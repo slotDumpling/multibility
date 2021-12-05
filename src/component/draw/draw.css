@@ -6,7 +6,3 @@ canvas {
   top: 0;
   touch-action: none;
 }
-
-body {
-  user-select: none;
-}
