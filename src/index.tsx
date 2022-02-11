@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, HashRouter, Route, Routes } from "react-router-dom";
 import MainMenu from "./component/menu/MainMenu";
 import Reader from "./component/reader/Reader";
 import Test from "./component/Test";
@@ -14,7 +14,7 @@ const placeholderEl = (
 );
 
 ReactDOM.render(
-  <BrowserRouter>
+  <HashRouter>
     <Routes>
       <Route path="/" element={<MainMenu />} />
       <Route path="/reader">
@@ -26,6 +26,6 @@ ReactDOM.render(
       <Route path="/test" element={<Test />} />
       <Route path="*" element={placeholderEl} />
     </Routes>
-  </BrowserRouter>,
+  </HashRouter>,
   document.getElementById("root")
 );
