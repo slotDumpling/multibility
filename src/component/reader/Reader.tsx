@@ -318,7 +318,7 @@ const PageWrapper = React.memo(
     return (
       <div className={`pdf-page${loaded ? " loaded" : ""}`}>
         <img
-          src={url || "/default.png"}
+          src={url || "./default.png"}
           alt="pdf-page"
           onLoad={() => setLoaded(true)}
         />

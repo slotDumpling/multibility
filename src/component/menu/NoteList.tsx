@@ -51,7 +51,7 @@ const NoteItem = ({ noteInfo }: { noteInfo: NoteInfo }) => {
     <Link to={href}>
       <div className="list-item">
         <div className="thumbnail-wrapper">
-          <img src={url || "/default.png"} alt={name} className="thumbnail" />
+          <img src={url || "./default.png"} alt={name} className="thumbnail" />
           {team && (
             <Tag color="blue" className="cloud-icon">
               <CloudOutlined />
