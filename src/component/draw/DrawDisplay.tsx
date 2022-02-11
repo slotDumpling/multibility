@@ -1,19 +1,11 @@
 import React, { useEffect, useRef } from "react";
-import "./draw.css";
-import { drawPoints } from "./lib/drawer";
-import { DrawState } from "./lib/DrawState";
+import { drawPoints } from "../../lib/draw/drawer";
+import { DrawState } from "../../lib/draw/DrawState";
 
-export default function Drawdisplay({
-  drawState,
-  width,
-  height,
-}: {
-  drawState: DrawState;
-  width: number;
-  height: number;
-}) {
+export default React.memo(({ drawState }: { drawState: DrawState }) => {
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const context = useRef<CanvasRenderingContext2D>();
+  const { width, height } = drawState;
 
   useEffect(() => {
     if (!canvasEl.current) return;
@@ -31,14 +23,14 @@ export default function Drawdisplay({
   }, []);
 
   useEffect(() => {
+    console.log("display rerender");
     context.current?.clearRect(0, 0, width, height);
 
     drawState.getValidStrokes().forEach((stroke) => {
       if (!context.current) return;
-      drawPoints(context.current, stroke.points);
+      drawPoints(context.current, stroke.points, "black", width, height);
     });
-    console.timeEnd('stroke');
   });
 
   return <canvas width={width} height={height} ref={canvasEl} />;
-}
+});

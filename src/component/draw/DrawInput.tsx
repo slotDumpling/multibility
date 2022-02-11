@@ -1,147 +1,144 @@
-import React, {
-  MouseEvent,
-  TouchEvent,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import "./draw.css";
-import { iOSTouch } from "./lib/draw";
-import { Drawer } from "./lib/drawer";
-import { DrawStateMethod, SetDrawState } from "./lib/DrawState";
+import React, { MouseEvent, TouchEvent, useEffect, useRef } from "react";
+import { iOSTouch } from "../../lib/draw/draw";
+import { DualDrawer } from "../../lib/draw/drawer";
+import { DrawState, DrawStateMethod, SetDrawState } from "../../lib/draw/DrawState";
 
 export default function Drawinput({
+  drawState,
   setDrawState,
   method,
   finger,
   even,
   lineWidth,
-  width,
-  height,
 }: {
+  drawState: DrawState;
   setDrawState: SetDrawState;
   method: DrawStateMethod;
   finger: boolean;
   even: boolean;
   lineWidth: number;
-  width: number;
-  height: number;
 }) {
+  const { width, height } = drawState;
   const canvasEl = useRef<HTMLCanvasElement>(null);
-  const context = useRef<CanvasRenderingContext2D>();
   const clientWidth = useRef(width);
   const clientHeight = useRef(height);
-  let [minX, minY, maxX, maxY] = [width, height, 0, 0];
 
-  const [isDrawing, setIsDrawing] = useState(false);
-  const drawer = useRef<Drawer>();
-
-  useEffect(() => {
-    if (!canvasEl.current) return;
-    canvasEl.current.addEventListener(
-      "touchstart",
-      (e) => {
-        e.preventDefault();
-      },
-      { passive: false }
-    );
-
-    const ctx = canvasEl.current.getContext("2d");
-    if (!ctx) return;
-    context.current = ctx;
-    updateClientSize();
-  }, []);
+  const isDrawing = useRef(false);
+  const drawer = useRef<DualDrawer>();
 
   useEffect(() => {
-    if (isDrawing === false) {
-      context.current?.clearRect(0, 0, width, height);
+    const cvs = getCanvasEl();
+
+    const touchPrevent = (e: globalThis.TouchEvent) => {
+      if (!finger && isFinger(e)) {
+        return;
+      }
+      e.preventDefault();
+    };
+
+    cvs.addEventListener("touchstart", touchPrevent, {
+      passive: false,
+    });
+
+    return () => {
+      cvs.removeEventListener("touchstart", touchPrevent);
+    };
+  }, [finger]);
+
+  useEffect(updateClientSize, []);
+
+  useEffect(() => {
+    getContext().clearRect(0, 0, width, height);
+  }, [drawState, width, height]);
+
+  function getCanvasEl() {
+    if (!canvasEl.current) {
+      throw Error("can't get canvas element");
     }
-  }, [isDrawing, width, height]);
+    return canvasEl.current;
+  }
+
+  function getContext() {
+    const context = getCanvasEl().getContext("2d");
+    if (!context) {
+      throw Error("can't get canvas context");
+    }
+    return context;
+  }
 
   function getPosition(
     e: iOSTouch | MouseEvent<HTMLCanvasElement>
   ): [number, number] {
-    const x = (e.clientX / clientWidth.current) * width;
-    const y = (e.clientY / clientHeight.current) * height;
-    [minX, minY, maxX, maxY] = [
-      Math.floor(Math.max(Math.min(minX, x - lineWidth), 0)),
-      Math.floor(Math.max(Math.min(minY, y - lineWidth), 0)),
-      Math.ceil(Math.min(Math.max(maxX, x + lineWidth), width)),
-      Math.ceil(Math.min(Math.max(maxY, y + lineWidth), height)),
-    ];
+    const clientRect = getCanvasEl().getBoundingClientRect();
+    const offsetX = e.clientX - clientRect.left;
+    const offsetY = e.clientY - clientRect.top;
+    const x = (offsetX / clientWidth.current) * width;
+    const y = (offsetY / clientHeight.current) * height;
     return [x, y];
   }
 
   function updateClientSize() {
-    if (!canvasEl.current) return;
-    clientWidth.current = canvasEl.current.clientWidth;
-    clientHeight.current = canvasEl.current.clientHeight;
+    clientWidth.current = getCanvasEl().clientWidth;
+    clientHeight.current = getCanvasEl().clientHeight;
+  }
+
+  function isFinger(e: TouchEvent<HTMLCanvasElement> | globalThis.TouchEvent) {
+    const touch = e.touches[0] as iOSTouch;
+    return touch.touchType === "direct";
   }
 
   function handleTouchStart(e: TouchEvent<HTMLCanvasElement>) {
-    if (!context.current) return;
-
-    setIsDrawing(true);
+    isDrawing.current = true;
     updateClientSize();
 
-    drawer.current = new Drawer(context.current);
+    drawer.current = new DualDrawer(getContext(), width, height);
 
     const touch = e.touches[0] as iOSTouch;
-    if (!finger && touch.touchType === "direct") {
+    if (!finger && isFinger(e)) {
       return;
     }
-    const pressure = (touch.force || 0) * lineWidth;
+    const pressure = (touch.force ?? 0) * lineWidth;
     const [x, y] = getPosition(touch);
-    const lineWidth_ = even
+    const lw = even
       ? lineWidth
       : drawer.current.computeLineWidth(pressure);
 
-    const newP = {
-      x,
-      y,
-      lineWidth: lineWidth_,
-    };
+    const newP = { x, y, lineWidth: lw };
 
     drawer.current.drawBegin(newP);
   }
 
   function handleMouseStart(e: MouseEvent<HTMLCanvasElement>) {
-    if (!context.current) return;
-
-    setIsDrawing(true);
+    isDrawing.current = true;
     updateClientSize();
 
     const [x, y] = getPosition(e);
 
-    drawer.current = new Drawer(context.current);
+    drawer.current = new DualDrawer(getContext(), width, height);
     const newP = { x, y, lineWidth };
     drawer.current.drawBegin(newP);
   }
 
   function handleTouchMove(e: TouchEvent<HTMLCanvasElement>) {
-    if (!isDrawing || !drawer.current) return;
+    if (!isDrawing.current || !drawer.current) return;
 
     const touch = e.touches[0] as iOSTouch;
     if (!finger && touch.touchType === "direct") {
       return;
     }
-    const pressure = (touch.force || 0) * lineWidth;
+    const pressure = (touch.force ?? 0) * lineWidth;
     const [x, y] = getPosition(touch);
 
-    const lineWidth_ = even
+    const lw = even
       ? lineWidth
       : drawer.current.computeLineWidth(pressure);
 
-    const newP = {
-      x,
-      y,
-      lineWidth: lineWidth_,
-    };
+    const newP = { x, y, lineWidth: lw };
     drawer.current.drawCurve(newP);
   }
 
   function handleMouseMove(e: MouseEvent<HTMLCanvasElement>) {
-    if (!isDrawing || !drawer.current) return;
+    if (!isDrawing.current || !drawer.current) return;
 
     const [x, y] = getPosition(e);
     const newP = { x, y, lineWidth };
@@ -149,19 +146,14 @@ export default function Drawinput({
   }
 
   function handleEnd() {
-    const ctx = context.current;
-    if (!isDrawing || !drawer.current || !ctx) return;
+    const d = drawer.current;
+    if (!isDrawing.current || !d) return;
 
-    const points = drawer.current.points;
-
-    console.time("stroke");
+    const points = d.points;
 
     const updateInput = () => {
-      const imageData = ctx.getImageData(minX, minY, maxX - minX, maxY - minY);
-      setDrawState((prev) =>
-        method(prev, { imageData, minX, minY, maxX, maxY }, points)
-      );
-      setIsDrawing(false);
+      isDrawing.current = false;
+      setDrawState((prev) => method(prev, d.getMirrorImageData(), points));
     };
 
     requestAnimationFrame(() => {

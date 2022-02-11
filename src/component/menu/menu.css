@@ -1,0 +1,187 @@
+@import "~antd/dist/antd.css";
+
+#container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#header {
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 4em;
+  padding: 1em;
+  position: relative;
+}
+
+#header > h4 {
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+#edit-button {
+  display: inline-block;
+  width: 65px;
+  margin-right: 10px;
+}
+
+#main {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  position: relative;
+}
+
+#aside-hide {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+}
+
+#aside-checkbox, #aside-label {
+  display: none;
+}
+
+#side-menu {
+  width: 300px;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: all 0.5s;
+}
+
+@media screen and (max-width: 500px) {
+  #side-menu {
+    position: absolute;
+    transform: translateX(-100%);
+    width: 200px;
+  }
+  #aside-label {
+    display: unset;
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    z-index: 10;
+  }
+  #aside-checkbox:checked + #side-menu {
+    transform: translateX(0);
+    box-shadow: 10px 0 20px 5px #0001;
+  }
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tag-circle {
+  width: 0.8em;
+  height: 0.8em;
+  border-radius: 0.4em;
+}
+
+.menu-item > .tag-circle,
+#all-note-icon {
+  margin: 0 10px 0 7px;
+}
+
+#all-note-icon + span {
+  margin-left: 0;
+}
+
+.menu-item > span {
+  margin-right: auto;
+}
+
+.tag-name-input {
+  width: initial;
+  flex: 1;
+}
+
+.ant-input-group-addon {
+  padding: 0 5px !important;
+}
+
+.ant-select-arrow {
+  transform: scale(0.8);
+}
+
+.ant-select-selection-item {
+  display: flex;
+  align-items: center;
+}
+
+#left-tools > input {
+  margin-right: 5px;
+}
+
+#right-tools > button:not(:last-of-type) {
+  margin-right: 10px;
+}
+
+#note-list {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.list-item {
+  border-bottom: 1px solid #eee;
+  height: 4em;
+  display: flex;
+  align-items: center;
+  padding: 0 1em;
+  cursor: pointer;
+}
+
+.list-item > p {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.list-item > .thumbnail-wrapper {
+  width: 3em;
+  margin-right: 1em;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.list-item .thumbnail {
+  max-width: 3em;
+  max-height: 3.5em;
+  border: 1px solid #eee;
+}
+
+.list-item .note-name-input {
+  flex: 1;
+}
+
+.list-item .note-name {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.list-item > .note-delete {
+  margin-left: auto;
+}
+
+.list-item .cloud-icon {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  /* zoom: 0.8; */
+  transform: scale(0.7);
+  transform-origin: bottom left;
+}
+
+input[type="file"] {
+  display: none;
+}
