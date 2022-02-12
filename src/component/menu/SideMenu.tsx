@@ -1,6 +1,6 @@
-import { Button, Input, Menu, Popconfirm, Select, Tag } from "antd";
+import { Button, Input, Menu, Popconfirm, Popover, Select } from "antd";
 import { useContext, useState } from "react";
-import { deleteTag, editTag, NoteTag } from "../../lib/note/archive";
+import { deleteTag, editTag, NoteTag, storeTag } from "../../lib/note/archive";
 import { colors } from "../ui/color";
 import { MenuStateCtx, MenuStateUpdateCtx } from "./MainMenu";
 import {
@@ -10,6 +10,7 @@ import {
   SettingOutlined,
   MenuOutlined,
   ProfileOutlined,
+  TagOutlined,
 } from "@ant-design/icons";
 
 function TagItem({ uid }: { uid: string }) {
@@ -128,6 +129,61 @@ function TagItem({ uid }: { uid: string }) {
   );
 }
 
+const AddTag = () => {
+  const [tagName, setTagName] = useState("");
+  const { setAllTags, setTagList } = useContext(MenuStateUpdateCtx);
+
+  async function addTag() {
+    const name = tagName.trim();
+    if (!name) {
+      return;
+    } else {
+      const [tags, tagList] = await storeTag(name);
+      setAllTags(tags);
+      setTagList(tagList);
+      setTagName("");
+    }
+  }
+
+  function cancelAdding() {
+    setTagName("");
+  }
+
+  const popContent = (
+    <>
+      <Input
+        placeholder="Tag name..."
+        id="tag-input"
+        value={tagName}
+        onChange={(e) => {
+          setTagName(e.target.value);
+        }}
+      />
+      <Button
+        disabled={tagName === "" ? true : false}
+        type="link"
+        size="small"
+        onClick={addTag}
+        icon={<CheckOutlined />}
+      />
+      <Button
+        type="text"
+        size="small"
+        onClick={cancelAdding}
+        icon={<CloseOutlined />}
+      />
+    </>
+  );
+
+  return (
+    <div id="add-tag">
+      <Popover content={popContent} trigger="click" placement="topLeft">
+        <Button type="text" icon={<TagOutlined />} />
+      </Popover>
+    </div>
+  );
+};
+
 export default function SideMenu() {
   const { tagList } = useContext(MenuStateCtx);
   const { setTagUid } = useContext(MenuStateUpdateCtx);
@@ -141,28 +197,31 @@ export default function SideMenu() {
   return (
     <aside>
       <label htmlFor="aside-checkbox" id="aside-label">
-        <Tag>
-          <MenuOutlined />
-        </Tag>
+        <MenuOutlined />
       </label>
       <input type="checkbox" id="aside-checkbox" />
-      <Menu
-        onClick={menuClicked}
-        id="side-menu"
-        defaultSelectedKeys={["DEFAULT"]}
-        defaultOpenKeys={["sub1"]}
-        mode="inline"
-      >
-        <Item key={"DEFAULT"}>
-          <ProfileOutlined id="all-note-icon" />
-          <span>All Notes</span>
-        </Item>
-        {tagList.map((uid) => (
-          <Item key={uid}>
-            <TagItem uid={uid} />
+      <div id="side-wrapper">
+        <Menu
+          onClick={menuClicked}
+          id="side-menu"
+          defaultSelectedKeys={["DEFAULT"]}
+          defaultOpenKeys={["sub1"]}
+          mode="inline"
+        >
+          <Item key={"DEFAULT"}>
+            <ProfileOutlined id="all-note-icon" />
+            <span>All Notes</span>
           </Item>
-        ))}
-      </Menu>
+          {tagList.map((uid) => (
+            <Item key={uid}>
+              <TagItem uid={uid} />
+            </Item>
+          ))}
+        </Menu>
+        <footer>
+          <AddTag />
+        </footer>
+      </div>
     </aside>
   );
 }

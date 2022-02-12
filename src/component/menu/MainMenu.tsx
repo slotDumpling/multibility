@@ -78,15 +78,15 @@ export default function MainMenu() {
         value={{ setAllNotes, setAllTags, setEditing, setTagList, setTagUid }}
       >
         <div id="container">
-          <div id="header">
+          <header>
             <LeftTools />
             <Title level={4}>{selectedTag.name}</Title>
             <RightTools />
-          </div>
-          <div id="main">
+          </header>
+          <main>
             <SideMenu />
             <NoteList noteList={noteList} />
-          </div>
+          </main>
         </div>
       </MenuStateUpdateCtx.Provider>
     </MenuStateCtx.Provider>
