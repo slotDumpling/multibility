@@ -1,15 +1,4 @@
-import { Button, message, Popconfirm, Popover, Slider } from "antd";
-import {
-  LeftOutlined,
-  UndoOutlined,
-  RedoOutlined,
-  HighlightOutlined,
-  TeamOutlined,
-  HighlightFilled,
-  FormatPainterFilled,
-  FormatPainterOutlined,
-  SaveOutlined,
-} from "@ant-design/icons";
+import { message } from "antd";
 import React, {
   createContext,
   Dispatch,
@@ -22,15 +11,18 @@ import React, {
 } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Draw, { DrawCtrl } from "../draw/Draw";
-import { DrawState, Stroke } from "../../lib/draw/DrawState";
-import { NoteInfo, NotePage } from "../../lib/note/note";
-import "./reader.css";
-import { StateSet } from "../../lib/draw/StateSet";
+import { DrawState } from "../../lib/draw/DrawState";
+import { Note, NotePage } from "../../lib/note/note";
+import "./reader.sass";
+import { SetOperation, StateSet } from "../../lib/draw/StateSet";
 import { loadNote, editNoteData } from "../../lib/note/archive";
 import { debounce } from "lodash";
 import DrawDisplay from "../draw/DrawDisplay";
-import { putNote } from "../../lib/http/http";
-import { RoomCode } from "./Team";
+import { putNote, updatePages } from "../../lib/network/http";
+import dafaultImg from "../ui/default.png";
+import DrawTools from "./DrawTools";
+import { useBeforeunload } from 'react-beforeunload';
+
 export const WIDTH = 2000;
 
 const defaultDrawCtrl: DrawCtrl = {
@@ -40,60 +32,65 @@ const defaultDrawCtrl: DrawCtrl = {
   lineWidth: 5,
   color: "#000",
 };
-const DrawCtrlCtx = createContext(defaultDrawCtrl);
-const StateCtx = createContext({
+export const DrawCtrlCtx = createContext(defaultDrawCtrl);
+export const ReaderStateCtx = createContext({
   noteId: "",
   stateSet: undefined as StateSet | undefined,
   saved: true,
   teamOn: false,
 });
-const StateUpdateCtx = createContext({
+export const ReaderMethodCtx = createContext({
   setSaved: (() => {}) as Dispatch<SetStateAction<boolean>>,
+  createRoom: () => {},
 });
 
 export default function Reader({
   teamOn,
   teamStateSet,
-  pushStroke,
+  pushOperation,
 }: {
   teamOn: boolean;
   teamStateSet?: StateSet;
-  pushStroke?: (pageId: string, stroke: Stroke) => void
+  pushOperation?: (op: SetOperation) => void;
 }) {
   const noteId = useParams().noteId ?? "";
   const nav = useNavigate();
 
-  const [pageRecord, setPageRecord] = useState<Record<string, NotePage>>({});
-  const [noteInfo, setNoteInfo] = useState<NoteInfo>();
+  const [pageRecord, setPageRecord] = useState<Record<string, NotePage>>();
+  const [note, setNote] = useState<Note>();
   const [stateSet, setStateSet] = useState<StateSet>();
   const [drawCtrl, setDrawCtrl] = useState(defaultDrawCtrl);
   const [saved, setSaved] = useState(true);
 
-  async function loadNotePages() {
+  const loadNotePages = async () => {
     const storedNote = await loadNote(noteId);
     if (!storedNote) {
       message.error("Note not found");
       return nav("/");
     }
-    const { pages, pdf, ...noteInfo } = storedNote;
+    const { pages } = storedNote;
     setPageRecord(pages);
-    setNoteInfo(noteInfo);
+    setNote(storedNote);
     setStateSet(StateSet.createFromPages(pages, WIDTH));
-  }
+    if (teamOn) updatePages(noteId, pages);
+  };
 
   const debouncedSave = useCallback(
     debounce(async (pr: Record<string, NotePage>) => {
       await editNoteData(noteId, { pages: pr });
       setSaved(true);
-    }, 5000),
+    }, 2000),
     []
   );
   const instantSave = debouncedSave.flush;
 
   const createRoom = async () => {
-    if (!noteInfo) return;
-    const resCode = await putNote(noteId, noteInfo, pageRecord);
-    if (!resCode) return message.error("Can't create room.");
+    if (!note || !pageRecord) return;
+    const resCode = await putNote(noteId, note, pageRecord);
+    if (!resCode) {
+      message.error("Can't create room.");
+      return;
+    }
     await editNoteData(noteId, { team: true });
     nav("/team/" + noteId);
   };
@@ -111,51 +108,51 @@ export default function Reader({
     return noteDestroy;
   }, [noteId, teamOn]);
 
-  const setPageState = useCallback(
-    (uid: string, ds: DrawState) => {
-      setStateSet((prev) => prev?.setState(uid, ds));
-      setPageRecord((prev) => {
-        const pr = {
-          ...prev,
-          [uid]: {
-            ...prev[uid],
-            state: DrawState.flaten(ds),
-          },
-        };
-        debouncedSave(pr);
-        return pr;
-      });
-      setSaved(false);
+  useBeforeunload(noteDestroy);
 
-      const stroke = ds.getLastStroke();
-      if (stroke && pushStroke) pushStroke(uid, stroke);
-    },
-    [debouncedSave]
-  );
+  useEffect(() => {
+    if (!stateSet?.lastOp || !pushOperation) return;
+    pushOperation(stateSet.lastOp);
+  }, [stateSet]);
 
-  function handleUndo() {
+  useEffect(() => {
+    if (!pageRecord) return;
+    debouncedSave(pageRecord);
+    setSaved(false);
+  }, [pageRecord]);
+
+  const setPageState = useCallback((uid: string, ds: DrawState) => {
+    setStateSet((prev) => prev?.setState(uid, ds));
+    setPageRecord((prev) => {
+      if (!prev) return;
+      return {
+        ...prev,
+        [uid]: { ...prev[uid], state: DrawState.flaten(ds) },
+      };
+    });
+  }, []);
+
+  const handleUndo = () => {
     setStateSet((prev) => prev?.undo());
-  }
+  };
 
-  function handleRedo() {
+  const handleRedo = () => {
     setStateSet((prev) => prev?.redo());
-  }
+  };
 
   return (
     <DrawCtrlCtx.Provider value={drawCtrl}>
-      <StateCtx.Provider
-        value={{ noteId, stateSet, saved, teamOn }}
-      >
-        <StateUpdateCtx.Provider value={{ setSaved }}>
-          <div className="reader-wrapper">
+      <ReaderStateCtx.Provider value={{ noteId, stateSet, saved, teamOn }}>
+        <ReaderMethodCtx.Provider value={{ setSaved, createRoom }}>
+          <div className="reader-container">
             <DrawTools
               setDrawCtrl={setDrawCtrl}
+              instantSave={instantSave}
               handleUndo={handleUndo}
               handleRedo={handleRedo}
-              instantSave={instantSave}
-              createRoom={createRoom}
             />
             {stateSet?.getKeys().map((uid) => {
+              if (!pageRecord) return <></>;
               const page = pageRecord[uid];
               const drawState = stateSet.getOneState(uid);
               const teamState = teamStateSet?.getOneState(uid);
@@ -172,122 +169,11 @@ export default function Reader({
               );
             })}
           </div>
-        </StateUpdateCtx.Provider>
-      </StateCtx.Provider>
+        </ReaderMethodCtx.Provider>
+      </ReaderStateCtx.Provider>
     </DrawCtrlCtx.Provider>
   );
 }
-
-const DrawTools = ({
-  setDrawCtrl,
-  handleUndo,
-  handleRedo,
-  instantSave,
-  createRoom,
-}: {
-  setDrawCtrl: Dispatch<SetStateAction<DrawCtrl>>;
-  handleUndo: () => void;
-  handleRedo: () => void;
-  instantSave: () => void;
-  createRoom: () => void;
-}) => {
-  const drawCtrl = useContext(DrawCtrlCtx);
-  const nav = useNavigate();
-
-  function updateDrawCtrl(updated: Partial<DrawCtrl>) {
-    setDrawCtrl((prev) => ({ ...prev, ...updated }));
-  }
-
-  const { saved, stateSet, teamOn } = useContext(StateCtx);
-
-  const PenPanel = (
-    <div id="pen-panel">
-      <Slider
-        min={1}
-        max={20}
-        value={drawCtrl.lineWidth}
-        onChange={(lineWidth) => updateDrawCtrl({ lineWidth })}
-      />
-    </div>
-  );
-
-  const PenButton = drawCtrl.erasing ? (
-    <Button
-      type="text"
-      onClick={() => updateDrawCtrl({ erasing: false })}
-      icon={<HighlightOutlined />}
-    />
-  ) : (
-    <Popover content={PenPanel} trigger="click" placement="bottom">
-      <Button type="text" icon={<HighlightFilled />} />
-    </Popover>
-  );
-
-  return (
-    <div id="tool-bar">
-      <div id="left-buttons">
-        <Button type="text" onClick={() => nav("/")} icon={<LeftOutlined />}>
-          Back
-        </Button>
-        <Button
-          type="text"
-          onClick={instantSave}
-          disabled={saved}
-          icon={<SaveOutlined />}
-        />
-      </div>
-      <div id="middle-buttons">
-        <Button
-          type="text"
-          icon={<UndoOutlined />}
-          onClick={handleUndo}
-          disabled={!stateSet?.isUndoable()}
-        />
-        <Button
-          id="redo-button"
-          type="text"
-          icon={<RedoOutlined />}
-          onClick={handleRedo}
-          disabled={!stateSet?.isRedoable()}
-        />
-        {PenButton}
-        <Button
-          type="text"
-          onClick={() => updateDrawCtrl({ erasing: true })}
-          icon={
-            drawCtrl.erasing ? (
-              <FormatPainterFilled />
-            ) : (
-              <FormatPainterOutlined />
-            )
-          }
-        />
-      </div>
-      <div id="right-buttons">
-        {teamOn && <RoomCode />}
-        {teamOn || <JoinRoom createRoom={createRoom} />}
-      </div>
-    </div>
-  );
-};
-
-
-
-const JoinRoom = ({ createRoom }: { createRoom: () => void }) => {
-  return (
-    <Popconfirm
-      placement="bottomRight"
-      title="Enable team editing?"
-      onConfirm={createRoom}
-      okText="Yes"
-      cancelText="No"
-    >
-      <Button shape="round" icon={<TeamOutlined />}>
-        Team
-      </Button>
-    </Popconfirm>
-  );
-};
 
 const PageWrapper = React.memo(
   ({
@@ -316,9 +202,9 @@ const PageWrapper = React.memo(
     }, [url]);
 
     return (
-      <div className={`pdf-page${loaded ? " loaded" : ""}`}>
+      <div className={`pdf-page ${loaded ? "loaded" : ""}`}>
         <img
-          src={url || "./default.png"}
+          src={url || dafaultImg}
           alt="pdf-page"
           onLoad={() => setLoaded(true)}
         />

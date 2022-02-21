@@ -1,7 +1,6 @@
 import { Button } from "antd";
 import { useContext } from "react";
 import { MenuStateCtx, MenuStateUpdateCtx } from "./MainMenu";
-import {} from "@ant-design/icons";
 
 export default function LeftTools() {
   const { editing } = useContext(MenuStateCtx);

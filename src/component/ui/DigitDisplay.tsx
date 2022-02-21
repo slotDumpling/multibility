@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "./digitDisplay.css";
+import "./digitDisplay.sass";
 
 function num2digits(num: number): number[] {
   return String(num)

@@ -26,7 +26,7 @@ export default function Draw({
   even?: boolean;
   lineWidth?: number;
 }) {
-  const method = erasing ? DrawState.eraseStrokes : DrawState.pushStroke;
+  const method = erasing ? DrawState.eraseStrokes : DrawState.addStroke;
 
   return (
     <div className="draw-wrapper">

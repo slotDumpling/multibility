@@ -1,7 +1,11 @@
 import React, { MouseEvent, TouchEvent, useEffect, useRef } from "react";
 import { iOSTouch } from "../../lib/draw/draw";
 import { DualDrawer } from "../../lib/draw/drawer";
-import { DrawState, DrawStateMethod, SetDrawState } from "../../lib/draw/DrawState";
+import {
+  DrawState,
+  DrawStateMethod,
+  SetDrawState,
+} from "../../lib/draw/DrawState";
 
 export default function Drawinput({
   drawState,
@@ -26,13 +30,13 @@ export default function Drawinput({
   const isDrawing = useRef(false);
   const drawer = useRef<DualDrawer>();
 
+  useEffect(updateClientSize, []);
+
   useEffect(() => {
     const cvs = getCanvasEl();
 
     const touchPrevent = (e: globalThis.TouchEvent) => {
-      if (!finger && isFinger(e)) {
-        return;
-      }
+      if (!finger && isFinger(e)) return;
       e.preventDefault();
     };
 
@@ -45,24 +49,18 @@ export default function Drawinput({
     };
   }, [finger]);
 
-  useEffect(updateClientSize, []);
-
   useEffect(() => {
     getContext().clearRect(0, 0, width, height);
   }, [drawState, width, height]);
 
   function getCanvasEl() {
-    if (!canvasEl.current) {
-      throw Error("can't get canvas element");
-    }
+    if (!canvasEl.current) throw Error("can't get canvas element");
     return canvasEl.current;
   }
 
   function getContext() {
     const context = getCanvasEl().getContext("2d");
-    if (!context) {
-      throw Error("can't get canvas context");
-    }
+    if (!context) throw Error("can't get canvas context");
     return context;
   }
 
@@ -94,14 +92,11 @@ export default function Drawinput({
     drawer.current = new DualDrawer(getContext(), width, height);
 
     const touch = e.touches[0] as iOSTouch;
-    if (!finger && isFinger(e)) {
-      return;
-    }
+    if (!finger && isFinger(e)) return;
+
     const pressure = (touch.force ?? 0) * lineWidth;
     const [x, y] = getPosition(touch);
-    const lw = even
-      ? lineWidth
-      : drawer.current.computeLineWidth(pressure);
+    const lw = even ? lineWidth : drawer.current.computeLineWidth(pressure);
 
     const newP = { x, y, lineWidth: lw };
 
@@ -129,9 +124,7 @@ export default function Drawinput({
     const pressure = (touch.force ?? 0) * lineWidth;
     const [x, y] = getPosition(touch);
 
-    const lw = even
-      ? lineWidth
-      : drawer.current.computeLineWidth(pressure);
+    const lw = even ? lineWidth : drawer.current.computeLineWidth(pressure);
 
     const newP = { x, y, lineWidth: lw };
     drawer.current.drawCurve(newP);
@@ -148,11 +141,12 @@ export default function Drawinput({
   function handleEnd() {
     const d = drawer.current;
     if (!isDrawing.current || !d) return;
+    isDrawing.current = false;
 
     const points = d.points;
+    if (points.length < 2) return;
 
     const updateInput = () => {
-      isDrawing.current = false;
       setDrawState((prev) => method(prev, d.getMirrorImageData(), points));
     };
 

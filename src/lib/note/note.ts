@@ -22,6 +22,7 @@ export interface NoteInfo {
   name: string;
   tagId: string;
   team: boolean;
+  withImg: boolean;
   createTime?: Date;
   lastTime?: Date;
   thumbnail?: Blob;
@@ -38,6 +39,7 @@ export function createEmptyNote(): Note {
     name: `New note ${Date.now()}`,
     tagId: "DEFAULT",
     team: false,
+    withImg: false,
     pages: {
       [getUid()]: {
         ratio: 1.5,

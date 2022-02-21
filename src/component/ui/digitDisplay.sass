@@ -1,0 +1,16 @@
+.digit-display
+  display: flex
+
+.digit
+  background-color: #222
+  color: white
+  font-size: 3em
+  font-family: Arial, Helvetica, sans-serif
+  line-height: 1.2em
+  width: 0.8em
+  text-align: center
+  border-radius: 5px
+  .disabled > &
+    color: transparent
+  &:not(:last-of-type)
+    margin-right: 10px

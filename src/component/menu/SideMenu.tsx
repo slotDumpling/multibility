@@ -1,7 +1,7 @@
 import { Button, Input, Menu, Popconfirm, Popover, Select } from "antd";
 import { useContext, useState } from "react";
 import { deleteTag, editTag, NoteTag, storeTag } from "../../lib/note/archive";
-import { colors } from "../ui/color";
+import { colors } from "../../lib/color";
 import { MenuStateCtx, MenuStateUpdateCtx } from "./MainMenu";
 import {
   MinusCircleOutlined,
@@ -11,29 +11,33 @@ import {
   MenuOutlined,
   ProfileOutlined,
   TagOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
+import Search from "antd/lib/input/Search";
 
-function TagItem({ uid }: { uid: string }) {
-  const { editing, allTags } = useContext(MenuStateCtx);
-  const { setTagUid, setTagList, setAllTags } = useContext(MenuStateUpdateCtx);
-  const tag = allTags[uid];
+export const TagCircle = ({ color }: { color: string }) => {
+  const style = { backgroundColor: color };
+  return <div className="tag-circle" style={style} />;
+};
+
+function TagItem({ noteTag }: { noteTag: NoteTag }) {
+  const { uid, color, name, notes } = noteTag;
+  const { editing } = useContext(MenuStateCtx);
+  const { setTagUid, setAllTags } = useContext(MenuStateUpdateCtx);
   const [tagEditing, setTagEditing] = useState(false);
-  const [tagName, setTagName] = useState(tag?.name ?? "");
-  const [tagColor, setTagColor] = useState(tag?.color ?? "");
-
-  if (!tag) return <></>;
+  const [tagName, setTagName] = useState(name);
+  const [tagColor, setTagColor] = useState(color);
 
   function cancelEditing() {
-    setTagName(tag.name);
-    setTagColor(tag.color);
+    setTagName(name);
+    setTagColor(color);
     setTagEditing(false);
   }
 
   async function removeTag() {
-    const [newAllTags, newTagList] = await deleteTag(uid);
+    const tags = await deleteTag(uid);
     setTagUid("DEFAULT");
-    setTagList(newTagList);
-    setAllTags(newAllTags);
+    setAllTags(tags);
   }
 
   async function finishEditing() {
@@ -41,18 +45,13 @@ function TagItem({ uid }: { uid: string }) {
       uid,
       name: tagName,
       color: tagColor,
-      notes: tag.notes,
+      notes: notes,
     };
 
     const newAllTags = await editTag(newTag);
     setAllTags(newAllTags);
     setTagEditing(false);
   }
-
-  const TagCircle = ({ color }: { color: string }) => {
-    const style = { backgroundColor: color };
-    return <div className="tag-circle" style={style} />;
-  };
 
   const colorSelector = (
     <Select value={tagColor} onSelect={setTagColor}>
@@ -66,7 +65,6 @@ function TagItem({ uid }: { uid: string }) {
 
   const TagNameInput = () => (
     <Input
-      size="small"
       className="tag-name-input"
       addonBefore={colorSelector}
       value={tagName}
@@ -97,7 +95,7 @@ function TagItem({ uid }: { uid: string }) {
       ) : (
         <>
           <TagCircle color={tagColor} />
-          <span>{tagName}</span>
+          <span className="tag-name">{tagName}</span>
         </>
       )}
       {editing && tagEditing && (
@@ -130,62 +128,43 @@ function TagItem({ uid }: { uid: string }) {
 }
 
 const AddTag = () => {
-  const [tagName, setTagName] = useState("");
-  const { setAllTags, setTagList } = useContext(MenuStateUpdateCtx);
+  const { setAllTags } = useContext(MenuStateUpdateCtx);
 
-  async function addTag() {
-    const name = tagName.trim();
+  async function addTag(val: string) {
+    const name = val.trim();
     if (!name) {
       return;
     } else {
-      const [tags, tagList] = await storeTag(name);
+      const tags = await storeTag(name);
       setAllTags(tags);
-      setTagList(tagList);
-      setTagName("");
     }
   }
 
-  function cancelAdding() {
-    setTagName("");
-  }
-
   const popContent = (
-    <>
-      <Input
-        placeholder="Tag name..."
-        id="tag-input"
-        value={tagName}
-        onChange={(e) => {
-          setTagName(e.target.value);
-        }}
-      />
-      <Button
-        disabled={tagName === "" ? true : false}
-        type="link"
-        size="small"
-        onClick={addTag}
-        icon={<CheckOutlined />}
-      />
-      <Button
-        type="text"
-        size="small"
-        onClick={cancelAdding}
-        icon={<CloseOutlined />}
-      />
-    </>
+    <Search
+      placeholder="Tag name..."
+      onSearch={addTag}
+      allowClear
+      enterButton={<PlusOutlined />}
+    />
   );
 
   return (
     <div id="add-tag">
-      <Popover content={popContent} trigger="click" placement="topLeft">
-        <Button type="text" icon={<TagOutlined />} />
+      <Popover
+        content={popContent}
+        trigger="click"
+        placement="topLeft"
+        destroyTooltipOnHide
+      >
+        <Button shape="circle" type="text" icon={<TagOutlined />} />
       </Popover>
     </div>
   );
 };
 
 export default function SideMenu() {
-  const { tagList } = useContext(MenuStateCtx);
+  const { allTags } = useContext(MenuStateCtx);
   const { setTagUid } = useContext(MenuStateUpdateCtx);
 
   function menuClicked({ key }: { key: string }) {
@@ -208,13 +187,15 @@ export default function SideMenu() {
           defaultOpenKeys={["sub1"]}
           mode="inline"
         >
-          <Item key={"DEFAULT"}>
-            <ProfileOutlined id="all-note-icon" />
-            <span>All Notes</span>
+          <Item key="DEFAULT">
+            <div className="menu-item">
+              <ProfileOutlined id="all-note-icon" />
+              <span className="tag-name">All Notes</span>
+            </div>
           </Item>
-          {tagList.map((uid) => (
-            <Item key={uid}>
-              <TagItem uid={uid} />
+          {Object.values(allTags).map((tag) => (
+            <Item key={tag.uid}>
+              <TagItem noteTag={tag} />
             </Item>
           ))}
         </Menu>

@@ -1,11 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
-import { BrowserRouter, HashRouter, Route, Routes } from "react-router-dom";
+import { HashRouter, Route, Routes } from "react-router-dom";
 import MainMenu from "./component/menu/MainMenu";
 import Reader from "./component/reader/Reader";
 import Test from "./component/Test";
 import Team from "./component/reader/Team";
+// import Stats from "stats.js";
 
 const placeholderEl = (
   <main style={{ padding: "1rem" }}>
@@ -29,3 +30,13 @@ ReactDOM.render(
   </HashRouter>,
   document.getElementById("root")
 );
+
+// const stats = new Stats();
+// stats.showPanel(2);
+// document.body.appendChild(stats.dom);
+
+// const updateStats = () => {
+//   stats.update();
+//   requestAnimationFrame(updateStats);
+// };
+// updateStats();

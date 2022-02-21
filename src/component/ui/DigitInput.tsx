@@ -4,7 +4,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import "./digitInput.css";
+import "./digitInput.sass";
 
 export default function DigitInput({
   value = 0,

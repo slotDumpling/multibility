@@ -1,14 +1,18 @@
-import { Input } from "antd";
-import React, { useState } from "react";
+import React from "react";
 
 export default function Test() {
-  const [text, setText] = useState("");
   return (
     <>
-      <h1>{text}</h1>
-      <Input value={text} onChange={(e) => setText(e.target.value)} />
-      <input value={text} onChange={(e) => setText(e.target.value)} />
-      <input type="text" />
+      <div
+        style={{
+          backgroundColor: "red",
+          height: 'fit-content',
+          width: 100,
+          transition: "all 3s",
+        }}
+      >
+        <div>apple</div>
+      </div>
     </>
   );
 }

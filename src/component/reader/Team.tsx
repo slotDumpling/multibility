@@ -1,64 +1,75 @@
-import { Button, Divider, Popover } from "antd";
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Stroke } from "../../lib/draw/DrawState";
-import { StateSet } from "../../lib/draw/StateSet";
-import { getTeamNote, getUserId } from "../../lib/http/http";
-import { getIO } from "../../lib/socket/io";
-import DigitDisplay from "../ui/DigitDisplay";
+import { message } from "antd";
+import React, { createContext, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { SetOperation, StateSet } from "../../lib/draw/StateSet";
+import { getTeamNote } from "../../lib/network/http";
+import { IoFactory } from "../../lib/network/io";
 import Reader, { WIDTH } from "./Reader";
-import { TeamOutlined } from "@ant-design/icons";
-import './reader.css';
+import { getUserId, UserInfo } from "../../lib/user";
+import {
+  LoginOutlined,
+  LogoutOutlined,
+} from "@ant-design/icons";
 
-const TeamStateCtx = createContext({
+export const TeamStateCtx = createContext({
   code: -2,
+  userList: [] as UserInfo[],
 });
 
 export default function Team() {
+  const noteId = useParams().noteId ?? "";
   const [teamStateSet, setTeamStateSet] = useState<StateSet>();
   const [code, setCode] = useState(-2);
-  const [ws] = useState(getIO);
-  const noteId = useParams().noteId ?? "";
+  const [userList, setUserList] = useState<UserInfo[]>([]);
+  const [ws] = useState(IoFactory(noteId));
+  const nav = useNavigate();
 
   async function loadTeamPages() {
     const res = await getTeamNote(noteId);
-    if (!res) return;
+    if (!res) {
+      message.error("Failed loading the team note");
+      return nav("/");
+    }
     const { code, pages } = res;
     setCode(code);
     setTeamStateSet(StateSet.createFromPages(pages, WIDTH));
   }
 
-  const joinRoom = () => {
-    ws.emit("joinRoom", {
-      noteId,
-      userId: getUserId(),
-    });
-  };
-
-  const leavRoom = () => {
-    ws.emit("leaveRoom", {
-      noteId,
-      userId: getUserId(),
-    });
-  };
-
   const roomInit = async () => {
     await loadTeamPages();
-    joinRoom();
-    ws.on("connect", () => {
-      console.log("on-conn");
-      joinRoom();
+    ws.on("push", ({ operation }) => {
+      setTeamStateSet((prev) => prev?.pushOperation(operation));
     });
-    ws.on("addStroke", ({ pageId, stroke }) => {
-      console.log("on-add");
-      setTeamStateSet((prev) => prev?.pushStroke(pageId, stroke));
+
+    ws.on("joined", ({ joined, members }) => {
+      const { userId, userName } = joined;
+      setUserList(members);
+      if (userId === getUserId()) return;
+      message.success({
+        icon: <LoginOutlined />,
+        content: userName + " joined room",
+      });
     });
+
+    ws.on("leaved", ({ leaved, members }) => {
+      const { userId, userName } = leaved;
+      setUserList(members);
+      if (userId === getUserId()) return;
+      message.warning({
+        icon: <LogoutOutlined />,
+        content: userName + " leaved room",
+      });
+    });
+
+    ws.connect();
   };
 
   const roomDestroy = () => {
-    leavRoom();
     ws.off("connect");
-    ws.off("addStroke");
+    ws.off("push");
+    ws.off("joined");
+    ws.off("leaved");
+    ws.disconnect();
   };
 
   useEffect(() => {
@@ -66,39 +77,17 @@ export default function Team() {
     return roomDestroy;
   }, [noteId]);
 
-  const pushStroke = (pageId: string, stroke: Stroke) => {
-    ws.emit("pushStroke", {
-      pageId,
-      userId: getUserId(),
-      stroke,
-    });
+  const pushOperation = (op: SetOperation) => {
+    ws.emit("push", { operation: op });
   };
 
   return (
-    <TeamStateCtx.Provider value={{ code }}>
+    <TeamStateCtx.Provider value={{ code, userList }}>
       <Reader
         teamOn={true}
         teamStateSet={teamStateSet}
-        pushStroke={pushStroke}
+        pushOperation={pushOperation}
       />
     </TeamStateCtx.Provider>
-  );
-}
-
-export function RoomCode() {
-  const { code } = useContext(TeamStateCtx);
-
-  const content = (
-    <div className="team-popover">
-      <p>Room Code:</p>
-      <DigitDisplay value={code} />
-      <Divider />
-    </div>
-  );
-
-  return (
-    <Popover content={content} trigger="click" placement="bottomRight" title="Team info">
-      <Button type="text" icon={<TeamOutlined />} />
-    </Popover>
   );
 }

@@ -1,0 +1,55 @@
+$speed: 0.3s
+
+.others-menu
+  position: relative
+  transition: all $speed ease
+  width: 200px
+  overflow: hidden
+
+.primary-enter
+  position: absolute
+  transform: translateX(-110%)
+  opacity: 0
+.primary-enter-active
+  transform: translateX(0)
+  opacity: 1
+  transition: all $speed ease
+.primary-exit
+  position: absolute
+  transform: translateX(0)
+.primary-exit-active
+  transform: translateX(-110%)
+  opacity: 0
+  transition: all $speed ease
+
+.secondary
+  width: 100%
+  .title
+    display: flex
+    align-items: center
+    margin-bottom: 10px
+    h5
+      margin: 0 10px
+.secondary-enter
+  position: absolute
+  transform: translateX(110%)
+  opacity: 0
+.secondary-enter-active
+  transform: translateX(0)
+  opacity: 1
+  transition: all $speed ease
+.secondary-exit
+  position: absolute
+  transform: translateX(0)
+.secondary-exit-active
+  transform: translateX(110%)
+  opacity: 0
+  transition: all $speed ease
+
+.ant-upload-drag-icon
+  .anticon-check
+    transform: scale(0.5)
+
+.profile-page
+  button
+    margin-top: 10px
