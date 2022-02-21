@@ -108,6 +108,11 @@ export default function Reader({
     return noteDestroy;
   }, [noteId, teamOn]);
 
+  useEffect(() => {
+    if (!note) return;
+    document.title = note.name;
+  }, [note]);
+
   useBeforeunload(noteDestroy);
 
   useEffect(() => {

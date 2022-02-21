@@ -67,6 +67,7 @@ export default function MainMenu() {
   useEffect(() => {
     getAllNotes().then(setAllNotes);
     getAllTags().then(setAllTags);
+    document.title = 'Multibility';
   }, []);
 
   return (
