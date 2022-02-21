@@ -194,7 +194,7 @@ function JoinTeamButton() {
 
   const nav = useNavigate();
   async function handleSubmit(code: number) {
-    const dismiss = message.loading("Loading team note...");
+    const dismiss = message.loading("Loading team note...", 0);
     const noteId = await getNoteId(code);
     dismiss();
     if (!noteId) {

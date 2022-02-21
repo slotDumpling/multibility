@@ -4,7 +4,7 @@ import { convertTeamPage, saveTeamNote } from "../note/archive";
 import { cloneDeep } from "lodash";
 import { getUserId } from "../user";
 
-export const BASE_URL = "http://100.81.113.84:8090/paint";
+export const BASE_URL = "https://api.slotdumpling.top/paint";
 axios.defaults.baseURL = BASE_URL;
 axios.interceptors.request.use((config) => {
   console.log(config.method, config.url);
