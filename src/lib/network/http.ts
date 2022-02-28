@@ -1,7 +1,6 @@
 import axios from "axios";
 import { Note, NoteInfo, NotePage } from "../note/note";
 import { convertTeamPage, saveTeamNote } from "../note/archive";
-import { cloneDeep } from "lodash";
 import { getUserId } from "../user";
 
 export const BASE_URL = "https://api.slotdumpling.top/paint";
@@ -42,20 +41,11 @@ export async function getNoteId(roomCode: number) {
   }
 }
 
-const deletePagesPosition = (pageRecord: Record<string, NotePage>) => {
-  const pages = cloneDeep(pageRecord);
-  for (let key of Object.keys(pages)) {
-    delete pages[key].state.position;
-  }
-  return pages;
-};
-
 export async function putNote(
   noteId: string,
   noteInfo: Note,
   pageRecord: Record<string, NotePage>
 ) {
-  pageRecord = deletePagesPosition(pageRecord);
   const { uid, name, withImg, pages } = noteInfo;
 
   try {

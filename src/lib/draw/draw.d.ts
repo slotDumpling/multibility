@@ -3,8 +3,3 @@ export interface Point {
   y: number;
   lineWidth: number;
 }
-
-export type iOSTouch = Touch & {
-  force?: number;
-  touchType: "stylue" | "direct";
-};

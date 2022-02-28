@@ -29,6 +29,7 @@ const NoteItem = ({ noteInfo }: { noteInfo: NoteInfo }) => {
   const href = editing ? "#" : `${team ? "team" : "reader"}/${uid}`;
   const { setAllTags, setAllNotes } = useContext(MenuStateUpdateCtx);
   const [noteName, setNoteName] = useState(name);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   async function removeNote() {
     const { tags, allNotes } = await deleteNote(uid);
@@ -107,7 +108,12 @@ const NoteItem = ({ noteInfo }: { noteInfo: NoteInfo }) => {
     <Link to={href}>
       <div className="list-item">
         <div className="thumbnail-wrapper">
-          <img src={url || dafaultImg} alt={name} className="thumbnail" />
+          <img
+            src={url || dafaultImg}
+            alt={name}
+            className={`thumbnail${imgLoaded ? " loaded" : ""}`}
+            onLoad={() => setImgLoaded(true)}
+          />
           {team && (
             <Tag color="blue" className="cloud-icon">
               <CloudOutlined />

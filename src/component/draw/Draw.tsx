@@ -1,7 +1,9 @@
 import Drawdisplay from "./DrawDisplay";
-import Drawinput from "./DrawInput";
+import DrawInput from "./DrawInput";
 import { DrawState, SetDrawState } from "../../lib/draw/DrawState";
 import "./draw.css";
+import { useMemo, useRef } from "react";
+import { CtxRecord, Eraser } from "../../lib/draw/eraser";
 
 export interface DrawCtrl {
   erasing: boolean;
@@ -26,18 +28,24 @@ export default function Draw({
   even?: boolean;
   lineWidth?: number;
 }) {
-  const method = erasing ? DrawState.eraseStrokes : DrawState.addStroke;
+  const cache = useRef<CtxRecord>({});
+  const eraser = useMemo(() => {
+    const res = new Eraser(drawState, cache.current);
+    cache.current = res.ctxRec;
+    return res;
+  }, [drawState]);
 
   return (
     <div className="draw-wrapper">
       <Drawdisplay drawState={drawState} />
-      <Drawinput
+      <DrawInput
         drawState={drawState}
-        method={method}
         finger={finger}
         even={even}
         lineWidth={lineWidth}
         setDrawState={onChange}
+        eraser={eraser}
+        erasing={erasing}
       />
     </div>
   );

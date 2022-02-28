@@ -43,7 +43,6 @@ interface DrawStateRecordType {
   undoStack: OrderedSet<string>;
   eraseStack: List<ImmuErase>;
   deleted: Set<string>;
-  position: List<Set<string>>;
 }
 
 type DrawStateRecord = Record<DrawStateRecordType>;
@@ -55,19 +54,16 @@ const defaultRecord: Readonly<DrawStateRecordType> = {
   undoStack: OrderedSet(),
   eraseStack: List(),
   deleted: Set(),
-  position: List<Set<string>>(),
 };
 
 const defaultFactory = Record(defaultRecord);
 
 export interface FlatState {
   strokes: Stroke[];
-  position?: string[][];
 }
 
 export const defaultFlatState: FlatState = {
   strokes: [],
-  position: [],
 };
 
 export class DrawState {
@@ -126,10 +122,6 @@ export class DrawState {
     return this.getImmutable().get("state");
   }
 
-  getPosition() {
-    return this.getImmutable().get("position");
-  }
-
   getLastStroke() {
     return this.getImmutable().get("strokes").last();
   }
@@ -141,14 +133,9 @@ export class DrawState {
   static undo(drawState: DrawState) {
     const uid = drawState.getUidStack().last();
 
-    if (!uid) {
-      return drawState;
-    }
+    if (!uid) return drawState;
 
-    const lastOp: Operation = {
-      type: "undo",
-      undoUid: uid,
-    };
+    const lastOp: Operation = { type: "undo", undoUid: uid };
 
     return new DrawState(
       drawState
@@ -167,10 +154,7 @@ export class DrawState {
     const uid = undo.last();
     if (!uid) return drawState;
 
-    const lastOp: Operation = {
-      type: "redo",
-      redoUid: uid,
-    };
+    const lastOp: Operation = { type: "redo", redoUid: uid };
 
     return new DrawState(
       drawState
@@ -183,11 +167,7 @@ export class DrawState {
     );
   }
 
-  static addStroke(
-    drawState: DrawState,
-    imageData: ImageData,
-    points: Point[]
-  ) {
+  static addStroke(drawState: DrawState, points: Point[]) {
     const uid = getUid();
     const stroke = { uid, points };
     const undo = drawState.getUndoStack();
@@ -202,53 +182,10 @@ export class DrawState {
         .update("uidStack", (s) => s.push(uid))
     );
 
-    let position = drawState.getPosition();
-    position = updatePosition(position, imageData, uid);
-
-    const lastOp: Operation = {
-      type: "add",
-      stroke,
-    };
+    const lastOp: Operation = { type: "add", stroke };
 
     return new DrawState(
-      pushedState.set("position", position),
-      drawState.width,
-      drawState.height,
-      lastOp
-    );
-  }
-
-  static eraseStrokes(drawState: DrawState, imageData: ImageData) {
-    const position = drawState.getPosition();
-    if (!position) return drawState;
-    const validStrokes = drawState.getValidStrokes();
-    const strokeSet = Set(validStrokes.map((s) => s.uid));
-
-    const erased = getErasedStrokes(position, imageData).filter((uid) =>
-      strokeSet.has(uid)
-    );
-
-    if (erased.size === 0) {
-      return new DrawState(
-        drawState.getImmutable(),
-        drawState.width,
-        drawState.height
-      );
-    }
-
-    const uid = getUid();
-    const lastOp: Operation = {
-      type: "erase",
-      erase: { uid, erased: erased.toArray() },
-    };
-
-    return new DrawState(
-      mergeUndo(
-        drawState
-          .getImmutable()
-          .update("eraseStack", (s) => s.push({ uid, erased }))
-          .update("uidStack", (s) => s.push(uid))
-      ),
+      pushedState,
       drawState.width,
       drawState.height,
       lastOp
@@ -265,15 +202,20 @@ export class DrawState {
 
   static pushErase(drawState: DrawState, erase: Erase) {
     const { uid, erased } = erase;
-    const immuErase: ImmuErase = {
-      uid,
-      erased: Set(erased),
-    };
+    const immuErase: ImmuErase = { uid, erased: Set(erased) };
     return new DrawState(
-      drawState.getImmutable().update("eraseStack", (s) => s.push(immuErase)),
+      drawState
+        .getImmutable()
+        .update("eraseStack", (s) => s.push(immuErase))
+        .update("uidStack", (s) => s.push(uid)),
       drawState.width,
       drawState.height
     );
+  }
+
+  static eraseStrokes(drawState: DrawState, erased: string[]) {
+    const erase = { uid: getUid(), erased };
+    return DrawState.pushErase(drawState, erase);
   }
 
   static pushUndo(drawState: DrawState, undoUid: string) {
@@ -304,22 +246,17 @@ export class DrawState {
       .get("strokes")
       .filter((s) => !deletedAll.has(s.uid))
       .toArray();
-    const position = mergedRecord
-      .get("position")
-      .map((set) => (!set ? set : set.toArray()))
-      .toArray();
-    return { strokes, position };
+    return { strokes };
   }
 
   static loadFromFlat(
-    { strokes, position }: FlatState,
+    { strokes }: FlatState,
     width: number,
     height: number
   ): DrawState {
     return new DrawState(
       defaultFactory()
-        .set("strokes", List(strokes))
-        .set("position", List(position?.map((arr) => (!arr ? arr : Set(arr))))),
+        .set("strokes", List(strokes)),
       width,
       height
     );
@@ -334,37 +271,4 @@ function mergeUndo(drawStateRecord: DrawStateRecord) {
     .update("uidStack", (s) => s.filter((uid) => !undo.has(uid)));
 }
 
-function updatePosition(
-  position: List<Set<string>>,
-  { data }: ImageData,
-  uid: string
-) {
-  const len = data.length;
-  for (let i = 0; i < len; i += 4) {
-    if (data[i + 3]) {
-      position = position.update(i / 4, Set(), (s) => (s ?? Set()).add(uid));
-    }
-  }
-  return position;
-}
-
-function getErasedStrokes(position: List<Set<string>>, { data }: ImageData) {
-  let erased = Set<string>();
-
-  const len = data.length;
-  for (let i = 0; i < len; i += 4) {
-    if (data[i + 3]) {
-      erased = erased.concat(position.get(i / 4) ?? Set());
-    }
-  }
-
-  return erased;
-}
-
 export type SetDrawState = Dispatch<SetStateAction<DrawState>>;
-
-export type DrawStateMethod = (
-  drawState: DrawState,
-  imageData: ImageData,
-  points: Point[]
-) => DrawState;

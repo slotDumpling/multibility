@@ -1,26 +1,25 @@
 import React, { MouseEvent, TouchEvent, useEffect, useRef } from "react";
-import { iOSTouch } from "../../lib/draw/draw";
-import { DualDrawer } from "../../lib/draw/drawer";
-import {
-  DrawState,
-  DrawStateMethod,
-  SetDrawState,
-} from "../../lib/draw/DrawState";
+import { iOSTouch, isFinger } from "../../lib/touch/touch";
+import { Drawer } from "../../lib/draw/drawer";
+import { Eraser } from "../../lib/draw/eraser";
+import { DrawState, SetDrawState } from "../../lib/draw/DrawState";
 
-export default function Drawinput({
+export default function DrawInput({
   drawState,
   setDrawState,
-  method,
   finger,
   even,
   lineWidth,
+  erasing,
+  eraser,
 }: {
   drawState: DrawState;
   setDrawState: SetDrawState;
-  method: DrawStateMethod;
   finger: boolean;
   even: boolean;
   lineWidth: number;
+  erasing: boolean;
+  eraser: Eraser;
 }) {
   const { width, height } = drawState;
   const canvasEl = useRef<HTMLCanvasElement>(null);
@@ -28,7 +27,8 @@ export default function Drawinput({
   const clientHeight = useRef(height);
 
   const isDrawing = useRef(false);
-  const drawer = useRef<DualDrawer>();
+  const drawer = useRef<Drawer>();
+  const erased = useRef<Set<string>>(new Set());
 
   useEffect(updateClientSize, []);
 
@@ -80,20 +80,14 @@ export default function Drawinput({
     clientHeight.current = getCanvasEl().clientHeight;
   }
 
-  function isFinger(e: TouchEvent<HTMLCanvasElement> | globalThis.TouchEvent) {
-    const touch = e.touches[0] as iOSTouch;
-    return touch.touchType === "direct";
-  }
-
   function handleTouchStart(e: TouchEvent<HTMLCanvasElement>) {
+    if (!finger && isFinger(e)) return;
     isDrawing.current = true;
     updateClientSize();
 
-    drawer.current = new DualDrawer(getContext(), width, height);
+    drawer.current = new Drawer(getContext());
 
     const touch = e.touches[0] as iOSTouch;
-    if (!finger && isFinger(e)) return;
-
     const pressure = (touch.force ?? 0) * lineWidth;
     const [x, y] = getPosition(touch);
     const lw = even ? lineWidth : drawer.current.computeLineWidth(pressure);
@@ -106,10 +100,9 @@ export default function Drawinput({
   function handleMouseStart(e: MouseEvent<HTMLCanvasElement>) {
     isDrawing.current = true;
     updateClientSize();
-
     const [x, y] = getPosition(e);
 
-    drawer.current = new DualDrawer(getContext(), width, height);
+    drawer.current = new Drawer(getContext());
     const newP = { x, y, lineWidth };
     drawer.current.drawBegin(newP);
   }
@@ -118,16 +111,18 @@ export default function Drawinput({
     if (!isDrawing.current || !drawer.current) return;
 
     const touch = e.touches[0] as iOSTouch;
-    if (!finger && touch.touchType === "direct") {
-      return;
-    }
+    if (!finger && isFinger(e)) return;
     const pressure = (touch.force ?? 0) * lineWidth;
     const [x, y] = getPosition(touch);
 
     const lw = even ? lineWidth : drawer.current.computeLineWidth(pressure);
 
     const newP = { x, y, lineWidth: lw };
-    drawer.current.drawCurve(newP);
+    drawer.current.drawCurve(newP, erasing ? "#ccc" : undefined);
+    if (!erasing) return;
+    eraser?.checkWithIntrpl([x, y]).forEach((uid) => {
+      erased.current.add(uid);
+    });
   }
 
   function handleMouseMove(e: MouseEvent<HTMLCanvasElement>) {
@@ -135,7 +130,11 @@ export default function Drawinput({
 
     const [x, y] = getPosition(e);
     const newP = { x, y, lineWidth };
-    drawer.current.drawCurve(newP);
+    drawer.current.drawCurve(newP, erasing ? "#ccc" : undefined);
+    if (!erasing) return;
+    eraser?.checkWithIntrpl([x, y]).forEach((uid) => {
+      erased.current.add(uid);
+    });
   }
 
   function handleEnd() {
@@ -143,16 +142,22 @@ export default function Drawinput({
     if (!isDrawing.current || !d) return;
     isDrawing.current = false;
 
-    const points = d.points;
-    if (points.length < 2) return;
-
-    const updateInput = () => {
-      setDrawState((prev) => method(prev, d.getMirrorImageData(), points));
-    };
+    const updateDrawState = erasing
+      ? () => {
+          setDrawState((prev) =>
+            DrawState.eraseStrokes(prev, Array.from(erased.current))
+          );
+          erased.current.clear();
+        }
+      : () => {
+          const points = d.points;
+          if (points.length < 3) return;
+          setDrawState((prev) => DrawState.addStroke(prev, points));
+        };
 
     requestAnimationFrame(() => {
-      requestAnimationFrame(updateInput);
-    });
+      requestAnimationFrame(updateDrawState);
+    })
   }
 
   return (

@@ -3,6 +3,7 @@ import * as pdfjs from "pdfjs-dist/legacy/build/pdf";
 import pdfjsWorker from "pdfjs-dist/legacy/build/pdf.worker.entry";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import { v4 as getUid } from "uuid";
+import { createVirtualCanvas } from "../draw/drawer";
 import { Note, NotePage } from "./note";
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -21,31 +22,27 @@ async function getPageImage(
   const viewport = page.getViewport({ scale });
   console.log(viewport);
 
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-  if (!context) {
-    throw new Error("can't get virtual canvas context");
-  }
-
   const { height, width } = viewport;
   const ratio = height / width;
-  canvas.width = Math.floor(width * scale);
-  canvas.height = Math.floor(height * scale);
+  const { canvas, context } = createVirtualCanvas(
+    Math.floor(width * scale),
+    Math.floor(height * scale)
+  );
 
-  console.time('render')
+  console.time("render");
   await page.render({
     canvasContext: context,
     viewport: viewport,
     transform: [scale, 0, 0, scale, 0, 0],
   }).promise;
-  console.timeEnd('render')
+  console.timeEnd("render");
 
-  console.time('img')
+  console.time("img");
   const blob = await getCanvasBlob(canvas);
   if (!blob) {
     throw new Error("can't get canvas image blob");
   }
-  console.timeEnd('img')
+  console.timeEnd("img");
   return [blob, ratio];
 }
 
@@ -63,7 +60,7 @@ export async function getImages(
     const [blob, ratio] = await getPageImage(pdf, i, scale);
     blobs.push(blob);
     ratios.push(ratio);
-    if (progressCb) progressCb(Math.floor(i / numPages * 100));
+    if (progressCb) progressCb(Math.floor((i / numPages) * 100));
   }
 
   const [thumbnail] = await getPageImage(pdf, 1, 0.5);
@@ -88,7 +85,6 @@ export async function LoadPDF(
       ratio: ratios[idx],
       state: {
         strokes: [],
-        position: [],
       },
     };
   });

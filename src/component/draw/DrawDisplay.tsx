@@ -28,7 +28,7 @@ export default React.memo(({ drawState }: { drawState: DrawState }) => {
 
     drawState.getValidStrokes().forEach((stroke) => {
       if (!context.current) return;
-      drawPoints(context.current, stroke.points, "black", width, height);
+      drawPoints(context.current, stroke.points, "black");
     });
   });
 

@@ -171,7 +171,6 @@ export async function saveTeamNote(
       team: true,
       pages,
     };
-    console.log(note);
     createNewNote(note);
   }
 }

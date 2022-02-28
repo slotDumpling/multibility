@@ -21,8 +21,8 @@ import DrawDisplay from "../draw/DrawDisplay";
 import { putNote, updatePages } from "../../lib/network/http";
 import dafaultImg from "../ui/default.png";
 import DrawTools from "./DrawTools";
-import { useBeforeunload } from 'react-beforeunload';
-
+import { useBeforeunload } from "react-beforeunload";
+import { LoadingOutlined } from "@ant-design/icons";
 export const WIDTH = 2000;
 
 const defaultDrawCtrl: DrawCtrl = {
@@ -79,7 +79,7 @@ export default function Reader({
     debounce(async (pr: Record<string, NotePage>) => {
       await editNoteData(noteId, { pages: pr });
       setSaved(true);
-    }, 2000),
+    }, 1000),
     []
   );
   const instantSave = debouncedSave.flush;
@@ -173,6 +173,7 @@ export default function Reader({
                 />
               );
             })}
+            <LoadingOutlined className="page-loading" />
           </div>
         </ReaderMethodCtx.Provider>
       </ReaderStateCtx.Provider>
