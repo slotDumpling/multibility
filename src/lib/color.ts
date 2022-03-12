@@ -1,7 +1,8 @@
 export const colors = [
+  "#000000",
+  "#9ca3af",
   "#64748b",
   "#78716c",
-  "#ef4444",
   "#f97316",
   "#eab308",
   "#84cc16",
@@ -17,6 +18,7 @@ export const colors = [
   "#d946ef",
   "#ec4899",
   "#f43f5e",
+  "#ef4444",
 ];
 
 export const getRandomColor = () => {

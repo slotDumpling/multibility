@@ -48,7 +48,7 @@ export default function MainMenu() {
       return {
         uid: "",
         name: "All Notes",
-        color: "#000",
+        color: "#000000",
         notes: Object.keys(allNotes),
       };
     } else {

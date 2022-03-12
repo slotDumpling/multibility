@@ -11,8 +11,8 @@ export default function LeftTools() {
   }
 
   return (
-    <div id="left-tools">
-      <Button onClick={swichEditing} type={editing ? "primary" : "text"}>
+    <div className="left-tools">
+      <Button onClick={swichEditing} type={editing ? "primary" : "text"} block>
         {editing ? "Done" : "Edit"}
       </Button>
     </div>

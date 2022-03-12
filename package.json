@@ -16,6 +16,7 @@
     "immutable": "^4.0.0",
     "localforage": "^1.10.0",
     "lodash": "^4.17.21",
+    "paper": "^0.12.15",
     "pdfjs-dist": "^2.10.377",
     "react": "^17.0.2",
     "react-beforeunload": "^2.5.2",

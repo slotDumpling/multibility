@@ -13,24 +13,23 @@ import { useParams, useNavigate } from "react-router-dom";
 import Draw, { DrawCtrl } from "../draw/Draw";
 import { DrawState } from "../../lib/draw/DrawState";
 import { Note, NotePage } from "../../lib/note/note";
-import "./reader.sass";
 import { SetOperation, StateSet } from "../../lib/draw/StateSet";
 import { loadNote, editNoteData } from "../../lib/note/archive";
 import { debounce } from "lodash";
-import DrawDisplay from "../draw/DrawDisplay";
 import { putNote, updatePages } from "../../lib/network/http";
-import dafaultImg from "../ui/default.png";
-import DrawTools from "./DrawTools";
 import { useBeforeunload } from "react-beforeunload";
 import { LoadingOutlined } from "@ant-design/icons";
+import DrawTools from "./DrawTools";
+import dafaultImg from "../ui/default.png";
+import "./reader.sass";
 export const WIDTH = 2000;
 
 const defaultDrawCtrl: DrawCtrl = {
   erasing: false,
   finger: false,
   even: true,
-  lineWidth: 5,
-  color: "#000",
+  lineWidth: 10,
+  color: "#000000",
 };
 export const DrawCtrlCtx = createContext(defaultDrawCtrl);
 export const ReaderStateCtx = createContext({
@@ -117,6 +116,7 @@ export default function Reader({
 
   useEffect(() => {
     if (!stateSet?.lastOp || !pushOperation) return;
+    console.log(stateSet.lastOp)
     pushOperation(stateSet.lastOp);
   }, [stateSet]);
 
@@ -215,7 +215,7 @@ const PageWrapper = React.memo(
           onLoad={() => setLoaded(true)}
         />
         <div className="page-draw">
-          {teamState && <DrawDisplay drawState={teamState} />}
+          {teamState && <Draw drawState={teamState} />}
           <DrawWrapper
             updateState={updateState}
             drawState={drawState}
@@ -236,7 +236,7 @@ const DrawWrapper = ({
   uid: string;
   updateState: (uid: string, ds: DrawState) => void;
 }) => {
-  const drawCtrl = useContext(DrawCtrlCtx);
+  const { erasing, lineWidth, color, finger } = useContext(DrawCtrlCtx);
 
   function handleChange(fn: ((s: DrawState) => DrawState) | DrawState) {
     let ds = fn instanceof DrawState ? fn : fn(drawState);
@@ -247,8 +247,10 @@ const DrawWrapper = ({
     <Draw
       drawState={drawState}
       onChange={handleChange}
-      erasing={drawCtrl.erasing}
-      lineWidth={drawCtrl.lineWidth}
+      erasing={erasing}
+      lineWidth={lineWidth}
+      color={color}
+      finger={finger}
     />
   );
 };

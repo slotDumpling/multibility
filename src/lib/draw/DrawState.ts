@@ -1,11 +1,13 @@
 import { List, OrderedSet, Record, Set } from "immutable";
 import { Dispatch, SetStateAction } from "react";
-import { Point } from "./draw";
+// import { Point } from "./draw";
 import { v4 as getUid } from "uuid";
 
 export interface Stroke {
   uid: string;
-  points: Point[];
+  color: string;
+  lineWidth: number;
+  pathData: string;
 }
 
 interface Erase {
@@ -167,11 +169,14 @@ export class DrawState {
     );
   }
 
-  static addStroke(drawState: DrawState, points: Point[]) {
+  static addStroke(drawState: DrawState, pathData: string, lineWidth: number, color: string) {
     const uid = getUid();
-    const stroke = { uid, points };
-    const undo = drawState.getUndoStack();
+    const stroke: Stroke = { uid, pathData, color, lineWidth };
+    return DrawState.pushStroke(drawState, stroke);
+  }
 
+  static pushStroke(drawState: DrawState, stroke: Stroke) {
+    const undo = drawState.getUndoStack();
     const pushedState = mergeUndo(
       drawState
         .getImmutable()
@@ -179,7 +184,7 @@ export class DrawState {
         .update("deleted", (d) => d.concat(undo))
         .set("undoStack", OrderedSet())
         .update("strokes", (s) => s.push(stroke))
-        .update("uidStack", (s) => s.push(uid))
+        .update("uidStack", (s) => s.push(stroke.uid))
     );
 
     const lastOp: Operation = { type: "add", stroke };
@@ -188,34 +193,30 @@ export class DrawState {
       pushedState,
       drawState.width,
       drawState.height,
-      lastOp
-    );
-  }
-
-  static pushStroke(drawState: DrawState, stroke: Stroke) {
-    return new DrawState(
-      drawState.getImmutable().update("strokes", (s) => s.push(stroke)),
-      drawState.width,
-      drawState.height
-    );
-  }
-
-  static pushErase(drawState: DrawState, erase: Erase) {
-    const { uid, erased } = erase;
-    const immuErase: ImmuErase = { uid, erased: Set(erased) };
-    return new DrawState(
-      drawState
-        .getImmutable()
-        .update("eraseStack", (s) => s.push(immuErase))
-        .update("uidStack", (s) => s.push(uid)),
-      drawState.width,
-      drawState.height
+      lastOp,
     );
   }
 
   static eraseStrokes(drawState: DrawState, erased: string[]) {
     const erase = { uid: getUid(), erased };
     return DrawState.pushErase(drawState, erase);
+  }
+
+  static pushErase(drawState: DrawState, erase: Erase) {
+    const { uid, erased } = erase;
+    const immuErase: ImmuErase = { uid, erased: Set(erased) };
+
+    const lastOp: Operation = { type: 'erase', erase };
+
+    return new DrawState(
+      drawState
+        .getImmutable()
+        .update("eraseStack", (s) => s.push(immuErase))
+        .update("uidStack", (s) => s.push(uid)),
+      drawState.width,
+      drawState.height,
+      lastOp,
+    );
   }
 
   static pushUndo(drawState: DrawState, undoUid: string) {
@@ -255,8 +256,7 @@ export class DrawState {
     height: number
   ): DrawState {
     return new DrawState(
-      defaultFactory()
-        .set("strokes", List(strokes)),
+      defaultFactory().set("strokes", List(strokes)),
       width,
       height
     );

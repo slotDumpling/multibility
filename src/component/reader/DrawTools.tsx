@@ -15,10 +15,10 @@ import {
 import "./drawTools.sass";
 import { TeamStateCtx } from "./Team";
 import DigitDisplay from "../ui/DigitDisplay";
-import { getRandomColor } from "../../lib/color";
+import { colors, getRandomColor } from "../../lib/color";
 import { UserInfo } from "../../lib/user";
 const IconFont = createFromIconfontCN({
-  scriptUrl: "//at.alicdn.com/t/font_3181679_ofhwjwfs5hb.js",
+  scriptUrl: "//at.alicdn.com/t/font_3181679_dsms7mr75hd.js",
 });
 
 export default function DrawTools({
@@ -32,45 +32,13 @@ export default function DrawTools({
   handleRedo: () => void;
   instantSave: () => void;
 }) {
-  const drawCtrl = useContext(DrawCtrlCtx);
+  const { erasing, finger } = useContext(DrawCtrlCtx);
   const { saved, stateSet, teamOn } = useContext(ReaderStateCtx);
   const nav = useNavigate();
 
   const updateDrawCtrl = (updated: Partial<DrawCtrl>) => {
     setDrawCtrl((prev) => ({ ...prev, ...updated }));
   };
-
-  const PenPanel = (
-    <div className="pen-panel">
-      <Slider
-        min={1}
-        max={20}
-        value={drawCtrl.lineWidth}
-        onChange={(lineWidth) => updateDrawCtrl({ lineWidth })}
-      />
-    </div>
-  );
-
-  const PenButton = () =>
-    drawCtrl.erasing ? (
-      <Button
-        type="text"
-        shape="circle"
-        onClick={() => updateDrawCtrl({ erasing: false })}
-        icon={<HighlightOutlined />}
-      />
-    ) : (
-      <Popover
-        content={PenPanel}
-        trigger="click"
-        placement="bottom"
-        getPopupContainer={(e) => {
-          return e.parentElement?.parentElement || e;
-        }}
-      >
-        <Button type="default" shape="circle" icon={<HighlightOutlined />} />
-      </Popover>
-    );
 
   return (
     <div className="tool-bar">
@@ -99,12 +67,19 @@ export default function DrawTools({
           onClick={handleRedo}
           disabled={!stateSet?.isRedoable()}
         />
-        <PenButton />
+        <PenButton erasing={erasing} updateDrawCtrl={updateDrawCtrl} />
         <Button
-          type={drawCtrl.erasing ? "default" : "text"}
+          type={erasing ? "default" : "text"}
           shape="circle"
           onClick={() => updateDrawCtrl({ erasing: true })}
           icon={<IconFont type="icon-eraser" />}
+        />
+        <Button
+          type={finger ? "primary" : "text"}
+          ghost={finger}
+          shape="circle"
+          onClick={() => updateDrawCtrl({ finger: !finger })}
+          icon={<IconFont type="icon-finger" />}
         />
       </div>
       <div className="right-buttons">
@@ -114,6 +89,79 @@ export default function DrawTools({
     </div>
   );
 }
+
+const PenButton = React.memo(
+  ({
+    erasing,
+    updateDrawCtrl,
+  }: {
+    erasing: boolean;
+    updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
+  }) => {
+    return erasing ? (
+      <Button
+        type="text"
+        shape="circle"
+        onClick={() => updateDrawCtrl({ erasing: false })}
+        icon={<HighlightOutlined />}
+      />
+    ) : (
+      <Popover
+        content={<PenPanel updateDrawCtrl={updateDrawCtrl} />}
+        trigger="click"
+        placement="bottom"
+        getPopupContainer={(e) => {
+          return e.parentElement?.parentElement || e;
+        }}
+      >
+        <Button type="default" shape="circle" icon={<HighlightOutlined />} />
+      </Popover>
+    );
+  }
+);
+
+const PenPanel = ({
+  updateDrawCtrl,
+}: {
+  updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
+}) => {
+  const { lineWidth } = useContext(DrawCtrlCtx);
+
+  return (
+    <div className="pen-panel">
+      <Slider
+        min={5}
+        max={50}
+        value={lineWidth}
+        onChange={(lineWidth) => updateDrawCtrl({ lineWidth })}
+      />
+      <ColorSelect updateDrawCtrl={updateDrawCtrl} />
+    </div>
+  );
+};
+
+const ColorSelect = ({
+  updateDrawCtrl,
+}: {
+  updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
+}) => {
+  const { color } = useContext(DrawCtrlCtx);
+
+  return (
+    <div className="color-select">
+      {colors.map((c) => (
+        <input
+          key={c}
+          checked={color === c}
+          type="radio"
+          name="color"
+          onChange={() => updateDrawCtrl({ color: c })}
+          style={{ borderColor: c, backgroundColor: c }}
+        />
+      ))}
+    </div>
+  );
+};
 
 const UserCard = ({ userInfo }: { userInfo: UserInfo }) => {
   const { userName } = userInfo;

@@ -9,11 +9,31 @@
   display: flex
   align-items: center
   justify-content: space-between
-  .redo-button
-    margin-right: 2em
+  .middle-buttons
+    button
+      &:not(:last-of-type)
+        margin-right: 5px
+      &.redo-button
+        margin-right: 20px
 
 .pen-panel
   width: 200px
+  .color-select
+    display: grid
+    grid-template-columns: repeat(4, 1fr)
+    justify-items: center
+    grid-auto-rows: 40px
+    align-items: center
+    input[type="radio"]
+      appearance: none
+      width: 30px
+      height: 30px
+      border-radius: 15px
+      border: 15px solid
+      transition: all 0.2s
+      &:checked
+        border: 6px solid
+        background-color: white !important
 
 .team-popover
   width: 100%
