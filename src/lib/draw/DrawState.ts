@@ -1,6 +1,5 @@
 import { List, OrderedSet, Record, Set } from "immutable";
 import { Dispatch, SetStateAction } from "react";
-// import { Point } from "./draw";
 import { v4 as getUid } from "uuid";
 
 export interface Stroke {

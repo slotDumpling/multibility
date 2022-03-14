@@ -20,7 +20,7 @@ async function getPageImage(
 ): Promise<[Blob, number]> {
   const page = await pdf.getPage(pageNum);
   const viewport = page.getViewport({ scale });
-  console.log(viewport);
+  console.log({viewport});
 
   const { height, width } = viewport;
   const ratio = height / width;
@@ -29,20 +29,17 @@ async function getPageImage(
     Math.floor(height * scale)
   );
 
-  console.time("render");
   await page.render({
     canvasContext: context,
     viewport: viewport,
     transform: [scale, 0, 0, scale, 0, 0],
   }).promise;
-  console.timeEnd("render");
 
-  console.time("img");
   const blob = await getCanvasBlob(canvas);
   if (!blob) {
     throw new Error("can't get canvas image blob");
   }
-  console.timeEnd("img");
+  
   return [blob, ratio];
 }
 
@@ -63,13 +60,24 @@ export async function getImages(
     if (progressCb) progressCb(Math.floor((i / numPages) * 100));
   }
 
-  const [thumbnail] = await getPageImage(pdf, 1, 0.5);
-
   return {
     images: blobs,
     ratios,
-    thumbnail,
   };
+}
+
+export async function getOneImage(
+  url: string,
+  index: number,
+  scale = 2,
+) {
+  const pdf = await pdfjs.getDocument(url).promise;
+  const { numPages } = pdf;
+  if (index > numPages) {
+    throw new Error('index out of range');
+  }
+  const [blob] = await getPageImage(pdf, index + 1, scale);
+  return blob;
 }
 
 export async function LoadPDF(
@@ -77,7 +85,8 @@ export async function LoadPDF(
   progressCb?: (percent: number) => void
 ): Promise<Note> {
   const url = URL.createObjectURL(file);
-  const { images, ratios, thumbnail } = await getImages(url, 2, progressCb);
+  const { images, ratios } = await getImages(url, 0.5, progressCb);
+  URL.revokeObjectURL(url);
   const pages: Record<string, NotePage> = {};
   images.forEach((image, idx) => {
     pages[getUid()] = {
@@ -96,7 +105,14 @@ export async function LoadPDF(
     team: false,
     withImg: true,
     pdf: file,
-    thumbnail,
+    thumbnail: images[0],
     pages,
   };
+}
+
+export async function loadPDFImages(file: File) {
+  const url = URL.createObjectURL(file);
+  const { images } = await getImages(url, 0.5);
+  URL.revokeObjectURL(url);
+  return images;
 }

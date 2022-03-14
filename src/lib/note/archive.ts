@@ -157,20 +157,21 @@ export async function convertTeamPage(teamPages: Record<string, TeamPage>) {
 export async function saveTeamNote(
   noteId: string,
   noteInfo: { name: string; uid: string; withImg: boolean },
-  teamPages: Record<string, Omit<NotePage, "state">>
+  teamPages: Record<string, Omit<NotePage, "state">>,
+  pdf?: File
 ) {
   let note = await loadNote(noteId);
-  if (!note) {
-    const pages: Record<string, NotePage> = {};
-    for (let [key, page] of Object.entries(teamPages)) {
-      pages[key] = { ...page, state: defaultFlatState };
-    }
-    note = {
-      ...noteInfo,
-      tagId: "DEFAULT",
-      team: true,
-      pages,
-    };
-    createNewNote(note);
+  if (note) return;
+  const pages: Record<string, NotePage> = {};
+  for (let [key, page] of Object.entries(teamPages)) {
+    pages[key] = { ...page, state: defaultFlatState };
   }
+  note = {
+    ...noteInfo,
+    tagId: "DEFAULT",
+    team: true,
+    pages,
+    pdf,
+  };
+  createNewNote(note);
 }

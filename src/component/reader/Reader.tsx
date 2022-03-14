@@ -21,7 +21,10 @@ import { useBeforeunload } from "react-beforeunload";
 import { LoadingOutlined } from "@ant-design/icons";
 import DrawTools from "./DrawTools";
 import dafaultImg from "../ui/default.png";
+import { getOneImage } from "../../lib/note/pdfImage";
 import "./reader.sass";
+import { useInView } from "react-intersection-observer";
+
 export const WIDTH = 2000;
 
 const defaultDrawCtrl: DrawCtrl = {
@@ -55,11 +58,12 @@ export default function Reader({
   const noteId = useParams().noteId ?? "";
   const nav = useNavigate();
 
-  const [pageRecord, setPageRecord] = useState<Record<string, NotePage>>();
+  const [pageRec, setPageRec] = useState<Record<string, NotePage>>();
   const [note, setNote] = useState<Note>();
   const [stateSet, setStateSet] = useState<StateSet>();
   const [drawCtrl, setDrawCtrl] = useState(defaultDrawCtrl);
   const [saved, setSaved] = useState(true);
+  const [pdfUrl, setPdfUrl] = useState<string>();
 
   const loadNotePages = async () => {
     const storedNote = await loadNote(noteId);
@@ -67,8 +71,9 @@ export default function Reader({
       message.error("Note not found");
       return nav("/");
     }
-    const { pages } = storedNote;
-    setPageRecord(pages);
+    const { pages, pdf } = storedNote;
+    setPageRec(pages);
+    if (pdf) setPdfUrl(URL.createObjectURL(pdf));
     setNote(storedNote);
     setStateSet(StateSet.createFromPages(pages, WIDTH));
     if (teamOn) updatePages(noteId, pages);
@@ -84,8 +89,8 @@ export default function Reader({
   const instantSave = debouncedSave.flush;
 
   const createRoom = async () => {
-    if (!note || !pageRecord) return;
-    const resCode = await putNote(noteId, note, pageRecord);
+    if (!note || !pageRec) return;
+    const resCode = await putNote(noteId, note, pageRec);
     if (!resCode) {
       message.error("Can't create room.");
       return;
@@ -116,19 +121,18 @@ export default function Reader({
 
   useEffect(() => {
     if (!stateSet?.lastOp || !pushOperation) return;
-    console.log(stateSet.lastOp)
     pushOperation(stateSet.lastOp);
   }, [stateSet]);
 
   useEffect(() => {
-    if (!pageRecord) return;
-    debouncedSave(pageRecord);
+    if (!pageRec) return;
+    debouncedSave(pageRec);
     setSaved(false);
-  }, [pageRecord]);
+  }, [pageRec]);
 
   const setPageState = useCallback((uid: string, ds: DrawState) => {
     setStateSet((prev) => prev?.setState(uid, ds));
-    setPageRecord((prev) => {
+    setPageRec((prev) => {
       if (!prev) return;
       return {
         ...prev,
@@ -145,36 +149,42 @@ export default function Reader({
     setStateSet((prev) => prev?.redo());
   };
 
+  const renderResult = (
+    <div className="reader-container">
+      <DrawTools
+        setDrawCtrl={setDrawCtrl}
+        instantSave={instantSave}
+        handleUndo={handleUndo}
+        handleRedo={handleRedo}
+      />
+      {stateSet?.getKeys().map((uid, index) => {
+        if (!pageRec) return <></>;
+        const page = pageRec[uid];
+        const drawState = stateSet.getOneState(uid);
+        const teamState = teamStateSet?.getOneState(uid);
+        if (!page || !drawState) return <></>;
+        return (
+          <PageWrapper
+            drawState={drawState}
+            teamState={teamState}
+            updateState={setPageState}
+            imageBlob={page.image}
+            pdfUrl={pdfUrl}
+            index={index}
+            uid={uid}
+            key={uid}
+          />
+        );
+      })}
+      <LoadingOutlined className="page-loading" />
+    </div>
+  );
+
   return (
     <DrawCtrlCtx.Provider value={drawCtrl}>
       <ReaderStateCtx.Provider value={{ noteId, stateSet, saved, teamOn }}>
         <ReaderMethodCtx.Provider value={{ setSaved, createRoom }}>
-          <div className="reader-container">
-            <DrawTools
-              setDrawCtrl={setDrawCtrl}
-              instantSave={instantSave}
-              handleUndo={handleUndo}
-              handleRedo={handleRedo}
-            />
-            {stateSet?.getKeys().map((uid) => {
-              if (!pageRecord) return <></>;
-              const page = pageRecord[uid];
-              const drawState = stateSet.getOneState(uid);
-              const teamState = teamStateSet?.getOneState(uid);
-              if (!page || !drawState) return <></>;
-              return (
-                <PageWrapper
-                  drawState={drawState}
-                  teamState={teamState}
-                  updateState={setPageState}
-                  imageBlob={page.image}
-                  uid={uid}
-                  key={uid}
-                />
-              );
-            })}
-            <LoadingOutlined className="page-loading" />
-          </div>
+          {renderResult}
         </ReaderMethodCtx.Provider>
       </ReaderStateCtx.Provider>
     </DrawCtrlCtx.Provider>
@@ -186,42 +196,74 @@ const PageWrapper = React.memo(
     imageBlob,
     drawState,
     teamState,
+    pdfUrl,
+    index,
     uid,
     updateState,
   }: {
     imageBlob?: Blob;
     drawState: DrawState;
     teamState: DrawState | undefined;
+    pdfUrl?: string;
+    index: number;
     uid: string;
     updateState: (uid: string, ds: DrawState) => void;
   }) => {
     const [loaded, setLoaded] = useState(false);
+    const [realImage, setRealImage] = useState<Blob>();
 
-    const url = useMemo(
+    const [lazyImg, inView] = useInView({
+      delay: 100,
+    });
+
+    const thumbnailUrl = useMemo(
       () => (imageBlob ? URL.createObjectURL(imageBlob) : null),
       [imageBlob]
     );
 
     useEffect(() => {
-      const prevUrl = url || "";
+      const prevUrl = thumbnailUrl || "";
       return () => URL.revokeObjectURL(prevUrl);
-    }, [url]);
+    }, [thumbnailUrl]);
+
+    const imgUrl = useMemo(
+      () => (realImage ? URL.createObjectURL(realImage) : null),
+      [realImage]
+    );
+
+    useEffect(() => {
+      const prevUrl = imgUrl || "";
+      return () => URL.revokeObjectURL(prevUrl);
+    }, [imgUrl]);
+
+    const loadImage = async () => {
+      if (!pdfUrl || realImage) return;
+      setRealImage(await getOneImage(pdfUrl, index));
+    };
+
+    useEffect(() => {
+      if (inView) loadImage();
+    }, [inView]);
 
     return (
       <div className={`pdf-page ${loaded ? "loaded" : ""}`}>
         <img
-          src={url || dafaultImg}
+          ref={lazyImg}
+          className={imgUrl ? undefined : "thumbnail"}
+          src={imgUrl || thumbnailUrl || dafaultImg}
           alt="pdf-page"
           onLoad={() => setLoaded(true)}
         />
-        <div className="page-draw">
-          {teamState && <Draw drawState={teamState} />}
-          <DrawWrapper
-            updateState={updateState}
-            drawState={drawState}
-            uid={uid}
-          />
-        </div>
+        {inView && (
+          <div className="page-draw">
+            {teamState && <Draw drawState={teamState} />}
+            <DrawWrapper
+              updateState={updateState}
+              drawState={drawState}
+              uid={uid}
+            />
+          </div>
+        )}
       </div>
     );
   }

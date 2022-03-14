@@ -6,8 +6,11 @@
   flex-direction: column
   .pdf-page
     position: relative
+    overflow: hidden
     img
       width: 100%
+      &.thumbnail
+        filter: blur(10px)
     .page-draw
       position: absolute
       top: 0
