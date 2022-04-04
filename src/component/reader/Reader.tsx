@@ -13,11 +13,7 @@ import React, {
 import { useParams, useNavigate } from "react-router-dom";
 import Draw, { DrawCtrl } from "../draw/Draw";
 import { DrawState } from "../../lib/draw/DrawState";
-import {
-  createPage,
-  NoteInfo,
-  NotePage,
-} from "../../lib/note/note";
+import { createPage, NoteInfo, NotePage } from "../../lib/note/note";
 import { StateSet } from "../../lib/draw/StateSet";
 import { loadNote, editNoteData } from "../../lib/note/archive";
 import { debounce, last, omit } from "lodash";
@@ -161,10 +157,9 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
       await editNoteData(noteId, { pageOrder });
       await instantSave();
       const teamOrder = teamUpdate?.pageOrder;
-      if (JSON.stringify(pageOrder) === JSON.stringify(teamOrder)) {
-        return;
+      if (teamOn && JSON.stringify(pageOrder) !== JSON.stringify(teamOrder)) {
+        updatePages(noteId);
       }
-      teamOn && updatePages(noteId);
     };
     handleReorder();
   }, [pageOrder]);

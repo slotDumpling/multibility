@@ -4,8 +4,8 @@ import { convertTeamPage, loadNote, saveTeamNote, updateTeamNote } from "../note
 import { getUserId } from "../user";
 import { loadPDFImages } from "../note/pdfImage";
 
-// export const BASE_URL = "https://api.slotdumpling.top/paint";
-export const BASE_URL = "http://100.81.113.84:8090/paint";
+export const BASE_URL = "https://api.slotdumpling.top/paint";
+// export const BASE_URL = "http://100.81.113.84:8090/paint";
 axios.defaults.baseURL = BASE_URL;
 axios.interceptors.request.use((config) => {
   console.log(config.method, config.url);

@@ -104,7 +104,6 @@ export default function Team() {
     ws.on(
       "newPage",
       ({
-        userId,
         pageId,
         newPage,
         pageOrder,
@@ -121,7 +120,7 @@ export default function Team() {
           pageId,
           newPage: newNotePage,
         });
-        setTeamStateSet(prev => prev?.addState(pageId, newNotePage, WIDTH));
+        setTeamStateSet((prev) => prev?.addState(pageId, newNotePage, WIDTH));
       }
     );
 
@@ -149,10 +148,10 @@ export default function Team() {
   const updateNewPage = (
     pageOrder: string[],
     pageId: string,
-    newPage: NotePage,
+    newPage: NotePage
   ) => {
-    setTeamStateSet(prev => prev?.addState(pageId, newPage, WIDTH));
-    const { image, state, marked, ...newTeamPage} = newPage;
+    setTeamStateSet((prev) => prev?.addState(pageId, newPage, WIDTH));
+    const { image, state, marked, ...newTeamPage } = newPage;
     ws.emit("newPage", { pageOrder, pageId, newPage: newTeamPage });
   };
 
