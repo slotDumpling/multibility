@@ -1,9 +1,16 @@
 import localforage from "localforage";
-import { NoteInfo, Note, NotePage, TeamPage } from "./note";
+import {
+  NoteInfo,
+  Note,
+  NotePage,
+  TeamPageState,
+  TeamNoteInfo,
+} from "./note";
 import { v4 as getUid } from "uuid";
-import { defaultFlatState } from "../draw/DrawState";
+import { getDefaultFlatState } from "../draw/DrawState";
 import { getUserId } from "../user";
 import { getRandomColor } from "../color";
+import { getOneImageFromFile } from "./pdfImage";
 
 export interface NoteTag {
   uid: string;
@@ -71,14 +78,16 @@ export async function loadNote(uid: string) {
   return (await localforage.getItem(uid)) as Note | undefined;
 }
 
-export async function editNoteData(uid: string, note: Partial<Note>) {
+export async function editNoteData(uid: string, noteDate: Partial<Note>) {
+  console.log("edit note data", noteDate);
   const allNotes = await getAllNotes();
-  const { pages, pdf, ...noteInfo } = note;
+  const { pageRec, pdf, ...noteInfo } = noteDate;
   allNotes[uid] = { ...allNotes[uid], ...noteInfo };
+
   await localforage.setItem("ALL_NOTES", allNotes);
   const prevNote = await loadNote(uid);
   if (!prevNote) return;
-  await localforage.setItem(uid, { ...prevNote, ...note });
+  await localforage.setItem(uid, { ...prevNote, ...noteDate });
 }
 
 export async function saveNoteInfo(noteInfo: NoteInfo) {
@@ -96,7 +105,7 @@ export async function saveNoteInfo(noteInfo: NoteInfo) {
 
 export async function createNewNote(note: Note) {
   await localforage.setItem(note.uid, note);
-  const { pdf, pages, ...noteInfo } = note;
+  const { pdf, pageRec, ...noteInfo } = note;
   return await saveNoteInfo(noteInfo);
 }
 
@@ -106,7 +115,7 @@ export async function deleteNote(uid: string) {
   const tags = await getAllTags();
   if (!note) return { tags, allNotes };
   await localforage.removeItem(uid);
-  const { pdf, pages, ...noteInfo } = note;
+  const { pdf, pageRec, ...noteInfo } = note;
   delete allNotes[uid];
   await localforage.setItem("ALL_NOTES", allNotes);
 
@@ -139,10 +148,17 @@ export async function moveNoteTag(noteId: string, tagId: string) {
   return { tags, allNotes };
 }
 
-export async function convertTeamPage(teamPages: Record<string, TeamPage>) {
+export async function convertTeamPage(
+  noteId: string,
+  teamPages: Record<string, TeamPageState>
+) {
+  const pageRec = (await loadNote(noteId))?.pageRec;
+  if (!pageRec) return;
   const notePages: Record<string, NotePage> = {};
   for (let [key, page] of Object.entries(teamPages)) {
-    const { ratio, states } = page;
+    const { states } = page;
+    const { ratio } = pageRec[key];
+    if (!ratio) continue;
     delete states[getUserId()];
     notePages[key] = {
       ratio,
@@ -156,22 +172,50 @@ export async function convertTeamPage(teamPages: Record<string, TeamPage>) {
 
 export async function saveTeamNote(
   noteId: string,
-  noteInfo: { name: string; uid: string; withImg: boolean },
-  teamPages: Record<string, Omit<NotePage, "state">>,
+  noteInfo: TeamNoteInfo,
+  teamPages: Record<string, NotePage>,
   pdf?: File
 ) {
   let note = await loadNote(noteId);
   if (note) return;
-  const pages: Record<string, NotePage> = {};
-  for (let [key, page] of Object.entries(teamPages)) {
-    pages[key] = { ...page, state: defaultFlatState };
+  for (let page of Object.values(teamPages)) {
+    page.state = getDefaultFlatState();
   }
   note = {
     ...noteInfo,
     tagId: "DEFAULT",
     team: true,
-    pages,
+    pageRec: teamPages,
     pdf,
   };
-  createNewNote(note);
+  await createNewNote(note);
+}
+
+export async function updateTeamNote(
+  noteId: string,
+  noteInfo: TeamNoteInfo,
+  pageInfos: Record<string, NotePage>
+) {
+  let note = await loadNote(noteId);
+  if (!note) return;
+  const { pageOrder } = noteInfo;
+  if (pageOrder.length < note.pageOrder.length) return;
+  const { pageRec, pdf } = note;
+  for (let [pageId, page] of Object.entries(pageInfos)) {
+    if (!(pageId in pageRec)) {
+      const { ratio, pdfIndex } = page;
+      let image: Blob | undefined = undefined;
+      if (pdf && pdfIndex) {
+        image = await getOneImageFromFile(pdf, pdfIndex, 0.5);
+      }
+      pageRec[pageId] = {
+        ratio,
+        state: getDefaultFlatState(),
+        pdfIndex,
+        image,
+      };
+    }
+  }
+
+  await editNoteData(noteId, { pageOrder, pageRec });
 }

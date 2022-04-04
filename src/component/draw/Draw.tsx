@@ -3,7 +3,10 @@ import { DrawState, SetDrawState } from "../../lib/draw/DrawState";
 import { isStylus } from "../../lib/touch/touch";
 import { Set } from "immutable";
 import paper from "paper";
-import './draw.css'
+import "./draw.sass";
+import { releaseCanvas } from "../../lib/draw/drawer";
+
+const PREVIE_WIDTH = 200;
 
 export interface DrawCtrl {
   erasing: boolean;
@@ -11,15 +14,19 @@ export interface DrawCtrl {
   even: boolean;
   lineWidth: number;
   color: string;
+  highlight: boolean;
 }
 
-export default function Draw({
+const Draw = ({
   drawState,
   onChange = () => {},
   erasing = false,
   finger = false,
   lineWidth = 10,
   color = "#000000",
+  highlight = false,
+  readonly = false,
+  preview = false,
 }: {
   drawState: DrawState;
   onChange?: SetDrawState;
@@ -27,7 +34,10 @@ export default function Draw({
   finger?: boolean;
   lineWidth?: number;
   color?: string;
-}) {
+  highlight?: boolean;
+  readonly?: boolean;
+  preview?: boolean;
+}) => {
   const { width, height } = drawState;
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const scope = useRef(new paper.PaperScope());
@@ -35,9 +45,10 @@ export default function Draw({
   const ratio = useRef(1);
   const path = useRef<paper.Path>();
   const [erased, setErased] = useState(Set<string>());
+
   if (erasing) {
     lineWidth = 10;
-    color = "#eee";
+    color = "#aaa8";
   }
 
   const isEventValid = (e: TouchEvent<HTMLCanvasElement>) => {
@@ -55,12 +66,21 @@ export default function Draw({
     scope.current.setup(canvasEl.current);
     scope.current.view.viewSize.width = width;
     scope.current.view.viewSize.height = height;
+
+    if (preview) {
+      const r = PREVIE_WIDTH / width;
+      scope.current.view.viewSize.width *= r;
+      scope.current.view.viewSize.height *= r;
+      scope.current.view.scale(r, new paper.Point(0, 0));
+    }
   };
 
   const handleDown = () => {
     scope.current.activate();
     path.current = new scope.current.Path();
-    path.current.strokeColor = new paper.Color(color);
+    const strokeColor = new paper.Color(color);
+    if (highlight) strokeColor.alpha /= 2;
+    path.current.strokeColor = strokeColor;
     path.current.strokeWidth = lineWidth;
     path.current.strokeCap = "round";
     updateRatio();
@@ -90,12 +110,14 @@ export default function Draw({
         if (!path.current) return;
         path.current.simplify();
         const { pathData } = path.current;
+        if (!pathData) return;
         onChange((prev) =>
-          DrawState.addStroke(prev, pathData, lineWidth, color)
+          DrawState.addStroke(prev, { pathData, lineWidth, color, highlight })
         );
       };
 
   const handlePaper = () => {
+    if (readonly) return;
     scope.current.view.onMouseDown = handleDown;
     scope.current.view.onMouseDrag = handleDrag;
     scope.current.view.onMouseUp = handleUp;
@@ -107,27 +129,30 @@ export default function Draw({
 
   useEffect(() => {
     setupPaper();
+    const cvs = canvasEl.current;
+    return () => void (cvs && releaseCanvas(cvs));
   }, []);
 
-  useEffect(() => {
-    path.current?.remove()
-  }, [drawState]);
+  useEffect(handlePaper);
 
   useEffect(() => {
-    handlePaper();
-  });
+    path.current?.remove();
+  }, [drawState]);
 
   useEffect(() => {
     scope.current.activate();
     group.current = new scope.current.Group();
 
     drawState.getValidStrokes().forEach((stroke) => {
-      let { pathData, lineWidth, color, uid } = stroke;
-      if (erased.has(uid)) color += "55";
+      let { pathData, lineWidth, color, uid, highlight } = stroke;
+
       const path = new paper.Path(pathData);
       path.strokeWidth = lineWidth;
       path.strokeCap = "round";
+
       path.strokeColor = new paper.Color(color);
+      if (erased.has(uid)) path.opacity /= 2;
+      if (highlight) path.opacity /= 2;
       path.name = uid;
       group.current?.addChild(path);
     });
@@ -137,11 +162,13 @@ export default function Draw({
 
   return (
     <canvas
-      data-paper-hidpi={false}
-      className="draw-canvas"
       ref={canvasEl}
+      className="draw-canvas"
+      data-paper-hidpi={false}
       onTouchStartCapture={preventTouch}
       onTouchMoveCapture={preventTouch}
     />
   );
-}
+};
+
+export default React.memo(Draw);

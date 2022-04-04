@@ -2,16 +2,15 @@ import { Button, Input, Menu, Popconfirm, Popover, Select } from "antd";
 import { useContext, useState } from "react";
 import { deleteTag, editTag, NoteTag, storeTag } from "../../lib/note/archive";
 import { colors } from "../../lib/color";
-import { MenuStateCtx, MenuStateUpdateCtx } from "./MainMenu";
+import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import {
-  MinusCircleOutlined,
+  TagOutlined,
+  PlusOutlined,
   CheckOutlined,
   CloseOutlined,
   SettingOutlined,
-  MenuOutlined,
   ProfileOutlined,
-  TagOutlined,
-  PlusOutlined,
+  MinusCircleOutlined,
 } from "@ant-design/icons";
 import Search from "antd/lib/input/Search";
 
@@ -23,7 +22,7 @@ export const TagCircle = ({ color }: { color: string }) => {
 function TagItem({ noteTag }: { noteTag: NoteTag }) {
   const { uid, color, name, notes } = noteTag;
   const { editing } = useContext(MenuStateCtx);
-  const { setTagUid, setAllTags } = useContext(MenuStateUpdateCtx);
+  const { setTagUid, setAllTags } = useContext(MenuMethodCtx);
   const [tagEditing, setTagEditing] = useState(false);
   const [tagName, setTagName] = useState(name);
   const [tagColor, setTagColor] = useState(color);
@@ -128,7 +127,7 @@ function TagItem({ noteTag }: { noteTag: NoteTag }) {
 }
 
 const AddTag = () => {
-  const { setAllTags } = useContext(MenuStateUpdateCtx);
+  const { setAllTags } = useContext(MenuMethodCtx);
 
   async function addTag(val: string) {
     const name = val.trim();
@@ -165,7 +164,7 @@ const AddTag = () => {
 
 export default function SideMenu() {
   const { allTags } = useContext(MenuStateCtx);
-  const { setTagUid } = useContext(MenuStateUpdateCtx);
+  const { setTagUid } = useContext(MenuMethodCtx);
 
   function menuClicked({ key }: { key: string }) {
     setTagUid(key);
@@ -175,14 +174,11 @@ export default function SideMenu() {
 
   return (
     <aside>
-      <label htmlFor="aside-checkbox" id="aside-label">
-        <MenuOutlined />
-      </label>
       <input type="checkbox" id="aside-checkbox" />
-      <div id="side-wrapper">
+      <div className="side-wrapper">
         <Menu
           onClick={menuClicked}
-          id="side-menu"
+          className="side-menu"
           defaultSelectedKeys={["DEFAULT"]}
           defaultOpenKeys={["sub1"]}
           mode="inline"

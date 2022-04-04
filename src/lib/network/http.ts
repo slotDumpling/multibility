@@ -1,10 +1,11 @@
 import axios from "axios";
-import { Note, NoteInfo, NotePage } from "../note/note";
-import { convertTeamPage, saveTeamNote } from "../note/archive";
+import { Note, NotePage, TeamNoteInfo, TeamPageInfo } from "../note/note";
+import { convertTeamPage, loadNote, saveTeamNote, updateTeamNote } from "../note/archive";
 import { getUserId } from "../user";
 import { loadPDFImages } from "../note/pdfImage";
 
-export const BASE_URL = "https://api.slotdumpling.top/paint";
+// export const BASE_URL = "https://api.slotdumpling.top/paint";
+export const BASE_URL = "http://100.81.113.84:8090/paint";
 axios.defaults.baseURL = BASE_URL;
 axios.interceptors.request.use((config) => {
   console.log(config.method, config.url);
@@ -16,10 +17,20 @@ export async function getNoteId(roomCode: number) {
     const { data } = await axios.get(`code/${roomCode}`);
     console.log({ data });
     if (data.statusCode !== 200) return null;
-    const { noteId, pageInfos, noteInfo } = data as {
-      noteId: string;
-      pageInfos: Record<string, Omit<NotePage, "state">>;
-      noteInfo: NoteInfo;
+    return data.noteId as string;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function loadTeamNote(noteId: string) {
+  try {
+    const { data } = await axios.get(`info/${noteId}`);
+    if (data.statusCode !== 200) return null;
+    const { pageInfos, noteInfo } = data as {
+      pageInfos: Record<string, NotePage>;
+      noteInfo: TeamNoteInfo & Partial<Note>;
     };
 
     let file: File | undefined = undefined;
@@ -30,77 +41,64 @@ export async function getNoteId(roomCode: number) {
         responseType: "blob",
       });
       file = new File([data], noteInfo.name + ".pdf");
+
       const images = await loadPDFImages(file);
-      let index = 0;
       for (let page of Object.values(pageInfos)) {
-        page.image = images[index++];
+        const { pdfIndex } = page;
+        if (!pdfIndex) return;
+        page.image = images[pdfIndex - 1];
       }
       noteInfo.thumbnail = images[0];
     }
     await saveTeamNote(noteId, noteInfo, pageInfos, file);
-    return noteId as string;
   } catch (e) {
     console.error(e);
     return null;
   }
 }
 
-export async function putNote(
-  noteId: string,
-  noteInfo: Note,
-  pageRecord: Record<string, NotePage>
-) {
-  const { uid, name, withImg, pdf } = noteInfo;
+export async function putNote(noteId: string) {
+  const note = await loadNote(noteId);
+  if (!note) return null;
+  const { uid, name, withImg, pdf, pageOrder, pageRec } = note;
 
   try {
     const { data } = await axios.put(`create/${noteId}`, {
       userId: getUserId(),
-      pageRecord,
-      noteInfo: { uid, name, withImg },
+      pageRec,
+      noteInfo: { uid, name, withImg, pageOrder },
     });
+
     if (pdf) {
       const formData = new FormData();
-      formData.append("noteId", noteId);
-      formData.append("file", pdf);
-      axios({
+      const ab = await pdf.arrayBuffer();
+      const file = new Blob([ab]);
+      formData.append("file", file, noteId);
+      await axios({
         method: "POST",
         url: "upload",
         data: formData,
         headers: { "Content-Type": "multipart/form-data" },
       });
-      // Object.entries(pages).forEach(([pageId, page]) => {
-      //   const { image } = page;
-      //   if (!image) return;
-      //   const formData = new FormData();
-      //   formData.append("pageId", pageId);
-      //   formData.append("file", image);
-      //   axios({
-      //     method: "POST",
-      //     url: "upload",
-      //     data: formData,
-      //     headers: { "Content-Type": "multipart/form-data" },
-      //   });
-      // });
     }
-    if (data.statusCode === 201) {
-      return data.code as number;
-    } else {
-      return null;
-    }
+
+    if (data.statusCode !== 201) return null;
+    return data.code as number;
   } catch (e) {
     console.error(e);
     return null;
   }
 }
 
-export async function updatePages(
-  noteId: string,
-  pageRecord: Record<string, NotePage>
-) {
+export async function updatePages(noteId: string) {
+  const note = await loadNote(noteId);
+  if (!note) return null;
+  const { uid, name, withImg, pageOrder, pageRec } = note;
   try {
-    const { data } = await axios.put(`pages/${noteId}`, {
+    const { data } = await axios.put(`update/${noteId}`, {
       userId: getUserId(),
-      pageRecord,
+      pageRec,
+      noteInfo: { uid, name, withImg, pageOrder },
     });
     if (data.statusCode === 201) return true;
     else return false;
@@ -110,18 +108,45 @@ export async function updatePages(
   }
 }
 
-export async function getTeamNote(noteId: string) {
+export async function getTeamNoteState(noteId: string) {
   try {
-    const { data } = await axios.get(`room/${noteId}`);
-    if (data.statusCode === 200) {
-      const { teamPages, code, noteInfo: info } = data;
-      const pages = await convertTeamPage(teamPages);
-      return { code, pages, info };
-    } else {
-      return null;
-    }
+    const { data } = await axios.get(`state/${noteId}`);
+    if (data.statusCode !== 200) return null;
+    const { teamPages } = data;
+    const pageRec = await convertTeamPage(noteId, teamPages);
+    return pageRec;
   } catch (e) {
     console.error(e);
     return null;
+  }
+}
+
+export async function getTeamNoteInfo(noteId: string) {
+  try {
+    const { data } = await axios.get(`info/${noteId}`);
+    const { statusCode, ...res } = data as {
+      statusCode: number;
+      code: number;
+      noteInfo: TeamNoteInfo;
+      pageInfos: Record<string, TeamPageInfo>;
+    };
+    if (statusCode !== 200) return null;
+    return res;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function preloadTeamNote(noteId: string) {
+  try {
+    const { data } = await axios.get(`info/${noteId}`);
+    if (data.statusCode !== 200) return null;
+    const { noteInfo, pageInfos } = data;
+    await updateTeamNote(noteId, noteInfo, pageInfos);
+    return true;
+  } catch (e) {
+    console.error(e);
+    return false;
   }
 }

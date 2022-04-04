@@ -2,19 +2,37 @@ import { message } from "antd";
 import React, { createContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { SetOperation, StateSet } from "../../lib/draw/StateSet";
-import { getTeamNote } from "../../lib/network/http";
+import { getTeamNoteState, getTeamNoteInfo } from "../../lib/network/http";
 import { IoFactory } from "../../lib/network/io";
 import Reader, { WIDTH } from "./Reader";
 import { getUserId, UserInfo } from "../../lib/user";
-import {
-  LoginOutlined,
-  LogoutOutlined,
-} from "@ant-design/icons";
+import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
+import { createTeamPage, NotePage, TeamPageInfo } from "../../lib/note/note";
 
-export const TeamStateCtx = createContext({
+export const TeamCtx = createContext({
   code: -2,
   userList: [] as UserInfo[],
+  loadInfo: undefined as undefined | (() => Promise<boolean>),
+  teamStateSet: undefined as StateSet | undefined,
+  pushOperation: undefined as undefined | ((op: SetOperation) => void),
+  teamUpdate: undefined as undefined | TeamUpdate,
+  updateReorder: (() => {}) as undefined | ((pageOrder: string[]) => void),
+  updateNewPage: (() => {}) as
+    | undefined
+    | ((pageOrder: string[], pageId: string, newPage: NotePage) => void),
 });
+
+type TeamUpdate =
+  | {
+      type: "reorder";
+      pageOrder: string[];
+    }
+  | {
+      type: "newPage";
+      pageOrder: string[];
+      pageId: string;
+      newPage: NotePage;
+    };
 
 export default function Team() {
   const noteId = useParams().noteId ?? "";
@@ -22,21 +40,33 @@ export default function Team() {
   const [code, setCode] = useState(-2);
   const [userList, setUserList] = useState<UserInfo[]>([]);
   const [ws] = useState(IoFactory(noteId));
+  const [teamUpdate, setTeamUpdate] = useState<TeamUpdate>();
   const nav = useNavigate();
 
-  async function loadTeamPages() {
-    const res = await getTeamNote(noteId);
-    if (!res) {
-      message.error("Failed loading the team note");
-      return nav("/");
+  async function loadState() {
+    const pageRec = await getTeamNoteState(noteId);
+    if (!pageRec) {
+      message.error("Failed loading the team note state");
+      return false;
     }
-    const { code, pages } = res;
-    setCode(code);
-    setTeamStateSet(StateSet.createFromPages(pages, WIDTH));
+    setTeamStateSet(StateSet.createFromPages(pageRec, WIDTH));
+    return true;
+  }
+
+  async function loadInfo() {
+    const info = await getTeamNoteInfo(noteId);
+    if (!info) {
+      message.error("Failed loading the team note info");
+      return false;
+    }
+    setCode(info.code);
+    return true;
   }
 
   const roomInit = async () => {
-    await loadTeamPages();
+    if (!((await loadState()) && (await loadInfo()))) {
+      return nav("/");
+    }
     ws.on("push", ({ operation }) => {
       setTeamStateSet((prev) => prev?.pushOperation(operation));
     });
@@ -45,9 +75,12 @@ export default function Team() {
       const { userId, userName } = joined;
       setUserList(members);
       if (userId === getUserId()) return;
+      message.destroy(userId);
       message.success({
         icon: <LoginOutlined />,
-        content: userName + " joined room",
+        content: `${userName} joined room`,
+        key: userId,
+        style: { marginTop: 60 },
       });
     });
 
@@ -55,20 +88,48 @@ export default function Team() {
       const { userId, userName } = leaved;
       setUserList(members);
       if (userId === getUserId()) return;
+      message.destroy(userId);
       message.warning({
         icon: <LogoutOutlined />,
-        content: userName + " leaved room",
+        content: `${userName} leaved room`,
+        key: userId,
+        style: { marginTop: 60 },
       });
     });
+
+    ws.on("reorder", ({ pageOrder }: { pageOrder: string[] }) => {
+      setTeamUpdate({ type: "reorder", pageOrder });
+    });
+
+    ws.on(
+      "newPage",
+      ({
+        userId,
+        pageId,
+        newPage,
+        pageOrder,
+      }: {
+        userId: string;
+        pageOrder: string[];
+        pageId: string;
+        newPage: TeamPageInfo;
+      }) => {
+        const newNotePage = createTeamPage(newPage);
+        setTeamUpdate({
+          type: "newPage",
+          pageOrder,
+          pageId,
+          newPage: newNotePage,
+        });
+        setTeamStateSet(prev => prev?.addState(pageId, newNotePage, WIDTH));
+      }
+    );
 
     ws.connect();
   };
 
   const roomDestroy = () => {
-    ws.off("connect");
-    ws.off("push");
-    ws.off("joined");
-    ws.off("leaved");
+    ws.removeAllListeners();
     ws.disconnect();
   };
 
@@ -81,13 +142,34 @@ export default function Team() {
     ws.emit("push", { operation: op });
   };
 
+  const updateReorder = (pageOrder: string[]) => {
+    ws.emit("reorder", { pageOrder });
+  };
+
+  const updateNewPage = (
+    pageOrder: string[],
+    pageId: string,
+    newPage: NotePage,
+  ) => {
+    setTeamStateSet(prev => prev?.addState(pageId, newPage, WIDTH));
+    const { image, state, marked, ...newTeamPage} = newPage;
+    ws.emit("newPage", { pageOrder, pageId, newPage: newTeamPage });
+  };
+
   return (
-    <TeamStateCtx.Provider value={{ code, userList }}>
-      <Reader
-        teamOn={true}
-        teamStateSet={teamStateSet}
-        pushOperation={pushOperation}
-      />
-    </TeamStateCtx.Provider>
+    <TeamCtx.Provider
+      value={{
+        code,
+        userList,
+        teamUpdate,
+        teamStateSet,
+        loadInfo,
+        pushOperation,
+        updateReorder,
+        updateNewPage,
+      }}
+    >
+      <Reader teamOn />
+    </TeamCtx.Provider>
   );
 }

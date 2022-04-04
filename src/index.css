@@ -30,3 +30,7 @@ code {
 *:not(input) {
   user-select: none;
 }
+
+.ant-menu-item-danger:not(.ant-menu-item-disabled) {
+  color: #ff4d4f !important
+}

@@ -1,10 +1,15 @@
 import { Button } from "antd";
 import { useContext } from "react";
-import { MenuStateCtx, MenuStateUpdateCtx } from "./MainMenu";
+import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
+import {
+  MenuOutlined,
+  EditOutlined,
+  CheckOutlined,
+} from "@ant-design/icons";
 
 export default function LeftTools() {
   const { editing } = useContext(MenuStateCtx);
-  const { setEditing } = useContext(MenuStateUpdateCtx);
+  const { setEditing } = useContext(MenuMethodCtx);
 
   function swichEditing() {
     setEditing((prev) => !prev);
@@ -12,8 +17,24 @@ export default function LeftTools() {
 
   return (
     <div className="left-tools">
-      <Button onClick={swichEditing} type={editing ? "primary" : "text"} block>
+      <label htmlFor="aside-checkbox" id="aside-label">
+        <MenuOutlined />
+      </label>
+      <Button
+        className="edit-btn large"
+        onClick={swichEditing}
+        type={editing ? "primary" : "text"}
+        block
+      >
         {editing ? "Done" : "Edit"}
+      </Button>
+      <Button
+        className="edit-btn small"
+        onClick={swichEditing}
+        type={editing ? "primary" : "text"}
+        shape="circle"
+      >
+        {editing ? <CheckOutlined /> : <EditOutlined />}
       </Button>
     </div>
   );

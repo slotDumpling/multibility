@@ -7,6 +7,7 @@ export interface Stroke {
   color: string;
   lineWidth: number;
   pathData: string;
+  highlight: boolean;
 }
 
 interface Erase {
@@ -63,8 +64,8 @@ export interface FlatState {
   strokes: Stroke[];
 }
 
-export const defaultFlatState: FlatState = {
-  strokes: [],
+export const getDefaultFlatState = () => {
+  return { strokes: [] } as FlatState;
 };
 
 export class DrawState {
@@ -127,6 +128,10 @@ export class DrawState {
     return this.getImmutable().get("strokes").last();
   }
 
+  isEmpty() {
+    return this.getStrokes().size === 0;
+  }
+
   static createEmpty(width: number, height: number) {
     return new DrawState(defaultFactory(), width, height);
   }
@@ -168,9 +173,9 @@ export class DrawState {
     );
   }
 
-  static addStroke(drawState: DrawState, pathData: string, lineWidth: number, color: string) {
+  static addStroke(drawState: DrawState, newStroke: Omit<Stroke, "uid">) {
     const uid = getUid();
-    const stroke: Stroke = { uid, pathData, color, lineWidth };
+    const stroke = { ...newStroke, uid };
     return DrawState.pushStroke(drawState, stroke);
   }
 
@@ -192,7 +197,7 @@ export class DrawState {
       pushedState,
       drawState.width,
       drawState.height,
-      lastOp,
+      lastOp
     );
   }
 
@@ -205,7 +210,7 @@ export class DrawState {
     const { uid, erased } = erase;
     const immuErase: ImmuErase = { uid, erased: Set(erased) };
 
-    const lastOp: Operation = { type: 'erase', erase };
+    const lastOp: Operation = { type: "erase", erase };
 
     return new DrawState(
       drawState
@@ -214,7 +219,7 @@ export class DrawState {
         .update("uidStack", (s) => s.push(uid)),
       drawState.width,
       drawState.height,
-      lastOp,
+      lastOp
     );
   }
 

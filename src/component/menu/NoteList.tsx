@@ -1,21 +1,23 @@
 import { Button, Input, Popconfirm, Tag, Dropdown, Menu } from "antd";
-import { useContext, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { deleteNote, editNoteData, moveNoteTag } from "../../lib/note/archive";
 import { NoteInfo } from "../../lib/note/note";
-import { MenuStateCtx, MenuStateUpdateCtx } from "./MainMenu";
+import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import {
-  CloudOutlined,
-  DeleteOutlined,
   TagsOutlined,
+  CloudOutlined,
   CloseOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { TagCircle } from "./SideMenu";
 import dafaultImg from "../ui/default.png";
+import { preloadTeamNote } from "../../lib/network/http";
+import { useObjectUrl } from "../../lib/hooks";
 
 export default function NoteList({ noteList }: { noteList: NoteInfo[] }) {
   return (
-    <div id="note-list">
+    <div className="note-list">
       {noteList.map((noteInfo) => (
         <NoteItem key={noteInfo.uid} noteInfo={noteInfo} />
       ))}
@@ -24,28 +26,21 @@ export default function NoteList({ noteList }: { noteList: NoteInfo[] }) {
 }
 
 const NoteItem = ({ noteInfo }: { noteInfo: NoteInfo }) => {
-  const { editing, allTags } = useContext(MenuStateCtx);
   const { team, uid, name, thumbnail } = noteInfo;
-  const href = editing ? "#" : `${team ? "team" : "reader"}/${uid}`;
-  const { setAllTags, setAllNotes } = useContext(MenuStateUpdateCtx);
+
+  const { editing, allTags } = useContext(MenuStateCtx);
+  const { setAllTags, setAllNotes } = useContext(MenuMethodCtx);
   const [noteName, setNoteName] = useState(name);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const nav = useNavigate();
+  const url = useObjectUrl(thumbnail);
+  const href = editing ? "#" : `${team ? "team" : "reader"}/${uid}`;
 
   async function removeNote() {
     const { tags, allNotes } = await deleteNote(uid);
     setAllTags(tags);
     setAllNotes(allNotes);
   }
-
-  const url = useMemo(
-    () => (thumbnail ? URL.createObjectURL(thumbnail) : null),
-    [thumbnail]
-  );
-
-  useEffect(() => {
-    const prevUrl = url || "";
-    return () => URL.revokeObjectURL(prevUrl);
-  }, [url]);
 
   const saveNoteName = () => {
     editNoteData(uid, { name: noteName });
@@ -83,7 +78,7 @@ const NoteItem = ({ noteInfo }: { noteInfo: NoteInfo }) => {
     );
     return (
       <Dropdown overlay={overlay} trigger={["click"]}>
-        <Button className="note-delete" type="text" icon={<TagsOutlined />} />
+        <Button type="text" icon={<TagsOutlined />} />
       </Dropdown>
     );
   };
@@ -93,10 +88,11 @@ const NoteItem = ({ noteInfo }: { noteInfo: NoteInfo }) => {
       title="Delete this note?"
       onConfirm={removeNote}
       okText="Yes"
+      icon={<DeleteOutlined />}
+      okType="danger"
       cancelText="No"
     >
       <Button
-        className="note-delete"
         type="text"
         danger
         icon={<DeleteOutlined />}
@@ -105,35 +101,40 @@ const NoteItem = ({ noteInfo }: { noteInfo: NoteInfo }) => {
   );
 
   return (
-    <Link to={href}>
-      <div className="list-item">
-        <div className="thumbnail-wrapper">
-          <img
-            src={url || dafaultImg}
-            alt={name}
-            className={`thumbnail${imgLoaded ? " loaded" : ""}`}
-            onLoad={() => setImgLoaded(true)}
-          />
-          {team && (
-            <Tag color="blue" className="cloud-icon">
-              <CloudOutlined />
-            </Tag>
-          )}
-        </div>
-        {editing || <p className="note-name">{name}</p>}
-        {editing && (
-          <>
-            <Input
-              className="note-name-input"
-              value={noteName}
-              onChange={(e) => setNoteName(e.target.value)}
-              onBlur={saveNoteName}
-            />
-            <TagButton />
-            <DeleteButton />
-          </>
+    <div className="list-item" onClick={async () => {
+      if (team) {
+        await preloadTeamNote(uid);
+        nav(href);
+      } else {
+        nav(href);
+      }
+    }}>
+      <div className="thumbnail-wrapper">
+        <img
+          src={url || dafaultImg}
+          alt={name}
+          className={`thumbnail${imgLoaded ? " loaded" : ""}`}
+          onLoad={() => setImgLoaded(true)}
+        />
+        {team && (
+          <Tag color="blue" className="cloud-icon">
+            <CloudOutlined />
+          </Tag>
         )}
       </div>
-    </Link>
+      {editing || <p className="note-name">{name}</p>}
+      {editing && (
+        <>
+          <Input
+            className="note-name-input"
+            value={noteName}
+            onChange={(e) => setNoteName(e.target.value)}
+            onBlur={saveNoteName}
+          />
+          <TagButton />
+          <DeleteButton />
+        </>
+      )}
+    </div>
   );
 };

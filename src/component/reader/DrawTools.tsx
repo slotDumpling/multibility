@@ -1,25 +1,24 @@
 import { Avatar, Button, Divider, Popconfirm, Popover, Slider } from "antd";
-import React, { Dispatch, SetStateAction, useContext } from "react";
+import React, { Dispatch, SetStateAction, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { DrawCtrl } from "../draw/Draw";
 import { DrawCtrlCtx, ReaderMethodCtx, ReaderStateCtx } from "./Reader";
+import { TeamCtx } from "./Team";
+import DigitDisplay from "../ui/DigitDisplay";
+import { colors, getHashedColor } from "../../lib/color";
+import { UserInfo } from "../../lib/user";
 import {
-  LeftOutlined,
+  HomeFilled,
   UndoOutlined,
   RedoOutlined,
-  HighlightOutlined,
   SaveOutlined,
   TeamOutlined,
-  createFromIconfontCN,
+  ReloadOutlined,
+  HighlightOutlined,
 } from "@ant-design/icons";
 import "./drawTools.sass";
-import { TeamStateCtx } from "./Team";
-import DigitDisplay from "../ui/DigitDisplay";
-import { colors, getRandomColor } from "../../lib/color";
-import { UserInfo } from "../../lib/user";
-const IconFont = createFromIconfontCN({
-  scriptUrl: "//at.alicdn.com/t/font_3181679_dsms7mr75hd.js",
-});
+import PageNav from "./PageNav";
+import IconFont from "../ui/IconFont";
 
 export default function DrawTools({
   setDrawCtrl,
@@ -41,32 +40,39 @@ export default function DrawTools({
   };
 
   return (
-    <div className="tool-bar">
-      <div className="left-buttons">
-        <Button type="text" onClick={() => nav("/")} icon={<LeftOutlined />}>
-          Back
-        </Button>
+    <header>
+      <div className="left">
         <Button
           type="text"
+          onClick={() => nav("/")}
+          icon={<HomeFilled className="home-icon" />}
+        />
+        <br />
+        <Button
+          type="text"
+          className="save"
           onClick={instantSave}
           disabled={saved}
           icon={<SaveOutlined />}
         />
       </div>
-      <div className="middle-buttons">
+      <div className="middle">
         <Button
           type="text"
+          shape="circle"
           icon={<UndoOutlined />}
           onClick={handleUndo}
           disabled={!stateSet?.isUndoable()}
         />
         <Button
-          className="redo-button"
+          className="redo"
           type="text"
+          shape="circle"
           icon={<RedoOutlined />}
           onClick={handleRedo}
           disabled={!stateSet?.isRedoable()}
         />
+        <br />
         <PenButton erasing={erasing} updateDrawCtrl={updateDrawCtrl} />
         <Button
           type={erasing ? "default" : "text"}
@@ -82,11 +88,13 @@ export default function DrawTools({
           icon={<IconFont type="icon-finger" />}
         />
       </div>
-      <div className="right-buttons">
+      <div className="right">
         {teamOn && <RoomInfo />}
         {teamOn || <JoinRoom />}
+        <br />
+        <PageNav />
       </div>
-    </div>
+    </header>
   );
 }
 
@@ -110,9 +118,7 @@ const PenButton = React.memo(
         content={<PenPanel updateDrawCtrl={updateDrawCtrl} />}
         trigger="click"
         placement="bottom"
-        getPopupContainer={(e) => {
-          return e.parentElement?.parentElement || e;
-        }}
+        getPopupContainer={(e) => e}
       >
         <Button type="default" shape="circle" icon={<HighlightOutlined />} />
       </Popover>
@@ -125,16 +131,25 @@ const PenPanel = ({
 }: {
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
 }) => {
-  const { lineWidth } = useContext(DrawCtrlCtx);
+  const { lineWidth, highlight } = useContext(DrawCtrlCtx);
 
   return (
     <div className="pen-panel">
-      <Slider
-        min={5}
-        max={50}
-        value={lineWidth}
-        onChange={(lineWidth) => updateDrawCtrl({ lineWidth })}
-      />
+      <div className="pen-status">
+        <Slider
+          min={5}
+          max={50}
+          value={lineWidth}
+          onChange={(lineWidth) => updateDrawCtrl({ lineWidth })}
+        />
+        <Button
+          type={highlight ? "primary" : "text"}
+          ghost={highlight}
+          shape="circle"
+          icon={<IconFont type="icon-Highlight" />}
+          onClick={() => updateDrawCtrl({ highlight: !highlight })}
+        />
+      </div>
       <ColorSelect updateDrawCtrl={updateDrawCtrl} />
     </div>
   );
@@ -165,12 +180,14 @@ const ColorSelect = ({
 
 const UserCard = ({ userInfo }: { userInfo: UserInfo }) => {
   const { userName } = userInfo;
+  const color = useMemo(() => getHashedColor(userName), [userName]);
+
   return (
     <div className="user-card">
       <Avatar
         className="avatar"
         size="small"
-        style={{ backgroundColor: getRandomColor() }}
+        style={{ backgroundColor: color }}
       >
         {userName.slice(0, 4)}
       </Avatar>
@@ -180,7 +197,7 @@ const UserCard = ({ userInfo }: { userInfo: UserInfo }) => {
 };
 
 function RoomInfo() {
-  const { code, userList } = useContext(TeamStateCtx);
+  const { code, userList, loadInfo } = useContext(TeamCtx);
 
   const content = (
     <div className="team-popover">
@@ -194,20 +211,29 @@ function RoomInfo() {
     </div>
   );
 
+  const title = (
+    <div className="team-title">
+      <span>Team info</span>
+      <Button
+        shape="circle"
+        type="text"
+        size="small"
+        icon={<ReloadOutlined />}
+        onClick={loadInfo}
+      />
+    </div>
+  );
+
   return (
     <Popover
       content={content}
       trigger="click"
       placement="bottomRight"
-      title="Team info"
+      title={title}
       defaultVisible
-      getPopupContainer={(e) => {
-        return e.parentElement?.parentElement || e;
-      }}
+      getPopupContainer={(e) => e}
     >
-      <Button shape="round" icon={<TeamOutlined />}>
-        Team
-      </Button>
+      <Button type="text" icon={<TeamOutlined />} />
     </Popover>
   );
 }
@@ -222,9 +248,7 @@ const JoinRoom = () => {
       okText="Yes"
       cancelText="No"
     >
-      <Button shape="round" icon={<TeamOutlined />}>
-        Team
-      </Button>
+      <Button type="text" icon={<TeamOutlined />} />
     </Popconfirm>
   );
 };

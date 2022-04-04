@@ -1,30 +1,30 @@
-#menu-container
+.menu-container
   height: 100%
   display: flex
   flex-direction: column
-
-header
-  border-bottom: 1px solid #ddd
-  display: flex
-  justify-content: space-between
-  align-items: center
-  padding: 10px 15px
-  position: relative
-  .left-tools
-    width: 70px
-  h4
-    margin: 0 !important
-
-main
-  flex: 1
-  overflow: hidden
-  display: flex
-  position: relative
-
-button#new-note
-  position: absolute
-  right: 20px
-  bottom: 20px
+  header
+    position: relative
+    height: 55px
+    padding: 10px 15px
+    display: flex
+    justify-content: space-between
+    align-items: center
+    border-bottom: 1px solid #ddd
+    .left-tools
+      width: 70px
+      display: flex
+      align-items: center
+    h4
+      margin: 0 !important
+  main
+    flex: 1
+    overflow: hidden
+    display: flex
+    position: relative
+    button.new-note
+      position: absolute
+      right: 20px
+      bottom: 20px
 
 #aside-checkbox, #aside-label
   display: none
@@ -32,14 +32,14 @@ button#new-note
 .ant-menu
   border-right: none
 
-#side-wrapper
+.side-wrapper
   transition: all 0.5s
   width: 300px
   height: 100%
   display: flex
   flex-direction: column
   border-right: 1px solid #eee
-  #side-menu
+  .side-menu
     flex: 1
     overflow-y: auto
     overflow-x: hidden
@@ -53,18 +53,25 @@ button#new-note
   aside
     display: flex
     flex-direction: row-reverse
-  #side-wrapper
+    position: absolute
+    height: 100%
+    background: white
+    z-index: 1000
+  .side-wrapper
     width: 0
-    border-right: none
+    box-shadow: 10px 0px 20px 5px #0001
+    overflow: hidden
   #aside-label
-    display: flex
-    align-items: center
-    font-size: 0.8em
-    color: #888
-    background-color: #f5f5f5
-    padding: 0 2px
-  #aside-checkbox:checked + #side-wrapper
+    display: unset
+    cursor: pointer
+    margin-right: 5px
+    padding: 5px 10px
+  #aside-checkbox:checked + .side-wrapper
     width: 200px
+  button.large
+    display: none
+  button.small
+    display: unset !important
 
 .tag-circle
   width: 12px
@@ -92,10 +99,12 @@ button#new-note
     display: flex
     align-items: center
 
-#right-tools > button:not(:last-of-type)
+button.team-btn
   margin-right: 10px
+button.small
+  display: none
 
-#note-list
+.note-list
   flex: 1
   padding: 10px
   overflow-y: auto
@@ -125,6 +134,7 @@ button#new-note
         transform: scale(0.7)
         transform-origin: bottom left
     .note-name
+      flex: 1
       margin: 0
       padding: 6px
       overflow: hidden
@@ -136,8 +146,6 @@ button#new-note
     .note-name-input
       padding-left: 5px
       flex: 1
-    .note-delete
-      margin-left: auto
 
 .tag-select
   display: flex

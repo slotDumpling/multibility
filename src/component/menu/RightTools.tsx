@@ -1,4 +1,12 @@
-import { Button, Input, Menu, message, Popover, Progress } from "antd";
+import {
+  Button,
+  Input,
+  Menu,
+  message,
+  Popconfirm,
+  Popover,
+  Progress,
+} from "antd";
 import {
   createContext,
   Dispatch,
@@ -9,23 +17,27 @@ import {
 } from "react";
 import { createNewNote } from "../../lib/note/archive";
 import { LoadPDF } from "../../lib/note/pdfImage";
-import { MenuStateCtx, MenuStateUpdateCtx } from "./MainMenu";
+import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import {
   TeamOutlined,
-  CaretDownOutlined,
-  FilePdfOutlined,
   UserOutlined,
-  ArrowLeftOutlined,
+  ClearOutlined,
   InboxOutlined,
+  FilePdfOutlined,
+  SettingOutlined,
+  CaretDownOutlined,
+  ArrowLeftOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { getNoteId } from "../../lib/network/http";
+import { getNoteId, loadTeamNote } from "../../lib/network/http";
 import DigitInput from "../ui/DigitInput";
 import { CSSTransition } from "react-transition-group";
 import "./right.sass";
 import Title from "antd/lib/typography/Title";
 import Dragger from "antd/lib/upload/Dragger";
 import { getUserName, setUserName } from "../../lib/user";
+import localforage from "localforage";
+import { useEffect } from "react";
 
 const OthersStateUpdateCtx = createContext({
   setActive: (() => {}) as Dispatch<SetStateAction<string>>,
@@ -33,7 +45,7 @@ const OthersStateUpdateCtx = createContext({
 
 export default function RightTools() {
   return (
-    <div id="right-tools">
+    <div className="right-tools">
       <JoinTeamButton />
       <OthersButton />
     </div>
@@ -45,13 +57,17 @@ const OthersMenu = () => {
   const { Item } = Menu;
   return (
     <Menu onClick={({ key }) => setActive(key)}>
-      <Item key="pdf">
+      <Item key="PDF">
         <FilePdfOutlined />
         <span>Load PDF</span>
       </Item>
-      <Item key="profile">
+      <Item key="PROFILE">
         <UserOutlined />
         <span>My profile</span>
+      </Item>
+      <Item key="SETTINGS">
+        <SettingOutlined />
+        <span>Settings</span>
       </Item>
     </Menu>
   );
@@ -71,7 +87,7 @@ const SeconaryMenu = ({
         <Button
           type="text"
           shape="circle"
-          onClick={() => setActive("menu")}
+          onClick={() => setActive("MENU")}
           icon={<ArrowLeftOutlined />}
         />
         <Title level={5}>{title}</Title>
@@ -84,7 +100,7 @@ const SeconaryMenu = ({
 function UploadPdfPage() {
   const [loading, setLoading] = useState(false);
   const { tagUid } = useContext(MenuStateCtx);
-  const { setAllTags, setAllNotes } = useContext(MenuStateUpdateCtx);
+  const { setAllTags, setAllNotes } = useContext(MenuMethodCtx);
   const [percent, setPercent] = useState(0);
 
   async function handleFile(file: File) {
@@ -127,7 +143,7 @@ const ProfilePage = () => {
   const [name, setName] = useState(userName);
   const handleEnter = () => {
     setUserName(name);
-  }
+  };
   return (
     <SeconaryMenu title="My profile">
       <div className="profile-page">
@@ -136,15 +152,48 @@ const ProfilePage = () => {
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <Button onClick={handleEnter} type="primary" block>Enter</Button>
+        <Button onClick={handleEnter} type="primary" block>
+          OK
+        </Button>
       </div>
     </SeconaryMenu>
   );
 };
 
+const SettingsPage = () => {
+  const { Item } = Menu;
+  const { menuInit } = useContext(MenuMethodCtx);
+
+  const clearAll = async () => {
+    await localforage.clear();
+    menuInit();
+  };
+
+  return (
+    <SeconaryMenu title="Settings">
+      <Menu>
+        <Popconfirm
+          title="Delete all notes and tags?"
+          onConfirm={clearAll}
+          icon={<ClearOutlined />}
+          okText="Yes"
+          okType="danger"
+          cancelText="No"
+          placement="left"
+        >
+          <Item key="CLEAR" danger>
+            <ClearOutlined />
+            <span>Clear all</span>
+          </Item>
+        </Popconfirm>
+      </Menu>
+    </SeconaryMenu>
+  );
+};
+
 const OthersPage = () => {
-  const [height, setHeight] = useState(100);
-  const [active, setActive] = useState("menu");
+  const [height, setHeight] = useState(0);
+  const [active, setActive] = useState("");
 
   const calcHeight = (el: HTMLElement) => {
     setHeight(el.clientHeight);
@@ -160,21 +209,27 @@ const OthersPage = () => {
     ...cssProps,
     classNames: "secondary",
   };
+
+  useEffect(() => setActive("MENU"), []);
+
   return (
     <OthersStateUpdateCtx.Provider value={{ setActive }}>
       <section className="others-menu" style={{ height }}>
         <CSSTransition
           classNames="primary"
-          in={active === "menu"}
+          in={active === "MENU"}
           {...cssProps}
         >
           <OthersMenu />
         </CSSTransition>
-        <CSSTransition in={active === "pdf"} {...cssProps2}>
+        <CSSTransition in={active === "PDF"} {...cssProps2}>
           <UploadPdfPage />
         </CSSTransition>
-        <CSSTransition in={active === "profile"} {...cssProps2}>
+        <CSSTransition in={active === "PROFILE"} {...cssProps2}>
           <ProfilePage />
+        </CSSTransition>
+        <CSSTransition in={active === "SETTINGS"} {...cssProps2}>
+          <SettingsPage />
         </CSSTransition>
       </section>
     </OthersStateUpdateCtx.Provider>
@@ -183,7 +238,12 @@ const OthersPage = () => {
 
 const OthersButton = () => {
   return (
-    <Popover placement="bottomRight" trigger="click" content={<OthersPage />}>
+    <Popover
+      placement="bottomRight"
+      trigger="click"
+      content={<OthersPage />}
+      zIndex={900}
+    >
       <Button shape="circle" icon={<CaretDownOutlined />} />
     </Popover>
   );
@@ -196,13 +256,14 @@ function JoinTeamButton() {
   async function handleSubmit(code: number) {
     const dismiss = message.loading("Loading team note...", 0);
     const noteId = await getNoteId(code);
-    dismiss();
     if (!noteId) {
       setRoomCode(0);
       message.error("Room doesn't exist.");
-    } else {
-      nav(`/team/${noteId}`);
+      return dismiss();
     }
+    await loadTeamNote(noteId);
+    dismiss();
+    nav(`/team/${noteId}`);
   }
 
   return (
@@ -219,9 +280,14 @@ function JoinTeamButton() {
         />
       }
     >
-      <Button shape="round" icon={<TeamOutlined />}>
+      <Button className="team-btn large" shape="round" icon={<TeamOutlined />}>
         Team
       </Button>
+      <Button
+        className="team-btn small"
+        shape="circle"
+        icon={<TeamOutlined />}
+      />
     </Popover>
   );
 }

@@ -1,10 +1,9 @@
-import { List, OrderedMap, Record as Rec } from "immutable";
+import { List, Map, Record as Rec } from "immutable";
+import { DrawState, Operation } from "./DrawState";
 import { NotePage } from "../note/note";
-import { DrawState, Operation, Stroke } from "./DrawState";
 
 interface StateSetRecordType {
-  states: OrderedMap<string, DrawState>;
-  keys: List<string>;
+  states: Map<string, DrawState>;
   editStack: List<string>;
   undoStack: List<string>;
 }
@@ -14,8 +13,7 @@ export type SetOperation = Operation & { pageId: string };
 type StateSetRecord = Rec<StateSetRecordType>;
 
 const defaultRecord: Readonly<StateSetRecordType> = {
-  states: OrderedMap(),
-  keys: List(),
+  states: Map(),
   editStack: List(),
   undoStack: List(),
 };
@@ -28,24 +26,12 @@ export class StateSet {
     public lastOp?: SetOperation
   ) {}
 
-  static createEmpty() {
-    return new StateSet(defaultFactory());
-  }
-
-  static createKeyed(keys: string[]) {
-    return new StateSet(defaultFactory().set("keys", List(keys)));
-  }
-
   static createFromList(list: [string, DrawState][]) {
-    return new StateSet(
-      defaultFactory()
-        .set("keys", List(list.map((item) => item[0])))
-        .set("states", OrderedMap(list))
-    );
+    return new StateSet(defaultFactory().set("states", Map(list)));
   }
 
-  static createFromPages(pageRecord: Record<string, NotePage>, width: number) {
-    const entries = Object.entries(pageRecord);
+  static createFromPages(pageRec: Record<string, NotePage>, width: number) {
+    const entries = Object.entries(pageRec);
     return StateSet.createFromList(
       entries.map(([key, { state, ratio }]) => [
         key,
@@ -60,10 +46,6 @@ export class StateSet {
 
   getStates() {
     return this.getImmutable().get("states");
-  }
-
-  getKeys() {
-    return this.getImmutable().get("keys");
   }
 
   getEditStack() {
@@ -90,6 +72,20 @@ export class StateSet {
     return new StateSet(newImmu, lastOp);
   }
 
+  addState(pageId: string, notePage: NotePage, width: number) {
+    const { state, ratio } = notePage;
+    const newImmu = this.getImmutable().update("states", (s) =>
+      s.set(pageId, DrawState.loadFromFlat(state, width, width * ratio))
+    );
+    return new StateSet(newImmu);
+  }
+
+  deleteState(pageId: string) {
+    return new StateSet(
+      this.getImmutable().update('states', s => s.delete(pageId))
+    )
+  }
+
   getOneState(pageId: string) {
     return this.getImmutable().get("states").get(pageId);
   }
@@ -104,10 +100,10 @@ export class StateSet {
 
   undo() {
     if (!this.isUndoable()) return this;
-    const lastUid = this.getImmutable().get("editStack").last();
+    const immu = this.getImmutable();
+    const lastUid = immu.get("editStack").last();
     if (!lastUid) return this;
-
-    const prevDS = this.getImmutable().get("states").get(lastUid);
+    const prevDS = immu.get("states").get(lastUid);
     if (!prevDS) return this;
 
     const newDS = DrawState.undo(prevDS);
@@ -116,7 +112,7 @@ export class StateSet {
     if (lastOp) lastSetOp = { pageId: lastUid, ...lastOp };
 
     return new StateSet(
-      this.getImmutable()
+      immu
         .update("editStack", (s) => s.pop())
         .update("undoStack", (s) => s.push(lastUid))
         .update("states", (s) => s.set(lastUid, newDS)),
@@ -125,35 +121,25 @@ export class StateSet {
   }
 
   redo() {
-    if (this.isRedoable()) {
-      const lastUid = this.getImmutable().get("undoStack").last();
-      if (!lastUid) return this;
+    if (!this.isRedoable()) return this;
+    const immu = this.getImmutable();
+    const lastUid = immu.get("undoStack").last();
+    if (!lastUid) return this;
+    const prevDS = immu.get("states").get(lastUid);
+    if (!prevDS) return this;
 
-      const prevDS = this.getImmutable().get("states").get(lastUid);
-      if (!prevDS) return this;
+    const newDS = DrawState.redo(prevDS);
+    const lastOp = newDS.lastOp;
+    let lastSetOp: SetOperation | undefined;
+    if (lastOp) lastSetOp = { pageId: lastUid, ...lastOp };
 
-      const newDS = DrawState.redo(prevDS);
-      const lastOp = newDS.lastOp;
-      let lastSetOp: SetOperation | undefined;
-      if (lastOp) lastSetOp = { pageId: lastUid, ...lastOp };
-
-      return new StateSet(
-        this.getImmutable()
-          .update("undoStack", (s) => s.pop())
-          .update("editStack", (s) => s.push(lastUid))
-          .update("states", (s) => s.set(lastUid, newDS)),
-        lastSetOp
-      );
-    } else {
-      return this;
-    }
-  }
-
-  pushStroke(pageId: string, stroke: Stroke) {
-    const prevDs = this.getImmutable().get("states").get(pageId);
-    if (!prevDs) return this;
-    const ds = DrawState.pushStroke(prevDs, stroke);
-    return this.setState(pageId, ds);
+    return new StateSet(
+      immu
+        .update("undoStack", (s) => s.pop())
+        .update("editStack", (s) => s.push(lastUid))
+        .update("states", (s) => s.set(lastUid, newDS)),
+      lastSetOp
+    );
   }
 
   pushOperation(SetOp: SetOperation) {
@@ -163,20 +149,27 @@ export class StateSet {
 
     let ds: DrawState;
     switch (type) {
-      case 'add':
+      case "add":
         ds = DrawState.pushStroke(prevDs, SetOp.stroke);
         break;
-      case 'erase':
+      case "erase":
         ds = DrawState.pushErase(prevDs, SetOp.erase);
         break;
-      case 'undo':
+      case "undo":
         ds = DrawState.pushUndo(prevDs, SetOp.undoUid);
         break;
-      case 'redo':
+      case "redo":
         ds = DrawState.pushRedo(prevDs, SetOp.redoUid);
         break;
     }
-
     return this.setState(pageId, ds);
+  }
+
+  getLastDs(): [string, DrawState] {
+    const pageId = this.lastOp?.pageId;
+    if (!pageId) throw new Error("can't get last modified page.");
+    const ds = this.getOneState(pageId);
+    if (!ds) throw new Error("can't get last modified page drawstate.");
+    return [pageId, ds];
   }
 }

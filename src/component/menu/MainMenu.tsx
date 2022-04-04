@@ -30,11 +30,12 @@ export const MenuStateCtx = createContext({
   allTags: {} as Record<string, NoteTag>,
 });
 
-export const MenuStateUpdateCtx = createContext({
+export const MenuMethodCtx = createContext({
   setAllNotes: (() => {}) as Dispatch<SetStateAction<Record<string, NoteInfo>>>,
   setAllTags: (() => {}) as Dispatch<SetStateAction<Record<string, NoteTag>>>,
   setTagUid: (() => {}) as Dispatch<SetStateAction<string>>,
   setEditing: (() => {}) as Dispatch<SetStateAction<boolean>>,
+  menuInit: (() => {}) as () => void,
 });
 
 export default function MainMenu() {
@@ -64,18 +65,20 @@ export default function MainMenu() {
     [selectedTag, allNotes]
   );
 
-  useEffect(() => {
+  const menuInit = () => {
     getAllNotes().then(setAllNotes);
     getAllTags().then(setAllTags);
-    document.title = 'Multibility';
-  }, []);
+    document.title = "Multibility";
+  };
+
+  useEffect(menuInit, []);
 
   return (
     <MenuStateCtx.Provider value={{ tagUid, editing, allNotes, allTags }}>
-      <MenuStateUpdateCtx.Provider
-        value={{ setAllNotes, setAllTags, setEditing, setTagUid }}
+      <MenuMethodCtx.Provider
+        value={{ setAllNotes, setAllTags, setEditing, setTagUid, menuInit }}
       >
-        <div id="menu-container">
+        <div className="menu-container">
           <header>
             <LeftTools />
             <Title level={4}>{selectedTag.name}</Title>
@@ -87,14 +90,14 @@ export default function MainMenu() {
             <NewNoteButton />
           </main>
         </div>
-      </MenuStateUpdateCtx.Provider>
+      </MenuMethodCtx.Provider>
     </MenuStateCtx.Provider>
   );
 }
 
 export const NewNoteButton = () => {
   const { tagUid } = useContext(MenuStateCtx);
-  const { setAllTags, setAllNotes } = useContext(MenuStateUpdateCtx);
+  const { setAllTags, setAllNotes } = useContext(MenuMethodCtx);
 
   async function addNewNote() {
     const note = createEmptyNote();
@@ -106,7 +109,7 @@ export const NewNoteButton = () => {
 
   return (
     <Button
-      id="new-note"
+      className="new-note"
       size="large"
       type="primary"
       shape="circle"

@@ -1,23 +1,39 @@
-.tool-bar
-  position: sticky
-  top: 0
-  z-index: 100
-  padding: 10px 15px
-  background-color: #fffc
-  backdrop-filter: saturate(180%) blur(20px)
-  border-bottom: 1px solid #ddd
-  display: flex
-  align-items: center
-  justify-content: space-between
-  .middle-buttons
+.reader-container
+  header
+    min-height: 55px
+    padding: 10px
+    display: flex
+    align-items: center
+    justify-content: space-between
+    border-bottom: 1px solid #ddd
     button
-      &:not(:last-of-type)
-        margin-right: 5px
-      &.redo-button
-        margin-right: 20px
+      margin: 0 5px
+      &.redo
+        margin-right: 30px 
+      .home-icon
+        opacity: 0.8
+    br
+      display: none
+
+@media screen and (max-width: 500px)
+  .reader-container
+    .middle
+      border-left: 1px solid #eee
+      border-right: 1px solid #eee
+      padding: 0 20px
+    br
+      display: block !important
+      height: 10px
+      content: ""
 
 .pen-panel
   width: 200px
+  .pen-status
+    display: flex
+    margin-bottom: 10px
+    .ant-slider
+      flex: 1
+      margin-right: 10px 
   .color-select
     display: grid
     grid-template-columns: repeat(4, 1fr)
@@ -34,12 +50,18 @@
       &:checked
         border: 6px solid
         background-color: white !important
+        
+.team-title
+  display: flex
+  justify-content: space-between
+  align-items: center
 
 .team-popover
   width: 100%
   display: flex
   flex-direction: column
   align-items: center
+
   .user-list
     width: 100%
     .user-card

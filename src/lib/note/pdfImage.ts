@@ -3,8 +3,8 @@ import * as pdfjs from "pdfjs-dist/legacy/build/pdf";
 import pdfjsWorker from "pdfjs-dist/legacy/build/pdf.worker.entry";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import { v4 as getUid } from "uuid";
-import { createVirtualCanvas } from "../draw/drawer";
-import { Note, NotePage } from "./note";
+import { createVirtualCanvas, releaseCanvas } from "../draw/drawer";
+import { createEmptyNote, Note, NotePage } from "./note";
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 function getCanvasBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
@@ -36,9 +36,9 @@ async function getPageImage(
   }).promise;
 
   const blob = await getCanvasBlob(canvas);
-  if (!blob) {
-    throw new Error("can't get canvas image blob");
-  }
+  if (!blob) throw new Error("can't get canvas image blob");
+
+  releaseCanvas(canvas);
   
   return [blob, ratio];
 }
@@ -76,7 +76,18 @@ export async function getOneImage(
   if (index > numPages) {
     throw new Error('index out of range');
   }
-  const [blob] = await getPageImage(pdf, index + 1, scale);
+  const [blob] = await getPageImage(pdf, index, scale);
+  return blob;
+}
+
+export async function getOneImageFromFile(
+  file: File,
+  index: number,
+  scale = 2,
+) {
+  const url = URL.createObjectURL(file);
+  const blob = await getOneImage(url, index, scale);
+  URL.revokeObjectURL(url);
   return blob;
 }
 
@@ -87,26 +98,29 @@ export async function LoadPDF(
   const url = URL.createObjectURL(file);
   const { images, ratios } = await getImages(url, 0.5, progressCb);
   URL.revokeObjectURL(url);
-  const pages: Record<string, NotePage> = {};
+  const pageRec: Record<string, NotePage> = {};
+  const pageOrder: string[] = [];
   images.forEach((image, idx) => {
-    pages[getUid()] = {
+    const pageId = getUid();
+    pageRec[pageId] = {
       image,
       ratio: ratios[idx],
       state: {
         strokes: [],
       },
+      pdfIndex: idx + 1,
     };
+    pageOrder.push(pageId);
   });
   const name = file.name.replace(".pdf", "");
   return {
-    uid: getUid(),
+    ...createEmptyNote(),
     name,
-    tagId: "DEFAULT",
-    team: false,
     withImg: true,
     pdf: file,
     thumbnail: images[0],
-    pages,
+    pageRec,
+    pageOrder,
   };
 }
 

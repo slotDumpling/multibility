@@ -1,20 +1,26 @@
-import { defaultFlatState, FlatState, Stroke } from "../draw/DrawState";
+import { getDefaultFlatState, FlatState, Stroke } from "../draw/DrawState";
 import { v4 as getUid } from "uuid";
 
 export interface NotePage {
-  image?: Blob;
   ratio: number;
   state: FlatState;
+  image?: Blob;
+  marked?: boolean;
+  pdfIndex?: number;
 }
 
-export interface TeamPage {
+export interface TeamPageState {
+  states: Record<string, Stroke[]>;
+}
+
+export interface TeamPageInfo {
   ratio: number;
-  states: Record<string, Stroke[]>
+  pdfIndex?: number;
 }
 
 export interface TeamNote {
   uid: string;
-  pages: Record<string, TeamPage>
+  pageRec: Record<string, TeamPageState>;
 }
 
 export interface NoteInfo {
@@ -30,21 +36,47 @@ export interface NoteInfo {
 
 export type Note = NoteInfo & {
   pdf?: File;
-  pages: Record<string, NotePage>;
+  pageRec: Record<string, NotePage>;
+  pageOrder: string[];
 };
 
+export interface TeamNoteInfo {
+  uid: string;
+  name: string;
+  pageOrder: string[];
+  withImg: boolean;
+}
+
 export function createEmptyNote(): Note {
+  const pageId = getUid();
   return {
     uid: getUid(),
     name: `New note ${Date.now()}`,
     tagId: "DEFAULT",
     team: false,
     withImg: false,
-    pages: {
-      [getUid()]: {
+    pageRec: {
+      [pageId]: {
         ratio: 1.5,
-        state: defaultFlatState,
+        state: getDefaultFlatState(),
       },
     },
+    pageOrder: [pageId],
+  };
+}
+
+export function createPage(page?: NotePage): [string, NotePage] {
+  const pageId = getUid();
+  const newPage = page ?? {
+    ratio: 1.5,
+    state: getDefaultFlatState(),
+  };
+  return [pageId, newPage];
+}
+
+export function createTeamPage(pageInfo: TeamPageInfo): NotePage {
+  return {
+    ...pageInfo,
+    state: getDefaultFlatState(),
   };
 }
