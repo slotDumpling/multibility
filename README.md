@@ -1,1 +1,1 @@
-Draw.js is a controlled drawing canvas, built for React and backed by an immutable model.
+Take notes and annotate PDF in the browser, and collaborate with others.
