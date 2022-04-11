@@ -1,7 +1,6 @@
 import { Avatar, Button, Divider, Popconfirm, Popover, Slider } from "antd";
 import React, { Dispatch, SetStateAction, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DrawCtrl } from "../draw/Draw";
 import { DrawCtrlCtx, ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { TeamCtx } from "./Team";
 import DigitDisplay from "../ui/DigitDisplay";
@@ -19,6 +18,7 @@ import {
 import "./drawTools.sass";
 import PageNav from "./PageNav";
 import IconFont from "../ui/IconFont";
+import { DrawCtrl } from "../../lib/draw/drawCtrl";
 
 export default function DrawTools({
   setDrawCtrl,

@@ -1,6 +1,11 @@
 import axios from "axios";
-import { Note, NotePage, TeamNoteInfo, TeamPageInfo } from "../note/note";
-import { convertTeamPage, loadNote, saveTeamNote, updateTeamNote } from "../note/archive";
+import { Note, NotePage, TeamNoteInfo } from "../note/note";
+import {
+  convertTeamPage,
+  loadNote,
+  saveTeamNote,
+  updateTeamNote,
+} from "../note/archive";
 import { getUserId } from "../user";
 import { loadPDFImages } from "../note/pdfImage";
 
@@ -24,14 +29,32 @@ export async function getNoteId(roomCode: number) {
   }
 }
 
-export async function loadTeamNote(noteId: string) {
+interface InfoRes {
+  statusCode: number;
+  code: number;
+  noteInfo: TeamNoteInfo & Partial<Note>;
+  pageInfos: Record<string, NotePage>;
+}
+
+export async function getTeamNoteInfo(noteId: string) {
   try {
     const { data } = await axios.get(`info/${noteId}`);
-    if (data.statusCode !== 200) return null;
-    const { pageInfos, noteInfo } = data as {
-      pageInfos: Record<string, NotePage>;
-      noteInfo: TeamNoteInfo & Partial<Note>;
-    };
+    const { statusCode, ...res } = data as InfoRes;
+    if (statusCode !== 200) return null;
+    return res;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function loadTeamNoteInfo(noteId: string) {
+  try {
+    const infoRes = await getTeamNoteInfo(noteId);
+    if (!infoRes) return null;
+    const { noteInfo, pageInfos } = infoRes;
+
+    if (await updateTeamNote(noteId, noteInfo, pageInfos)) return infoRes;
 
     let file: File | undefined = undefined;
     if (noteInfo.withImg) {
@@ -45,12 +68,13 @@ export async function loadTeamNote(noteId: string) {
       const images = await loadPDFImages(file);
       for (let page of Object.values(pageInfos)) {
         const { pdfIndex } = page;
-        if (!pdfIndex) return;
+        if (!pdfIndex) continue;
         page.image = images[pdfIndex - 1];
       }
       noteInfo.thumbnail = images[0];
     }
     await saveTeamNote(noteId, noteInfo, pageInfos, file);
+    return infoRes;
   } catch (e) {
     console.error(e);
     return null;
@@ -118,35 +142,5 @@ export async function getTeamNoteState(noteId: string) {
   } catch (e) {
     console.error(e);
     return null;
-  }
-}
-
-export async function getTeamNoteInfo(noteId: string) {
-  try {
-    const { data } = await axios.get(`info/${noteId}`);
-    const { statusCode, ...res } = data as {
-      statusCode: number;
-      code: number;
-      noteInfo: TeamNoteInfo;
-      pageInfos: Record<string, TeamPageInfo>;
-    };
-    if (statusCode !== 200) return null;
-    return res;
-  } catch (e) {
-    console.error(e);
-    return null;
-  }
-}
-
-export async function preloadTeamNote(noteId: string) {
-  try {
-    const { data } = await axios.get(`info/${noteId}`);
-    if (data.statusCode !== 200) return null;
-    const { noteInfo, pageInfos } = data;
-    await updateTeamNote(noteId, noteInfo, pageInfos);
-    return true;
-  } catch (e) {
-    console.error(e);
-    return false;
   }
 }

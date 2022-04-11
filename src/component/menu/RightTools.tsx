@@ -29,7 +29,7 @@ import {
   ArrowLeftOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { getNoteId, loadTeamNote } from "../../lib/network/http";
+import { getNoteId } from "../../lib/network/http";
 import DigitInput from "../ui/DigitInput";
 import { CSSTransition } from "react-transition-group";
 import "./right.sass";
@@ -56,7 +56,7 @@ const OthersMenu = () => {
   const { setActive } = useContext(OthersStateUpdateCtx);
   const { Item } = Menu;
   return (
-    <Menu onClick={({ key }) => setActive(key)}>
+    <Menu onClick={({ key }) => setActive(key)} mode="inline">
       <Item key="PDF">
         <FilePdfOutlined />
         <span>Load PDF</span>
@@ -173,12 +173,13 @@ const SettingsPage = () => {
     <SeconaryMenu title="Settings">
       <Menu>
         <Popconfirm
-          title="Delete all notes and tags?"
+          title="Everything will be deleted."
           onConfirm={clearAll}
           icon={<ClearOutlined />}
-          okText="Yes"
+          okText="Clear all"
           okType="danger"
-          cancelText="No"
+          okButtonProps={{type: 'primary'}}
+          cancelText="Cancel"
           placement="left"
         >
           <Item key="CLEAR" danger>
@@ -254,15 +255,11 @@ function JoinTeamButton() {
 
   const nav = useNavigate();
   async function handleSubmit(code: number) {
-    const dismiss = message.loading("Loading team note...", 0);
     const noteId = await getNoteId(code);
     if (!noteId) {
       setRoomCode(0);
       message.error("Room doesn't exist.");
-      return dismiss();
     }
-    await loadTeamNote(noteId);
-    dismiss();
     nav(`/team/${noteId}`);
   }
 

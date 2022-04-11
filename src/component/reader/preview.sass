@@ -16,14 +16,12 @@
     .page
       cursor: pointer
       position: relative
-      &.curr > .note-page
+      border: 1px solid #eee
+      &.curr
+        border-color: #1890ff
         outline: 2px solid #1890ff
       &.drag
         box-shadow: 0 0 20px 10px #0002
-      .note-page
-        border: 1px solid #eee
-        &:not(.loaded) ~ *
-          display: none
       .bookmark
         position: absolute
         top: -10px
@@ -34,7 +32,7 @@
         &::after
           content: ""
           position: absolute
-          top: 11px
+          top: 10px
           right: 10px
           height: 30px
           width: 20px
@@ -45,16 +43,16 @@
           background-color: #1890ff
       .index
         position: absolute
-        right: 1px
-        bottom: 1px
+        right: 0px
+        bottom: 0px
         background-color: #444
         color: #fff
         padding: 0 .5em
         border-radius: 5px 0 0 0
       .option
         position: absolute
-        left: 1px
-        bottom: 1px
+        left: 0px
+        bottom: 0px
         background-color: #444
         color: #fff
         padding: 0 .5em

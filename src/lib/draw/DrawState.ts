@@ -4,10 +4,7 @@ import { v4 as getUid } from "uuid";
 
 export interface Stroke {
   uid: string;
-  color: string;
-  lineWidth: number;
   pathData: string;
-  highlight: boolean;
 }
 
 interface Erase {

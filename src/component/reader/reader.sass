@@ -6,7 +6,7 @@
   flex-direction: column
   main
     flex: 1
-    overflow: overlay
+    overflow: hidden scroll
     background-color: #fafafa
     .note-page
       border: 1px solid #eee
@@ -14,8 +14,6 @@
         margin-bottom: 10px
       .mask
         backdrop-filter: blur(10px)
-      &:not(.loaded) ~ .add-btn-wrapper
-        display: none
     .page-loading
       color: #333
       font-size: 50px
@@ -40,8 +38,6 @@
     bottom: 0
     left: 0
     right: 0
-  &:not(.loaded)
-    display: none
   .mask
     position: absolute
     top: 0

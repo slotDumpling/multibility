@@ -7,11 +7,18 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Draw, { DrawCtrl } from "../draw/Draw";
+import Draw from "../draw/Draw";
+import {
+  defaultDrawCtrl,
+  getDrawCtrl,
+  saveDrawCtrl,
+} from "../../lib/draw/drawCtrl";
 import { DrawState } from "../../lib/draw/DrawState";
 import { createPage, NoteInfo, NotePage } from "../../lib/note/note";
 import { StateSet } from "../../lib/draw/StateSet";
@@ -20,26 +27,17 @@ import { debounce, last, omit } from "lodash";
 import { putNote, updatePages } from "../../lib/network/http";
 import { useBeforeunload } from "react-beforeunload";
 import DrawTools from "./DrawTools";
-import dafaultImg from "../ui/default.png";
 import { getOneImage } from "../../lib/note/pdfImage";
 import { useInView } from "react-intersection-observer";
 import { Set } from "immutable";
 import { insertAfter } from "../../lib/array";
 import { AddPageButton } from "./ReaderTools";
-import { useObjectUrl } from "../../lib/hooks";
+import { useMounted, useObjectUrl } from "../../lib/hooks";
 import { TeamCtx } from "./Team";
 import "./reader.sass";
 
 export const WIDTH = 2000;
 
-const defaultDrawCtrl: DrawCtrl = {
-  erasing: false,
-  finger: false,
-  even: true,
-  lineWidth: 10,
-  color: "#000000",
-  highlight: false,
-};
 export const DrawCtrlCtx = createContext(defaultDrawCtrl);
 export const ReaderStateCtx = createContext({
   noteId: "",
@@ -80,6 +78,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   const [pageOrder, setPageOrder] = useState<string[]>();
   const [loaded, setLoaded] = useState(false);
   const refRec = useRef<Record<string, HTMLDivElement>>({});
+  const mounted = useMounted();
 
   const { teamStateSet, pushOperation, teamUpdate, updateNewPage } =
     useContext(TeamCtx);
@@ -95,6 +94,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     setPageOrder(pageOrder);
     setNoteInfo(noteInfo);
     setStateSet(StateSet.createFromPages(pageRec, WIDTH));
+    setDrawCtrl(await getDrawCtrl());
     setLoaded(true);
     if (pdf) setPdfUrl(URL.createObjectURL(pdf));
     if (teamOn) updatePages(noteId);
@@ -103,7 +103,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   const debouncedSave = useCallback(
     debounce(async (pr: Record<string, NotePage>) => {
       await editNoteData(noteId, { pageRec: pr });
-      setSaved(true);
+      mounted.current && setSaved(true);
     }, 1000),
     []
   );
@@ -128,17 +128,31 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     instantSave();
   };
 
+  useLayoutEffect(() => {
+    return () => {
+      const canvas = document.querySelector("canvas");
+      canvas?.toBlob((blob) => {
+        if (!blob) return;
+        editNoteData(noteId, { thumbnail: blob });
+      });
+    };
+  }, []);
+
   useEffect(() => {
     noteInit();
     return noteDestroy;
   }, [noteId, teamOn]);
+
+  useBeforeunload(noteDestroy);
 
   useEffect(() => {
     if (!noteInfo) return;
     document.title = noteInfo.name;
   }, [noteInfo]);
 
-  useBeforeunload(noteDestroy);
+  useEffect(() => {
+    loaded && saveDrawCtrl(drawCtrl);
+  }, [drawCtrl]);
 
   useEffect(() => {
     if (!stateSet?.lastOp || !pushOperation) return;
@@ -171,7 +185,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
       setPageOrder(pageOrder);
     } else if (type === "newPage") {
       setPageOrder(pageOrder);
-      const { pageId, newPage } = teamUpdate;
+      let { pageId, newPage } = teamUpdate;
       setPageRec((prev) => prev && { ...prev, [pageId]: newPage });
       setStateSet((prev) => prev?.addState(pageId, newPage, WIDTH));
     }
@@ -257,8 +271,8 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
         handleRedo={handleRedo}
       />
       <main>
-        {pageOrder?.map((uid, index) => (
-          <PageContainer uid={uid} pageIndex={index} key={uid} />
+        {pageOrder?.map((uid) => (
+          <PageContainer uid={uid} key={uid} />
         ))}
         <AddPageButton />
       </main>
@@ -302,10 +316,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   );
 }
 
-const PageContainer: FC<{
-  uid: string;
-  pageIndex: number;
-}> = ({ uid, pageIndex }) => {
+const PageContainer: FC<{ uid: string }> = ({ uid }) => {
   const { pageRec, stateSet, teamStateSet, pdfUrl, refRec } =
     useContext(ReaderStateCtx);
   const { setPageState } = useContext(ReaderMethodCtx);
@@ -352,11 +363,13 @@ export const PageWrapper = React.memo(
     preview?: boolean;
   }) => {
     const { setInviewPages } = useContext(ReaderMethodCtx);
-    const [loaded, setLoaded] = useState(false);
     const [realImage, setRealImage] = useState<Blob>();
     const [visibleRef, visible] = useInView({ delay: 100 });
     const thumbnailUrl = useObjectUrl(imageBlob);
     const imgUrl = useObjectUrl(realImage);
+
+    const { height, width } = drawState;
+    const ratio = height / width;
 
     const handleRef = useCallback(
       (e: HTMLDivElement | null) => {
@@ -391,38 +404,25 @@ export const PageWrapper = React.memo(
       }
     }, [visible, loadImage, preview]);
 
-    const TeamDraw = teamState && (
-      <Draw drawState={teamState} readonly preview={preview} />
-    );
-
-    const SelfDraw = preview ? (
-      <Draw drawState={drawState} readonly preview />
-    ) : (
-      <DrawWrapper
-        updateState={updateState}
-        drawState={drawState}
-        uid={uid}
-        preview={preview}
-      />
-    );
+    const otherStates = useMemo(() => teamState && [teamState], [teamState]);
 
     const maskShow = Boolean(preview || (pdfIndex && !imgUrl));
 
     return (
       <section
         ref={handleRef}
-        className={`note-page${loaded ? " loaded" : ""}`}
+        className="note-page"
+        style={{ paddingTop: `${ratio * 100}%` }}
       >
-        <img
-          src={imgUrl || thumbnailUrl || dafaultImg}
-          alt="pdf-page"
-          onLoad={() => setLoaded(true)}
-        />
         {visible && (
-          <div className="page-draw">
-            {TeamDraw}
-            {SelfDraw}
-          </div>
+          <DrawWrapper
+            drawState={drawState}
+            otherStates={otherStates}
+            updateState={preview ? undefined : updateState}
+            imgSrc={imgUrl || thumbnailUrl || undefined}
+            uid={uid}
+            preview={preview}
+          />
         )}
         {maskShow && <div className="mask" />}
       </section>
@@ -436,12 +436,16 @@ const DrawWrapper = React.memo(
     drawState,
     uid,
     updateState,
+    otherStates,
     preview = false,
+    imgSrc,
   }: {
     drawState: DrawState;
     uid: string;
+    otherStates?: DrawState[];
     updateState?: (uid: string, ds: DrawState) => void;
     preview?: boolean;
+    imgSrc?: string;
   }) => {
     const drawCtrl = useContext(DrawCtrlCtx);
 
@@ -452,13 +456,17 @@ const DrawWrapper = React.memo(
     }
 
     return (
-      <Draw
-        drawState={drawState}
-        onChange={handleChange}
-        readonly={!updateState}
-        preview={preview}
-        {...drawCtrl}
-      />
+      <div className="page-draw">
+        <Draw
+          drawState={drawState}
+          onChange={handleChange}
+          otherStates={otherStates}
+          readonly={!updateState}
+          preview={preview}
+          imgSrc={imgSrc}
+          {...drawCtrl}
+        />
+      </div>
     );
   }
 );

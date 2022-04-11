@@ -197,9 +197,9 @@ export async function updateTeamNote(
   pageInfos: Record<string, NotePage>
 ) {
   let note = await loadNote(noteId);
-  if (!note) return;
+  if (!note) return false;
   const { pageOrder } = noteInfo;
-  if (pageOrder.length < note.pageOrder.length) return;
+  if (pageOrder.length < note.pageOrder.length) return true;
   const { pageRec, pdf } = note;
   for (let [pageId, page] of Object.entries(pageInfos)) {
     if (!(pageId in pageRec)) {
@@ -216,6 +216,6 @@ export async function updateTeamNote(
       };
     }
   }
-
   await editNoteData(noteId, { pageOrder, pageRec });
+  return true;
 }

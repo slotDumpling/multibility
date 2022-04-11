@@ -1,5 +1,5 @@
 import { Button, Input, Popconfirm, Tag, Dropdown, Menu } from "antd";
-import { useContext, useState } from "react";
+import { FC, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteNote, editNoteData, moveNoteTag } from "../../lib/note/archive";
 import { NoteInfo } from "../../lib/note/note";
@@ -12,35 +12,61 @@ import {
 } from "@ant-design/icons";
 import { TagCircle } from "./SideMenu";
 import dafaultImg from "../ui/default.png";
-import { preloadTeamNote } from "../../lib/network/http";
 import { useObjectUrl } from "../../lib/hooks";
+import classNames from "classnames";
+import SwipeDelete from "../ui/SwipeDelete";
 
 export default function NoteList({ noteList }: { noteList: NoteInfo[] }) {
+  const [nowSwiped, setNowSwiped] = useState("");
+  const { editing } = useContext(MenuStateCtx);
+  const { setAllTags, setAllNotes } = useContext(MenuMethodCtx);
+
+  useEffect(() => {
+    if (editing) setNowSwiped("");
+  }, [editing]);
+
+  const removeOneNote = async (uid: string) => {
+    const { tags, allNotes } = await deleteNote(uid);
+    setAllTags(tags);
+    setAllNotes(allNotes);
+  };
+
   return (
     <div className="note-list">
-      {noteList.map((noteInfo) => (
-        <NoteItem key={noteInfo.uid} noteInfo={noteInfo} />
-      ))}
+      {noteList.map((noteInfo) => {
+        const { uid } = noteInfo;
+        const removeNote = () => removeOneNote(uid);
+        return (
+          <SwipeDelete
+            onDelete={removeNote}
+            key={uid}
+            uid={uid}
+            nowSwiped={nowSwiped}
+            setNowSwiped={setNowSwiped}
+            disable={editing}
+          >
+            <NoteItem noteInfo={noteInfo} removeNote={removeNote} />
+          </SwipeDelete>
+        );
+      })}
     </div>
   );
 }
 
-const NoteItem = ({ noteInfo }: { noteInfo: NoteInfo }) => {
+const NoteItem: FC<{
+  noteInfo: NoteInfo;
+  removeNote: () => void;
+}> = ({ noteInfo, removeNote }) => {
   const { team, uid, name, thumbnail } = noteInfo;
+
+  const href = `${team ? "team" : "reader"}/${uid}`;
+  const nav = useNavigate();
 
   const { editing, allTags } = useContext(MenuStateCtx);
   const { setAllTags, setAllNotes } = useContext(MenuMethodCtx);
   const [noteName, setNoteName] = useState(name);
   const [imgLoaded, setImgLoaded] = useState(false);
-  const nav = useNavigate();
   const url = useObjectUrl(thumbnail);
-  const href = editing ? "#" : `${team ? "team" : "reader"}/${uid}`;
-
-  async function removeNote() {
-    const { tags, allNotes } = await deleteNote(uid);
-    setAllTags(tags);
-    setAllNotes(allNotes);
-  }
 
   const saveNoteName = () => {
     editNoteData(uid, { name: noteName });
@@ -63,7 +89,7 @@ const NoteItem = ({ noteInfo }: { noteInfo: NoteInfo }) => {
         <Item key="DEFAULT">
           <div className="tag-select">
             <CloseOutlined className="none-tag-icon" />
-            <span>None Tag</span>
+            <span>No Tag</span>
           </div>
         </Item>
         {Object.values(allTags).map((t) => (
@@ -85,35 +111,26 @@ const NoteItem = ({ noteInfo }: { noteInfo: NoteInfo }) => {
 
   const DeleteButton = () => (
     <Popconfirm
-      title="Delete this note?"
+      title="This note will be deleted."
       onConfirm={removeNote}
-      okText="Yes"
       icon={<DeleteOutlined />}
+      cancelText="Cancel"
+      placement="left"
+      okText="Delete"
       okType="danger"
-      cancelText="No"
+      okButtonProps={{ type: "primary" }}
     >
-      <Button
-        type="text"
-        danger
-        icon={<DeleteOutlined />}
-      />
+      <Button type="text" danger icon={<DeleteOutlined />} />
     </Popconfirm>
   );
 
   return (
-    <div className="list-item" onClick={async () => {
-      if (team) {
-        await preloadTeamNote(uid);
-        nav(href);
-      } else {
-        nav(href);
-      }
-    }}>
+    <div className="list-item" onClick={() => !editing && nav(href)}>
       <div className="thumbnail-wrapper">
         <img
           src={url || dafaultImg}
           alt={name}
-          className={`thumbnail${imgLoaded ? " loaded" : ""}`}
+          className={classNames("thumbnail", { loaded: imgLoaded })}
           onLoad={() => setImgLoaded(true)}
         />
         {team && (

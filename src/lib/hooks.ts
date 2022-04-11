@@ -1,10 +1,7 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 export function useObjectUrl(obj: Blob | MediaSource | undefined) {
-  const url = useMemo(
-    () => (obj ? URL.createObjectURL(obj) : null),
-    [obj]
-  );
+  const url = useMemo(() => (obj ? URL.createObjectURL(obj) : null), [obj]);
 
   useEffect(() => {
     const prevUrl = url || "";
@@ -12,4 +9,17 @@ export function useObjectUrl(obj: Blob | MediaSource | undefined) {
   }, [url]);
 
   return url;
+}
+
+export function useMounted() {
+  const _mounted = useRef(false);
+
+  useEffect(() => {
+    _mounted.current = true;
+    return () => {
+      _mounted.current = false;
+    };
+  }, []);
+
+  return _mounted;
 }

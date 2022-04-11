@@ -1,45 +1,43 @@
-import { Button, Input, Menu, Popconfirm, Popover, Select } from "antd";
-import { useContext, useState } from "react";
+import { Button, Input, Popconfirm, Popover, Select } from "antd";
+import { FC, MouseEventHandler, useContext, useEffect, useState } from "react";
 import { deleteTag, editTag, NoteTag, storeTag } from "../../lib/note/archive";
 import { colors } from "../../lib/color";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import {
   TagOutlined,
   PlusOutlined,
-  CheckOutlined,
-  CloseOutlined,
+  DeleteOutlined,
   SettingOutlined,
   ProfileOutlined,
-  MinusCircleOutlined,
 } from "@ant-design/icons";
 import Search from "antd/lib/input/Search";
+import SwipeDelete from "../ui/SwipeDelete";
+import classNames from "classnames";
 
 export const TagCircle = ({ color }: { color: string }) => {
   const style = { backgroundColor: color };
   return <div className="tag-circle" style={style} />;
 };
 
-function TagItem({ noteTag }: { noteTag: NoteTag }) {
+const TagItem: FC<{
+  noteTag: NoteTag;
+  removeTag: () => void;
+  onClick: MouseEventHandler<HTMLDivElement>;
+}> = ({ noteTag, removeTag, onClick }) => {
   const { uid, color, name, notes } = noteTag;
-  const { editing } = useContext(MenuStateCtx);
-  const { setTagUid, setAllTags } = useContext(MenuMethodCtx);
+  const { editing, tagUid } = useContext(MenuStateCtx);
+  const { setAllTags } = useContext(MenuMethodCtx);
   const [tagEditing, setTagEditing] = useState(false);
   const [tagName, setTagName] = useState(name);
   const [tagColor, setTagColor] = useState(color);
 
-  function cancelEditing() {
+  const cancelEditing = () => {
     setTagName(name);
     setTagColor(color);
     setTagEditing(false);
-  }
+  };
 
-  async function removeTag() {
-    const tags = await deleteTag(uid);
-    setTagUid("DEFAULT");
-    setAllTags(tags);
-  }
-
-  async function finishEditing() {
+  const finishEditing = async () => {
     const newTag: NoteTag = {
       uid,
       name: tagName,
@@ -50,7 +48,7 @@ function TagItem({ noteTag }: { noteTag: NoteTag }) {
     const newAllTags = await editTag(newTag);
     setAllTags(newAllTags);
     setTagEditing(false);
-  }
+  };
 
   const colorSelector = (
     <Select value={tagColor} onSelect={setTagColor}>
@@ -62,7 +60,7 @@ function TagItem({ noteTag }: { noteTag: NoteTag }) {
     </Select>
   );
 
-  const TagNameInput = () => (
+  const TagNameInput = (
     <Input
       className="tag-name-input"
       addonBefore={colorSelector}
@@ -71,26 +69,20 @@ function TagItem({ noteTag }: { noteTag: NoteTag }) {
     />
   );
 
+  useEffect(() => {
+    setTagEditing(false);
+  }, [editing])
+
   return (
-    <div className="menu-item">
+    <div
+      className={classNames("menu-item", {
+        curr: tagUid === uid,
+        editing: editing && tagEditing,
+      })}
+      onClick={onClick}
+    >
       {editing && tagEditing ? (
-        <>
-          <Popconfirm
-            title="Delete this tag?"
-            onConfirm={removeTag}
-            placement="left"
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button
-              type="text"
-              danger
-              size="small"
-              icon={<MinusCircleOutlined />}
-            />
-          </Popconfirm>
-          <TagNameInput />
-        </>
+        TagNameInput
       ) : (
         <>
           <TagCircle color={tagColor} />
@@ -98,21 +90,28 @@ function TagItem({ noteTag }: { noteTag: NoteTag }) {
         </>
       )}
       {editing && tagEditing && (
-        <>
+        <div className="buttons">
+          <Popconfirm
+            title="This tag will be deleted."
+            onConfirm={removeTag}
+            placement="left"
+            cancelText="Cancel"
+            icon={<DeleteOutlined />}
+            okText="Delete"
+            okType="danger"
+            okButtonProps={{type: 'primary'}}
+          >
+            <Button danger>Delete</Button>
+          </Popconfirm>
+          <Button onClick={cancelEditing}>Cancel</Button>
           <Button
             disabled={tagName === ""}
-            size="small"
-            type="link"
+            type="primary"
             onClick={finishEditing}
-            icon={<CheckOutlined />}
-          />
-          <Button
-            size="small"
-            type="text"
-            onClick={cancelEditing}
-            icon={<CloseOutlined />}
-          />
-        </>
+          >
+            OK
+          </Button>
+        </div>
       )}
       {editing && !tagEditing && (
         <Button
@@ -124,10 +123,11 @@ function TagItem({ noteTag }: { noteTag: NoteTag }) {
       )}
     </div>
   );
-}
+};
 
 const AddTag = () => {
   const { setAllTags } = useContext(MenuMethodCtx);
+  const [popShow, setPopShow] = useState(false);
 
   async function addTag(val: string) {
     const name = val.trim();
@@ -136,10 +136,11 @@ const AddTag = () => {
     } else {
       const tags = await storeTag(name);
       setAllTags(tags);
+      setPopShow(false);
     }
   }
 
-  const popContent = (
+  const AddTagInput = () => (
     <Search
       placeholder="Tag name..."
       onSearch={addTag}
@@ -151,50 +152,73 @@ const AddTag = () => {
   return (
     <div id="add-tag">
       <Popover
-        content={popContent}
+        visible={popShow}
+        onVisibleChange={setPopShow}
+        content={<AddTagInput />}
         trigger="click"
         placement="topLeft"
         destroyTooltipOnHide
       >
-        <Button shape="circle" type="text" icon={<TagOutlined />} />
+        <Button
+          shape="circle"
+          type="text"
+          icon={<TagOutlined />}
+          onClick={() => setPopShow(true)}
+        />
       </Popover>
     </div>
   );
 };
 
 export default function SideMenu() {
-  const { allTags } = useContext(MenuStateCtx);
-  const { setTagUid } = useContext(MenuMethodCtx);
+  const { allTags, editing, tagUid } = useContext(MenuStateCtx);
+  const { setTagUid, setAllTags } = useContext(MenuMethodCtx);
+  const [nowSwiped, setNowSwiped] = useState("");
 
-  function menuClicked({ key }: { key: string }) {
-    setTagUid(key);
+  useEffect(() => {
+    if (editing) setNowSwiped("");
+  }, [editing]);
+
+  async function removeOneTag(uid: string) {
+    const tags = await deleteTag(uid);
+    setTagUid("DEFAULT");
+    setAllTags(tags);
   }
-
-  const { Item } = Menu;
 
   return (
     <aside>
       <input type="checkbox" id="aside-checkbox" />
       <div className="side-wrapper">
-        <Menu
-          onClick={menuClicked}
-          className="side-menu"
-          defaultSelectedKeys={["DEFAULT"]}
-          defaultOpenKeys={["sub1"]}
-          mode="inline"
-        >
-          <Item key="DEFAULT">
-            <div className="menu-item">
-              <ProfileOutlined id="all-note-icon" />
-              <span className="tag-name">All Notes</span>
-            </div>
-          </Item>
-          {Object.values(allTags).map((tag) => (
-            <Item key={tag.uid}>
-              <TagItem noteTag={tag} />
-            </Item>
-          ))}
-        </Menu>
+        <div className="side-menu">
+          <div
+            className={classNames("menu-item", { curr: tagUid === "DEFAULT" })}
+            onClick={() => setTagUid("DEFAULT")}
+          >
+            <ProfileOutlined id="all-note-icon" />
+            <span className="tag-name">All Notes</span>
+          </div>
+          {Object.values(allTags).map((tag) => {
+            const { uid } = tag;
+            const removeTag = () => removeOneTag(uid);
+            return (
+              <SwipeDelete
+                key={uid}
+                uid={uid}
+                onDelete={removeTag}
+                nowSwiped={nowSwiped}
+                setNowSwiped={setNowSwiped}
+                disable={editing}
+                icon
+              >
+                <TagItem
+                  noteTag={tag}
+                  removeTag={removeTag}
+                  onClick={() => setTagUid(uid)}
+                />
+              </SwipeDelete>
+            );
+          })}
+        </div>
         <footer>
           <AddTag />
         </footer>

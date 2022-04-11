@@ -34,3 +34,7 @@ code {
 .ant-menu-item-danger:not(.ant-menu-item-disabled) {
   color: #ff4d4f !important
 }
+
+.ant-menu {
+  border-right: none;
+}

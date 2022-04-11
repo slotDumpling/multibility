@@ -1,6 +1,7 @@
 import { Button, Drawer, Menu, Popover, Tabs } from "antd";
 import React, {
   Dispatch,
+  FC,
   MouseEvent,
   SetStateAction,
   useContext,
@@ -27,6 +28,7 @@ import "./preview.sass";
 import { exchange } from "../../lib/array";
 import { AddPageButton } from "./ReaderTools";
 import { TeamCtx } from "./Team";
+import classNames from "classnames";
 
 const PageNavContent = ({
   activeKey,
@@ -84,17 +86,12 @@ const PageNavContent = ({
   );
 };
 
-const PagePreview = ({
-  uid,
-  pageIndex,
-  mode,
-  currPageId,
-}: {
+const PagePreview: FC<{
   uid: string;
   pageIndex: number;
   mode: string;
   currPageId: string;
-}) => {
+}> = ({ uid, pageIndex, mode, currPageId }) => {
   const { stateSet, teamStateSet, pageRec } = useContext(ReaderStateCtx);
   const { scrollPage, switchPageMarked } = useContext(ReaderMethodCtx);
   const page = pageRec && pageRec[uid];
@@ -125,29 +122,35 @@ const PagePreview = ({
       index={pageIndex}
       isDragDisabled={dragDisabled}
     >
-      {({ innerRef, draggableProps, dragHandleProps }, { isDragging }) => (
-        <div
-          ref={innerRef}
-          className={`page${curr ? " curr" : ""}${isDragging ? " drag" : ""}`}
-          onClick={() => scrollPage(uid)}
-          {...draggableProps}
-          {...dragHandleProps}
-        >
-          <PageWrapper
-            uid={uid}
-            drawState={drawState}
-            teamState={teamState}
-            imageBlob={page.image}
-            preview
-          />
-          <span
-            className={`bookmark${page.marked ? " marked" : ""}`}
-            onClickCapture={switchMarked}
-          />
-          <span className="index">{pageIndex + 1}</span>
-          <PreviewOption uid={uid} />
-        </div>
-      )}
+      {(
+        { innerRef, draggableProps, dragHandleProps },
+        { isDragging: drag }
+      ) => {
+        const { image, marked } = page;
+        return (
+          <div
+            ref={innerRef}
+            className={classNames("page", { curr, drag })}
+            onClick={() => scrollPage(uid)}
+            {...draggableProps}
+            {...dragHandleProps}
+          >
+            <PageWrapper
+              uid={uid}
+              drawState={drawState}
+              teamState={teamState}
+              imageBlob={image}
+              preview
+            />
+            <span
+              className={classNames("bookmark", { marked })}
+              onClickCapture={switchMarked}
+            />
+            <span className="index">{pageIndex + 1}</span>
+            <PreviewOption uid={uid} />
+          </div>
+        );
+      }}
     </Draggable>
   );
 };
@@ -216,11 +219,11 @@ const PreviewTabs = ({
   return (
     <Tabs
       className="tabs"
-      centered
-      tabBarGutter={10}
-      size="small"
       activeKey={activeKey}
       onChange={setActiveKey}
+      tabBarGutter={10}
+      size="small"
+      centered
     >
       <TabPane tab={<IconFont type="icon-uf_paper" />} key="ALL" />
       <TabPane tab={<IconFont type="icon-bookmark2" />} key="MARKED" />

@@ -1,3 +1,4 @@
+import classNames from "classnames";
 import React, { useEffect, useState } from "react";
 import "./digitDisplay.sass";
 
@@ -23,7 +24,7 @@ export default function DigitDisplay({ value }: { value: number }) {
   }, [value]);
 
   return (
-    <div className={`digit-display ${value === -2 ? "disabled" : ""}`}>
+    <div className={classNames("digit-display", { disabled: value === -2 })}>
       {digits.map((d, idx) => (
         <Digit key={idx} digit={d} />
       ))}

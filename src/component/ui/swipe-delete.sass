@@ -1,0 +1,32 @@
+.swipe-wrapper
+  position: relative
+  transition: all 0.3s
+  $button-width: 80px
+  $icon-width: 40px
+  .content
+    height: 100%
+    overflow: hidden
+  &.deleting
+    transform: translateX(-$button-width)
+  &.deleted
+    height: 0 !important
+    opacity: 0
+  .button
+    position: absolute
+    top: 0
+    right: -$button-width
+    bottom: 0
+    width: $button-width
+    background: #ff4d4f
+    color: white
+    transition: transform 0.3s
+    display: flex
+    align-items: center
+    justify-content: center
+  &.icon
+    &.deleting
+      transform: translateX(-$icon-width)
+    .button
+      right: -$icon-width
+      width: $icon-width
+
