@@ -1,1 +1,1 @@
-Take notes and annotate PDF in the browser, and collaborate with others.
+Take notes, annotate PDFs and share your ideas in the browser.
