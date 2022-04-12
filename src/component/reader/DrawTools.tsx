@@ -74,12 +74,7 @@ export default function DrawTools({
         />
         <br />
         <PenButton erasing={erasing} updateDrawCtrl={updateDrawCtrl} />
-        <Button
-          type={erasing ? "default" : "text"}
-          shape="circle"
-          onClick={() => updateDrawCtrl({ erasing: true })}
-          icon={<IconFont type="icon-eraser" />}
-        />
+        <EraserButton erasing={erasing} updateDrawCtrl={updateDrawCtrl} />
         <Button
           type={finger ? "primary" : "text"}
           ghost={finger}
@@ -138,7 +133,7 @@ const PenPanel = ({
       <div className="pen-status">
         <Slider
           min={5}
-          max={50}
+          max={100}
           value={lineWidth}
           onChange={(lineWidth) => updateDrawCtrl({ lineWidth })}
         />
@@ -177,6 +172,50 @@ const ColorSelect = ({
     </div>
   );
 };
+
+const EraserButton = React.memo(
+  ({
+    erasing,
+    updateDrawCtrl,
+  }: {
+    erasing: boolean;
+    updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
+  }) => {
+    const { lineWidth } = useContext(DrawCtrlCtx);
+
+    const content = (
+      <div className="pen-panel">
+        <Slider
+          min={5}
+          max={100}
+          value={lineWidth}
+          onChange={(lineWidth) => updateDrawCtrl({ lineWidth })}
+        />
+      </div>
+    );
+    return erasing ? (
+      <Popover
+        content={content}
+        trigger="click"
+        placement="bottom"
+        getPopupContainer={(e) => e}
+      >
+        <Button
+          type="default"
+          shape="circle"
+          icon={<IconFont type="icon-eraser" />}
+        />
+      </Popover>
+    ) : (
+      <Button
+        type="text"
+        shape="circle"
+        onClick={() => updateDrawCtrl({ erasing: true })}
+        icon={<IconFont type="icon-eraser" />}
+      />
+    );
+  }
+);
 
 const UserCard = ({ userInfo }: { userInfo: UserInfo }) => {
   const { userName } = userInfo;

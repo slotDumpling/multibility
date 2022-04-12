@@ -464,7 +464,7 @@ const DrawWrapper = React.memo(
           readonly={!updateState}
           preview={preview}
           imgSrc={imgSrc}
-          {...drawCtrl}
+          drawCtrl={drawCtrl}
         />
       </div>
     );

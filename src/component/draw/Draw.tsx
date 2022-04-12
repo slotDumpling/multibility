@@ -1,10 +1,11 @@
-import React, { CSSProperties, TouchEvent, useEffect, useRef, useState } from "react";
+import React, { TouchEvent, useEffect, useRef, useState } from "react";
+import paper from "paper";
 import { DrawState, SetDrawState, Stroke } from "../../lib/draw/DrawState";
 import { isStylus } from "../../lib/touch/touch";
 import { Set } from "immutable";
-import paper from "paper";
-import "./draw.sass";
 import { releaseCanvas } from "../../lib/draw/drawer";
+import { DrawCtrl } from "../../lib/draw/drawCtrl";
+import "./draw.sass";
 
 const PREVIEW_WIDTH = 200;
 
@@ -12,11 +13,7 @@ const Draw = ({
   drawState,
   onChange = () => {},
   otherStates,
-  erasing = false,
-  finger = false,
-  lineWidth = 10,
-  color = "#000000",
-  highlight = false,
+  drawCtrl,
   readonly = false,
   preview = false,
   imgSrc,
@@ -24,11 +21,7 @@ const Draw = ({
   drawState: DrawState;
   onChange?: SetDrawState;
   otherStates?: DrawState[];
-  erasing?: boolean;
-  finger?: boolean;
-  lineWidth?: number;
-  color?: string;
-  highlight?: boolean;
+  drawCtrl: DrawCtrl;
   readonly?: boolean;
   preview?: boolean;
   imgSrc?: string;
@@ -41,10 +34,8 @@ const Draw = ({
   const path = useRef<paper.Path>();
   const [erased, setErased] = useState(Set<string>());
 
-  if (erasing) {
-    // lineWidth = 10;
-    color = "#aaa8";
-  }
+  let { erasing, color, finger, lineWidth, highlight } = drawCtrl;
+  if (erasing) color = "#aaa8";
 
   const isEventValid = (e: TouchEvent<HTMLCanvasElement>) => {
     return finger || isStylus(e);
@@ -85,23 +76,39 @@ const Draw = ({
   };
 
   const handleDrag = (e: paper.MouseEvent) => {
-    if (!path.current) return;
-    path.current.add(e.point.multiply(ratio.current));
-    path.current.smooth();
+        if (!path.current) return;
+        scope.current.activate();
+        const point = e.point.multiply(ratio.current);
+        path.current.add(point);
+        path.current.smooth();
 
-    if (!erasing) return;
-    group.current?.children.forEach((p) => {
-      if (!path.current) return;
-      if (!(p instanceof paper.Path)) return;
-      if (path.current.intersects(p)) {
-        setErased((prev) => prev.add(p.name));
+        if (!erasing) return;
+        const checkPoints = getCheckPoints(e, ratio.current, lineWidth);
+        const curveBound = path.current.lastSegment.curve?.strokeBounds;
+        const newErased = group.current?.children
+          .filter((p) => {
+            if (
+              erased.has(p.name) ||
+              !(p instanceof paper.Path) ||
+              !(curveBound && p.strokeBounds.intersects(curveBound))
+            ) {
+              return false;
+            }
+
+            return checkPoints.some((cPoint) => {
+              const d = p.getNearestPoint(cPoint).getDistance(cPoint);
+              return d < (p.strokeWidth + lineWidth) / 2;
+            });
+          })
+          .map((p) => p.name);
+
+        newErased && setErased((prev) => prev.concat(newErased));
       }
-    });
-  };
 
   const handleUp = erasing
     ? () => {
         if (!path.current) return;
+        scope.current.activate();
         path.current.remove();
         onChange((prev) => DrawState.eraseStrokes(prev, erased.toArray()));
         setErased(Set());
@@ -203,3 +210,19 @@ const Draw = ({
 };
 
 export default React.memo(Draw);
+
+const getCheckPoints = (
+  e: paper.MouseEvent,
+  ratio: number,
+  lineWidth: number
+) => {
+  const point = e.point.multiply(ratio);
+
+  const delta = e.delta.multiply(ratio);
+  const times = (delta.length / lineWidth) * 2;
+  const checkPoints: paper.Point[] = [];
+  for (let i = 0; i < times; i += 1) {
+    checkPoints.push(point.subtract(delta.multiply(i / times)));
+  }
+  return checkPoints;
+};
