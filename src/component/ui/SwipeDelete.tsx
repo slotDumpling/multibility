@@ -1,5 +1,12 @@
 import classNames from "classnames";
-import React, { Dispatch, FC, SetStateAction, useRef, useState } from "react";
+import React, {
+  Dispatch,
+  FC,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useSwipeable } from "react-swipeable";
 import { DeleteOutlined } from "@ant-design/icons";
 import "./swipe-delete.sass";
@@ -24,8 +31,7 @@ const SwipeDelete: FC<{
   const [swiped, setSwiped] = useState(false);
   const [height, setHeight] = useState<number>();
   const button = useRef<HTMLDivElement>(null);
-  const deleting =
-    swiped && (nowSwiped === undefined || nowSwiped === uid) && !disable;
+  const deleting = swiped && (nowSwiped === undefined || nowSwiped === uid);
 
   const showDelete = () => {
     setSwiped(true);
@@ -36,7 +42,7 @@ const SwipeDelete: FC<{
   const hideDelete = () => {
     setSwiped(false);
     setNowSwiped && setNowSwiped("");
-    setHeight(undefined)
+    setHeight(undefined);
   };
 
   const swipeHandler = useSwipeable({
@@ -45,6 +51,13 @@ const SwipeDelete: FC<{
     preventDefaultTouchmoveEvent: true,
     trackTouch: !disable,
   });
+
+  useEffect(() => {
+    if (!disable) return;
+    setHeight(undefined);
+    setNowSwiped && setNowSwiped("");
+    setSwiped(false);
+  }, [disable]);
 
   return (
     <div

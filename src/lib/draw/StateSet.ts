@@ -62,7 +62,9 @@ export class StateSet {
     );
 
     if (this.getStates().has(pageId)) {
-      newImmu = newImmu.update("editStack", (s) => s.push(pageId));
+      newImmu = newImmu
+        .update("editStack", (l) => l.push(pageId))
+        .set("undoStack", List());
     }
 
     let lastOp: SetOperation | undefined;
@@ -82,8 +84,8 @@ export class StateSet {
 
   deleteState(pageId: string) {
     return new StateSet(
-      this.getImmutable().update('states', s => s.delete(pageId))
-    )
+      this.getImmutable().update("states", (s) => s.delete(pageId))
+    );
   }
 
   getOneState(pageId: string) {

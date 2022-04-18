@@ -21,10 +21,6 @@ export default function NoteList({ noteList }: { noteList: NoteInfo[] }) {
   const { editing } = useContext(MenuStateCtx);
   const { setAllTags, setAllNotes } = useContext(MenuMethodCtx);
 
-  useEffect(() => {
-    if (editing) setNowSwiped("");
-  }, [editing]);
-
   const removeOneNote = async (uid: string) => {
     const { tags, allNotes } = await deleteNote(uid);
     setAllTags(tags);
@@ -125,7 +121,7 @@ const NoteItem: FC<{
   );
 
   return (
-    <div className="list-item" onClick={() => !editing && nav(href)}>
+    <div className="note-item" onClick={() => !editing && nav(href)}>
       <div className="thumbnail-wrapper">
         <img
           src={url || dafaultImg}

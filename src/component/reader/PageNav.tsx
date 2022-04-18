@@ -66,7 +66,7 @@ const PageNavContent = ({
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="droppable">
           {({ droppableProps, innerRef, placeholder }) => (
-            <div className="pages" {...droppableProps} ref={innerRef}>
+            <div className="page-list" {...droppableProps} ref={innerRef}>
               {pageOrder?.map((uid, index) => (
                 <PagePreview
                   key={uid}

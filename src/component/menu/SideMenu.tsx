@@ -71,11 +71,11 @@ const TagItem: FC<{
 
   useEffect(() => {
     setTagEditing(false);
-  }, [editing])
+  }, [editing]);
 
   return (
     <div
-      className={classNames("menu-item", {
+      className={classNames("tag-item", {
         curr: tagUid === uid,
         editing: editing && tagEditing,
       })}
@@ -99,7 +99,7 @@ const TagItem: FC<{
             icon={<DeleteOutlined />}
             okText="Delete"
             okType="danger"
-            okButtonProps={{type: 'primary'}}
+            okButtonProps={{ type: "primary" }}
           >
             <Button danger>Delete</Button>
           </Popconfirm>
@@ -145,7 +145,7 @@ const AddTag = () => {
       placeholder="Tag name..."
       onSearch={addTag}
       allowClear
-      enterButton={<PlusOutlined />}
+      enterButton={<Button icon={<PlusOutlined />} />}
     />
   );
 
@@ -175,10 +175,6 @@ export default function SideMenu() {
   const { setTagUid, setAllTags } = useContext(MenuMethodCtx);
   const [nowSwiped, setNowSwiped] = useState("");
 
-  useEffect(() => {
-    if (editing) setNowSwiped("");
-  }, [editing]);
-
   async function removeOneTag(uid: string) {
     const tags = await deleteTag(uid);
     setTagUid("DEFAULT");
@@ -186,43 +182,40 @@ export default function SideMenu() {
   }
 
   return (
-    <aside>
-      <input type="checkbox" id="aside-checkbox" />
-      <div className="side-wrapper">
-        <div className="side-menu">
-          <div
-            className={classNames("menu-item", { curr: tagUid === "DEFAULT" })}
-            onClick={() => setTagUid("DEFAULT")}
-          >
-            <ProfileOutlined id="all-note-icon" />
-            <span className="tag-name">All Notes</span>
-          </div>
-          {Object.values(allTags).map((tag) => {
-            const { uid } = tag;
-            const removeTag = () => removeOneTag(uid);
-            return (
-              <SwipeDelete
-                key={uid}
-                uid={uid}
-                onDelete={removeTag}
-                nowSwiped={nowSwiped}
-                setNowSwiped={setNowSwiped}
-                disable={editing}
-                icon
-              >
-                <TagItem
-                  noteTag={tag}
-                  removeTag={removeTag}
-                  onClick={() => setTagUid(uid)}
-                />
-              </SwipeDelete>
-            );
-          })}
+    <aside className="side-menu">
+      <div className="tag-list">
+        <div
+          className={classNames("tag-item", { curr: tagUid === "DEFAULT" })}
+          onClick={() => setTagUid("DEFAULT")}
+        >
+          <ProfileOutlined id="all-note-icon" />
+          <span className="tag-name">All Notes</span>
         </div>
-        <footer>
-          <AddTag />
-        </footer>
+        {Object.values(allTags).map((tag) => {
+          const { uid } = tag;
+          const removeTag = () => removeOneTag(uid);
+          return (
+            <SwipeDelete
+              key={uid}
+              uid={uid}
+              onDelete={removeTag}
+              nowSwiped={nowSwiped}
+              setNowSwiped={setNowSwiped}
+              disable={editing}
+              icon
+            >
+              <TagItem
+                noteTag={tag}
+                removeTag={removeTag}
+                onClick={() => setTagUid(uid)}
+              />
+            </SwipeDelete>
+          );
+        })}
       </div>
+      <footer>
+        <AddTag />
+      </footer>
     </aside>
   );
 }

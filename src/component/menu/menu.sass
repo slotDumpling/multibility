@@ -32,10 +32,7 @@
       right: 20px
       bottom: 20px
 
-#aside-checkbox, #aside-label
-  display: none
-
-.side-wrapper
+.side-menu
   transition: all 0.5s
   width: 300px
   height: 100%
@@ -43,7 +40,7 @@
   flex-direction: column
   border-right: 1px solid #eee
   background-color: #eee3
-  .side-menu
+  .tag-list
     flex: 1
     overflow-y: auto
     overflow-x: hidden
@@ -59,36 +56,35 @@
     padding: 10px 15px
     overflow: hidden
 
+.aside-drawer-title
+  display: flex
+  justify-content: space-between
+  align-items: center
+.aside-btn
+  margin-right: 10px
+.aside-drawer .side-menu
+  background: #0000
+
 @media screen and (max-width: 500px)
-  aside
-    display: flex
-    flex-direction: row-reverse
-    position: absolute
-    height: 100%
-    background: white
-    z-index: 1000
-  .side-wrapper
-    width: 0
-    box-shadow: 10px 0px 20px 5px #0001
-    overflow: hidden
-  #aside-label
-    display: unset
-    cursor: pointer
-    margin-right: 5px
-    padding: 5px 10px
-  #aside-checkbox:checked + .side-wrapper
-    width: 200px
   button.large
     display: none
+  main > .side-menu
+    display: none
+
+@media screen and (min-width: 500px)
   button.small
-    display: unset !important
+    display: none
+  .aside-btn
+    display: none
+  .aside-drawer
+    display: none
 
 .tag-circle
   width: 12px
   height: 12px
   border-radius: 6px
 
-.menu-item
+.tag-item
   height: 3em
   padding: 0 10px
   margin: 0 20px
@@ -97,7 +93,8 @@
   justify-content: space-between
   cursor: pointer
   border-radius: 10px
-  transition: all 0.3s
+  transition-property: height, background
+  transition-duration: 0.3s
   &.editing
     flex-direction: column
     height: 8em
@@ -108,7 +105,7 @@
       justify-content: space-between
       width: 100%
   &.curr
-    background-color: #f1f0f5
+    background-: #f1f0f5
   & > .tag-circle
     margin: 0 12px 0 7px
   #all-note-icon
@@ -128,14 +125,12 @@
 
 button.team-btn
   margin-right: 10px
-button.small
-  display: none
 
 .note-list
   flex: 1
   padding-bottom: 20px
   overflow: hidden auto
-  .list-item
+  .note-item
     border-bottom: 1px solid #eee
     height: 5em
     display: flex

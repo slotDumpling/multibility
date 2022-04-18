@@ -7,19 +7,19 @@
       margin: 0 20px
     .anticon
       margin: 0 15px
-  .pages
+  .page-list
     flex: 1
     overflow: hidden scroll
     padding: 25px 25px 0 25px
-    & > *
+    & > div
       margin-bottom: 25px
     .page
       cursor: pointer
       position: relative
       border: 1px solid #eee
       &.curr
-        border-color: #1890ff
-        outline: 2px solid #1890ff
+        border-color: var(--blue-color)
+        outline: 2px solid var(--blue-color)
       &.drag
         box-shadow: 0 0 20px 10px #0002
       .bookmark
@@ -40,7 +40,7 @@
           background-color: #ddd
           transition: background 0.3s
         &.marked::after
-          background-color: #1890ff
+          background-color: var(--blue-color)
       .index
         position: absolute
         right: 0px
@@ -57,6 +57,9 @@
         color: #fff
         padding: 0 .5em
         border-radius: 0 5px 0 0
+        transition: opacity 0.2s
+        &:active
+          opacity: 0.7
         &::after
           content: ""
           position: absolute

@@ -1,13 +1,16 @@
-import { Button } from "antd";
-import { useContext } from "react";
+import { Button, Drawer } from "antd";
+import { useContext, useState } from "react";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import {
-  MenuOutlined,
   EditOutlined,
   CheckOutlined,
+  MenuUnfoldOutlined,
+  MenuFoldOutlined,
 } from "@ant-design/icons";
+import SideMenu from "./SideMenu";
 
 export default function LeftTools() {
+  const [asideOn, setAsideOn] = useState(false);
   const { editing } = useContext(MenuStateCtx);
   const { setEditing } = useContext(MenuMethodCtx);
 
@@ -15,27 +18,63 @@ export default function LeftTools() {
     setEditing((prev) => !prev);
   }
 
+  const SmallEditButton = (
+    <Button
+      className="edit-btn small"
+      onClick={swichEditing}
+      type={editing ? "primary" : "default"}
+      shape="circle"
+    >
+      {editing ? <CheckOutlined /> : <EditOutlined />}
+    </Button>
+  );
+
+  const largeEditButton = (
+    <Button
+      className="edit-btn large"
+      onClick={swichEditing}
+      type={editing ? "primary" : "text"}
+      block
+    >
+      {editing ? "Done" : "Edit"}
+    </Button>
+  );
+
+  const AsideTitle = (
+    <div className="aside-drawer-title">
+      <span>Tags</span>
+      {SmallEditButton}
+    </div>
+  );
+
+  const AsideButton = (
+    <div className="aside-btn">
+      <Button
+        type="text"
+        icon={<MenuUnfoldOutlined />}
+        onClick={() => setAsideOn(true)}
+      />
+      <Drawer
+        className="aside-drawer"
+        visible={asideOn}
+        onClose={() => setAsideOn(false)}
+        placement="left"
+        title={AsideTitle}
+        closeIcon={<MenuFoldOutlined />}
+        width={300}
+        bodyStyle={{ padding: 0, overflow: "hidden" }}
+        destroyOnClose
+      >
+        <SideMenu />
+      </Drawer>
+    </div>
+  );
+
   return (
     <div className="left-tools">
-      <label htmlFor="aside-checkbox" id="aside-label">
-        <MenuOutlined />
-      </label>
-      <Button
-        className="edit-btn large"
-        onClick={swichEditing}
-        type={editing ? "primary" : "text"}
-        block
-      >
-        {editing ? "Done" : "Edit"}
-      </Button>
-      <Button
-        className="edit-btn small"
-        onClick={swichEditing}
-        type={editing ? "primary" : "text"}
-        shape="circle"
-      >
-        {editing ? <CheckOutlined /> : <EditOutlined />}
-      </Button>
+      {AsideButton}
+      {largeEditButton}
+      {SmallEditButton}
     </div>
   );
 }

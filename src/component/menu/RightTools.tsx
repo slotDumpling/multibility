@@ -56,7 +56,7 @@ const OthersMenu = () => {
   const { setActive } = useContext(OthersStateUpdateCtx);
   const { Item } = Menu;
   return (
-    <Menu onClick={({ key }) => setActive(key)} mode="inline">
+    <Menu onClick={({ key }) => setActive(key)}>
       <Item key="PDF">
         <FilePdfOutlined />
         <span>Load PDF</span>
@@ -176,7 +176,7 @@ const SettingsPage = () => {
           title="Everything will be deleted."
           onConfirm={clearAll}
           icon={<ClearOutlined />}
-          okText="Clear all"
+          okText="Delete"
           okType="danger"
           okButtonProps={{type: 'primary'}}
           cancelText="Cancel"

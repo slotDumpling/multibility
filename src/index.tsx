@@ -6,6 +6,9 @@ import MainMenu from "./component/menu/MainMenu";
 import Reader from "./component/reader/Reader";
 import Test from "./component/Test";
 import Team from "./component/reader/Team";
+import { message } from "antd";
+
+message.config({ top: 60 });
 
 const placeholderEl = (
   <main style={{ padding: "1rem" }}>

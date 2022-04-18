@@ -1,5 +1,20 @@
-import { Avatar, Button, Divider, Popconfirm, Popover, Slider } from "antd";
-import React, { Dispatch, SetStateAction, useContext, useMemo } from "react";
+import {
+  Avatar,
+  Button,
+  Divider,
+  Input,
+  message,
+  Popconfirm,
+  Popover,
+  Slider,
+} from "antd";
+import React, {
+  CSSProperties,
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useMemo,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { DrawCtrlCtx, ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { TeamCtx } from "./Team";
@@ -12,6 +27,8 @@ import {
   RedoOutlined,
   SaveOutlined,
   TeamOutlined,
+  CopyOutlined,
+  ExpandOutlined,
   ReloadOutlined,
   HighlightOutlined,
 } from "@ant-design/icons";
@@ -19,6 +36,7 @@ import "./drawTools.sass";
 import PageNav from "./PageNav";
 import IconFont from "../ui/IconFont";
 import { DrawCtrl } from "../../lib/draw/drawCtrl";
+import Search from "antd/lib/input/Search";
 
 export default function DrawTools({
   setDrawCtrl,
@@ -31,7 +49,7 @@ export default function DrawTools({
   handleRedo: () => void;
   instantSave: () => void;
 }) {
-  const { erasing, finger } = useContext(DrawCtrlCtx);
+  const { finger, mode } = useContext(DrawCtrlCtx);
   const { saved, stateSet, teamOn } = useContext(ReaderStateCtx);
   const nav = useNavigate();
 
@@ -45,7 +63,7 @@ export default function DrawTools({
         <Button
           type="text"
           onClick={() => nav("/")}
-          icon={<HomeFilled className="home-icon" />}
+          icon={<HomeFilled style={{ opacity: 0.8 }} />}
         />
         <br />
         <Button
@@ -73,9 +91,16 @@ export default function DrawTools({
           disabled={!stateSet?.isRedoable()}
         />
         <br />
-        <PenButton erasing={erasing} updateDrawCtrl={updateDrawCtrl} />
-        <EraserButton erasing={erasing} updateDrawCtrl={updateDrawCtrl} />
+        <PenButton updateDrawCtrl={updateDrawCtrl} />
+        <EraserButton updateDrawCtrl={updateDrawCtrl} />
         <Button
+          type={mode === "select" ? "default" : "text"}
+          shape="circle"
+          onClick={() => updateDrawCtrl({ mode: "select" })}
+          icon={<ExpandOutlined />}
+        />
+        <Button
+          className="finger"
           type={finger ? "primary" : "text"}
           ghost={finger}
           shape="circle"
@@ -93,33 +118,31 @@ export default function DrawTools({
   );
 }
 
-const PenButton = React.memo(
-  ({
-    erasing,
-    updateDrawCtrl,
-  }: {
-    erasing: boolean;
-    updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
-  }) => {
-    return erasing ? (
-      <Button
-        type="text"
-        shape="circle"
-        onClick={() => updateDrawCtrl({ erasing: false })}
-        icon={<HighlightOutlined />}
-      />
-    ) : (
-      <Popover
-        content={<PenPanel updateDrawCtrl={updateDrawCtrl} />}
-        trigger="click"
-        placement="bottom"
-        getPopupContainer={(e) => e}
-      >
-        <Button type="default" shape="circle" icon={<HighlightOutlined />} />
-      </Popover>
-    );
-  }
-);
+const PenButton = ({
+  updateDrawCtrl,
+}: {
+  updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
+}) => {
+  const { mode } = useContext(DrawCtrlCtx);
+  return mode === "draw" ? (
+    <Popover
+      content={<PenPanel updateDrawCtrl={updateDrawCtrl} />}
+      trigger="click"
+      placement="bottom"
+      getPopupContainer={(e) => e}
+      destroyTooltipOnHide
+    >
+      <Button type="default" shape="circle" icon={<HighlightOutlined />} />
+    </Popover>
+  ) : (
+    <Button
+      type="text"
+      shape="circle"
+      onClick={() => updateDrawCtrl({ mode: "draw" })}
+      icon={<HighlightOutlined />}
+    />
+  );
+};
 
 const PenPanel = ({
   updateDrawCtrl,
@@ -160,69 +183,70 @@ const ColorSelect = ({
   return (
     <div className="color-select">
       {colors.map((c) => (
-        <input
-          key={c}
-          checked={color === c}
-          type="radio"
-          name="color"
-          onChange={() => updateDrawCtrl({ color: c })}
-          style={{ borderColor: c, backgroundColor: c }}
-        />
+        <label key={c}>
+          <input
+            checked={color === c}
+            type="radio"
+            name="color"
+            onChange={() => updateDrawCtrl({ color: c })}
+          />
+          <div
+            className="circle"
+            style={{ "--circle-color": c } as CSSProperties}
+          ></div>
+        </label>
       ))}
     </div>
   );
 };
 
-const EraserButton = React.memo(
-  ({
-    erasing,
-    updateDrawCtrl,
-  }: {
-    erasing: boolean;
-    updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
-  }) => {
-    const { lineWidth } = useContext(DrawCtrlCtx);
+const EraserButton = ({
+  updateDrawCtrl,
+}: {
+  updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
+}) => {
+  const { eraserWidth, mode } = useContext(DrawCtrlCtx);
 
-    const content = (
-      <div className="pen-panel">
-        <Slider
-          min={5}
-          max={100}
-          value={lineWidth}
-          onChange={(lineWidth) => updateDrawCtrl({ lineWidth })}
-        />
-      </div>
-    );
-    return erasing ? (
-      <Popover
-        content={content}
-        trigger="click"
-        placement="bottom"
-        getPopupContainer={(e) => e}
-      >
-        <Button
-          type="default"
-          shape="circle"
-          icon={<IconFont type="icon-eraser" />}
-        />
-      </Popover>
-    ) : (
+  const content = (
+    <div className="pen-panel">
+      <Slider
+        min={5}
+        max={100}
+        value={eraserWidth}
+        onChange={(eraserWidth) => updateDrawCtrl({ eraserWidth })}
+      />
+    </div>
+  );
+  return mode === "erase" ? (
+    <Popover
+      content={content}
+      trigger="click"
+      placement="bottom"
+      getPopupContainer={(e) => e}
+      destroyTooltipOnHide
+    >
       <Button
-        type="text"
+        type="default"
         shape="circle"
-        onClick={() => updateDrawCtrl({ erasing: true })}
         icon={<IconFont type="icon-eraser" />}
       />
-    );
-  }
-);
+    </Popover>
+  ) : (
+    <Button
+      type="text"
+      shape="circle"
+      onClick={() => updateDrawCtrl({ mode: "erase" })}
+      icon={<IconFont type="icon-eraser" />}
+    />
+  );
+};
 
 const UserCard = ({ userInfo }: { userInfo: UserInfo }) => {
   const { userName } = userInfo;
   const color = useMemo(() => getHashedColor(userName), [userName]);
 
   return (
-    <div className="user-card">
+    <div className="user-item">
       <Avatar
         className="avatar"
         size="small"
@@ -237,10 +261,26 @@ const UserCard = ({ userInfo }: { userInfo: UserInfo }) => {
 
 function RoomInfo() {
   const { code, userList, loadInfo } = useContext(TeamCtx);
+  const link = window.location.href;
+  const copy = () => {
+    navigator.clipboard.writeText(link);
+    message.destroy("copy");
+    message.success({
+      content: "Share link copied!",
+      icon: <CopyOutlined />,
+      key: "copy",
+    });
+  };
 
   const content = (
     <div className="team-popover">
       <DigitDisplay value={code} />
+      <Search
+        className="copy-link"
+        value={link}
+        enterButton={<Button icon={<CopyOutlined />} />}
+        onSearch={copy}
+      />
       <Divider />
       <div className="user-list">
         {userList.map((u) => (

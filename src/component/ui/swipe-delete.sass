@@ -1,12 +1,14 @@
 .swipe-wrapper
   position: relative
-  transition: all 0.3s
+  transition-property: transform
+  transition-duration: 0.3s
   $button-width: 80px
   $icon-width: 40px
   .content
     height: 100%
     overflow: hidden
   &.deleting
+    transition-property: transform, height
     transform: translateX(-$button-width)
   &.deleted
     height: 0 !important

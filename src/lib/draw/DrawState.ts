@@ -1,4 +1,4 @@
-import { List, OrderedSet, Record, Set } from "immutable";
+import { List, Map, OrderedSet, Record, Set } from "immutable";
 import { Dispatch, SetStateAction } from "react";
 import { v4 as getUid } from "uuid";
 
@@ -16,6 +16,8 @@ interface ImmuErase {
   uid: string;
   erased: Set<string>;
 }
+
+interface Mutation extends Stroke {}
 
 export type Operation =
   | {
@@ -42,6 +44,7 @@ interface DrawStateRecordType {
   undoStack: OrderedSet<string>;
   eraseStack: List<ImmuErase>;
   deleted: Set<string>;
+  mutations: Map<string, List<Mutation>>;
 }
 
 type DrawStateRecord = Record<DrawStateRecordType>;
@@ -53,6 +56,7 @@ const defaultRecord: Readonly<DrawStateRecordType> = {
   undoStack: OrderedSet(),
   eraseStack: List(),
   deleted: Set(),
+  mutations: Map(),
 };
 
 const defaultFactory = Record(defaultRecord);
@@ -61,8 +65,8 @@ export interface FlatState {
   strokes: Stroke[];
 }
 
-export const getDefaultFlatState = () => {
-  return { strokes: [] } as FlatState;
+export const getDefaultFlatState = (): FlatState => {
+  return { strokes: [] };
 };
 
 export class DrawState {
@@ -101,20 +105,37 @@ export class DrawState {
     return this.getImmutable().get("strokes");
   }
 
+  getMutatedStoke(stroke: Stroke) {
+    const deleted = this.getDeleted();
+    const undo = this.getUndoStack();
+    const mutations = this.getMutations();
+    const { uid, pathData } = stroke;
+    const overlay = mutations
+      .get(uid)
+      ?.findLast(({ uid: mUid }) => !undo.has(mUid) && !deleted.has(mUid));
+    return { uid, pathData: overlay?.pathData ?? pathData };
+  }
+
   getValidStrokes() {
     const deleted = this.getDeleted();
     const undo = this.getUndoStack();
     const erase = this.getValidEraseStack();
-    return this.getStrokes().filter(
-      ({ uid }) =>
-        !deleted.has(uid) &&
-        !undo.has(uid) &&
-        !erase.some((s) => s.erased.has(uid))
-    );
+    return this.getStrokes()
+      .filter(
+        ({ uid }) =>
+          !deleted.has(uid) &&
+          !undo.has(uid) &&
+          !erase.some((s) => s.erased.has(uid))
+      )
+      .map((s) => this.getMutatedStoke(s));
   }
 
   getDeleted() {
     return this.getImmutable().get("deleted");
+  }
+
+  getMutations() {
+    return this.getImmutable().get("mutations");
   }
 
   getState() {
@@ -170,20 +191,17 @@ export class DrawState {
     );
   }
 
-  static addStroke(drawState: DrawState, newStroke: Omit<Stroke, "uid">) {
+  static addStroke(drawState: DrawState, pathData: string) {
     const uid = getUid();
-    const stroke = { ...newStroke, uid };
+    const stroke = { pathData, uid };
     return DrawState.pushStroke(drawState, stroke);
   }
 
   static pushStroke(drawState: DrawState, stroke: Stroke) {
-    const undo = drawState.getUndoStack();
     const pushedState = mergeUndo(
       drawState
         .getImmutable()
         .set("state", "drawing")
-        .update("deleted", (d) => d.concat(undo))
-        .set("undoStack", OrderedSet())
         .update("strokes", (s) => s.push(stroke))
         .update("uidStack", (s) => s.push(stroke.uid))
     );
@@ -236,6 +254,24 @@ export class DrawState {
     );
   }
 
+  static mutateStroke(drawState: DrawState, strokes: Stroke[]) {
+    let mutations = drawState.getMutations();
+    const mUid = getUid();
+    strokes.forEach((s) => {
+      const { uid, pathData } = s;
+      const m = { uid: mUid, pathData };
+      mutations = mutations.update(uid, (l) => l?.push(m) ?? List([m]));
+    });
+    return new DrawState(
+      drawState
+        .getImmutable()
+        .set("mutations", mutations)
+        .update("uidStack", (s) => s.push(mUid)),
+      drawState.width,
+      drawState.height
+    );
+  }
+
   static flaten(drawState: DrawState): FlatState {
     const mergedRecord = mergeUndo(drawState.getImmutable());
     const deleted = mergedRecord.get("deleted");
@@ -247,6 +283,7 @@ export class DrawState {
     const strokes = mergedRecord
       .get("strokes")
       .filter((s) => !deletedAll.has(s.uid))
+      .map(s => drawState.getMutatedStoke(s))
       .toArray();
     return { strokes };
   }

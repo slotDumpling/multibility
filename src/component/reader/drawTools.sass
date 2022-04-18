@@ -6,14 +6,10 @@
     align-items: center
     justify-content: space-between
     border-bottom: 1px solid #ddd
-    button
+    div > button
       margin: 0 5px
       &.redo
         margin-right: 30px 
-      .home-icon
-        opacity: 0.8
-    br
-      display: none
 
 @media screen and (max-width: 500px)
   .reader-container
@@ -25,6 +21,10 @@
       display: block !important
       height: 10px
       content: ""
+
+@media screen and (min-width: 500px)
+  .reader-container br
+    display: none
 
 .pen-panel
   width: 200px
@@ -41,15 +41,20 @@
     grid-auto-rows: 40px
     align-items: center
     input[type="radio"]
-      appearance: none
+      display: none
+      &:checked + .circle
+        border-width: 6px
+        background-color: white
+    .circle
+      cursor: pointer
       width: 30px
       height: 30px
       border-radius: 15px
       border: 15px solid
       transition: all 0.2s
-      &:checked
-        border: 6px solid
-        background-color: white !important
+      background-color: var(--circle-color)
+      border-color: var(--circle-color)
+
         
 .team-title
   display: flex
@@ -57,17 +62,18 @@
   align-items: center
 
 .team-popover
-  width: 100%
+  width: 180px
   display: flex
   flex-direction: column
   align-items: center
+  .copy-link
+    width: 165px
+    margin-top: 20px
   .user-list
     width: 100%
-    .user-card
+    .user-item
       display: flex
       width: 100%
       margin-bottom: 10px
       .avatar
         margin-right: 10px
-      button
-        margin-left: auto
