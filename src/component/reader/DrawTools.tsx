@@ -6,6 +6,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useState,
 } from "react";
 import {
   Avatar,
@@ -68,7 +69,7 @@ export default function DrawTools({
     if (mode === "selected") {
       message.info({
         className: "select-message",
-        icon: <DragOutlined style={{ display: 'none' }} />,
+        icon: <DragOutlined style={{ display: "none" }} />,
         content: <SelectMenu setMode={setMode} />,
         duration: 0,
         key: "selected",
@@ -173,6 +174,7 @@ const PenPanel = ({
   const {
     drawCtrl: { lineWidth, highlight },
   } = useContext(ReaderStateCtx);
+  const [tempLineWidth, setTempLineWidth] = useState(lineWidth);
 
   return (
     <div className="pen-panel">
@@ -180,8 +182,9 @@ const PenPanel = ({
         <Slider
           min={5}
           max={100}
-          value={lineWidth}
-          onChange={(lineWidth) => updateDrawCtrl({ lineWidth })}
+          value={tempLineWidth}
+          onChange={setTempLineWidth}
+          onAfterChange={(lineWidth) => updateDrawCtrl({ lineWidth })}
         />
         <Button
           type={highlight ? "primary" : "text"}
@@ -235,14 +238,16 @@ const EraserButton = ({
     mode,
     drawCtrl: { eraserWidth },
   } = useContext(ReaderStateCtx);
+  const [tempEraserWidth, setTempEraserWidth] = useState(eraserWidth);
 
   const content = (
     <div className="pen-panel">
       <Slider
         min={5}
         max={100}
-        value={eraserWidth}
-        onChange={(eraserWidth) => updateDrawCtrl({ eraserWidth })}
+        value={tempEraserWidth}
+        onChange={setTempEraserWidth}
+        onAfterChange={(eraserWidth) => updateDrawCtrl({ eraserWidth })}
       />
     </div>
   );
@@ -279,14 +284,8 @@ const SelectMenu: FC<{
   };
   return (
     <>
-      <Button
-        icon={<RotateLeftOutlined />}
-        {...buttonProps}
-      />
-      <Button
-        icon={<RotateRightOutlined />}
-        {...buttonProps}
-      />
+      <Button icon={<RotateLeftOutlined />} {...buttonProps} />
+      <Button icon={<RotateRightOutlined />} {...buttonProps} />
       <Button
         danger
         icon={<DeleteOutlined />}

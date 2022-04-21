@@ -7,9 +7,9 @@ import React, {
   useState,
 } from "react";
 import paper from "paper";
+import { CtrlMode, defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
 import { DrawState, SetDrawState, Stroke } from "../../lib/draw/DrawState";
 import { releaseCanvas } from "../../lib/draw/drawer";
-import { CtrlMode, defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
 import { isStylus } from "../../lib/touch/touch";
 import { Set } from "immutable";
 import "./draw.sass";
@@ -268,9 +268,9 @@ const Draw = ({
   const deleteSelected = () => {
     const list = selectGroup.current?.children;
     if (!list?.length) return;
-    const deleted = list.map(item => item.name);
+    const deleted = list.map((item) => item.name);
     onChange((prev) => DrawState.eraseStrokes(prev, deleted));
-  }
+  };
 
   useEffect(() => {
     if (mode === "select") {
@@ -279,11 +279,11 @@ const Draw = ({
       if (rect?.strokeColor) rect.strokeColor.alpha /= 2;
       scope.current.activate();
       const circle = new paper.Shape.Circle(new paper.Point(10, 10), 10);
-      circle.strokeColor = new paper.Color('black');
+      circle.strokeColor = new paper.Color("black");
       return updateMutation;
     } else if (mode === "delete") {
-      deleteSelected()
-      setMode('select');
+      deleteSelected();
+      setMode("select");
       setRect(undefined);
     } else {
       setRect(undefined);

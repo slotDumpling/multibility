@@ -1,5 +1,13 @@
-import { Button, Input, Popconfirm, Popover, Select } from "antd";
-import { FC, MouseEventHandler, useContext, useEffect, useState } from "react";
+import { Button, Input, InputRef, Popconfirm, Popover, Select } from "antd";
+import {
+  FC,
+  MouseEventHandler,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { deleteTag, editTag, NoteTag, storeTag } from "../../lib/note/archive";
 import { colors } from "../../lib/color";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
@@ -161,11 +169,12 @@ const AddTag = () => {
         destroyTooltipOnHide
       >
         <Button
-          shape="circle"
-          type="text"
+          shape="round"
           icon={<TagOutlined />}
           onClick={() => setPopShow(true)}
-        />
+        >
+          Add
+        </Button>
       </Popover>
     </div>
   );

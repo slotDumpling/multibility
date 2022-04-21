@@ -1,15 +1,15 @@
 import React, {
-  createContext,
-  Dispatch,
   FC,
-  SetStateAction,
-  useCallback,
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
   useRef,
+  useMemo,
   useState,
+  Dispatch,
+  useEffect,
+  useContext,
+  useCallback,
+  createContext,
+  SetStateAction,
+  useLayoutEffect,
 } from "react";
 import { message } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
@@ -147,7 +147,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
 
   useEffect(() => {
     if (!noteInfo) return;
-    document.title = noteInfo.name + ' - Multibility';
+    document.title = noteInfo.name + " - Multibility";
   }, [noteInfo]);
 
   useEffect(() => {
@@ -342,135 +342,134 @@ const PageContainer: FC<{ uid: string }> = ({ uid }) => {
   );
 };
 
-export const PageWrapper = React.memo(
-  ({
-    thumbnail,
-    drawState,
-    teamState,
-    uid,
-    pdfIndex,
-    updateState,
-    preview = false,
-  }: {
-    uid: string;
-    drawState: DrawState;
-    teamState?: DrawState;
-    thumbnail?: string;
-    pdfIndex?: number;
-    updateState?: (ds: DrawState) => void;
-    preview?: boolean;
-  }) => {
-    const { setInviewPages } = useContext(ReaderMethodCtx);
-    const { pdfFile, refRec } = useContext(ReaderStateCtx);
-    const [fullImg, setFullImg] = useState<string>();
-    const [visibleRef, visible] = useInView({ delay: 100 });
+export const PageWrapper = ({
+  thumbnail,
+  drawState,
+  teamState,
+  uid,
+  pdfIndex,
+  updateState,
+  preview = false,
+}: {
+  uid: string;
+  drawState: DrawState;
+  teamState?: DrawState;
+  thumbnail?: string;
+  pdfIndex?: number;
+  updateState?: (ds: DrawState) => void;
+  preview?: boolean;
+}) => {
+  const { setInviewPages } = useContext(ReaderMethodCtx);
+  const { pdfFile, refRec } = useContext(ReaderStateCtx);
+  const [fullImg, setFullImg] = useState<string>();
+  const [visibleRef, visible] = useInView({ delay: 100 });
 
-    const { height, width } = drawState;
-    const ratio = height / width;
+  const { height, width } = drawState;
+  const ratio = height / width;
 
-    const handleRef = useCallback(
-      (e: HTMLDivElement | null) => {
-        if (!e) return;
-        visibleRef(e);
-        if (!preview && refRec) refRec[uid] = e;
-      },
-      [refRec]
-    );
+  const handleRef = useCallback(
+    (e: HTMLDivElement | null) => {
+      if (!e) return;
+      visibleRef(e);
+      if (!preview && refRec) refRec[uid] = e;
+    },
+    [refRec]
+  );
 
-    const loadImage = useCallback(
-      (() => {
-        let called = false;
-        return async () => {
-          if (preview || !pdfFile || !pdfIndex || called) return;
-          called = true;
-          getOneImage(pdfFile, pdfIndex).then(setFullImg);
-        };
-      })(),
-      [preview, pdfFile, pdfIndex]
-    );
+  const loadImage = useCallback(
+    (() => {
+      let called = false;
+      return async () => {
+        if (preview || !pdfFile || !pdfIndex || called) return;
+        called = true;
+        getOneImage(pdfFile, pdfIndex).then(setFullImg);
+      };
+    })(),
+    [preview, pdfFile, pdfIndex]
+  );
 
-    useEffect(() => {
-      if (preview) return;
-      if (visible) {
-        loadImage();
-        setInviewPages((prev) => prev.add(uid));
-      } else {
-        setInviewPages((prev) => prev.delete(uid));
-      }
-    }, [visible, loadImage, preview]);
+  useEffect(() => {
+    if (preview) return;
+    if (visible) {
+      loadImage();
+      setInviewPages((prev) => prev.add(uid));
+    } else {
+      setInviewPages((prev) => prev.delete(uid));
+    }
+  }, [visible, loadImage, preview]);
 
-    const otherStates = useMemo(() => teamState && [teamState], [teamState]);
+  const otherStates = useMemo(() => teamState && [teamState], [teamState]);
 
-    const maskShow = Boolean(preview || (pdfIndex && !fullImg));
+  const maskShow = Boolean(preview || (pdfIndex && !fullImg));
 
-    return (
-      <section
-        ref={handleRef}
-        className="note-page"
-        style={{ paddingTop: `${ratio * 100}%` }}
-      >
-        {visible && (
-          <DrawWrapper
-            drawState={drawState}
-            otherStates={otherStates}
-            updateState={updateState}
-            imgSrc={fullImg || thumbnail || undefined}
-            preview={preview}
-          />
-        )}
-        {maskShow && <div className="mask" />}
-      </section>
-    );
-  }
-);
+  return (
+    <section
+      ref={handleRef}
+      className="note-page"
+      style={{ paddingTop: `${ratio * 100}%` }}
+    >
+      {visible && (
+        <DrawWrapper
+          drawState={drawState}
+          otherStates={otherStates}
+          updateState={updateState}
+          imgSrc={fullImg || thumbnail || undefined}
+          preview={preview}
+        />
+      )}
+      {maskShow && <div className="mask" />}
+    </section>
+  );
+};
 PageWrapper.displayName = "PageWrapper";
 
-const DrawWrapper = React.memo(
-  ({
-    drawState,
-    updateState,
-    otherStates,
-    preview = false,
-    imgSrc,
-  }: {
-    drawState: DrawState;
-    otherStates?: DrawState[];
-    updateState?: (ds: DrawState) => void;
-    preview?: boolean;
-    imgSrc?: string;
-  }) => {
-    const { mode, drawCtrl } = useContext(ReaderStateCtx);
-    const { setMode } = useContext(ReaderMethodCtx);
+const DrawWrapper = ({
+  drawState,
+  updateState,
+  otherStates,
+  preview = false,
+  imgSrc,
+}: {
+  drawState: DrawState;
+  otherStates?: DrawState[];
+  updateState?: (ds: DrawState) => void;
+  preview?: boolean;
+  imgSrc?: string;
+}) => {
+  const { mode, drawCtrl } = useContext(ReaderStateCtx);
+  const { setMode } = useContext(ReaderMethodCtx);
 
-    function handleChange(fn: ((s: DrawState) => DrawState) | DrawState) {
+  const handleChange = useCallback(
+    (arg: ((s: DrawState) => DrawState) | DrawState) => {
       if (!updateState) return;
-      let ds = fn instanceof DrawState ? fn : fn(drawState);
+      let ds = arg instanceof DrawState ? arg : arg(drawState);
       updateState(ds);
-    }
+    },
+    [updateState, drawState]
+  );
 
-    return (
-      <div className="page-draw">
-        {preview ? (
-          <Draw
-            drawState={drawState}
-            otherStates={otherStates}
-            imgSrc={imgSrc}
-            readonly
-            preview
-          />
-        ) : (
-          <Draw
-            drawState={drawState}
-            otherStates={otherStates}
-            onChange={handleChange}
-            imgSrc={imgSrc}
-            drawCtrl={drawCtrl}
-            mode={mode}
-            setMode={setMode}
-          />
-        )}
-      </div>
-    );
-  }
-);
+  return (
+    <div className="page-draw">
+      {preview ? (
+        <Draw
+          drawState={drawState}
+          otherStates={otherStates}
+          imgSrc={imgSrc}
+          readonly
+          preview
+        />
+      ) : (
+        <Draw
+          drawState={drawState}
+          otherStates={otherStates}
+          onChange={handleChange}
+          imgSrc={imgSrc}
+          drawCtrl={drawCtrl}
+          mode={mode}
+          setMode={setMode}
+        />
+      )}
+    </div>
+  );
+};
 DrawWrapper.displayName = "DrawWrapper";
