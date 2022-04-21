@@ -10,7 +10,7 @@ export interface DrawCtrl {
   highlight: boolean;
 }
 
-export const defaultDrawCtrl: DrawCtrl = {
+export const defaultDrawCtrl: Readonly<DrawCtrl> = {
   finger: false,
   lineWidth: 10,
   eraserWidth: 10,
