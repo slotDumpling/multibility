@@ -180,7 +180,7 @@ const SettingsPage = () => {
           okType="danger"
           okButtonProps={{type: 'primary'}}
           cancelText="Cancel"
-          placement="left"
+          placement="bottom"
         >
           <Item key="CLEAR" danger>
             <ClearOutlined />

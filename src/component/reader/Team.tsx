@@ -85,7 +85,6 @@ export default function Team() {
         icon: <LoginOutlined />,
         content: `${userName} joined room`,
         key: userId,
-        style: { marginTop: 60 },
       });
     });
 
@@ -98,7 +97,6 @@ export default function Team() {
         icon: <LogoutOutlined />,
         content: `${userName} leaved room`,
         key: userId,
-        style: { marginTop: 60 },
       });
     });
 

@@ -38,7 +38,6 @@ export type Operation =
     };
 
 interface DrawStateRecordType {
-  state: "drawing" | "revoking";
   strokes: List<Stroke>;
   uidStack: List<string>;
   undoStack: OrderedSet<string>;
@@ -50,7 +49,6 @@ interface DrawStateRecordType {
 type DrawStateRecord = Record<DrawStateRecordType>;
 
 const defaultRecord: Readonly<DrawStateRecordType> = {
-  state: "drawing",
   strokes: List(),
   uidStack: List(),
   undoStack: OrderedSet(),
@@ -138,10 +136,6 @@ export class DrawState {
     return this.getImmutable().get("mutations");
   }
 
-  getState() {
-    return this.getImmutable().get("state");
-  }
-
   getLastStroke() {
     return this.getImmutable().get("strokes").last();
   }
@@ -164,7 +158,6 @@ export class DrawState {
     return new DrawState(
       drawState
         .getImmutable()
-        .set("state", "revoking")
         .update("undoStack", (s) => s.add(uid))
         .update("uidStack", (s) => s.pop()),
       drawState.width,
@@ -201,7 +194,6 @@ export class DrawState {
     const pushedState = mergeUndo(
       drawState
         .getImmutable()
-        .set("state", "drawing")
         .update("strokes", (s) => s.push(stroke))
         .update("uidStack", (s) => s.push(stroke.uid))
     );
@@ -224,14 +216,17 @@ export class DrawState {
   static pushErase(drawState: DrawState, erase: Erase) {
     const { uid, erased } = erase;
     const immuErase: ImmuErase = { uid, erased: Set(erased) };
+    const pushedState = mergeUndo(
+      drawState
+        .getImmutable()
+        .update("eraseStack", (s) => s.push(immuErase))
+        .update("uidStack", (s) => s.push(uid))
+    );
 
     const lastOp: Operation = { type: "erase", erase };
 
     return new DrawState(
-      drawState
-        .getImmutable()
-        .update("eraseStack", (s) => s.push(immuErase))
-        .update("uidStack", (s) => s.push(uid)),
+      pushedState,
       drawState.width,
       drawState.height,
       lastOp
@@ -283,7 +278,7 @@ export class DrawState {
     const strokes = mergedRecord
       .get("strokes")
       .filter((s) => !deletedAll.has(s.uid))
-      .map(s => drawState.getMutatedStoke(s))
+      .map((s) => drawState.getMutatedStoke(s))
       .toArray();
     return { strokes };
   }

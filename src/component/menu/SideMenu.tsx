@@ -39,10 +39,9 @@ const TagItem: FC<{
 
   const finishEditing = async () => {
     const newTag: NoteTag = {
-      uid,
+      ...noteTag,
       name: tagName,
       color: tagColor,
-      notes: notes,
     };
 
     const newAllTags = await editTag(newTag);
@@ -81,38 +80,13 @@ const TagItem: FC<{
       })}
       onClick={onClick}
     >
-      {editing && tagEditing ? (
-        TagNameInput
-      ) : (
+      {(editing && tagEditing) || (
         <>
           <TagCircle color={tagColor} />
           <span className="tag-name">{tagName}</span>
         </>
       )}
-      {editing && tagEditing && (
-        <div className="buttons">
-          <Popconfirm
-            title="This tag will be deleted."
-            onConfirm={removeTag}
-            placement="left"
-            cancelText="Cancel"
-            icon={<DeleteOutlined />}
-            okText="Delete"
-            okType="danger"
-            okButtonProps={{ type: "primary" }}
-          >
-            <Button danger>Delete</Button>
-          </Popconfirm>
-          <Button onClick={cancelEditing}>Cancel</Button>
-          <Button
-            disabled={tagName === ""}
-            type="primary"
-            onClick={finishEditing}
-          >
-            OK
-          </Button>
-        </div>
-      )}
+      {editing || <span className="tag-num">{notes.length}</span>}
       {editing && !tagEditing && (
         <Button
           size="small"
@@ -120,6 +94,33 @@ const TagItem: FC<{
           onClick={() => setTagEditing(true)}
           icon={<SettingOutlined />}
         />
+      )}
+      {editing && tagEditing && (
+        <>
+          {TagNameInput}
+          <div className="buttons">
+            <Popconfirm
+              title="This tag will be deleted."
+              onConfirm={removeTag}
+              placement="left"
+              cancelText="Cancel"
+              icon={<DeleteOutlined />}
+              okText="Delete"
+              okType="danger"
+              okButtonProps={{ type: "primary" }}
+            >
+              <Button danger>Delete</Button>
+            </Popconfirm>
+            <Button onClick={cancelEditing}>Cancel</Button>
+            <Button
+              disabled={tagName === ""}
+              type="primary"
+              onClick={finishEditing}
+            >
+              OK
+            </Button>
+          </div>
+        </>
       )}
     </div>
   );
@@ -171,7 +172,7 @@ const AddTag = () => {
 };
 
 export default function SideMenu() {
-  const { allTags, editing, tagUid } = useContext(MenuStateCtx);
+  const { allTags, editing, tagUid, allNotes } = useContext(MenuStateCtx);
   const { setTagUid, setAllTags } = useContext(MenuMethodCtx);
   const [nowSwiped, setNowSwiped] = useState("");
 
@@ -181,16 +182,21 @@ export default function SideMenu() {
     setAllTags(tags);
   }
 
+  const AllNoteTag = () => (
+    <div
+      className={classNames("tag-item", { curr: tagUid === "DEFAULT" })}
+      onClick={() => setTagUid("DEFAULT")}
+    >
+      <ProfileOutlined id="all-note-icon" />
+      <span className="tag-name">All Notes</span>
+      <span className="tag-num">{Object.keys(allNotes).length}</span>
+    </div>
+  );
+
   return (
     <aside className="side-menu">
       <div className="tag-list">
-        <div
-          className={classNames("tag-item", { curr: tagUid === "DEFAULT" })}
-          onClick={() => setTagUid("DEFAULT")}
-        >
-          <ProfileOutlined id="all-note-icon" />
-          <span className="tag-name">All Notes</span>
-        </div>
+        <AllNoteTag />
         {Object.values(allTags).map((tag) => {
           const { uid } = tag;
           const removeTag = () => removeOneTag(uid);

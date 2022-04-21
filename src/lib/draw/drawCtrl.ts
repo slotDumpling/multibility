@@ -1,10 +1,8 @@
 import localforage from "localforage";
 
-export type CtrlMode = "draw" | "erase" | "select"
+export type CtrlMode = "draw" | "erase" | "select" | "selected" | "delete";
 
 export interface DrawCtrl {
-  // erasing: boolean;
-  mode: CtrlMode;
   finger: boolean;
   lineWidth: number;
   eraserWidth: number;
@@ -13,8 +11,6 @@ export interface DrawCtrl {
 }
 
 export const defaultDrawCtrl: DrawCtrl = {
-  // erasing: false,
-  mode: "draw",
   finger: false,
   lineWidth: 10,
   eraserWidth: 10,

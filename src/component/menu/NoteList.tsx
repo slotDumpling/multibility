@@ -1,5 +1,5 @@
 import { Button, Input, Popconfirm, Tag, Dropdown, Menu } from "antd";
-import { FC, useContext, useEffect, useState } from "react";
+import { FC, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteNote, editNoteData, moveNoteTag } from "../../lib/note/archive";
 import { NoteInfo } from "../../lib/note/note";
@@ -12,7 +12,6 @@ import {
 } from "@ant-design/icons";
 import { TagCircle } from "./SideMenu";
 import dafaultImg from "../ui/default.png";
-import { useObjectUrl } from "../../lib/hooks";
 import classNames from "classnames";
 import SwipeDelete from "../ui/SwipeDelete";
 
@@ -62,7 +61,6 @@ const NoteItem: FC<{
   const { setAllTags, setAllNotes } = useContext(MenuMethodCtx);
   const [noteName, setNoteName] = useState(name);
   const [imgLoaded, setImgLoaded] = useState(false);
-  const url = useObjectUrl(thumbnail);
 
   const saveNoteName = () => {
     editNoteData(uid, { name: noteName });
@@ -124,7 +122,7 @@ const NoteItem: FC<{
     <div className="note-item" onClick={() => !editing && nav(href)}>
       <div className="thumbnail-wrapper">
         <img
-          src={url || dafaultImg}
+          src={thumbnail || dafaultImg}
           alt={name}
           className={classNames("thumbnail", { loaded: imgLoaded })}
           onLoad={() => setImgLoaded(true)}

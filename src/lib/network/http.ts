@@ -7,7 +7,7 @@ import {
   updateTeamNote,
 } from "../note/archive";
 import { getUserId } from "../user";
-import { loadPDFImages } from "../note/pdfImage";
+import { getPDFImages } from "../note/pdfImage";
 
 export const BASE_URL = "https://api.slotdumpling.top/paint";
 // export const BASE_URL = "http://100.81.113.84:8090/paint";
@@ -56,16 +56,17 @@ export async function loadTeamNoteInfo(noteId: string) {
 
     if (await updateTeamNote(noteId, noteInfo, pageInfos)) return infoRes;
 
-    let file: File | undefined = undefined;
+    let file: Blob | undefined = undefined;
     if (noteInfo.withImg) {
       const { data } = await axios({
         method: "GET",
         url: noteId,
         responseType: "blob",
       });
-      file = new File([data], noteInfo.name + ".pdf");
+      console.log(data);
+      file = new Blob([data], { type: "application/pdf" });
 
-      const images = await loadPDFImages(file);
+      const { images } = await getPDFImages(file);
       for (let page of Object.values(pageInfos)) {
         const { pdfIndex } = page;
         if (!pdfIndex) continue;

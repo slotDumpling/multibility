@@ -1,12 +1,12 @@
 import { Button, Drawer, Menu, Popover, Tabs } from "antd";
 import React, {
-  Dispatch,
   FC,
+  useMemo,
+  Dispatch,
+  useState,
+  useContext,
   MouseEvent,
   SetStateAction,
-  useContext,
-  useMemo,
-  useState,
 } from "react";
 import { PageWrapper, ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import {
@@ -139,7 +139,7 @@ const PagePreview: FC<{
               uid={uid}
               drawState={drawState}
               teamState={teamState}
-              imageBlob={image}
+              thumbnail={image}
               preview
             />
             <span

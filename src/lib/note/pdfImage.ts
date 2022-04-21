@@ -7,20 +7,19 @@ import { createVirtualCanvas, releaseCanvas } from "../draw/drawer";
 import { createEmptyNote, Note, NotePage } from "./note";
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
-function getCanvasBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
-  return new Promise((res: BlobCallback) => {
-    canvas.toBlob(res);
-  });
+async function getPDFDocument(file: Blob) {
+  const data = new Uint8Array(await file.arrayBuffer());
+  return pdfjs.getDocument(data).promise;
 }
 
 async function getPageImage(
-  pdf: PDFDocumentProxy,
+  doc: PDFDocumentProxy,
   pageNum: number,
   scale: number
-): Promise<[Blob, number]> {
-  const page = await pdf.getPage(pageNum);
+): Promise<[string, number]> {
+  const page = await doc.getPage(pageNum);
   const viewport = page.getViewport({ scale });
-  console.log({viewport});
+  console.log({ viewport });
 
   const { height, width } = viewport;
   const ratio = height / width;
@@ -35,59 +34,40 @@ async function getPageImage(
     transform: [scale, 0, 0, scale, 0, 0],
   }).promise;
 
-  const blob = await getCanvasBlob(canvas);
-  if (!blob) throw new Error("can't get canvas image blob");
+  const data = canvas.toDataURL();
 
   releaseCanvas(canvas);
-  
-  return [blob, ratio];
+
+  return [data, ratio];
 }
 
-export async function getImages(
-  url: string,
+export async function getPDFImages(
+  file: Blob,
   scale = 2,
   progressCb?: (percent: number) => void
 ) {
-  const pdf = await pdfjs.getDocument(url).promise;
-  const { numPages } = pdf;
-  const blobs: Blob[] = [];
+  const doc = await getPDFDocument(file);
+  const { numPages } = doc;
+  const images: string[] = [];
   const ratios: number[] = [];
 
   for (let i = 1; i <= numPages; i += 1) {
-    const [blob, ratio] = await getPageImage(pdf, i, scale);
-    blobs.push(blob);
+    const [data, ratio] = await getPageImage(doc, i, scale);
+    images.push(data);
     ratios.push(ratio);
     if (progressCb) progressCb(Math.floor((i / numPages) * 100));
   }
 
-  return {
-    images: blobs,
-    ratios,
-  };
+  return { images, ratios };
 }
 
-export async function getOneImage(
-  url: string,
-  index: number,
-  scale = 2,
-) {
-  const pdf = await pdfjs.getDocument(url).promise;
-  const { numPages } = pdf;
+export async function getOneImage(file: Blob, index: number, scale = 2) {
+  const doc = await getPDFDocument(file);
+  const { numPages } = doc;
   if (index > numPages) {
-    throw new Error('index out of range');
+    throw new Error("index out of range");
   }
-  const [blob] = await getPageImage(pdf, index, scale);
-  return blob;
-}
-
-export async function getOneImageFromFile(
-  file: File,
-  index: number,
-  scale = 2,
-) {
-  const url = URL.createObjectURL(file);
-  const blob = await getOneImage(url, index, scale);
-  URL.revokeObjectURL(url);
+  const [blob] = await getPageImage(doc, index, scale);
   return blob;
 }
 
@@ -95,9 +75,7 @@ export async function LoadPDF(
   file: File,
   progressCb?: (percent: number) => void
 ): Promise<Note> {
-  const url = URL.createObjectURL(file);
-  const { images, ratios } = await getImages(url, 0.5, progressCb);
-  URL.revokeObjectURL(url);
+  const { images, ratios } = await getPDFImages(file, 0.5, progressCb);
   const pageRec: Record<string, NotePage> = {};
   const pageOrder: string[] = [];
   images.forEach((image, idx) => {
@@ -113,20 +91,15 @@ export async function LoadPDF(
     pageOrder.push(pageId);
   });
   const name = file.name.replace(".pdf", "");
+  const ab = await file.arrayBuffer();
+  const pdf = new Blob([ab], { type: "application/pdf" });
   return {
     ...createEmptyNote(),
     name,
     withImg: true,
-    pdf: file,
+    pdf,
     thumbnail: images[0],
     pageRec,
     pageOrder,
   };
-}
-
-export async function loadPDFImages(file: File) {
-  const url = URL.createObjectURL(file);
-  const { images } = await getImages(url, 0.5);
-  URL.revokeObjectURL(url);
-  return images;
 }

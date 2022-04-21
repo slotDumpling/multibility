@@ -1,10 +1,17 @@
-import React, { TouchEvent, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  Dispatch,
+  SetStateAction,
+  TouchEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import paper from "paper";
 import { DrawState, SetDrawState, Stroke } from "../../lib/draw/DrawState";
+import { releaseCanvas } from "../../lib/draw/drawer";
+import { CtrlMode, defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
 import { isStylus } from "../../lib/touch/touch";
 import { Set } from "immutable";
-import { releaseCanvas } from "../../lib/draw/drawer";
-import { DrawCtrl } from "../../lib/draw/drawCtrl";
 import "./draw.sass";
 
 const PREVIEW_WIDTH = 200;
@@ -13,7 +20,9 @@ const Draw = ({
   drawState,
   onChange = () => {},
   otherStates,
-  drawCtrl,
+  drawCtrl = defaultDrawCtrl,
+  mode = "draw",
+  setMode = () => {},
   readonly = false,
   preview = false,
   imgSrc,
@@ -21,7 +30,9 @@ const Draw = ({
   drawState: DrawState;
   onChange?: SetDrawState;
   otherStates?: DrawState[];
-  drawCtrl: DrawCtrl;
+  drawCtrl?: DrawCtrl;
+  mode?: CtrlMode;
+  setMode?: Dispatch<SetStateAction<CtrlMode>>;
   readonly?: boolean;
   preview?: boolean;
   imgSrc?: string;
@@ -29,50 +40,33 @@ const Draw = ({
   const { width, height } = drawState;
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const scope = useRef(new paper.PaperScope());
-  const group = useRef<paper.Item[]>();
+  const group = useRef<paper.Path[]>();
   const ratio = useRef(1);
   const path = useRef<paper.Path>();
   const [rect, setRect] = useState<paper.Shape.Rectangle>();
   const selectGroup = useRef<paper.Group>();
   const [erased, setErased] = useState(Set<string>());
 
-  let {
-    mode: ctrlMode,
-    color,
-    finger,
-    lineWidth,
-    highlight,
-    eraserWidth,
-  } = drawCtrl;
-
-  const [selected, setSelected] = useState(false);
-  const mode = useMemo(() => {
-    if (ctrlMode !== "select") return ctrlMode;
-    return selected ? "selected" : "select";
-  }, [ctrlMode, selected]);
-  useEffect(() => setSelected(false), [ctrlMode]);
+  let { color, finger, lineWidth, highlight, eraserWidth } = drawCtrl;
 
   const isEventValid = (e: TouchEvent<HTMLCanvasElement>) => {
-    return finger || isStylus(e);
+    return finger || isStylus(e) || mode === "selected";
+    // selected rectangle can always be dragged by finger.
   };
 
   const updateRatio = () => {
     const clientWidth = canvasEl.current?.clientWidth;
-    if (!clientWidth) return;
-    ratio.current = width / clientWidth;
+    if (clientWidth) ratio.current = width / clientWidth;
   };
 
   const setupPaper = () => {
     if (!canvasEl.current) return;
     scope.current.setup(canvasEl.current);
 
-    const r = PREVIEW_WIDTH / width;
-    scope.current.view.viewSize.width = preview ? width * r : width;
-    scope.current.view.viewSize.height = preview ? height * r : height;
-
-    if (preview) {
-      scope.current.view.scale(r, new paper.Point(0, 0));
-    }
+    const r = preview ? PREVIEW_WIDTH / width : 1;
+    scope.current.view.viewSize.width = width * r;
+    scope.current.view.viewSize.height = height * r;
+    scope.current.view.scale(r, new paper.Point(0, 0));
   };
 
   const setNewRect = (e: paper.MouseEvent) => {
@@ -81,9 +75,9 @@ const Draw = ({
     const point = e.point.multiply(ratio.current);
     const rectangle = new paper.Shape.Rectangle(point, new paper.Size(0, 0));
     rectangle.strokeColor = new paper.Color("#1890ff");
-    rectangle.strokeWidth = 5;
+    rectangle.strokeWidth = 3;
     rectangle.dashOffset = 0;
-    rectangle.dashArray = [50, 30];
+    rectangle.dashArray = [30, 20];
     setRect(rectangle);
   };
 
@@ -121,9 +115,10 @@ const Draw = ({
       if (!rect) return;
       if (!point.isInside(rect.strokeBounds)) {
         setNewRect(e);
-        setSelected(false);
+        setMode("select");
       }
     },
+    delete() {},
   }[mode];
 
   const handleDrag = {
@@ -135,31 +130,16 @@ const Draw = ({
       path.current.smooth();
     },
     erase(e: paper.MouseEvent) {
-      if (!path.current) return;
+      const eraserPath = path.current;
+      if (!eraserPath) return;
       scope.current.activate();
       const point = e.point.multiply(ratio.current);
-      path.current.add(point);
-      path.current.smooth();
+      eraserPath.add(point);
+      eraserPath.smooth();
 
-      const checkPoints = getCheckPoints(e, ratio.current, eraserWidth);
-      const curveBound = path.current.lastSegment.curve?.strokeBounds;
       const newErased = group.current
-        ?.filter((p) => {
-          if (
-            erased.has(p.name) ||
-            !(p instanceof paper.Path) ||
-            !curveBound?.intersects(p.strokeBounds)
-          ) {
-            return false;
-          }
-
-          if (path.current?.intersects(p)) return true;
-
-          return checkPoints.some((cPoint) => {
-            const d = p.getNearestPoint(cPoint)?.getDistance(cPoint);
-            return d && d < (p.strokeWidth + eraserWidth) / 2;
-          });
-        })
+        ?.filter((p) => !erased.has(p.name))
+        .filter((p) => checkErase(p, eraserPath, e, ratio.current, eraserWidth))
         .map((p) => p.name);
       newErased && setErased((prev) => prev.concat(newErased));
     },
@@ -177,6 +157,7 @@ const Draw = ({
       rect.position = rect.position.add(delta);
       sGroup.position = sGroup.position.add(delta);
     },
+    delete() {},
   }[mode];
 
   const handleUp = {
@@ -196,7 +177,7 @@ const Draw = ({
       onChange((prev) => DrawState.addStroke(prev, pathData));
     },
     select() {
-      if (!rect) return;
+      if (!rect?.size.width || !rect.size.height) return;
       scope.current.activate();
 
       const bounds = rect.strokeBounds;
@@ -207,21 +188,11 @@ const Draw = ({
           selectGroup.current?.addChild(p);
         }
       });
-      setSelected(true);
+      setMode("selected");
     },
     selected() {},
+    delete() {},
   }[mode];
-
-  const handlePaper = () => {
-    if (readonly) return;
-    scope.current.view.onMouseDown = handleDown;
-    scope.current.view.onMouseDrag = handleDrag;
-    scope.current.view.onMouseUp = handleUp;
-  };
-
-  const preventTouch = (e: TouchEvent<HTMLCanvasElement>) => {
-    if (!isEventValid(e)) e.stopPropagation();
-  };
 
   useEffect(() => {
     setupPaper();
@@ -229,6 +200,18 @@ const Draw = ({
     const cvs = canvasEl.current;
     return () => void (cvs && releaseCanvas(cvs));
   }, []);
+
+  const handlePaper = () => {
+    if (readonly) return;
+    scope.current.view.onMouseDown = handleDown;
+    scope.current.view.onMouseDrag = handleDrag;
+    scope.current.view.onMouseUp = handleUp;
+  };
+  useEffect(handlePaper);
+
+  const preventTouch = (e: TouchEvent<HTMLCanvasElement>) => {
+    if (!isEventValid(e)) e.stopPropagation();
+  };
 
   useEffect(() => {
     if (!imgSrc) return;
@@ -248,28 +231,12 @@ const Draw = ({
     return () => void raster?.remove();
   }, [imgSrc]);
 
-  useEffect(handlePaper);
-
-  const paintStroke = (stroke: Stroke, group?: paper.Item[]) => {
-    let { pathData, uid } = stroke;
-    scope.current.activate();
-    try {
-      const path = new paper.Path();
-      path.importJSON(pathData);
-      path.name = uid;
-      if (erased.has(uid)) path.opacity /= 2;
-      group?.push(path);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   useEffect(() => {
     scope.current.activate();
     group.current = [];
 
     drawState.getValidStrokes().forEach((stroke) => {
-      paintStroke(stroke, group.current);
+      paintStroke(stroke, group.current, erased);
     });
 
     return () => group.current?.forEach((item) => item.remove());
@@ -277,7 +244,7 @@ const Draw = ({
 
   useEffect(() => {
     scope.current.activate();
-    const otherGroup: paper.Item[] = [];
+    const otherGroup: paper.Path[] = [];
 
     otherStates?.forEach((ds) => {
       ds.getValidStrokes().forEach((stroke) => {
@@ -298,12 +265,26 @@ const Draw = ({
     onChange((prev) => DrawState.mutateStroke(prev, strokes));
   };
 
+  const deleteSelected = () => {
+    const list = selectGroup.current?.children;
+    if (!list?.length) return;
+    const deleted = list.map(item => item.name);
+    onChange((prev) => DrawState.eraseStrokes(prev, deleted));
+  }
+
   useEffect(() => {
     if (mode === "select") {
       //
     } else if (mode === "selected") {
       if (rect?.strokeColor) rect.strokeColor.alpha /= 2;
+      scope.current.activate();
+      const circle = new paper.Shape.Circle(new paper.Point(10, 10), 10);
+      circle.strokeColor = new paper.Color('black');
       return updateMutation;
+    } else if (mode === "delete") {
+      deleteSelected()
+      setMode('select');
+      setRect(undefined);
     } else {
       setRect(undefined);
     }
@@ -314,12 +295,11 @@ const Draw = ({
     let id = 0;
     const moveDash = () => {
       id = requestAnimationFrame(() => {
-        rect.dashOffset -= 5;
+        rect.dashOffset += 3;
         moveDash();
       });
     };
     moveDash();
-    rect.onClick = () => console.log('clicked');
     return () => {
       rect.remove();
       cancelAnimationFrame(id);
@@ -339,18 +319,61 @@ const Draw = ({
 
 export default React.memo(Draw);
 
-const getCheckPoints = (
+const paintStroke = (
+  stroke: Stroke,
+  group?: paper.Path[],
+  erased?: Set<string>
+) => {
+  let { pathData, uid } = stroke;
+  try {
+    const path = new paper.Path();
+    path.importJSON(pathData);
+    path.name = uid;
+    if (erased?.has(uid)) path.opacity /= 2;
+    group?.push(path);
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const getCheckPoints = (() => {
+  const cache = new WeakMap<paper.MouseEvent, paper.Point[]>();
+  return (e: paper.MouseEvent, ratio: number, eraserWidth: number) => {
+    const cached = cache.get(e);
+    if (cached) return cached;
+
+    const point = e.point.multiply(ratio);
+    const delta = e.delta.multiply(ratio);
+    const times = (delta.length / eraserWidth) * 2;
+    const checkPoints: paper.Point[] = [];
+    for (let i = 0; i < times; i += 1) {
+      checkPoints.push(point.subtract(delta.multiply(i / times)));
+    }
+    cache.set(e, checkPoints);
+    return checkPoints;
+  };
+})();
+
+const checkErase = (
+  checkedPath: paper.Path,
+  eraserPath: paper.Path,
   e: paper.MouseEvent,
   ratio: number,
-  lineWidth: number
+  eraserWidth: number
 ) => {
-  const point = e.point.multiply(ratio);
-
-  const delta = e.delta.multiply(ratio);
-  const times = (delta.length / lineWidth) * 2;
-  const checkPoints: paper.Point[] = [];
-  for (let i = 0; i < times; i += 1) {
-    checkPoints.push(point.subtract(delta.multiply(i / times)));
+  const curveBound = eraserPath.lastSegment.curve?.strokeBounds;
+  if (
+    !(checkedPath instanceof paper.Path) ||
+    !curveBound?.intersects(checkedPath.strokeBounds)
+  ) {
+    return false;
   }
-  return checkPoints;
+
+  if (eraserPath.intersects(checkedPath)) return true;
+
+  const checkPoints = getCheckPoints(e, ratio, eraserWidth);
+  return checkPoints.some((cPoint) => {
+    const d = checkedPath.getNearestPoint(cPoint)?.getDistance(cPoint);
+    return d && d < (checkedPath.strokeWidth + eraserWidth) / 2;
+  });
 };

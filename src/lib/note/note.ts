@@ -4,7 +4,7 @@ import { v4 as getUid } from "uuid";
 export interface NotePage {
   ratio: number;
   state: FlatState;
-  image?: Blob;
+  image?: string;
   marked?: boolean;
   pdfIndex?: number;
 }
@@ -31,11 +31,11 @@ export interface NoteInfo {
   withImg: boolean;
   createTime?: Date;
   lastTime?: Date;
-  thumbnail?: Blob;
+  thumbnail?: string;
 }
 
 export type Note = NoteInfo & {
-  pdf?: File;
+  pdf?: Blob;
   pageRec: Record<string, NotePage>;
   pageOrder: string[];
 };

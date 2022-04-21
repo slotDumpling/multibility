@@ -1,4 +1,3 @@
-import { message } from "antd";
 import React, {
   createContext,
   Dispatch,
@@ -12,10 +11,13 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { message } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import Draw from "../draw/Draw";
 import {
+  CtrlMode,
   defaultDrawCtrl,
+  DrawCtrl,
   getDrawCtrl,
   saveDrawCtrl,
 } from "../../lib/draw/drawCtrl";
@@ -32,26 +34,28 @@ import { useInView } from "react-intersection-observer";
 import { Set } from "immutable";
 import { insertAfter } from "../../lib/array";
 import { AddPageButton } from "./ReaderTools";
-import { useMounted, useObjectUrl } from "../../lib/hooks";
+import { useMounted } from "../../lib/hooks";
 import { TeamCtx } from "./Team";
 import "./reader.sass";
 
 export const WIDTH = 2000;
 
-export const DrawCtrlCtx = createContext(defaultDrawCtrl);
 export const ReaderStateCtx = createContext({
   noteId: "",
   noteInfo: undefined as NoteInfo | undefined,
   stateSet: undefined as StateSet | undefined,
   teamStateSet: undefined as StateSet | undefined,
-  pdfUrl: undefined as string | undefined,
+  pdfFile: undefined as Blob | undefined,
   pageRec: undefined as Record<string, NotePage> | undefined,
   pageOrder: undefined as string[] | undefined,
   saved: true,
   teamOn: false,
   inviewPages: Set<string>(),
   refRec: {} as Record<string, HTMLDivElement>,
+  drawCtrl: defaultDrawCtrl,
+  mode: "draw" as CtrlMode,
 });
+
 export const ReaderMethodCtx = createContext({
   createRoom: () => {},
   scrollPage: (() => {}) as (pageId: string) => void,
@@ -62,6 +66,8 @@ export const ReaderMethodCtx = createContext({
   addPage: (() => {}) as (prevPageId: string, copy?: boolean) => void,
   addFinalPage: (() => {}) as () => void,
   deletePage: (() => {}) as (pageId: string) => void,
+  setMode: (() => {}) as Dispatch<SetStateAction<CtrlMode>>,
+  setDrawCtrl: (() => {}) as Dispatch<SetStateAction<DrawCtrl>>,
 });
 
 export default function Reader({ teamOn }: { teamOn: boolean }) {
@@ -72,8 +78,9 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   const [noteInfo, setNoteInfo] = useState<NoteInfo>();
   const [stateSet, setStateSet] = useState<StateSet>();
   const [drawCtrl, setDrawCtrl] = useState(defaultDrawCtrl);
+  const [mode, setMode] = useState<CtrlMode>("draw");
   const [saved, setSaved] = useState(true);
-  const [pdfUrl, setPdfUrl] = useState<string>();
+  const [pdfFile, setPdfFile] = useState<Blob>();
   const [inviewPages, setInviewPages] = useState(Set<string>());
   const [pageOrder, setPageOrder] = useState<string[]>();
   const [loaded, setLoaded] = useState(false);
@@ -96,15 +103,18 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     setStateSet(StateSet.createFromPages(pageRec, WIDTH));
     setDrawCtrl(await getDrawCtrl());
     setLoaded(true);
-    if (pdf) setPdfUrl(URL.createObjectURL(pdf));
+    setPdfFile(pdf);
     if (teamOn) updatePages(noteId);
   };
 
   const debouncedSave = useCallback(
     debounce(async (pr: Record<string, NotePage>) => {
       await editNoteData(noteId, { pageRec: pr });
+      const canvas = document.querySelector("canvas");
+      const data = canvas?.toDataURL();
+      data && editNoteData(noteId, { thumbnail: data });
       mounted.current && setSaved(true);
-    }, 1000),
+    }, 5000),
     []
   );
   const instantSave = debouncedSave.flush;
@@ -129,16 +139,6 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   };
 
   useLayoutEffect(() => {
-    return () => {
-      const canvas = document.querySelector("canvas");
-      canvas?.toBlob((blob) => {
-        if (!blob) return;
-        editNoteData(noteId, { thumbnail: blob });
-      });
-    };
-  }, []);
-
-  useEffect(() => {
     noteInit();
     return noteDestroy;
   }, [noteId, teamOn]);
@@ -147,7 +147,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
 
   useEffect(() => {
     if (!noteInfo) return;
-    document.title = noteInfo.name;
+    document.title = noteInfo.name + ' - Multibility';
   }, [noteInfo]);
 
   useEffect(() => {
@@ -265,7 +265,6 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   const renderResult = (
     <div className="reader-container">
       <DrawTools
-        setDrawCtrl={setDrawCtrl}
         instantSave={instantSave}
         handleUndo={handleUndo}
         handleRedo={handleRedo}
@@ -280,93 +279,91 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   );
 
   return (
-    <DrawCtrlCtx.Provider value={drawCtrl}>
-      <ReaderStateCtx.Provider
+    <ReaderStateCtx.Provider
+      value={{
+        noteId,
+        noteInfo,
+        stateSet,
+        teamStateSet,
+        saved,
+        teamOn,
+        pdfFile,
+        pageRec,
+        pageOrder,
+        inviewPages,
+        refRec: refRec.current,
+        mode,
+        drawCtrl,
+      }}
+    >
+      <ReaderMethodCtx.Provider
         value={{
-          noteId,
-          noteInfo,
-          stateSet,
-          teamStateSet,
-          saved,
-          teamOn,
-          pdfUrl,
-          pageRec,
-          pageOrder,
-          inviewPages,
-          refRec: refRec.current,
+          createRoom,
+          scrollPage,
+          setInviewPages,
+          switchPageMarked,
+          setPageOrder,
+          setPageState,
+          addPage,
+          addFinalPage,
+          deletePage,
+          setMode,
+          setDrawCtrl,
         }}
       >
-        <ReaderMethodCtx.Provider
-          value={{
-            createRoom,
-            scrollPage,
-            setInviewPages,
-            switchPageMarked,
-            setPageOrder,
-            setPageState,
-            addPage,
-            addFinalPage,
-            deletePage,
-          }}
-        >
-          {renderResult}
-        </ReaderMethodCtx.Provider>
-      </ReaderStateCtx.Provider>
-    </DrawCtrlCtx.Provider>
+        {renderResult}
+      </ReaderMethodCtx.Provider>
+    </ReaderStateCtx.Provider>
   );
 }
 
 const PageContainer: FC<{ uid: string }> = ({ uid }) => {
-  const { pageRec, stateSet, teamStateSet, pdfUrl, refRec } =
-    useContext(ReaderStateCtx);
+  const { pageRec, stateSet, teamStateSet } = useContext(ReaderStateCtx);
   const { setPageState } = useContext(ReaderMethodCtx);
 
   const page = pageRec && pageRec[uid];
   const drawState = stateSet?.getOneState(uid);
   const teamState = teamStateSet?.getOneState(uid);
+  const updateState = useCallback(
+    (ds: DrawState) => setPageState(uid, ds),
+    [uid, setPageState]
+  );
   if (!page || !drawState) return null;
 
   return (
     <PageWrapper
       drawState={drawState}
       teamState={teamState}
-      updateState={setPageState}
-      imageBlob={page.image}
-      pdfUrl={pdfUrl}
+      updateState={updateState}
+      thumbnail={page.image}
       pdfIndex={page.pdfIndex}
       uid={uid}
-      refRec={refRec}
     />
   );
 };
 
 export const PageWrapper = React.memo(
   ({
-    imageBlob,
+    thumbnail,
     drawState,
     teamState,
     uid,
-    pdfUrl,
     pdfIndex,
     updateState,
-    refRec,
     preview = false,
   }: {
     uid: string;
     drawState: DrawState;
     teamState?: DrawState;
-    imageBlob?: Blob;
-    pdfUrl?: string;
+    thumbnail?: string;
     pdfIndex?: number;
-    updateState?: (uid: string, ds: DrawState) => void;
-    refRec?: Record<string, HTMLDivElement>;
+    updateState?: (ds: DrawState) => void;
     preview?: boolean;
   }) => {
     const { setInviewPages } = useContext(ReaderMethodCtx);
-    const [realImage, setRealImage] = useState<Blob>();
+    const { pdfFile, refRec } = useContext(ReaderStateCtx);
+    const [fullImg, setFullImg] = useState<string>();
     const [visibleRef, visible] = useInView({ delay: 100 });
-    const thumbnailUrl = useObjectUrl(imageBlob);
-    const imgUrl = useObjectUrl(realImage);
 
     const { height, width } = drawState;
     const ratio = height / width;
@@ -375,7 +372,7 @@ export const PageWrapper = React.memo(
       (e: HTMLDivElement | null) => {
         if (!e) return;
         visibleRef(e);
-        if (refRec) refRec[uid] = e;
+        if (!preview && refRec) refRec[uid] = e;
       },
       [refRec]
     );
@@ -383,15 +380,13 @@ export const PageWrapper = React.memo(
     const loadImage = useCallback(
       (() => {
         let called = false;
-        return () => {
-          if (preview || !pdfUrl || !pdfIndex || called) {
-            return;
-          }
+        return async () => {
+          if (preview || !pdfFile || !pdfIndex || called) return;
           called = true;
-          getOneImage(pdfUrl, pdfIndex).then(setRealImage);
+          getOneImage(pdfFile, pdfIndex).then(setFullImg);
         };
       })(),
-      [preview, pdfUrl, pdfIndex]
+      [preview, pdfFile, pdfIndex]
     );
 
     useEffect(() => {
@@ -406,7 +401,7 @@ export const PageWrapper = React.memo(
 
     const otherStates = useMemo(() => teamState && [teamState], [teamState]);
 
-    const maskShow = Boolean(preview || (pdfIndex && !imgUrl));
+    const maskShow = Boolean(preview || (pdfIndex && !fullImg));
 
     return (
       <section
@@ -418,9 +413,8 @@ export const PageWrapper = React.memo(
           <DrawWrapper
             drawState={drawState}
             otherStates={otherStates}
-            updateState={preview ? undefined : updateState}
-            imgSrc={imgUrl || thumbnailUrl || undefined}
-            uid={uid}
+            updateState={updateState}
+            imgSrc={fullImg || thumbnail || undefined}
             preview={preview}
           />
         )}
@@ -434,38 +428,47 @@ PageWrapper.displayName = "PageWrapper";
 const DrawWrapper = React.memo(
   ({
     drawState,
-    uid,
     updateState,
     otherStates,
     preview = false,
     imgSrc,
   }: {
     drawState: DrawState;
-    uid: string;
     otherStates?: DrawState[];
-    updateState?: (uid: string, ds: DrawState) => void;
+    updateState?: (ds: DrawState) => void;
     preview?: boolean;
     imgSrc?: string;
   }) => {
-    const drawCtrl = useContext(DrawCtrlCtx);
+    const { mode, drawCtrl } = useContext(ReaderStateCtx);
+    const { setMode } = useContext(ReaderMethodCtx);
 
     function handleChange(fn: ((s: DrawState) => DrawState) | DrawState) {
       if (!updateState) return;
       let ds = fn instanceof DrawState ? fn : fn(drawState);
-      updateState(uid, ds);
+      updateState(ds);
     }
 
     return (
       <div className="page-draw">
-        <Draw
-          drawState={drawState}
-          onChange={handleChange}
-          otherStates={otherStates}
-          readonly={!updateState}
-          preview={preview}
-          imgSrc={imgSrc}
-          drawCtrl={drawCtrl}
-        />
+        {preview ? (
+          <Draw
+            drawState={drawState}
+            otherStates={otherStates}
+            imgSrc={imgSrc}
+            readonly
+            preview
+          />
+        ) : (
+          <Draw
+            drawState={drawState}
+            otherStates={otherStates}
+            onChange={handleChange}
+            imgSrc={imgSrc}
+            drawCtrl={drawCtrl}
+            mode={mode}
+            setMode={setMode}
+          />
+        )}
       </div>
     );
   }

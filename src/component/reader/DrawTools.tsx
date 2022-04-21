@@ -1,26 +1,31 @@
+import React, {
+  CSSProperties,
+  Dispatch,
+  FC,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useMemo,
+} from "react";
 import {
   Avatar,
   Button,
+  ButtonProps,
   Divider,
-  Input,
   message,
   Popconfirm,
   Popover,
   Slider,
 } from "antd";
-import React, {
-  CSSProperties,
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useMemo,
-} from "react";
+import Search from "antd/lib/input/Search";
 import { useNavigate } from "react-router-dom";
-import { DrawCtrlCtx, ReaderMethodCtx, ReaderStateCtx } from "./Reader";
+import { ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { TeamCtx } from "./Team";
 import DigitDisplay from "../ui/DigitDisplay";
 import { colors, getHashedColor } from "../../lib/color";
 import { UserInfo } from "../../lib/user";
+import { CtrlMode, DrawCtrl } from "../../lib/draw/drawCtrl";
+import PageNav from "./PageNav";
 import {
   HomeFilled,
   UndoOutlined,
@@ -28,34 +33,49 @@ import {
   SaveOutlined,
   TeamOutlined,
   CopyOutlined,
+  DragOutlined,
   ExpandOutlined,
   ReloadOutlined,
+  DeleteOutlined,
   HighlightOutlined,
+  RotateLeftOutlined,
+  RotateRightOutlined,
 } from "@ant-design/icons";
-import "./drawTools.sass";
-import PageNav from "./PageNav";
 import IconFont from "../ui/IconFont";
-import { DrawCtrl } from "../../lib/draw/drawCtrl";
-import Search from "antd/lib/input/Search";
+import "./drawTools.sass";
 
 export default function DrawTools({
-  setDrawCtrl,
   handleUndo,
   handleRedo,
   instantSave,
 }: {
-  setDrawCtrl: Dispatch<SetStateAction<DrawCtrl>>;
   handleUndo: () => void;
   handleRedo: () => void;
   instantSave: () => void;
 }) {
-  const { finger, mode } = useContext(DrawCtrlCtx);
-  const { saved, stateSet, teamOn } = useContext(ReaderStateCtx);
+  const { saved, stateSet, teamOn, mode, drawCtrl } =
+    useContext(ReaderStateCtx);
+  const { setDrawCtrl, setMode } = useContext(ReaderMethodCtx);
+  const { finger } = drawCtrl;
+
   const nav = useNavigate();
 
   const updateDrawCtrl = (updated: Partial<DrawCtrl>) => {
     setDrawCtrl((prev) => ({ ...prev, ...updated }));
   };
+
+  useEffect(() => {
+    if (mode === "selected") {
+      message.info({
+        className: "select-message",
+        icon: <DragOutlined style={{ display: 'none' }} />,
+        content: <SelectMenu setMode={setMode} />,
+        duration: 0,
+        key: "selected",
+      });
+      return () => message.destroy("selected");
+    }
+  }, [mode]);
 
   return (
     <header>
@@ -94,9 +114,9 @@ export default function DrawTools({
         <PenButton updateDrawCtrl={updateDrawCtrl} />
         <EraserButton updateDrawCtrl={updateDrawCtrl} />
         <Button
-          type={mode === "select" ? "default" : "text"}
+          type={["select", "selected"].includes(mode) ? "default" : "text"}
           shape="circle"
-          onClick={() => updateDrawCtrl({ mode: "select" })}
+          onClick={() => setMode("select")}
           icon={<ExpandOutlined />}
         />
         <Button
@@ -123,7 +143,8 @@ const PenButton = ({
 }: {
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
 }) => {
-  const { mode } = useContext(DrawCtrlCtx);
+  const { mode } = useContext(ReaderStateCtx);
+  const { setMode } = useContext(ReaderMethodCtx);
   return mode === "draw" ? (
     <Popover
       content={<PenPanel updateDrawCtrl={updateDrawCtrl} />}
@@ -138,7 +159,7 @@ const PenButton = ({
     <Button
       type="text"
       shape="circle"
-      onClick={() => updateDrawCtrl({ mode: "draw" })}
+      onClick={() => setMode("draw")}
       icon={<HighlightOutlined />}
     />
   );
@@ -149,7 +170,9 @@ const PenPanel = ({
 }: {
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
 }) => {
-  const { lineWidth, highlight } = useContext(DrawCtrlCtx);
+  const {
+    drawCtrl: { lineWidth, highlight },
+  } = useContext(ReaderStateCtx);
 
   return (
     <div className="pen-panel">
@@ -178,7 +201,9 @@ const ColorSelect = ({
 }: {
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
 }) => {
-  const { color } = useContext(DrawCtrlCtx);
+  const {
+    drawCtrl: { color },
+  } = useContext(ReaderStateCtx);
 
   return (
     <div className="color-select">
@@ -205,7 +230,11 @@ const EraserButton = ({
 }: {
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
 }) => {
-  const { eraserWidth, mode } = useContext(DrawCtrlCtx);
+  const { setMode } = useContext(ReaderMethodCtx);
+  const {
+    mode,
+    drawCtrl: { eraserWidth },
+  } = useContext(ReaderStateCtx);
 
   const content = (
     <div className="pen-panel">
@@ -235,9 +264,36 @@ const EraserButton = ({
     <Button
       type="text"
       shape="circle"
-      onClick={() => updateDrawCtrl({ mode: "erase" })}
+      onClick={() => setMode("erase")}
       icon={<IconFont type="icon-eraser" />}
     />
+  );
+};
+
+const SelectMenu: FC<{
+  setMode: Dispatch<SetStateAction<CtrlMode>>;
+}> = ({ setMode }) => {
+  const buttonProps: ButtonProps = {
+    type: "text",
+    shape: "round",
+  };
+  return (
+    <>
+      <Button
+        icon={<RotateLeftOutlined />}
+        {...buttonProps}
+      />
+      <Button
+        icon={<RotateRightOutlined />}
+        {...buttonProps}
+      />
+      <Button
+        danger
+        icon={<DeleteOutlined />}
+        onClick={() => setMode("delete")}
+        {...buttonProps}
+      />
+    </>
   );
 };
 

@@ -1,16 +1,10 @@
 import localforage from "localforage";
-import {
-  NoteInfo,
-  Note,
-  NotePage,
-  TeamPageState,
-  TeamNoteInfo,
-} from "./note";
+import { Note, NoteInfo, NotePage, TeamNoteInfo, TeamPageState } from "./note";
 import { v4 as getUid } from "uuid";
 import { getDefaultFlatState } from "../draw/DrawState";
 import { getUserId } from "../user";
 import { getRandomColor } from "../color";
-import { getOneImageFromFile } from "./pdfImage";
+import { getOneImage } from "./pdfImage";
 
 export interface NoteTag {
   uid: string;
@@ -75,13 +69,16 @@ export async function editTag(tag: NoteTag) {
 }
 
 export async function loadNote(uid: string) {
-  return (await localforage.getItem(uid)) as Note | undefined;
+  const note = (await localforage.getItem(uid)) as Note | undefined;
+  if (!note) return;
+  const pdf = (await localforage.getItem(`PDF_${uid}`)) as Blob | undefined;
+  return { ...note, pdf };
 }
 
 export async function editNoteData(uid: string, noteDate: Partial<Note>) {
   console.log("edit note data", noteDate);
   const allNotes = await getAllNotes();
-  const { pageRec, pdf, ...noteInfo } = noteDate;
+  const { pageRec, ...noteInfo } = noteDate;
   allNotes[uid] = { ...allNotes[uid], ...noteInfo };
 
   await localforage.setItem("ALL_NOTES", allNotes);
@@ -103,9 +100,11 @@ export async function saveNoteInfo(noteInfo: NoteInfo) {
   return { tags, allNotes };
 }
 
-export async function createNewNote(note: Note) {
+export async function createNewNote(noteWithPdf: Note) {
+  const { pdf, ...note } = noteWithPdf;
   await localforage.setItem(note.uid, note);
-  const { pdf, pageRec, ...noteInfo } = note;
+  if (pdf) await localforage.setItem(`PDF_${note.uid}`, pdf);
+  const { pageRec, ...noteInfo } = note;
   return await saveNoteInfo(noteInfo);
 }
 
@@ -115,11 +114,11 @@ export async function deleteNote(uid: string) {
   const tags = await getAllTags();
   if (!note) return { tags, allNotes };
   await localforage.removeItem(uid);
-  const { pdf, pageRec, ...noteInfo } = note;
+  await localforage.removeItem(`PDF_${uid}`);
+  const { tagId } = note;
   delete allNotes[uid];
   await localforage.setItem("ALL_NOTES", allNotes);
 
-  const { tagId } = noteInfo;
   if (tagId !== "DEFAULT") {
     const { notes } = tags[tagId];
     tags[tagId].notes = notes.filter((id) => id !== uid);
@@ -174,7 +173,7 @@ export async function saveTeamNote(
   noteId: string,
   noteInfo: TeamNoteInfo,
   teamPages: Record<string, NotePage>,
-  pdf?: File
+  pdf?: Blob
 ) {
   let note = await loadNote(noteId);
   if (note) return;
@@ -204,9 +203,9 @@ export async function updateTeamNote(
   for (let [pageId, page] of Object.entries(pageInfos)) {
     if (!(pageId in pageRec)) {
       const { ratio, pdfIndex } = page;
-      let image: Blob | undefined = undefined;
+      let image: string | undefined = undefined;
       if (pdf && pdfIndex) {
-        image = await getOneImageFromFile(pdf, pdfIndex, 0.5);
+        image = await getOneImage(pdf, pdfIndex, 0.5);
       }
       pageRec[pageId] = {
         ratio,
