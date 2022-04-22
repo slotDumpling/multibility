@@ -84,7 +84,7 @@ export async function LoadPDF(
       image,
       ratio: ratios[idx],
       state: {
-        strokes: [],
+        strokes: {},
       },
       pdfIndex: idx + 1,
     };

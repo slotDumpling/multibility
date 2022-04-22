@@ -216,7 +216,8 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     setStateSet((prev) => {
       if (!prev) return;
       const newSS = prev.undo();
-      updatePageRec(...newSS.getLastDs());
+      const lastDS = newSS.getLastDS();
+      lastDS && updatePageRec(...lastDS);
       return newSS;
     });
   };
@@ -225,7 +226,8 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     setStateSet((prev) => {
       if (!prev) return;
       const newSS = prev.redo();
-      updatePageRec(...newSS.getLastDs());
+      const lastDS = newSS.getLastDS();
+      lastDS && updatePageRec(...lastDS);
       return newSS;
     });
   };

@@ -48,6 +48,10 @@ export class StateSet {
     return this.getImmutable().get("states");
   }
 
+  getOneState(pageId: string) {
+    return this.getStates().get(pageId);
+  }
+
   getEditStack() {
     return this.getImmutable().get("editStack");
   }
@@ -57,39 +61,31 @@ export class StateSet {
   }
 
   setState(pageId: string, drawState: DrawState) {
-    let newImmu = this.getImmutable().update("states", (s) =>
-      s.set(pageId, drawState)
-    );
+    if (!this.getOneState(pageId)) return this;
+    let currRecord = this.getImmutable()
+      .update("states", (s) => s.set(pageId, drawState))
+      .update("editStack", (l) => l.push(pageId))
+      .delete("undoStack");
 
-    if (this.getStates().has(pageId)) {
-      newImmu = newImmu
-        .update("editStack", (l) => l.push(pageId))
-        .set("undoStack", List());
-    }
+    const { lastOp } = drawState;
+    const lastSetOp = lastOp && { ...lastOp, pageId };
 
-    let lastOp: SetOperation | undefined;
-    if (drawState.lastOp) {
-      lastOp = { ...drawState.lastOp, pageId };
-    }
-    return new StateSet(newImmu, lastOp);
+    return new StateSet(currRecord, lastSetOp);
   }
 
   addState(pageId: string, notePage: NotePage, width: number) {
     const { state, ratio } = notePage;
-    const newImmu = this.getImmutable().update("states", (s) =>
-      s.set(pageId, DrawState.loadFromFlat(state, width, width * ratio))
+    const newDS = DrawState.loadFromFlat(state, width, width * ratio);
+    const currRecord = this.getImmutable().update("states", (s) =>
+      s.set(pageId, newDS)
     );
-    return new StateSet(newImmu);
+    return new StateSet(currRecord);
   }
 
   deleteState(pageId: string) {
     return new StateSet(
       this.getImmutable().update("states", (s) => s.delete(pageId))
     );
-  }
-
-  getOneState(pageId: string) {
-    return this.getImmutable().get("states").get(pageId);
   }
 
   isUndoable() {
@@ -102,19 +98,16 @@ export class StateSet {
 
   undo() {
     if (!this.isUndoable()) return this;
-    const immu = this.getImmutable();
-    const lastUid = immu.get("editStack").last();
-    if (!lastUid) return this;
-    const prevDS = immu.get("states").get(lastUid);
+    const lastUid = this.getEditStack().last();
+    const prevDS = lastUid && this.getOneState(lastUid);
     if (!prevDS) return this;
 
     const newDS = DrawState.undo(prevDS);
-    const lastOp = newDS.lastOp;
-    let lastSetOp: SetOperation | undefined;
-    if (lastOp) lastSetOp = { pageId: lastUid, ...lastOp };
+    const { lastOp } = newDS;
+    const lastSetOp = lastOp && { pageId: lastUid, ...lastOp };
 
     return new StateSet(
-      immu
+      this.getImmutable()
         .update("editStack", (s) => s.pop())
         .update("undoStack", (s) => s.push(lastUid))
         .update("states", (s) => s.set(lastUid, newDS)),
@@ -124,19 +117,16 @@ export class StateSet {
 
   redo() {
     if (!this.isRedoable()) return this;
-    const immu = this.getImmutable();
-    const lastUid = immu.get("undoStack").last();
-    if (!lastUid) return this;
-    const prevDS = immu.get("states").get(lastUid);
+    const lastUid = this.getUndoStack().last();
+    const prevDS = lastUid && this.getOneState(lastUid);
     if (!prevDS) return this;
 
     const newDS = DrawState.redo(prevDS);
-    const lastOp = newDS.lastOp;
-    let lastSetOp: SetOperation | undefined;
-    if (lastOp) lastSetOp = { pageId: lastUid, ...lastOp };
+    const { lastOp } = newDS;
+    const lastSetOp = lastOp && { pageId: lastUid, ...lastOp };
 
     return new StateSet(
-      immu
+      this.getImmutable()
         .update("undoStack", (s) => s.pop())
         .update("editStack", (s) => s.push(lastUid))
         .update("states", (s) => s.set(lastUid, newDS)),
@@ -146,7 +136,7 @@ export class StateSet {
 
   pushOperation(SetOp: SetOperation) {
     const { type, pageId } = SetOp;
-    const prevDs = this.getImmutable().get("states").get(pageId);
+    const prevDs = this.getOneState(pageId);
     if (!prevDs) return this;
 
     let ds: DrawState;
@@ -155,23 +145,24 @@ export class StateSet {
         ds = DrawState.pushStroke(prevDs, SetOp.stroke);
         break;
       case "erase":
-        ds = DrawState.pushErase(prevDs, SetOp.erase);
+        ds = DrawState.eraseStrokes(prevDs, SetOp.erased);
+        break;
+      case "mutate":
+        ds = DrawState.mutateStroke(prevDs, SetOp.mutations);
         break;
       case "undo":
-        ds = DrawState.pushUndo(prevDs, SetOp.undoUid);
+        ds = DrawState.undo(prevDs);
         break;
       case "redo":
-        ds = DrawState.pushRedo(prevDs, SetOp.redoUid);
+        ds = DrawState.redo(prevDs);
         break;
     }
     return this.setState(pageId, ds);
   }
 
-  getLastDs(): [string, DrawState] {
+  getLastDS(): [string, DrawState] | undefined {
     const pageId = this.lastOp?.pageId;
-    if (!pageId) throw new Error("can't get last modified page.");
-    const ds = this.getOneState(pageId);
-    if (!ds) throw new Error("can't get last modified page drawstate.");
-    return [pageId, ds];
+    const ds = pageId && this.getOneState(pageId);
+    return ds ? [pageId, ds] : undefined;
   }
 }

@@ -1,4 +1,4 @@
-import { List, Map, OrderedSet, Record, Set } from "immutable";
+import { List, Record, Map } from "immutable";
 import { Dispatch, SetStateAction } from "react";
 import { v4 as getUid } from "uuid";
 
@@ -7,18 +7,6 @@ export interface Stroke {
   pathData: string;
 }
 
-interface Erase {
-  uid: string;
-  erased: string[];
-}
-
-interface ImmuErase {
-  uid: string;
-  erased: Set<string>;
-}
-
-interface Mutation extends Stroke {}
-
 export type Operation =
   | {
       type: "add";
@@ -26,45 +14,41 @@ export type Operation =
     }
   | {
       type: "erase";
-      erase: Erase;
+      erased: string[];
+    }
+  | {
+      type: "mutate";
+      mutations: [string, string][];
     }
   | {
       type: "undo";
-      undoUid: string;
     }
   | {
       type: "redo";
-      redoUid: string;
     };
 
 interface DrawStateRecordType {
-  strokes: List<Stroke>;
-  uidStack: List<string>;
-  undoStack: OrderedSet<string>;
-  eraseStack: List<ImmuErase>;
-  deleted: Set<string>;
-  mutations: Map<string, List<Mutation>>;
+  strokes: Map<string, string>;
+  undoStack: List<DrawStateRecord>;
+  historyStack: List<DrawStateRecord>;
 }
 
 type DrawStateRecord = Record<DrawStateRecordType>;
 
 const defaultRecord: Readonly<DrawStateRecordType> = {
-  strokes: List(),
-  uidStack: List(),
-  undoStack: OrderedSet(),
-  eraseStack: List(),
-  deleted: Set(),
-  mutations: Map(),
+  strokes: Map(),
+  undoStack: List(),
+  historyStack: List(),
 };
 
 const defaultFactory = Record(defaultRecord);
 
 export interface FlatState {
-  strokes: Stroke[];
+  strokes: globalThis.Record<string, string>;
 }
 
 export const getDefaultFlatState = (): FlatState => {
-  return { strokes: [] };
+  return { strokes: {} };
 };
 
 export class DrawState {
@@ -79,65 +63,22 @@ export class DrawState {
     return this.immutable;
   }
 
-  getUidStack() {
-    return this.getImmutable().get("uidStack");
-  }
-
   getUndoStack() {
     return this.getImmutable().get("undoStack");
   }
 
-  getEraseStack() {
-    return this.getImmutable().get("eraseStack");
-  }
-
-  getValidEraseStack() {
-    const deleted = this.getDeleted();
-    const undo = this.getUndoStack();
-    return this.getEraseStack().filter(
-      ({ uid }) => !deleted.has(uid) && !undo.has(uid)
-    );
+  getHistoryStack() {
+    return this.getImmutable().get("historyStack");
   }
 
   getStrokes() {
     return this.getImmutable().get("strokes");
   }
 
-  getMutatedStoke(stroke: Stroke) {
-    const deleted = this.getDeleted();
-    const undo = this.getUndoStack();
-    const mutations = this.getMutations();
-    const { uid, pathData } = stroke;
-    const overlay = mutations
-      .get(uid)
-      ?.findLast(({ uid: mUid }) => !undo.has(mUid) && !deleted.has(mUid));
-    return { uid, pathData: overlay?.pathData ?? pathData };
-  }
-
-  getValidStrokes() {
-    const deleted = this.getDeleted();
-    const undo = this.getUndoStack();
-    const erase = this.getValidEraseStack();
+  getValidStrokes(): Stroke[] {
     return this.getStrokes()
-      .filter(
-        ({ uid }) =>
-          !deleted.has(uid) &&
-          !undo.has(uid) &&
-          !erase.some((s) => s.erased.has(uid))
-      )
-      .map((s) => this.getMutatedStoke(s));
-  }
-
-  getDeleted() {
-    return this.getImmutable().get("deleted");
-  }
-
-  getMutations() {
-    return this.getImmutable().get("mutations");
-  }
-
-  getLastStroke() {
-    return this.getImmutable().get("strokes").last();
+      .toArray()
+      .map(([uid, pathData]) => ({ uid, pathData }));
   }
 
   isEmpty() {
@@ -149,17 +90,14 @@ export class DrawState {
   }
 
   static undo(drawState: DrawState) {
-    const uid = drawState.getUidStack().last();
-
-    if (!uid) return drawState;
-
-    const lastOp: Operation = { type: "undo", undoUid: uid };
-
+    const lastOp: Operation = { type: "undo" };
+    const lastRecord = drawState.getHistoryStack().last();
+    if (!lastRecord) return drawState;
+    const undoStack = drawState
+      .getUndoStack()
+      .unshift(drawState.getImmutable());
     return new DrawState(
-      drawState
-        .getImmutable()
-        .update("undoStack", (s) => s.add(uid))
-        .update("uidStack", (s) => s.pop()),
+      lastRecord.set("undoStack", undoStack),
       drawState.width,
       drawState.height,
       lastOp
@@ -167,21 +105,11 @@ export class DrawState {
   }
 
   static redo(drawState: DrawState) {
-    const undo = drawState.getUndoStack();
-    const uid = undo.last();
-    if (!uid) return drawState;
+    const lastOp: Operation = { type: "redo" };
 
-    const lastOp: Operation = { type: "redo", redoUid: uid };
-
-    return new DrawState(
-      drawState
-        .getImmutable()
-        .update("undoStack", (s) => s.butLast())
-        .update("uidStack", (s) => s.push(uid)),
-      drawState.width,
-      drawState.height,
-      lastOp
-    );
+    const nextRecord = drawState.getUndoStack().first();
+    if (!nextRecord) return drawState;
+    return new DrawState(nextRecord, drawState.width, drawState.height, lastOp);
   }
 
   static addStroke(drawState: DrawState, pathData: string) {
@@ -191,95 +119,42 @@ export class DrawState {
   }
 
   static pushStroke(drawState: DrawState, stroke: Stroke) {
-    const pushedState = mergeUndo(
-      drawState
-        .getImmutable()
-        .update("strokes", (s) => s.push(stroke))
-        .update("uidStack", (s) => s.push(stroke.uid))
-    );
+    const { uid, pathData } = stroke;
+    const prevRecord = drawState.getImmutable();
+    const currRecord = prevRecord
+      .update("strokes", (s) => s.set(uid, pathData))
+      .update("historyStack", (s) => s.push(prevRecord))
+      .delete("undoStack");
 
     const lastOp: Operation = { type: "add", stroke };
 
-    return new DrawState(
-      pushedState,
-      drawState.width,
-      drawState.height,
-      lastOp
-    );
+    return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
   }
 
   static eraseStrokes(drawState: DrawState, erased: string[]) {
-    const erase = { uid: getUid(), erased };
-    return DrawState.pushErase(drawState, erase);
+    const prevRecord = drawState.getImmutable();
+    const currRecord = prevRecord
+      .update("strokes", (m) => m.deleteAll(erased))
+      .update("historyStack", (s) => s.push(prevRecord))
+      .delete("undoStack");
+
+    const lastOp: Operation = { type: "erase", erased };
+
+    return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
   }
 
-  static pushErase(drawState: DrawState, erase: Erase) {
-    const { uid, erased } = erase;
-    const immuErase: ImmuErase = { uid, erased: Set(erased) };
-    const pushedState = mergeUndo(
-      drawState
-        .getImmutable()
-        .update("eraseStack", (s) => s.push(immuErase))
-        .update("uidStack", (s) => s.push(uid))
-    );
-
-    const lastOp: Operation = { type: "erase", erase };
-
-    return new DrawState(
-      pushedState,
-      drawState.width,
-      drawState.height,
-      lastOp
-    );
-  }
-
-  static pushUndo(drawState: DrawState, undoUid: string) {
-    return new DrawState(
-      drawState.getImmutable().update("undoStack", (s) => s.add(undoUid)),
-      drawState.width,
-      drawState.height
-    );
-  }
-
-  static pushRedo(drawState: DrawState, RedoUid: string) {
-    return new DrawState(
-      drawState.getImmutable().update("undoStack", (s) => s.delete(RedoUid)),
-      drawState.width,
-      drawState.height
-    );
-  }
-
-  static mutateStroke(drawState: DrawState, strokes: Stroke[]) {
-    let mutations = drawState.getMutations();
-    const mUid = getUid();
-    strokes.forEach((s) => {
-      const { uid, pathData } = s;
-      const m = { uid: mUid, pathData };
-      mutations = mutations.update(uid, (l) => l?.push(m) ?? List([m]));
-    });
-    return new DrawState(
-      drawState
-        .getImmutable()
-        .set("mutations", mutations)
-        .update("uidStack", (s) => s.push(mUid)),
-      drawState.width,
-      drawState.height
-    );
+  static mutateStroke(drawState: DrawState, mutations: [string, string][]) {
+    if (mutations.length === 0) return drawState;
+    const prevRecord = drawState.getImmutable();
+    const currRecord = prevRecord
+      .update("strokes", (m) => m.merge(mutations))
+      .update("historyStack", (s) => s.push(prevRecord))
+      .delete("undoStack");
+    return new DrawState(currRecord, drawState.width, drawState.height);
   }
 
   static flaten(drawState: DrawState): FlatState {
-    const mergedRecord = mergeUndo(drawState.getImmutable());
-    const deleted = mergedRecord.get("deleted");
-    const erased = drawState.getValidEraseStack().reduce((prev, e) => {
-      return prev.concat(e.erased);
-    }, Set<string>());
-
-    const deletedAll = deleted.concat(erased);
-    const strokes = mergedRecord
-      .get("strokes")
-      .filter((s) => !deletedAll.has(s.uid))
-      .map((s) => drawState.getMutatedStoke(s))
-      .toArray();
+    const strokes = drawState.getImmutable().get("strokes").toObject();
     return { strokes };
   }
 
@@ -289,19 +164,11 @@ export class DrawState {
     height: number
   ): DrawState {
     return new DrawState(
-      defaultFactory().set("strokes", List(strokes)),
+      defaultFactory().set("strokes", Map(strokes)),
       width,
       height
     );
   }
-}
-
-function mergeUndo(drawStateRecord: DrawStateRecord) {
-  const undo = drawStateRecord.get("undoStack");
-  return drawStateRecord
-    .update("deleted", (d) => d.concat(undo))
-    .set("undoStack", OrderedSet())
-    .update("uidStack", (s) => s.filter((uid) => !undo.has(uid)));
 }
 
 export type SetDrawState = Dispatch<SetStateAction<DrawState>>;

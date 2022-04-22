@@ -258,11 +258,11 @@ const Draw = ({
   const updateMutation = () => {
     const list = selectGroup.current?.children;
     if (!list?.length) return;
-    const strokes: Stroke[] = list.map((p) => ({
-      uid: p.name,
-      pathData: p.exportJSON(),
-    }));
-    onChange((prev) => DrawState.mutateStroke(prev, strokes));
+    const mutations: [string, string][] = list.map((p) => [
+      p.name,
+      p.exportJSON(),
+    ]);
+    onChange((prev) => DrawState.mutateStroke(prev, mutations));
   };
 
   const deleteSelected = () => {
@@ -278,8 +278,6 @@ const Draw = ({
     } else if (mode === "selected") {
       if (rect?.strokeColor) rect.strokeColor.alpha /= 2;
       scope.current.activate();
-      const circle = new paper.Shape.Circle(new paper.Point(10, 10), 10);
-      circle.strokeColor = new paper.Color("black");
       return updateMutation;
     } else if (mode === "delete") {
       deleteSelected();

@@ -162,7 +162,9 @@ export async function convertTeamPage(
     notePages[key] = {
       ratio,
       state: {
-        strokes: Object.values(states).flat(1),
+        // strokes: Object.values(states).flat(1),
+        // !!!!!!!!
+        strokes: {},
       },
     };
   }
