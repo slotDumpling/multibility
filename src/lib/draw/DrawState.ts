@@ -7,6 +7,9 @@ export interface Stroke {
   pathData: string;
 }
 
+export type StrokeRecord = globalThis.Record<string, string>;
+export type Mutation = [string, string];
+
 export type Operation =
   | {
       type: "add";
@@ -18,7 +21,7 @@ export type Operation =
     }
   | {
       type: "mutate";
-      mutations: [string, string][];
+      mutations: Mutation[];
     }
   | {
       type: "undo";
@@ -44,7 +47,7 @@ const defaultRecord: Readonly<DrawStateRecordType> = {
 const defaultFactory = Record(defaultRecord);
 
 export interface FlatState {
-  strokes: globalThis.Record<string, string>;
+  strokes: StrokeRecord;
 }
 
 export const getDefaultFlatState = (): FlatState => {
@@ -143,14 +146,17 @@ export class DrawState {
     return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
   }
 
-  static mutateStroke(drawState: DrawState, mutations: [string, string][]) {
+  static mutateStroke(drawState: DrawState, mutations: Mutation[]) {
     if (mutations.length === 0) return drawState;
     const prevRecord = drawState.getImmutable();
     const currRecord = prevRecord
       .update("strokes", (m) => m.merge(mutations))
       .update("historyStack", (s) => s.push(prevRecord))
       .delete("undoStack");
-    return new DrawState(currRecord, drawState.width, drawState.height);
+
+    const lastOp: Operation = { type: "mutate", mutations };
+
+    return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
   }
 
   static flaten(drawState: DrawState): FlatState {

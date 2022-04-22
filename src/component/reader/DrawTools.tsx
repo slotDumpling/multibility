@@ -24,15 +24,17 @@ import { ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { TeamCtx } from "./Team";
 import DigitDisplay from "../ui/DigitDisplay";
 import { colors, getHashedColor } from "../../lib/color";
-import { UserInfo } from "../../lib/user";
+import { getUserId, UserInfo } from "../../lib/user";
 import { CtrlMode, DrawCtrl } from "../../lib/draw/drawCtrl";
 import PageNav from "./PageNav";
 import {
   HomeFilled,
+  EyeOutlined,
   UndoOutlined,
   RedoOutlined,
   SaveOutlined,
   TeamOutlined,
+  UserOutlined,
   CopyOutlined,
   DragOutlined,
   ExpandOutlined,
@@ -41,6 +43,7 @@ import {
   HighlightOutlined,
   RotateLeftOutlined,
   RotateRightOutlined,
+  EyeInvisibleOutlined,
 } from "@ant-design/icons";
 import IconFont from "../ui/IconFont";
 import "./drawTools.sass";
@@ -296,9 +299,27 @@ const SelectMenu: FC<{
   );
 };
 
-const UserCard = ({ userInfo }: { userInfo: UserInfo }) => {
-  const { userName } = userInfo;
+const UserCard: FC<{ userInfo: UserInfo }> = ({ userInfo }) => {
+  const { userName, userId } = userInfo;
+  const { ignores, setIgnores } = useContext(TeamCtx);
   const color = useMemo(() => getHashedColor(userName), [userName]);
+  const self = userId === getUserId();
+  const ignored = ignores.has(userId) && !self;
+
+  const switchIgnore = () => {
+    setIgnores((prev) => {
+      if (prev.has(userId)) return prev.delete(userId);
+      return prev.add(userId);
+    });
+  };
+
+  const icon = self ? (
+    <UserOutlined />
+  ) : ignored ? (
+    <EyeInvisibleOutlined />
+  ) : (
+    <EyeOutlined />
+  );
 
   return (
     <div className="user-item">
@@ -309,7 +330,8 @@ const UserCard = ({ userInfo }: { userInfo: UserInfo }) => {
       >
         {userName.slice(0, 4)}
       </Avatar>
-      <span>{userName}</span>
+      <span className="user-name">{userName}</span>
+      <Button disabled={self} type="text" icon={icon} onClick={switchIgnore} />
     </div>
   );
 };

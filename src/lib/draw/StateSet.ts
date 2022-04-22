@@ -1,4 +1,4 @@
-import { List, Map, Record as Rec } from "immutable";
+import { List, Map, Record } from "immutable";
 import { DrawState, Operation } from "./DrawState";
 import { NotePage } from "../note/note";
 
@@ -8,17 +8,16 @@ interface StateSetRecordType {
   undoStack: List<string>;
 }
 
-export type SetOperation = Operation & { pageId: string };
-
-type StateSetRecord = Rec<StateSetRecordType>;
-
 const defaultRecord: Readonly<StateSetRecordType> = {
   states: Map(),
   editStack: List(),
   undoStack: List(),
 };
 
-const defaultFactory = Rec(defaultRecord);
+type StateSetRecord = Record<StateSetRecordType>;
+const defaultFactory = Record(defaultRecord);
+
+export type SetOperation = Operation & { pageId: string };
 
 export class StateSet {
   constructor(
@@ -30,7 +29,10 @@ export class StateSet {
     return new StateSet(defaultFactory().set("states", Map(list)));
   }
 
-  static createFromPages(pageRec: Record<string, NotePage>, width: number) {
+  static createFromPages(
+    pageRec: globalThis.Record<string, NotePage>,
+    width: number
+  ) {
     const entries = Object.entries(pageRec);
     return StateSet.createFromList(
       entries.map(([key, { state, ratio }]) => [
@@ -132,32 +134,6 @@ export class StateSet {
         .update("states", (s) => s.set(lastUid, newDS)),
       lastSetOp
     );
-  }
-
-  pushOperation(SetOp: SetOperation) {
-    const { type, pageId } = SetOp;
-    const prevDs = this.getOneState(pageId);
-    if (!prevDs) return this;
-
-    let ds: DrawState;
-    switch (type) {
-      case "add":
-        ds = DrawState.pushStroke(prevDs, SetOp.stroke);
-        break;
-      case "erase":
-        ds = DrawState.eraseStrokes(prevDs, SetOp.erased);
-        break;
-      case "mutate":
-        ds = DrawState.mutateStroke(prevDs, SetOp.mutations);
-        break;
-      case "undo":
-        ds = DrawState.undo(prevDs);
-        break;
-      case "redo":
-        ds = DrawState.redo(prevDs);
-        break;
-    }
-    return this.setState(pageId, ds);
   }
 
   getLastDS(): [string, DrawState] | undefined {

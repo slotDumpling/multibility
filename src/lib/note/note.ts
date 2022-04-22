@@ -1,4 +1,4 @@
-import { getDefaultFlatState, FlatState, Stroke } from "../draw/DrawState";
+import { getDefaultFlatState, FlatState, StrokeRecord } from "../draw/DrawState";
 import { v4 as getUid } from "uuid";
 
 export interface NotePage {
@@ -10,7 +10,7 @@ export interface NotePage {
 }
 
 export interface TeamPageState {
-  states: Record<string, Stroke[]>;
+  states: Record<string, StrokeRecord>;
 }
 
 export interface TeamPageInfo {
@@ -18,9 +18,11 @@ export interface TeamPageInfo {
   pdfIndex?: number;
 }
 
+export type TeamPage = TeamPageInfo & TeamPageState;
+
 export interface TeamNote {
   uid: string;
-  pageRec: Record<string, TeamPageState>;
+  pageRec: Record<string, TeamPage>;
 }
 
 export interface NoteInfo {

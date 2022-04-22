@@ -202,6 +202,7 @@ const Draw = ({
   }, []);
 
   const handlePaper = () => {
+    console.log('rerender')
     if (readonly) return;
     scope.current.view.onMouseDown = handleDown;
     scope.current.view.onMouseDrag = handleDrag;

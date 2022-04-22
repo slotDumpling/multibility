@@ -1,5 +1,12 @@
 import localforage from "localforage";
-import { Note, NoteInfo, NotePage, TeamNoteInfo, TeamPageState } from "./note";
+import {
+  Note,
+  NoteInfo,
+  NotePage,
+  TeamNote,
+  TeamNoteInfo,
+  TeamPageState,
+} from "./note";
 import { v4 as getUid } from "uuid";
 import { getDefaultFlatState } from "../draw/DrawState";
 import { getUserId } from "../user";
@@ -150,25 +157,21 @@ export async function moveNoteTag(noteId: string, tagId: string) {
 export async function convertTeamPage(
   noteId: string,
   teamPages: Record<string, TeamPageState>
-) {
+): Promise<TeamNote | undefined> {
   const pageRec = (await loadNote(noteId))?.pageRec;
   if (!pageRec) return;
-  const notePages: Record<string, NotePage> = {};
+  const teamNote: TeamNote = { uid: noteId, pageRec: {} };
   for (let [key, page] of Object.entries(teamPages)) {
     const { states } = page;
     const { ratio } = pageRec[key];
     if (!ratio) continue;
     delete states[getUserId()];
-    notePages[key] = {
+    teamNote.pageRec[key] = {
       ratio,
-      state: {
-        // strokes: Object.values(states).flat(1),
-        // !!!!!!!!
-        strokes: {},
-      },
+      states,
     };
   }
-  return notePages;
+  return teamNote;
 }
 
 export async function saveTeamNote(

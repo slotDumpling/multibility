@@ -31,12 +31,13 @@ import { useBeforeunload } from "react-beforeunload";
 import DrawTools from "./DrawTools";
 import { getOneImage } from "../../lib/note/pdfImage";
 import { useInView } from "react-intersection-observer";
-import { Set } from "immutable";
+import { Map, Set } from "immutable";
 import { insertAfter } from "../../lib/array";
 import { AddPageButton } from "./ReaderTools";
 import { useMounted } from "../../lib/hooks";
 import { TeamCtx } from "./Team";
 import "./reader.sass";
+import { TeamState } from "../../lib/draw/TeamState";
 
 export const WIDTH = 2000;
 
@@ -44,7 +45,7 @@ export const ReaderStateCtx = createContext({
   noteId: "",
   noteInfo: undefined as NoteInfo | undefined,
   stateSet: undefined as StateSet | undefined,
-  teamStateSet: undefined as StateSet | undefined,
+  teamStateSet: undefined as TeamState | undefined,
   pdfFile: undefined as Blob | undefined,
   pageRec: undefined as Record<string, NotePage> | undefined,
   pageOrder: undefined as string[] | undefined,
@@ -325,7 +326,7 @@ const PageContainer: FC<{ uid: string }> = ({ uid }) => {
 
   const page = pageRec && pageRec[uid];
   const drawState = stateSet?.getOneState(uid);
-  const teamState = teamStateSet?.getOneState(uid);
+  const teamStates = teamStateSet?.getOnePageState(uid);
   const updateState = useCallback(
     (ds: DrawState) => setPageState(uid, ds),
     [uid, setPageState]
@@ -335,7 +336,7 @@ const PageContainer: FC<{ uid: string }> = ({ uid }) => {
   return (
     <PageWrapper
       drawState={drawState}
-      teamState={teamState}
+      teamStates={teamStates}
       updateState={updateState}
       thumbnail={page.image}
       pdfIndex={page.pdfIndex}
@@ -347,7 +348,7 @@ const PageContainer: FC<{ uid: string }> = ({ uid }) => {
 export const PageWrapper = ({
   thumbnail,
   drawState,
-  teamState,
+  teamStates,
   uid,
   pdfIndex,
   updateState,
@@ -355,7 +356,7 @@ export const PageWrapper = ({
 }: {
   uid: string;
   drawState: DrawState;
-  teamState?: DrawState;
+  teamStates?: Map<string, DrawState>;
   thumbnail?: string;
   pdfIndex?: number;
   updateState?: (ds: DrawState) => void;
@@ -400,7 +401,11 @@ export const PageWrapper = ({
     }
   }, [visible, loadImage, preview]);
 
-  const otherStates = useMemo(() => teamState && [teamState], [teamState]);
+  const { ignores } = useContext(TeamCtx);
+  const otherStates = useMemo(
+    () => teamStates && Array.from(teamStates.deleteAll(ignores).values()),
+    [teamStates, ignores]
+  );
 
   const maskShow = Boolean(preview || (pdfIndex && !fullImg));
 

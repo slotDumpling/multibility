@@ -96,13 +96,13 @@ const PagePreview: FC<{
   const { scrollPage, switchPageMarked } = useContext(ReaderMethodCtx);
   const page = pageRec && pageRec[uid];
   const drawState = stateSet?.getOneState(uid);
-  const teamState = teamStateSet?.getOneState(uid);
+  const teamStates = teamStateSet?.getOnePageState(uid);
   if (!page || !drawState) return null;
 
   if (
     mode === "WRITTEN" &&
-    drawState.isEmpty() &&
-    (!teamState || teamState.isEmpty())
+    drawState.isEmpty()
+    // (!teamState || teamState.isEmpty())
   ) {
     return null;
   } else if (mode === "MARKED" && !page.marked) {
@@ -138,7 +138,7 @@ const PagePreview: FC<{
             <PageWrapper
               uid={uid}
               drawState={drawState}
-              teamState={teamState}
+              teamStates={teamStates}
               thumbnail={image}
               preview
             />

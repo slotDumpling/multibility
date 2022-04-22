@@ -62,21 +62,30 @@
   align-items: center
 
 .team-popover
-  width: 180px
+  width: 200px
   display: flex
   flex-direction: column
   align-items: center
   .copy-link
-    width: 165px
+    width: 180px
     margin-top: 20px
   .user-list
     width: 100%
+    display: flex
+    flex-direction: column
+    align-items: center
     .user-item
       display: flex
-      width: 100%
+      width: 180px
       margin-bottom: 10px
+      align-items: center
       .avatar
         margin-right: 10px
+      .user-name
+        flex: 1
+        overflow: hidden
+        text-overflow: ellipsis
+
 
 .select-message
   .ant-message-notice-content
