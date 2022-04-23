@@ -13,7 +13,7 @@ body {
   height: 100%;
 }
 
-code {
+code, .code-font {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }

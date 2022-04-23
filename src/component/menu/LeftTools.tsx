@@ -5,7 +5,6 @@ import {
   EditOutlined,
   CheckOutlined,
   MenuUnfoldOutlined,
-  MenuFoldOutlined,
 } from "@ant-design/icons";
 import SideMenu from "./SideMenu";
 
@@ -22,8 +21,8 @@ export default function LeftTools() {
     <Button
       className="edit-btn small"
       onClick={swichEditing}
-      type={editing ? "primary" : "default"}
-      shape="circle"
+      type={editing ? "primary" : "text"}
+      size="small"
     >
       {editing ? <CheckOutlined /> : <EditOutlined />}
     </Button>
@@ -60,12 +59,12 @@ export default function LeftTools() {
         onClose={() => setAsideOn(false)}
         placement="left"
         title={AsideTitle}
-        closeIcon={<MenuFoldOutlined />}
+        closable={false}
         width={300}
         bodyStyle={{ padding: 0, overflow: "hidden" }}
         destroyOnClose
       >
-        <SideMenu />
+        <SideMenu onSelect={() => setAsideOn(false)} />
       </Drawer>
     </div>
   );

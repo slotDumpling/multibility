@@ -63,7 +63,8 @@ export class StateSet {
   }
 
   setState(pageId: string, drawState: DrawState) {
-    if (!this.getOneState(pageId)) return this;
+    const prevDS = this.getOneState(pageId);
+    if (!prevDS || prevDS === drawState) return this;
     let currRecord = this.getImmutable()
       .update("states", (s) => s.set(pageId, drawState))
       .update("editStack", (l) => l.push(pageId))

@@ -135,6 +135,7 @@ export class DrawState {
   }
 
   static eraseStrokes(drawState: DrawState, erased: string[]) {
+    if (erased.length === 0) return drawState;
     const prevRecord = drawState.getImmutable();
     const currRecord = prevRecord
       .update("strokes", (m) => m.deleteAll(erased))

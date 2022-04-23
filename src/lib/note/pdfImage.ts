@@ -1,3 +1,4 @@
+import localforage from "localforage";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf";
 // @ts-ignore
 import pdfjsWorker from "pdfjs-dist/legacy/build/pdf.worker.entry";
@@ -67,8 +68,44 @@ export async function getOneImage(file: Blob, index: number, scale = 2) {
   if (index > numPages) {
     throw new Error("index out of range");
   }
-  const [blob] = await getPageImage(doc, index, scale);
-  return blob;
+  const [data] = await getPageImage(doc, index, scale);
+  return data;
+}
+
+const IMAGE_CACHE_NUMBER = 10;
+async function getImageCache(noteId: string, index: number) {
+  let cacheList = ((await localforage.getItem("IMAGE_CACHE")) ||
+    []) as string[];
+  const key = `IMAGE_${noteId}_${index}`;
+  if (!cacheList.includes(key)) return;
+  cacheList = [key, ...cacheList.filter((id) => id !== key)];
+  await localforage.setItem("IMAGE_CACHE", cacheList);
+  return (await localforage.getItem(key)) as string;
+}
+
+async function setImageCache(noteId: string, index: number, data: string) {
+  let cacheList = ((await localforage.getItem("IMAGE_CACHE")) ||
+    []) as string[];
+  const key = `IMAGE_${noteId}_${index}`;
+  cacheList = [key, ...cacheList.filter((id) => id !== key)];
+  if (cacheList.length > IMAGE_CACHE_NUMBER) {
+    const deleteList = cacheList.slice(IMAGE_CACHE_NUMBER);
+    cacheList = cacheList.slice(0, IMAGE_CACHE_NUMBER);
+    for (let id of deleteList) {
+      await localforage.removeItem(id);
+    }
+  }
+  await localforage.setItem("IMAGE_CACHE", cacheList);
+  await localforage.setItem(key, data);
+}
+
+export async function getOnePageImage(noteId: string, index: number) {
+  const cached = await getImageCache(noteId, index);
+  if (cached) return cached;
+  const file = (await localforage.getItem(`PDF_${noteId}`)) as Blob | undefined;
+  const data = file && (await getOneImage(file, index, 2));
+  if (data) setImageCache(noteId, index, data);
+  return data;
 }
 
 export async function LoadPDF(

@@ -1,10 +1,10 @@
 import { message } from "antd";
 import React, {
-  createContext,
-  Dispatch,
-  SetStateAction,
-  useEffect,
   useState,
+  Dispatch,
+  useEffect,
+  createContext,
+  SetStateAction,
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { SetOperation } from "../../lib/draw/StateSet";
@@ -30,6 +30,7 @@ export const TeamCtx = createContext({
   updateNewPage: (() => {}) as
     | undefined
     | ((pageOrder: string[], pageId: string, newPage: NotePage) => void),
+  connected: false,
 });
 
 type TeamUpdate =
@@ -53,9 +54,10 @@ export default function Team() {
   const [ws] = useState(IoFactory(noteId));
   const [teamUpdate, setTeamUpdate] = useState<TeamUpdate>();
   const [loaded, setLoaded] = useState(false);
+  const [connected, setConnected] = useState(true);
   const nav = useNavigate();
 
-  async function loadState() {
+  const loadState = async () => {
     const teamNote = await getTeamNoteState(noteId);
     if (!teamNote) {
       message.error("Failed loading the team note state");
@@ -63,9 +65,9 @@ export default function Team() {
     }
     setTeamStateSet(TeamState.createFromTeamPages(teamNote, WIDTH));
     return true;
-  }
+  };
 
-  async function loadInfo() {
+  const loadInfo = async () => {
     const info = await loadTeamNoteInfo(noteId);
     if (!info) {
       message.error("Failed loading the team note info");
@@ -73,7 +75,7 @@ export default function Team() {
     }
     setCode(info.code);
     return true;
-  }
+  };
 
   const roomInit = async () => {
     const dismiss = message.loading("Loading team note...", 0);
@@ -138,6 +140,9 @@ export default function Team() {
       }
     );
 
+    ws.on("connect", () => setConnected(true));
+    ws.on("disconnect", () => setConnected(false));
+
     ws.connect();
   };
 
@@ -173,12 +178,13 @@ export default function Team() {
     <TeamCtx.Provider
       value={{
         code,
-        userList,
         ignores,
+        userList,
+        loadInfo,
+        connected,
         setIgnores,
         teamUpdate,
         teamStateSet,
-        loadInfo,
         pushOperation,
         updateReorder,
         updateNewPage,

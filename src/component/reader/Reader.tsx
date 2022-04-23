@@ -29,15 +29,15 @@ import { debounce, last, omit } from "lodash";
 import { putNote, updatePages } from "../../lib/network/http";
 import { useBeforeunload } from "react-beforeunload";
 import DrawTools from "./DrawTools";
-import { getOneImage } from "../../lib/note/pdfImage";
+import { getOnePageImage } from "../../lib/note/pdfImage";
 import { useInView } from "react-intersection-observer";
 import { Map, Set } from "immutable";
 import { insertAfter } from "../../lib/array";
 import { AddPageButton } from "./ReaderTools";
 import { useMounted } from "../../lib/hooks";
 import { TeamCtx } from "./Team";
-import "./reader.sass";
 import { TeamState } from "../../lib/draw/TeamState";
+import "./reader.sass";
 
 export const WIDTH = 2000;
 
@@ -46,7 +46,7 @@ export const ReaderStateCtx = createContext({
   noteInfo: undefined as NoteInfo | undefined,
   stateSet: undefined as StateSet | undefined,
   teamStateSet: undefined as TeamState | undefined,
-  pdfFile: undefined as Blob | undefined,
+  // pdfFile: undefined as Blob | undefined,
   pageRec: undefined as Record<string, NotePage> | undefined,
   pageOrder: undefined as string[] | undefined,
   saved: true,
@@ -81,7 +81,6 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   const [drawCtrl, setDrawCtrl] = useState(defaultDrawCtrl);
   const [mode, setMode] = useState<CtrlMode>("draw");
   const [saved, setSaved] = useState(true);
-  const [pdfFile, setPdfFile] = useState<Blob>();
   const [inviewPages, setInviewPages] = useState(Set<string>());
   const [pageOrder, setPageOrder] = useState<string[]>();
   const [loaded, setLoaded] = useState(false);
@@ -104,7 +103,6 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     setStateSet(StateSet.createFromPages(pageRec, WIDTH));
     setDrawCtrl(await getDrawCtrl());
     setLoaded(true);
-    setPdfFile(pdf);
     if (teamOn) updatePages(noteId);
   };
 
@@ -290,7 +288,6 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
         teamStateSet,
         saved,
         teamOn,
-        pdfFile,
         pageRec,
         pageOrder,
         inviewPages,
@@ -338,7 +335,6 @@ const PageContainer: FC<{ uid: string }> = ({ uid }) => {
       drawState={drawState}
       teamStates={teamStates}
       updateState={updateState}
-      thumbnail={page.image}
       pdfIndex={page.pdfIndex}
       uid={uid}
     />
@@ -349,10 +345,10 @@ export const PageWrapper = ({
   thumbnail,
   drawState,
   teamStates,
-  uid,
-  pdfIndex,
   updateState,
+  pdfIndex,
   preview = false,
+  uid,
 }: {
   uid: string;
   drawState: DrawState;
@@ -363,7 +359,7 @@ export const PageWrapper = ({
   preview?: boolean;
 }) => {
   const { setInviewPages } = useContext(ReaderMethodCtx);
-  const { pdfFile, refRec } = useContext(ReaderStateCtx);
+  const { refRec, noteId } = useContext(ReaderStateCtx);
   const [fullImg, setFullImg] = useState<string>();
   const [visibleRef, visible] = useInView({ delay: 100 });
 
@@ -383,12 +379,12 @@ export const PageWrapper = ({
     (() => {
       let called = false;
       return async () => {
-        if (preview || !pdfFile || !pdfIndex || called) return;
+        if (preview || !pdfIndex || called) return;
         called = true;
-        getOneImage(pdfFile, pdfIndex).then(setFullImg);
+        setFullImg(await getOnePageImage(noteId, pdfIndex));
       };
     })(),
-    [preview, pdfFile, pdfIndex]
+    [preview, pdfIndex]
   );
 
   useEffect(() => {
@@ -407,7 +403,9 @@ export const PageWrapper = ({
     [teamStates, ignores]
   );
 
-  const maskShow = Boolean(preview || (pdfIndex && !fullImg));
+  const imageLoaded = fullImg || !pdfIndex;
+  const drawShow = visible && imageLoaded;
+  const maskShow = Boolean(preview || !imageLoaded);
 
   return (
     <section
@@ -415,7 +413,7 @@ export const PageWrapper = ({
       className="note-page"
       style={{ paddingTop: `${ratio * 100}%` }}
     >
-      {visible && (
+      {drawShow && (
         <DrawWrapper
           drawState={drawState}
           otherStates={otherStates}

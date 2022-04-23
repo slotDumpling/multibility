@@ -1,5 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useSwipeable } from "react-swipeable";
+import React, { useEffect, useRef, useState } from "react";
 import './test.sass'
 
 export default function Test() {

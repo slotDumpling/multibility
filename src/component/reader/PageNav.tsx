@@ -7,6 +7,8 @@ import React, {
   useContext,
   MouseEvent,
   SetStateAction,
+  useEffect,
+  useRef,
 } from "react";
 import { PageWrapper, ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import {
@@ -24,11 +26,11 @@ import {
   DropResult,
   DragDropContext,
 } from "react-beautiful-dnd";
-import "./preview.sass";
-import { exchange } from "../../lib/array";
 import { AddPageButton } from "./ReaderTools";
-import { TeamCtx } from "./Team";
+import { exchange } from "../../lib/array";
 import classNames from "classnames";
+import { TeamCtx } from "./Team";
+import "./preview.sass";
 
 const PageNavContent = ({
   activeKey,
@@ -40,6 +42,8 @@ const PageNavContent = ({
   const { pageOrder, inviewPages } = useContext(ReaderStateCtx);
   const { setPageOrder, scrollPage } = useContext(ReaderMethodCtx);
   const { updateReorder } = useContext(TeamCtx);
+  const refRec = useRef<Record<string, HTMLElement>>({});
+  const listEl = useRef<HTMLDivElement>();
 
   const onDragEnd = ({ source, destination }: DropResult) => {
     if (!destination || !pageOrder) return;
@@ -60,20 +64,35 @@ const PageNavContent = ({
     [pageOrder, inviewPages]
   );
 
+  useEffect(() => {
+    refRec.current[currPageId]?.scrollIntoView();
+    const itemHeight = refRec.current[currPageId]?.clientHeight || 0;
+    const listHeight = listEl.current?.clientHeight || 0;
+    listEl.current?.scrollBy(0, -listHeight / 2 + itemHeight / 2);
+  }, []);
+
   return (
     <div className="preview-container">
       <PreviewTabs activeKey={activeKey} setActiveKey={setActiveKey} />
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="droppable">
           {({ droppableProps, innerRef, placeholder }) => (
-            <div className="page-list" {...droppableProps} ref={innerRef}>
+            <div
+              className="page-list"
+              ref={(e) => {
+                innerRef(e);
+                if (e) listEl.current = e;
+              }}
+              {...droppableProps}
+            >
               {pageOrder?.map((uid, index) => (
                 <PagePreview
                   key={uid}
                   uid={uid}
-                  pageIndex={index}
                   mode={activeKey}
+                  pageIndex={index}
                   currPageId={currPageId}
+                  refRec={refRec.current}
                 />
               ))}
               {placeholder}
@@ -88,10 +107,11 @@ const PageNavContent = ({
 
 const PagePreview: FC<{
   uid: string;
-  pageIndex: number;
   mode: string;
+  pageIndex: number;
   currPageId: string;
-}> = ({ uid, pageIndex, mode, currPageId }) => {
+  refRec: Record<string, HTMLElement>;
+}> = ({ uid, pageIndex, mode, currPageId, refRec }) => {
   const { stateSet, teamStateSet, pageRec } = useContext(ReaderStateCtx);
   const { scrollPage, switchPageMarked } = useContext(ReaderMethodCtx);
   const page = pageRec && pageRec[uid];
@@ -101,8 +121,8 @@ const PagePreview: FC<{
 
   if (
     mode === "WRITTEN" &&
-    drawState.isEmpty()
-    // (!teamState || teamState.isEmpty())
+    drawState.isEmpty() &&
+    (!teamStates || teamStates.size === 0)
   ) {
     return null;
   } else if (mode === "MARKED" && !page.marked) {
@@ -129,7 +149,10 @@ const PagePreview: FC<{
         const { image, marked } = page;
         return (
           <div
-            ref={innerRef}
+            ref={(e) => {
+              innerRef(e);
+              if (e) refRec[uid] = e;
+            }}
             className={classNames("page", { curr, drag })}
             onClick={() => scrollPage(uid)}
             {...draggableProps}
@@ -255,7 +278,7 @@ export default function PageNav() {
         title={title}
         closeIcon={<MenuUnfoldOutlined />}
         bodyStyle={{ padding: 0, overflow: "hidden" }}
-        forceRender
+        destroyOnClose
       >
         <PageNavContent activeKey={activeKey} setActiveKey={setActiveKey} />
       </Drawer>

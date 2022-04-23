@@ -1,22 +1,25 @@
 import React, {
-  CSSProperties,
-  Dispatch,
   FC,
-  SetStateAction,
-  useContext,
-  useEffect,
   useMemo,
   useState,
+  Dispatch,
+  useEffect,
+  useContext,
+  CSSProperties,
+  SetStateAction,
 } from "react";
 import {
+  Badge,
   Avatar,
   Button,
-  ButtonProps,
+  Slider,
   Divider,
   message,
-  Popconfirm,
   Popover,
-  Slider,
+  Popconfirm,
+  ButtonProps,
+  Tag,
+  Alert,
 } from "antd";
 import Search from "antd/lib/input/Search";
 import { useNavigate } from "react-router-dom";
@@ -34,16 +37,17 @@ import {
   RedoOutlined,
   SaveOutlined,
   TeamOutlined,
-  UserOutlined,
   CopyOutlined,
   DragOutlined,
   ExpandOutlined,
   ReloadOutlined,
   DeleteOutlined,
   HighlightOutlined,
+  DisconnectOutlined,
   RotateLeftOutlined,
   RotateRightOutlined,
   EyeInvisibleOutlined,
+  UsergroupAddOutlined,
 } from "@ant-design/icons";
 import IconFont from "../ui/IconFont";
 import "./drawTools.sass";
@@ -313,14 +317,6 @@ const UserCard: FC<{ userInfo: UserInfo }> = ({ userInfo }) => {
     });
   };
 
-  const icon = self ? (
-    <UserOutlined />
-  ) : ignored ? (
-    <EyeInvisibleOutlined />
-  ) : (
-    <EyeOutlined />
-  );
-
   return (
     <div className="user-item">
       <Avatar
@@ -331,13 +327,24 @@ const UserCard: FC<{ userInfo: UserInfo }> = ({ userInfo }) => {
         {userName.slice(0, 4)}
       </Avatar>
       <span className="user-name">{userName}</span>
-      <Button disabled={self} type="text" icon={icon} onClick={switchIgnore} />
+      {self ? (
+        <Tag className="me-tag">
+          Me
+        </Tag>
+      ) : (
+        <Button
+          disabled={self}
+          type="text"
+          icon={ignored ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+          onClick={switchIgnore}
+        />
+      )}
     </div>
   );
 };
 
 function RoomInfo() {
-  const { code, userList, loadInfo } = useContext(TeamCtx);
+  const { code, userList, loadInfo, connected } = useContext(TeamCtx);
   const link = window.location.href;
   const copy = () => {
     navigator.clipboard.writeText(link);
@@ -351,9 +358,19 @@ function RoomInfo() {
 
   const content = (
     <div className="team-popover">
+      {connected || (
+        <Alert
+          className="disconn-alert"
+          message="Network failed."
+          icon={<DisconnectOutlined />}
+          type="error"
+          showIcon
+          banner
+        />
+      )}
       <DigitDisplay value={code} />
       <Search
-        className="copy-link"
+        className="copy-link code-font"
         value={link}
         enterButton={<Button icon={<CopyOutlined />} />}
         onSearch={copy}
@@ -389,7 +406,14 @@ function RoomInfo() {
       defaultVisible
       getPopupContainer={(e) => e}
     >
-      <Button type="text" icon={<TeamOutlined />} />
+      <Badge
+        status={connected ? "success" : "error"}
+        offset={[-5, 5]}
+        count={connected ? userList.length : "!"}
+        size="small"
+      >
+        <Button type="text" icon={<TeamOutlined />} />
+      </Badge>
     </Popover>
   );
 }
@@ -404,7 +428,7 @@ const JoinRoom = () => {
       okText="Yes"
       cancelText="No"
     >
-      <Button type="text" icon={<TeamOutlined />} />
+      <Button type="text" icon={<UsergroupAddOutlined />} />
     </Popconfirm>
   );
 };

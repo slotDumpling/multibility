@@ -1,13 +1,5 @@
-import { Button, Input, InputRef, Popconfirm, Popover, Select } from "antd";
-import {
-  FC,
-  MouseEventHandler,
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { Button, Input, Popconfirm, Popover, Select } from "antd";
+import { FC, MouseEventHandler, useContext, useEffect, useState } from "react";
 import { deleteTag, editTag, NoteTag, storeTag } from "../../lib/note/archive";
 import { colors } from "../../lib/color";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
@@ -180,7 +172,7 @@ const AddTag = () => {
   );
 };
 
-export default function SideMenu() {
+export default function SideMenu({ onSelect }: { onSelect?: () => void }) {
   const { allTags, editing, tagUid, allNotes } = useContext(MenuStateCtx);
   const { setTagUid, setAllTags } = useContext(MenuMethodCtx);
   const [nowSwiped, setNowSwiped] = useState("");
@@ -191,10 +183,15 @@ export default function SideMenu() {
     setAllTags(tags);
   }
 
+  const selectTag = (key: string) => {
+    setTagUid(key);
+    onSelect && onSelect();
+  };
+
   const AllNoteTag = () => (
     <div
       className={classNames("tag-item", { curr: tagUid === "DEFAULT" })}
-      onClick={() => setTagUid("DEFAULT")}
+      onClick={() => selectTag("DEFAULT")}
     >
       <ProfileOutlined id="all-note-icon" />
       <span className="tag-name">All Notes</span>
@@ -222,7 +219,7 @@ export default function SideMenu() {
               <TagItem
                 noteTag={tag}
                 removeTag={removeTag}
-                onClick={() => setTagUid(uid)}
+                onClick={() => selectTag(uid)}
               />
             </SwipeDelete>
           );

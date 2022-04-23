@@ -44,18 +44,15 @@ export default function MainMenu() {
   const [tagUid, setTagUid] = useState("DEFAULT");
   const [editing, setEditing] = useState(false);
 
-  const selectedTag = useMemo<NoteTag>(() => {
-    if (tagUid === "DEFAULT") {
-      return {
-        uid: "",
-        name: "All Notes",
-        color: "#000000",
-        notes: Object.keys(allNotes),
-      };
-    } else {
-      return allTags[tagUid];
-    }
-  }, [tagUid, allTags, allNotes]);
+  const selectedTag =
+    tagUid === "DEFAULT"
+      ? {
+          uid: "",
+          name: "All Notes",
+          color: "#000000",
+          notes: Object.keys(allNotes),
+        }
+      : allTags[tagUid];
 
   const noteList = useMemo<NoteInfo[]>(
     () =>
@@ -70,7 +67,6 @@ export default function MainMenu() {
     getAllTags().then(setAllTags);
     document.title = "Multibility";
   };
-
   useEffect(menuInit, []);
 
   return (

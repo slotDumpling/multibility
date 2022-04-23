@@ -1,17 +1,17 @@
 import React, {
-  Dispatch,
-  SetStateAction,
-  TouchEvent,
-  useEffect,
   useRef,
+  Dispatch,
   useState,
+  useEffect,
+  TouchEvent,
+  SetStateAction,
 } from "react";
-import paper from "paper";
 import { CtrlMode, defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
 import { DrawState, SetDrawState, Stroke } from "../../lib/draw/DrawState";
 import { releaseCanvas } from "../../lib/draw/drawer";
 import { isStylus } from "../../lib/touch/touch";
 import { Set } from "immutable";
+import paper from "paper";
 import "./draw.sass";
 
 const PREVIEW_WIDTH = 200;
@@ -28,8 +28,8 @@ const Draw = ({
   imgSrc,
 }: {
   drawState: DrawState;
-  onChange?: SetDrawState;
   otherStates?: DrawState[];
+  onChange?: SetDrawState;
   drawCtrl?: DrawCtrl;
   mode?: CtrlMode;
   setMode?: Dispatch<SetStateAction<CtrlMode>>;
@@ -50,8 +50,7 @@ const Draw = ({
   let { color, finger, lineWidth, highlight, eraserWidth } = drawCtrl;
 
   const isEventValid = (e: TouchEvent<HTMLCanvasElement>) => {
-    return finger || isStylus(e) || mode === "selected";
-    // selected rectangle can always be dragged by finger.
+    return finger || isStylus(e);
   };
 
   const updateRatio = () => {
@@ -177,7 +176,9 @@ const Draw = ({
       onChange((prev) => DrawState.addStroke(prev, pathData));
     },
     select() {
-      if (!rect?.size.width || !rect.size.height) return;
+      if (!rect || rect.size.width < 10 || rect.size.height < 10) {
+        return setRect(undefined);
+      }
       scope.current.activate();
 
       const bounds = rect.strokeBounds;
@@ -202,7 +203,6 @@ const Draw = ({
   }, []);
 
   const handlePaper = () => {
-    console.log('rerender')
     if (readonly) return;
     scope.current.view.onMouseDown = handleDown;
     scope.current.view.onMouseDrag = handleDrag;
@@ -211,7 +211,7 @@ const Draw = ({
   useEffect(handlePaper);
 
   const preventTouch = (e: TouchEvent<HTMLCanvasElement>) => {
-    if (!isEventValid(e)) e.stopPropagation();
+    isEventValid(e) || e.stopPropagation();
   };
 
   useEffect(() => {

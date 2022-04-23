@@ -32,12 +32,13 @@ import { useNavigate } from "react-router-dom";
 import { getNoteId } from "../../lib/network/http";
 import DigitInput from "../ui/DigitInput";
 import { CSSTransition } from "react-transition-group";
-import "./right.sass";
 import Title from "antd/lib/typography/Title";
 import Dragger from "antd/lib/upload/Dragger";
 import { getUserName, setUserName } from "../../lib/user";
 import localforage from "localforage";
 import { useEffect } from "react";
+import "./right.sass";
+import "animate.css";
 
 const OthersStateUpdateCtx = createContext({
   setActive: (() => {}) as Dispatch<SetStateAction<string>>,
@@ -178,7 +179,7 @@ const SettingsPage = () => {
           icon={<ClearOutlined />}
           okText="Delete"
           okType="danger"
-          okButtonProps={{type: 'primary'}}
+          okButtonProps={{ type: "primary" }}
           cancelText="Cancel"
           placement="bottom"
         >
@@ -252,13 +253,16 @@ const OthersButton = () => {
 
 function JoinTeamButton() {
   const [roomCode, setRoomCode] = useState(0);
+  const [animated, setAnimated] = useState(false);
 
   const nav = useNavigate();
   async function handleSubmit(code: number) {
     const noteId = await getNoteId(code);
     if (!noteId) {
       setRoomCode(0);
-      message.error("Room doesn't exist.");
+      setAnimated(true);
+      setTimeout(() => setAnimated(false), 1000);
+      return;
     }
     nav(`/team/${noteId}`);
   }
@@ -270,11 +274,15 @@ function JoinTeamButton() {
       title="Join a team note"
       destroyTooltipOnHide
       content={
-        <DigitInput
-          value={roomCode}
-          onChange={setRoomCode}
-          onSubmit={handleSubmit}
-        />
+        <div
+          className={animated ? "animate__animated animate__shakeX" : undefined}
+        >
+          <DigitInput
+            value={roomCode}
+            onChange={setRoomCode}
+            onSubmit={handleSubmit}
+          />
+        </div>
       }
     >
       <Button className="team-btn large" shape="round" icon={<TeamOutlined />}>
