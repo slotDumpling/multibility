@@ -40,7 +40,7 @@ import { useEffect } from "react";
 import "./right.sass";
 import "animate.css";
 
-const OthersStateUpdateCtx = createContext({
+const OthersStateCtx = createContext({
   setActive: (() => {}) as Dispatch<SetStateAction<string>>,
 });
 
@@ -54,13 +54,13 @@ export default function RightTools() {
 }
 
 const OthersMenu = () => {
-  const { setActive } = useContext(OthersStateUpdateCtx);
+  const { setActive } = useContext(OthersStateCtx);
   const { Item } = Menu;
   return (
     <Menu onClick={({ key }) => setActive(key)}>
       <Item key="PDF">
         <FilePdfOutlined />
-        <span>Load PDF</span>
+        <span>Import PDF</span>
       </Item>
       <Item key="PROFILE">
         <UserOutlined />
@@ -81,7 +81,7 @@ const SeconaryMenu = ({
   children: ReactNode;
   title: string;
 }) => {
-  const { setActive } = useContext(OthersStateUpdateCtx);
+  const { setActive } = useContext(OthersStateCtx);
   return (
     <div className="secondary">
       <div className="title">
@@ -142,18 +142,27 @@ function UploadPdfPage() {
 const ProfilePage = () => {
   const userName = getUserName();
   const [name, setName] = useState(userName);
+  const { setActive } = useContext(OthersStateCtx);
   const handleEnter = () => {
+    if (!name) return;
     setUserName(name);
+    setActive('MENU');
   };
   return (
     <SeconaryMenu title="My profile">
       <div className="profile-page">
         <Input
-          prefix={<UserOutlined />}
           value={name}
           onChange={(e) => setName(e.target.value)}
+          prefix={<UserOutlined />}
+          allowClear
         />
-        <Button onClick={handleEnter} type="primary" block>
+        <Button
+          disabled={userName === name || !name}
+          onClick={handleEnter}
+          type="primary"
+          block
+        >
           OK
         </Button>
       </div>
@@ -215,7 +224,7 @@ const OthersPage = () => {
   useEffect(() => setActive("MENU"), []);
 
   return (
-    <OthersStateUpdateCtx.Provider value={{ setActive }}>
+    <OthersStateCtx.Provider value={{ setActive }}>
       <section className="others-menu" style={{ height }}>
         <CSSTransition
           classNames="primary"
@@ -234,7 +243,7 @@ const OthersPage = () => {
           <SettingsPage />
         </CSSTransition>
       </section>
-    </OthersStateUpdateCtx.Provider>
+    </OthersStateCtx.Provider>
   );
 };
 
