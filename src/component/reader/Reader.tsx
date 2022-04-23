@@ -15,11 +15,11 @@ import { message } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import Draw from "../draw/Draw";
 import {
-  CtrlMode,
-  defaultDrawCtrl,
   DrawCtrl,
+  CtrlMode,
   getDrawCtrl,
   saveDrawCtrl,
+  defaultDrawCtrl,
 } from "../../lib/draw/drawCtrl";
 import { DrawState } from "../../lib/draw/DrawState";
 import { createPage, NoteInfo, NotePage } from "../../lib/note/note";
@@ -46,13 +46,12 @@ export const ReaderStateCtx = createContext({
   noteInfo: undefined as NoteInfo | undefined,
   stateSet: undefined as StateSet | undefined,
   teamStateSet: undefined as TeamState | undefined,
-  // pdfFile: undefined as Blob | undefined,
   pageRec: undefined as Record<string, NotePage> | undefined,
   pageOrder: undefined as string[] | undefined,
   saved: true,
   teamOn: false,
   inviewPages: Set<string>(),
-  refRec: {} as Record<string, HTMLDivElement>,
+  refRec: {} as Record<string, HTMLElement>,
   drawCtrl: defaultDrawCtrl,
   mode: "draw" as CtrlMode,
 });
@@ -84,7 +83,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   const [inviewPages, setInviewPages] = useState(Set<string>());
   const [pageOrder, setPageOrder] = useState<string[]>();
   const [loaded, setLoaded] = useState(false);
-  const refRec = useRef<Record<string, HTMLDivElement>>({});
+  const refRec = useRef<Record<string, HTMLElement>>({});
   const mounted = useMounted();
 
   const { teamStateSet, pushOperation, teamUpdate, updateNewPage } =
