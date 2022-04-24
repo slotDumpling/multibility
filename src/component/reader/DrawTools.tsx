@@ -328,9 +328,7 @@ const UserCard: FC<{ userInfo: UserInfo }> = ({ userInfo }) => {
       </Avatar>
       <span className="user-name">{userName}</span>
       {self ? (
-        <Tag className="me-tag">
-          Me
-        </Tag>
+        <Tag className="me-tag">Me</Tag>
       ) : (
         <Button
           disabled={self}
@@ -406,14 +404,18 @@ function RoomInfo() {
       defaultVisible
       getPopupContainer={(e) => e}
     >
-      <Badge
-        status={connected ? "success" : "error"}
-        offset={[-5, 5]}
-        count={connected ? userList.length : "!"}
-        size="small"
-      >
-        <Button type="text" icon={<TeamOutlined />} />
-      </Badge>
+      <Button
+        type="text"
+        icon={
+          <Badge
+            status={connected ? "success" : "error"}
+            count={connected ? userList.length : "!"}
+            size="small"
+          >
+            <TeamOutlined />
+          </Badge>
+        }
+      />
     </Popover>
   );
 }
