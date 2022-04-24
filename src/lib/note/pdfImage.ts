@@ -73,20 +73,20 @@ export async function getOneImage(file: Blob, index: number, scale = 2) {
 }
 
 const IMAGE_CACHE_NUMBER = 10;
-async function getImageCache(noteId: string, index: number) {
+async function getImageCache(noteID: string, index: number) {
   let cacheList = ((await localforage.getItem("IMAGE_CACHE")) ||
     []) as string[];
-  const key = `IMAGE_${noteId}_${index}`;
+  const key = `IMAGE_${noteID}_${index}`;
   if (!cacheList.includes(key)) return;
   cacheList = [key, ...cacheList.filter((id) => id !== key)];
   await localforage.setItem("IMAGE_CACHE", cacheList);
   return (await localforage.getItem(key)) as string;
 }
 
-async function setImageCache(noteId: string, index: number, data: string) {
+async function setImageCache(noteID: string, index: number, data: string) {
   let cacheList = ((await localforage.getItem("IMAGE_CACHE")) ||
     []) as string[];
-  const key = `IMAGE_${noteId}_${index}`;
+  const key = `IMAGE_${noteID}_${index}`;
   cacheList = [key, ...cacheList.filter((id) => id !== key)];
   if (cacheList.length > IMAGE_CACHE_NUMBER) {
     const deleteList = cacheList.slice(IMAGE_CACHE_NUMBER);
@@ -99,12 +99,12 @@ async function setImageCache(noteId: string, index: number, data: string) {
   await localforage.setItem(key, data);
 }
 
-export async function getOnePageImage(noteId: string, index: number) {
-  const cached = await getImageCache(noteId, index);
+export async function getOnePageImage(noteID: string, index: number) {
+  const cached = await getImageCache(noteID, index);
   if (cached) return cached;
-  const file = (await localforage.getItem(`PDF_${noteId}`)) as Blob | undefined;
+  const file = (await localforage.getItem(`PDF_${noteID}`)) as Blob | undefined;
   const data = file && (await getOneImage(file, index, 2));
-  if (data) setImageCache(noteId, index, data);
+  if (data) setImageCache(noteID, index, data);
   return data;
 }
 
@@ -116,8 +116,8 @@ export async function LoadPDF(
   const pageRec: Record<string, NotePage> = {};
   const pageOrder: string[] = [];
   images.forEach((image, idx) => {
-    const pageId = getUid();
-    pageRec[pageId] = {
+    const pageID = getUid();
+    pageRec[pageID] = {
       image,
       ratio: ratios[idx],
       state: {
@@ -125,7 +125,7 @@ export async function LoadPDF(
       },
       pdfIndex: idx + 1,
     };
-    pageOrder.push(pageId);
+    pageOrder.push(pageID);
   });
   const name = file.name.replace(".pdf", "");
   const ab = await file.arrayBuffer();

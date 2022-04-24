@@ -11,7 +11,7 @@ import { SetOperation } from "../../lib/draw/StateSet";
 import { getTeamNoteState, loadTeamNoteInfo } from "../../lib/network/http";
 import { IoFactory } from "../../lib/network/io";
 import Reader, { WIDTH } from "./Reader";
-import { getUserId, UserInfo } from "../../lib/user";
+import { getuserID, UserInfo } from "../../lib/user";
 import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
 import { createTeamPage, NotePage } from "../../lib/note/note";
 import { TeamState } from "../../lib/draw/TeamState";
@@ -29,7 +29,7 @@ export const TeamCtx = createContext({
   updateReorder: (() => {}) as undefined | ((pageOrder: string[]) => void),
   updateNewPage: (() => {}) as
     | undefined
-    | ((pageOrder: string[], pageId: string, newPage: NotePage) => void),
+    | ((pageOrder: string[], pageID: string, newPage: NotePage) => void),
   connected: false,
 });
 
@@ -41,24 +41,24 @@ type TeamUpdate =
   | {
       type: "newPage";
       pageOrder: string[];
-      pageId: string;
+      pageID: string;
       newPage: NotePage;
     };
 
 export default function Team() {
-  const noteId = useParams().noteId ?? "";
+  const noteID = useParams().noteID ?? "";
   const [teamStateSet, setTeamStateSet] = useState<TeamState>();
   const [code, setCode] = useState(-2);
   const [userList, setUserList] = useState<UserInfo[]>([]);
   const [ignores, setIgnores] = useState(Set<string>());
-  const [ws] = useState(IoFactory(noteId));
+  const [ws] = useState(IoFactory(noteID));
   const [teamUpdate, setTeamUpdate] = useState<TeamUpdate>();
   const [loaded, setLoaded] = useState(false);
   const [connected, setConnected] = useState(true);
   const nav = useNavigate();
 
   const loadState = async () => {
-    const teamNote = await getTeamNoteState(noteId);
+    const teamNote = await getTeamNoteState(noteID);
     if (!teamNote) {
       message.error("Failed loading the team note state");
       return false;
@@ -68,7 +68,7 @@ export default function Team() {
   };
 
   const loadInfo = async () => {
-    const info = await loadTeamNoteInfo(noteId);
+    const info = await loadTeamNoteInfo(noteID);
     if (!info) {
       message.error("Failed loading the team note info");
       return false;
@@ -85,31 +85,31 @@ export default function Team() {
     }
     dismiss();
     setLoaded(true);
-    ws.on("push", ({ operation, userId }) => {
-      setTeamStateSet((prev) => prev?.pushOperation(operation, userId, WIDTH));
+    ws.on("push", ({ operation, userID }) => {
+      setTeamStateSet((prev) => prev?.pushOperation(operation, userID, WIDTH));
     });
 
     ws.on("joined", ({ joined, members }) => {
-      const { userId, userName } = joined;
+      const { userID, userName } = joined;
       setUserList(members);
-      if (userId === getUserId()) return;
-      message.destroy(userId);
+      if (userID === getuserID()) return;
+      message.destroy(userID);
       message.success({
         icon: <LoginOutlined />,
         content: `${userName} joined room`,
-        key: userId,
+        key: userID,
       });
     });
 
     ws.on("leaved", ({ leaved, members }) => {
-      const { userId, userName } = leaved;
+      const { userID, userName } = leaved;
       setUserList(members);
-      if (userId === getUserId()) return;
-      message.destroy(userId);
+      if (userID === getuserID()) return;
+      message.destroy(userID);
       message.warning({
         icon: <LogoutOutlined />,
         content: `${userName} leaved room`,
-        key: userId,
+        key: userID,
       });
     });
 
@@ -120,21 +120,21 @@ export default function Team() {
     ws.on(
       "newPage",
       ({
-        pageId,
+        pageID,
         newPage,
         pageOrder,
       }: {
-        userId: string;
+        userID: string;
         pageOrder: string[];
-        pageId: string;
+        pageID: string;
         newPage: NotePage;
       }) => {
-        setTeamStateSet((prev) => prev?.addPage(pageId, newPage));
+        setTeamStateSet((prev) => prev?.addPage(pageID, newPage));
         newPage = createTeamPage(newPage);
         setTeamUpdate({
           type: "newPage",
           pageOrder,
-          pageId,
+          pageID,
           newPage,
         });
       }
@@ -154,7 +154,7 @@ export default function Team() {
   useEffect(() => {
     roomInit();
     return roomDestroy;
-  }, [noteId]);
+  }, [noteID]);
 
   const pushOperation = (op: SetOperation) => {
     ws.emit("push", { operation: op });
@@ -166,12 +166,12 @@ export default function Team() {
 
   const updateNewPage = (
     pageOrder: string[],
-    pageId: string,
+    pageID: string,
     newPage: NotePage
   ) => {
-    setTeamStateSet((prev) => prev?.addPage(pageId, newPage));
+    setTeamStateSet((prev) => prev?.addPage(pageID, newPage));
     const { image, marked, ...newTeamPage } = newPage;
-    ws.emit("newPage", { pageOrder, pageId, newPage: newTeamPage });
+    ws.emit("newPage", { pageOrder, pageID, newPage: newTeamPage });
   };
 
   return (

@@ -6,23 +6,24 @@ import {
   saveTeamNote,
   updateTeamNote,
 } from "../note/archive";
-import { getUserId } from "../user";
+import { getuserID } from "../user";
 import { getPDFImages } from "../note/pdfImage";
 
 export let BASE_URL = "https://api.slotdumpling.top/paint";
 BASE_URL = "http://100.81.113.84:8090/paint";
 axios.defaults.baseURL = BASE_URL;
+
 axios.interceptors.request.use((config) => {
   console.log(config.method, config.url);
   return config;
 });
 
-export async function getNoteId(roomCode: number) {
+export async function getnoteID(roomCode: number) {
   try {
     const { data } = await axios.get(`code/${roomCode}`);
     console.log({ data });
     if (data.statusCode !== 200) return null;
-    return data.noteId as string;
+    return data.noteID as string;
   } catch (e) {
     console.error(e);
     return null;
@@ -36,9 +37,9 @@ interface InfoRes {
   pageInfos: Record<string, NotePage>;
 }
 
-export async function getTeamNoteInfo(noteId: string) {
+export async function getTeamNoteInfo(noteID: string) {
   try {
-    const { data } = await axios.get(`info/${noteId}`);
+    const { data } = await axios.get(`info/${noteID}`);
     const { statusCode, ...res } = data as InfoRes;
     if (statusCode !== 200) return null;
     return res;
@@ -48,19 +49,19 @@ export async function getTeamNoteInfo(noteId: string) {
   }
 }
 
-export async function loadTeamNoteInfo(noteId: string) {
+export async function loadTeamNoteInfo(noteID: string) {
   try {
-    const infoRes = await getTeamNoteInfo(noteId);
+    const infoRes = await getTeamNoteInfo(noteID);
     if (!infoRes) return null;
     const { noteInfo, pageInfos } = infoRes;
 
-    if (await updateTeamNote(noteId, noteInfo, pageInfos)) return infoRes;
+    if (await updateTeamNote(noteID, noteInfo, pageInfos)) return infoRes;
 
     let file: Blob | undefined = undefined;
     if (noteInfo.withImg) {
       const { data } = await axios({
         method: "GET",
-        url: noteId,
+        url: noteID,
         responseType: "blob",
       });
       console.log(data);
@@ -74,7 +75,7 @@ export async function loadTeamNoteInfo(noteId: string) {
       }
       noteInfo.thumbnail = images[0];
     }
-    await saveTeamNote(noteId, noteInfo, pageInfos, file);
+    await saveTeamNote(noteID, noteInfo, pageInfos, file);
     return infoRes;
   } catch (e) {
     console.error(e);
@@ -82,14 +83,14 @@ export async function loadTeamNoteInfo(noteId: string) {
   }
 }
 
-export async function putNote(noteId: string) {
-  const note = await loadNote(noteId);
+export async function putNote(noteID: string) {
+  const note = await loadNote(noteID);
   if (!note) return null;
   const { uid, name, withImg, pdf, pageOrder, pageRec } = note;
 
   try {
-    const { data } = await axios.put(`create/${noteId}`, {
-      userId: getUserId(),
+    const { data } = await axios.put(`create/${noteID}`, {
+      userID: getuserID(),
       pageRec,
       noteInfo: { uid, name, withImg, pageOrder },
     });
@@ -98,7 +99,7 @@ export async function putNote(noteId: string) {
       const formData = new FormData();
       const ab = await pdf.arrayBuffer();
       const file = new Blob([ab]);
-      formData.append("file", file, noteId);
+      formData.append("file", file, noteID);
       await axios({
         method: "POST",
         url: "upload",
@@ -115,13 +116,13 @@ export async function putNote(noteId: string) {
   }
 }
 
-export async function updatePages(noteId: string) {
-  const note = await loadNote(noteId);
+export async function updatePages(noteID: string) {
+  const note = await loadNote(noteID);
   if (!note) return null;
   const { uid, name, withImg, pageOrder, pageRec } = note;
   try {
-    const { data } = await axios.put(`update/${noteId}`, {
-      userId: getUserId(),
+    const { data } = await axios.put(`update/${noteID}`, {
+      userID: getuserID(),
       pageRec,
       noteInfo: { uid, name, withImg, pageOrder },
     });
@@ -133,12 +134,12 @@ export async function updatePages(noteId: string) {
   }
 }
 
-export async function getTeamNoteState(noteId: string) {
+export async function getTeamNoteState(noteID: string) {
   try {
-    const { data } = await axios.get(`state/${noteId}`);
+    const { data } = await axios.get(`state/${noteID}`);
     if (data.statusCode !== 200) return null;
     const { teamPages } = data;
-    const pageRec = await convertTeamPage(noteId, teamPages);
+    const pageRec = await convertTeamPage(noteID, teamPages);
     return pageRec;
   } catch (e) {
     console.error(e);

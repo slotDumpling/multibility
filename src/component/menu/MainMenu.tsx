@@ -97,7 +97,7 @@ export const NewNoteButton = () => {
 
   async function addNewNote() {
     const note = createEmptyNote();
-    note.tagId = tagUid;
+    note.tagID = tagUid;
     const { tags, allNotes } = await createNewNote(note);
     setAllTags(tags);
     setAllNotes(allNotes);

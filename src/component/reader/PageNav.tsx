@@ -49,24 +49,24 @@ const PageNavContent = ({
     if (!destination || !pageOrder) return;
     const { index: fromIndex } = source;
     const { index: toIndex } = destination;
-    const pageId = pageOrder[fromIndex];
+    const pageID = pageOrder[fromIndex];
     setPageOrder((prev) => {
       if (!prev) return;
       const newOrder = exchange(prev, fromIndex, toIndex);
       updateReorder && updateReorder(newOrder);
       return newOrder;
     });
-    requestAnimationFrame(() => scrollPage(pageId));
+    requestAnimationFrame(() => scrollPage(pageID));
   };
 
-  const currPageId = useMemo(
-    () => pageOrder?.find((pageId) => inviewPages.has(pageId)) || "",
+  const currpageID = useMemo(
+    () => pageOrder?.find((pageID) => inviewPages.has(pageID)) || "",
     [pageOrder, inviewPages]
   );
 
   useEffect(() => {
-    refRec.current[currPageId]?.scrollIntoView();
-    const itemHeight = refRec.current[currPageId]?.clientHeight || 0;
+    refRec.current[currpageID]?.scrollIntoView();
+    const itemHeight = refRec.current[currpageID]?.clientHeight || 0;
     const listHeight = listEl.current?.clientHeight || 0;
     listEl.current?.scrollBy(0, -listHeight / 2 + itemHeight / 2);
   }, []);
@@ -91,7 +91,7 @@ const PageNavContent = ({
                   uid={uid}
                   mode={activeKey}
                   pageIndex={index}
-                  currPageId={currPageId}
+                  currpageID={currpageID}
                   refRec={refRec.current}
                 />
               ))}
@@ -109,9 +109,9 @@ const PagePreview: FC<{
   uid: string;
   mode: string;
   pageIndex: number;
-  currPageId: string;
+  currpageID: string;
   refRec: Record<string, HTMLElement>;
-}> = ({ uid, pageIndex, mode, currPageId, refRec }) => {
+}> = ({ uid, pageIndex, mode, currpageID, refRec }) => {
   const { stateSet, teamStateSet, pageRec } = useContext(ReaderStateCtx);
   const { scrollPage, switchPageMarked } = useContext(ReaderMethodCtx);
   const page = pageRec && pageRec[uid];
@@ -133,7 +133,7 @@ const PagePreview: FC<{
     switchPageMarked(uid);
     e.stopPropagation();
   };
-  const curr = currPageId === uid;
+  const curr = currpageID === uid;
   const dragDisabled = mode !== "ALL";
 
   return (

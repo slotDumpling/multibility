@@ -27,7 +27,7 @@ import { ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { TeamCtx } from "./Team";
 import DigitDisplay from "../ui/DigitDisplay";
 import { colors, getHashedColor } from "../../lib/color";
-import { getUserId, UserInfo } from "../../lib/user";
+import { getuserID, UserInfo } from "../../lib/user";
 import { CtrlMode, DrawCtrl } from "../../lib/draw/drawCtrl";
 import PageNav from "./PageNav";
 import {
@@ -304,16 +304,16 @@ const SelectMenu: FC<{
 };
 
 const UserCard: FC<{ userInfo: UserInfo }> = ({ userInfo }) => {
-  const { userName, userId } = userInfo;
+  const { userName, userID } = userInfo;
   const { ignores, setIgnores } = useContext(TeamCtx);
   const color = useMemo(() => getHashedColor(userName), [userName]);
-  const self = userId === getUserId();
-  const ignored = ignores.has(userId) && !self;
+  const self = userID === getuserID();
+  const ignored = ignores.has(userID) && !self;
 
   const switchIgnore = () => {
     setIgnores((prev) => {
-      if (prev.has(userId)) return prev.delete(userId);
-      return prev.add(userId);
+      if (prev.has(userID)) return prev.delete(userID);
+      return prev.add(userID);
     });
   };
 
@@ -376,7 +376,7 @@ function RoomInfo() {
       <Divider />
       <div className="user-list">
         {userList.map((u) => (
-          <UserCard key={u.userId} userInfo={u} />
+          <UserCard key={u.userID} userInfo={u} />
         ))}
       </div>
     </div>

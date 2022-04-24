@@ -28,7 +28,7 @@ export interface TeamNote {
 export interface NoteInfo {
   uid: string;
   name: string;
-  tagId: string;
+  tagID: string;
   team: boolean;
   withImg: boolean;
   createTime?: Date;
@@ -50,30 +50,30 @@ export interface TeamNoteInfo {
 }
 
 export function createEmptyNote(): Note {
-  const pageId = getUid();
+  const pageID = getUid();
   return {
     uid: getUid(),
     name: `New note ${Date.now()}`,
-    tagId: "DEFAULT",
+    tagID: "DEFAULT",
     team: false,
     withImg: false,
     pageRec: {
-      [pageId]: {
+      [pageID]: {
         ratio: 1.5,
         state: getDefaultFlatState(),
       },
     },
-    pageOrder: [pageId],
+    pageOrder: [pageID],
   };
 }
 
 export function createPage(page?: NotePage): [string, NotePage] {
-  const pageId = getUid();
+  const pageID = getUid();
   const newPage = page ?? {
     ratio: 1.5,
     state: getDefaultFlatState(),
   };
-  return [pageId, newPage];
+  return [pageID, newPage];
 }
 
 export function createTeamPage(pageInfo: TeamPageInfo): NotePage {

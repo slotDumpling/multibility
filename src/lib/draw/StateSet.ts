@@ -17,7 +17,7 @@ const defaultRecord: Readonly<StateSetRecordType> = {
 type StateSetRecord = Record<StateSetRecordType>;
 const defaultFactory = Record(defaultRecord);
 
-export type SetOperation = Operation & { pageId: string };
+export type SetOperation = Operation & { pageID: string };
 
 export class StateSet {
   constructor(
@@ -50,8 +50,8 @@ export class StateSet {
     return this.getImmutable().get("states");
   }
 
-  getOneState(pageId: string) {
-    return this.getStates().get(pageId);
+  getOneState(pageID: string) {
+    return this.getStates().get(pageID);
   }
 
   getEditStack() {
@@ -62,32 +62,32 @@ export class StateSet {
     return this.getImmutable().get("undoStack");
   }
 
-  setState(pageId: string, drawState: DrawState) {
-    const prevDS = this.getOneState(pageId);
+  setState(pageID: string, drawState: DrawState) {
+    const prevDS = this.getOneState(pageID);
     if (!prevDS || prevDS === drawState) return this;
     let currRecord = this.getImmutable()
-      .update("states", (s) => s.set(pageId, drawState))
-      .update("editStack", (l) => l.push(pageId))
+      .update("states", (s) => s.set(pageID, drawState))
+      .update("editStack", (l) => l.push(pageID))
       .delete("undoStack");
 
     const { lastOp } = drawState;
-    const lastSetOp = lastOp && { ...lastOp, pageId };
+    const lastSetOp = lastOp && { ...lastOp, pageID };
 
     return new StateSet(currRecord, lastSetOp);
   }
 
-  addState(pageId: string, notePage: NotePage, width: number) {
+  addState(pageID: string, notePage: NotePage, width: number) {
     const { state, ratio } = notePage;
     const newDS = DrawState.loadFromFlat(state, width, width * ratio);
     const currRecord = this.getImmutable().update("states", (s) =>
-      s.set(pageId, newDS)
+      s.set(pageID, newDS)
     );
     return new StateSet(currRecord);
   }
 
-  deleteState(pageId: string) {
+  deleteState(pageID: string) {
     return new StateSet(
-      this.getImmutable().update("states", (s) => s.delete(pageId))
+      this.getImmutable().update("states", (s) => s.delete(pageID))
     );
   }
 
@@ -107,7 +107,7 @@ export class StateSet {
 
     const newDS = DrawState.undo(prevDS);
     const { lastOp } = newDS;
-    const lastSetOp = lastOp && { pageId: lastUid, ...lastOp };
+    const lastSetOp = lastOp && { pageID: lastUid, ...lastOp };
 
     return new StateSet(
       this.getImmutable()
@@ -126,7 +126,7 @@ export class StateSet {
 
     const newDS = DrawState.redo(prevDS);
     const { lastOp } = newDS;
-    const lastSetOp = lastOp && { pageId: lastUid, ...lastOp };
+    const lastSetOp = lastOp && { pageID: lastUid, ...lastOp };
 
     return new StateSet(
       this.getImmutable()
@@ -138,8 +138,8 @@ export class StateSet {
   }
 
   getLastDS(): [string, DrawState] | undefined {
-    const pageId = this.lastOp?.pageId;
-    const ds = pageId && this.getOneState(pageId);
-    return ds ? [pageId, ds] : undefined;
+    const pageID = this.lastOp?.pageID;
+    const ds = pageID && this.getOneState(pageID);
+    return ds ? [pageID, ds] : undefined;
   }
 }

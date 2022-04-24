@@ -9,7 +9,7 @@ import {
 } from "./note";
 import { v4 as getUid } from "uuid";
 import { getDefaultFlatState } from "../draw/DrawState";
-import { getUserId } from "../user";
+import { getuserID } from "../user";
 import { getRandomColor } from "../color";
 import { getOneImage } from "./pdfImage";
 
@@ -95,13 +95,13 @@ export async function editNoteData(uid: string, noteDate: Partial<Note>) {
 }
 
 export async function saveNoteInfo(noteInfo: NoteInfo) {
-  const { uid, tagId } = noteInfo;
+  const { uid, tagID } = noteInfo;
   const allNotes = await getAllNotes();
   allNotes[uid] = noteInfo;
   await localforage.setItem("ALL_NOTES", allNotes);
   const tags = await getAllTags();
-  if (tagId !== "DEFAULT") {
-    tags[tagId].notes.push(noteInfo.uid);
+  if (tagID !== "DEFAULT") {
+    tags[tagID].notes.push(noteInfo.uid);
     await localforage.setItem("ALL_TAGS", tags);
   }
   return { tags, allNotes };
@@ -122,50 +122,50 @@ export async function deleteNote(uid: string) {
   if (!note) return { tags, allNotes };
   await localforage.removeItem(uid);
   await localforage.removeItem(`PDF_${uid}`);
-  const { tagId } = note;
+  const { tagID } = note;
   delete allNotes[uid];
   await localforage.setItem("ALL_NOTES", allNotes);
 
-  if (tagId !== "DEFAULT") {
-    const { notes } = tags[tagId];
-    tags[tagId].notes = notes.filter((id) => id !== uid);
+  if (tagID !== "DEFAULT") {
+    const { notes } = tags[tagID];
+    tags[tagID].notes = notes.filter((id) => id !== uid);
     await localforage.setItem("ALL_TAGS", tags);
   }
   return { tags, allNotes };
 }
 
-export async function moveNoteTag(noteId: string, tagId: string) {
-  const note = await loadNote(noteId);
+export async function moveNoteTag(noteID: string, tagID: string) {
+  const note = await loadNote(noteID);
   const allNotes = await getAllNotes();
   const tags = await getAllTags();
   if (!note) return { tags, allNotes };
 
-  const { tagId: prevTagId } = note;
-  note.tagId = tagId;
-  await localforage.setItem(noteId, note);
-  allNotes[noteId].tagId = tagId;
+  const { tagID: prevTagId } = note;
+  note.tagID = tagID;
+  await localforage.setItem(noteID, note);
+  allNotes[noteID].tagID = tagID;
   await localforage.setItem("ALL_NOTES", allNotes);
 
   if (prevTagId in tags) {
-    tags[prevTagId].notes = tags[prevTagId].notes.filter((id) => id !== noteId);
+    tags[prevTagId].notes = tags[prevTagId].notes.filter((id) => id !== noteID);
   }
-  tags[tagId]?.notes?.push(noteId);
+  tags[tagID]?.notes?.push(noteID);
   await localforage.setItem("ALL_TAGS", tags);
   return { tags, allNotes };
 }
 
 export async function convertTeamPage(
-  noteId: string,
+  noteID: string,
   teamPages: Record<string, TeamPageState>
 ): Promise<TeamNote | undefined> {
-  const pageRec = (await loadNote(noteId))?.pageRec;
+  const pageRec = (await loadNote(noteID))?.pageRec;
   if (!pageRec) return;
-  const teamNote: TeamNote = { uid: noteId, pageRec: {} };
+  const teamNote: TeamNote = { uid: noteID, pageRec: {} };
   for (let [key, page] of Object.entries(teamPages)) {
     const { states } = page;
     const { ratio } = pageRec[key];
     if (!ratio) continue;
-    delete states[getUserId()];
+    delete states[getuserID()];
     teamNote.pageRec[key] = {
       ratio,
       states,
@@ -175,19 +175,19 @@ export async function convertTeamPage(
 }
 
 export async function saveTeamNote(
-  noteId: string,
+  noteID: string,
   noteInfo: TeamNoteInfo,
   teamPages: Record<string, NotePage>,
   pdf?: Blob
 ) {
-  let note = await loadNote(noteId);
+  let note = await loadNote(noteID);
   if (note) return;
   for (let page of Object.values(teamPages)) {
     page.state = getDefaultFlatState();
   }
   note = {
     ...noteInfo,
-    tagId: "DEFAULT",
+    tagID: "DEFAULT",
     team: true,
     pageRec: teamPages,
     pdf,
@@ -196,23 +196,23 @@ export async function saveTeamNote(
 }
 
 export async function updateTeamNote(
-  noteId: string,
+  noteID: string,
   noteInfo: TeamNoteInfo,
   pageInfos: Record<string, NotePage>
 ) {
-  let note = await loadNote(noteId);
+  let note = await loadNote(noteID);
   if (!note) return false;
   const { pageOrder } = noteInfo;
   if (pageOrder.length < note.pageOrder.length) return true;
   const { pageRec, pdf } = note;
-  for (let [pageId, page] of Object.entries(pageInfos)) {
-    if (!(pageId in pageRec)) {
+  for (let [pageID, page] of Object.entries(pageInfos)) {
+    if (!(pageID in pageRec)) {
       const { ratio, pdfIndex } = page;
       let image: string | undefined = undefined;
       if (pdf && pdfIndex) {
         image = await getOneImage(pdf, pdfIndex, 0.5);
       }
-      pageRec[pageId] = {
+      pageRec[pageID] = {
         ratio,
         state: getDefaultFlatState(),
         pdfIndex,
@@ -220,6 +220,6 @@ export async function updateTeamNote(
       };
     }
   }
-  await editNoteData(noteId, { pageOrder, pageRec });
+  await editNoteData(noteID, { pageOrder, pageRec });
   return true;
 }

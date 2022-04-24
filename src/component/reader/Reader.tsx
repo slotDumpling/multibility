@@ -42,7 +42,7 @@ import "./reader.sass";
 export const WIDTH = 2000;
 
 export const ReaderStateCtx = createContext({
-  noteId: "",
+  noteID: "",
   noteInfo: undefined as NoteInfo | undefined,
   stateSet: undefined as StateSet | undefined,
   teamStateSet: undefined as TeamState | undefined,
@@ -58,20 +58,20 @@ export const ReaderStateCtx = createContext({
 
 export const ReaderMethodCtx = createContext({
   createRoom: () => {},
-  scrollPage: (() => {}) as (pageId: string) => void,
+  scrollPage: (() => {}) as (pageID: string) => void,
   setInviewPages: (() => {}) as Dispatch<SetStateAction<Set<string>>>,
-  switchPageMarked: (() => {}) as (pageId: string) => void,
+  switchPageMarked: (() => {}) as (pageID: string) => void,
   setPageOrder: (() => {}) as Dispatch<SetStateAction<string[] | undefined>>,
   setPageState: (() => {}) as (uid: string, ds: DrawState) => void,
-  addPage: (() => {}) as (prevPageId: string, copy?: boolean) => void,
+  addPage: (() => {}) as (prevpageID: string, copy?: boolean) => void,
   addFinalPage: (() => {}),
-  deletePage: (() => {}) as (pageId: string) => void,
+  deletePage: (() => {}) as (pageID: string) => void,
   setMode: (() => {}) as Dispatch<SetStateAction<CtrlMode>>,
   setDrawCtrl: (() => {}) as Dispatch<SetStateAction<DrawCtrl>>,
 });
 
 export default function Reader({ teamOn }: { teamOn: boolean }) {
-  const noteId = useParams().noteId ?? "";
+  const noteID = useParams().noteID ?? "";
   const nav = useNavigate();
 
   const [pageRec, setPageRec] = useState<Record<string, NotePage>>();
@@ -90,7 +90,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     useContext(TeamCtx);
 
   const loadNotePages = async () => {
-    const storedNote = await loadNote(noteId);
+    const storedNote = await loadNote(noteID);
     if (!storedNote) {
       message.error("Note not found");
       return nav("/");
@@ -102,15 +102,15 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     setStateSet(StateSet.createFromPages(pageRec, WIDTH));
     setDrawCtrl(await getDrawCtrl());
     setLoaded(true);
-    if (teamOn) updatePages(noteId);
+    if (teamOn) updatePages(noteID);
   };
 
   const debouncedSave = useCallback(
     debounce(async (pr: Record<string, NotePage>) => {
-      await editNoteData(noteId, { pageRec: pr });
+      await editNoteData(noteID, { pageRec: pr });
       const canvas = document.querySelector("canvas");
       const data = canvas?.toDataURL();
-      data && editNoteData(noteId, { thumbnail: data });
+      data && editNoteData(noteID, { thumbnail: data });
       mounted.current && setSaved(true);
     }, 5000),
     []
@@ -119,13 +119,13 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
 
   const createRoom = async () => {
     await instantSave();
-    const resCode = await putNote(noteId);
+    const resCode = await putNote(noteID);
     if (!resCode) {
       message.error("Can't create room.");
       return;
     }
-    await editNoteData(noteId, { team: true });
-    nav("/team/" + noteId);
+    await editNoteData(noteID, { team: true });
+    nav("/team/" + noteID);
   };
 
   const noteInit = () => {
@@ -139,7 +139,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   useLayoutEffect(() => {
     noteInit();
     return noteDestroy;
-  }, [noteId, teamOn]);
+  }, [noteID, teamOn]);
 
   useBeforeunload(noteDestroy);
 
@@ -166,11 +166,11 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   useEffect(() => {
     const handleReorder = async () => {
       if (!pageOrder || !loaded) return;
-      await editNoteData(noteId, { pageOrder });
+      await editNoteData(noteID, { pageOrder });
       await instantSave();
       const teamOrder = teamUpdate?.pageOrder;
       if (teamOn && JSON.stringify(pageOrder) !== JSON.stringify(teamOrder)) {
-        updatePages(noteId);
+        updatePages(noteID);
       }
     };
     handleReorder();
@@ -183,16 +183,16 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
       setPageOrder(pageOrder);
     } else if (type === "newPage") {
       setPageOrder(pageOrder);
-      let { pageId, newPage } = teamUpdate;
-      setPageRec((prev) => prev && { ...prev, [pageId]: newPage });
-      setStateSet((prev) => prev?.addState(pageId, newPage, WIDTH));
+      let { pageID, newPage } = teamUpdate;
+      setPageRec((prev) => prev && { ...prev, [pageID]: newPage });
+      setStateSet((prev) => prev?.addState(pageID, newPage, WIDTH));
     }
   }, [teamUpdate]);
 
-  const updatePageRec = (pageId: string, ds: DrawState) => {
+  const updatePageRec = (pageID: string, ds: DrawState) => {
     const state = DrawState.flaten(ds);
     setPageRec(
-      (prev) => prev && { ...prev, [pageId]: { ...prev[pageId], state } }
+      (prev) => prev && { ...prev, [pageID]: { ...prev[pageID], state } }
     );
   };
 
@@ -201,12 +201,12 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     updatePageRec(uid, ds);
   }, []);
 
-  const switchPageMarked = (pageId: string) => {
-    const page = pageRec && pageRec[pageId];
+  const switchPageMarked = (pageID: string) => {
+    const page = pageRec && pageRec[pageID];
     if (!page) return;
     const marked = !Boolean(page.marked);
     setPageRec(
-      (prev) => prev && { ...prev, [pageId]: { ...prev[pageId], marked } }
+      (prev) => prev && { ...prev, [pageID]: { ...prev[pageID], marked } }
     );
   };
 
@@ -230,36 +230,36 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     });
   };
 
-  const scrollPage = (pageId: string) => {
-    refRec.current[pageId]?.scrollIntoView();
+  const scrollPage = (pageID: string) => {
+    refRec.current[pageID]?.scrollIntoView();
   };
 
-  const addPage = (prevPageId: string, copy = false) => {
-    const prevPage = copy ? pageRec && pageRec[prevPageId] : undefined;
-    const [pageId, newPage] = createPage(prevPage);
+  const addPage = (prevpageID: string, copy = false) => {
+    const prevPage = copy ? pageRec && pageRec[prevpageID] : undefined;
+    const [pageID, newPage] = createPage(prevPage);
     setPageOrder((prev) => {
       if (!prev) return;
-      const newOrder = insertAfter(prev, prevPageId, pageId);
-      updateNewPage && updateNewPage(newOrder, pageId, newPage);
+      const newOrder = insertAfter(prev, prevpageID, pageID);
+      updateNewPage && updateNewPage(newOrder, pageID, newPage);
       return newOrder;
     });
-    setPageRec((prev) => prev && { ...prev, [pageId]: newPage });
-    setStateSet((prev) => prev?.addState(pageId, newPage, WIDTH));
+    setPageRec((prev) => prev && { ...prev, [pageID]: newPage });
+    setStateSet((prev) => prev?.addState(pageID, newPage, WIDTH));
   };
 
   const addFinalPage = () => {
-    const lastPageId = last(pageOrder);
-    lastPageId && addPage(lastPageId);
+    const lastpageID = last(pageOrder);
+    lastpageID && addPage(lastpageID);
   };
 
-  const deletePage = (pageId: string) => {
+  const deletePage = (pageID: string) => {
     if (teamOn) {
       message.error("You can't delete pages from a team note.");
       return;
     }
-    setPageOrder((prev) => prev?.filter((id) => id !== pageId));
-    setPageRec((prev) => prev && omit(prev, pageId));
-    setStateSet((prev) => prev?.deleteState(pageId));
+    setPageOrder((prev) => prev?.filter((id) => id !== pageID));
+    setPageRec((prev) => prev && omit(prev, pageID));
+    setStateSet((prev) => prev?.deleteState(pageID));
   };
 
   const renderResult = (
@@ -281,7 +281,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   return (
     <ReaderStateCtx.Provider
       value={{
-        noteId,
+        noteID,
         noteInfo,
         stateSet,
         teamStateSet,
@@ -358,7 +358,7 @@ export const PageWrapper = ({
   preview?: boolean;
 }) => {
   const { setInviewPages } = useContext(ReaderMethodCtx);
-  const { refRec, noteId } = useContext(ReaderStateCtx);
+  const { refRec, noteID } = useContext(ReaderStateCtx);
   const [fullImg, setFullImg] = useState<string>();
   const [visibleRef, visible] = useInView({ delay: 100 });
 
@@ -380,7 +380,7 @@ export const PageWrapper = ({
       return async () => {
         if (preview || !pdfIndex || called) return;
         called = true;
-        setFullImg(await getOnePageImage(noteId, pdfIndex));
+        setFullImg(await getOnePageImage(noteID, pdfIndex));
       };
     })(),
     [preview, pdfIndex]

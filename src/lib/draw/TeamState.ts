@@ -31,28 +31,28 @@ export class TeamState {
     return this.getImmutable().get("pageInfos");
   }
 
-  getOneState(pageId: string, userId: string) {
-    return this.getPageStates().get(pageId)?.get(userId);
+  getOneState(pageID: string, userID: string) {
+    return this.getPageStates().get(pageID)?.get(userID);
   }
 
-  getOnePageState(pageId: string) {
-    return this.getPageStates().get(pageId);
+  getOnePageState(pageID: string) {
+    return this.getPageStates().get(pageID);
   }
 
-  getPageRatio(pageId: string) {
-    return this.getPageInfos().get(pageId)?.ratio;
+  getPageRatio(pageID: string) {
+    return this.getPageInfos().get(pageID)?.ratio;
   }
 
-  includesPage(pageId: string) {
-    return this.getPageStates().has(pageId);
+  includesPage(pageID: string) {
+    return this.getPageStates().has(pageID);
   }
 
-  setState(pageId: string, userId: string, drawState: DrawState) {
-    const pageMap = this.getPageStates().get(pageId);
+  setState(pageID: string, userID: string, drawState: DrawState) {
+    const pageMap = this.getPageStates().get(pageID);
     if (!pageMap) return this;
     return new TeamState(
       this.getImmutable().update("pageStates", (m) =>
-        m.set(pageId, pageMap.set(userId, drawState))
+        m.set(pageID, pageMap.set(userID, drawState))
       )
     );
   }
@@ -60,39 +60,39 @@ export class TeamState {
   static createFromTeamPages(teamNote: TeamNote, width: number) {
     const { pageRec } = teamNote;
     let record = defaultFactory();
-    Object.entries(pageRec).forEach(([pageId, teamPage]) => {
+    Object.entries(pageRec).forEach(([pageID, teamPage]) => {
       const { states, ratio } = teamPage;
       const pageMap = Map(
-        Object.entries(states).map(([userId, flatState]) => [
-          userId,
+        Object.entries(states).map(([userID, flatState]) => [
+          userID,
           DrawState.loadFromFlat(flatState, width, width * ratio),
         ])
       );
       record = record
-        .update("pageStates", (m) => m.set(pageId, pageMap))
-        .update("pageInfos", (m) => m.set(pageId, { ratio }));
+        .update("pageStates", (m) => m.set(pageID, pageMap))
+        .update("pageInfos", (m) => m.set(pageID, { ratio }));
     });
     return new TeamState(record);
   }
 
-  addPage(pageId: string, notePage: NotePage) {
+  addPage(pageID: string, notePage: NotePage) {
     const { ratio } = notePage;
     return new TeamState(
       this.getImmutable()
-        .update("pageStates", (m) => m.set(pageId, Map()))
-        .update("pageInfos", (m) => m.set(pageId, { ratio }))
+        .update("pageStates", (m) => m.set(pageID, Map()))
+        .update("pageInfos", (m) => m.set(pageID, { ratio }))
     );
   }
 
-  pushOperation(setOp: SetOperation, userId: string, width: number) {
-    const { pageId, ...op } = setOp;
-    const ratio = this.getPageRatio(pageId);
-    if (!this.includesPage(pageId) || !ratio) return this;
+  pushOperation(setOp: SetOperation, userID: string, width: number) {
+    const { pageID, ...op } = setOp;
+    const ratio = this.getPageRatio(pageID);
+    if (!this.includesPage(pageID) || !ratio) return this;
     const prevDs =
-      this.getOneState(pageId, userId) ||
+      this.getOneState(pageID, userID) ||
       DrawState.createEmpty(width, width * ratio);
 
     const ds = DrawState.pushOperation(prevDs, op);
-    return this.setState(pageId, userId, ds);
+    return this.setState(pageID, userID, ds);
   }
 }

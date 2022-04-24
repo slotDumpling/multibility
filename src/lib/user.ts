@@ -1,21 +1,21 @@
 import { v4 as getUid } from "uuid";
 
 export interface UserInfo {
-  userId: string;
+  userID: string;
   userName: string;
 }
 
-export const getUserId = (() => {
+export const getuserID = (() => {
   let cached: string;
   return () => {
     if (cached) return cached;
-    let userId = localStorage.getItem("user_id");
-    if (!userId) {
-      userId = getUid();
-      localStorage.setItem("user_id", userId);
+    let userID = localStorage.getItem("user_id");
+    if (!userID) {
+      userID = getUid();
+      localStorage.setItem("user_id", userID);
     }
-    cached = userId;
-    return userId;
+    cached = userID;
+    return userID;
   };
 })();
 

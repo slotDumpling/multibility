@@ -21,10 +21,10 @@ ReactDOM.render(
     <Routes>
       <Route path="/" element={<MainMenu />} />
       <Route path="/reader">
-        <Route path=":noteId" element={<Reader teamOn={false} />} />
+        <Route path=":noteID" element={<Reader teamOn={false} />} />
       </Route>
       <Route path="/team">
-        <Route path=":noteId" element={<Team />} />
+        <Route path=":noteID" element={<Team />} />
       </Route>
       <Route path="/test" element={<Test />} />
       <Route path="*" element={placeholderEl} />

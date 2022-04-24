@@ -29,7 +29,7 @@ import {
   ArrowLeftOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { getNoteId } from "../../lib/network/http";
+import { getnoteID } from "../../lib/network/http";
 import DigitInput from "../ui/DigitInput";
 import { CSSTransition } from "react-transition-group";
 import Title from "antd/lib/typography/Title";
@@ -108,7 +108,7 @@ function UploadPdfPage() {
     if (file.type !== "application/pdf") return;
     setLoading(true);
     const note = await LoadPDF(file, setPercent);
-    note.tagId = tagUid;
+    note.tagID = tagUid;
     const { tags, allNotes } = await createNewNote(note);
     setAllTags(tags);
     setAllNotes(allNotes);
@@ -266,14 +266,14 @@ function JoinTeamButton() {
 
   const nav = useNavigate();
   async function handleSubmit(code: number) {
-    const noteId = await getNoteId(code);
-    if (!noteId) {
+    const noteID = await getnoteID(code);
+    if (!noteID) {
       setRoomCode(0);
       setAnimated(true);
       setTimeout(() => setAnimated(false), 1000);
       return;
     }
-    nav(`/team/${noteId}`);
+    nav(`/team/${noteID}`);
   }
 
   return (
