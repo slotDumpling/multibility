@@ -122,7 +122,7 @@ const PagePreview: FC<{
   if (
     mode === "WRITTEN" &&
     drawState.isEmpty() &&
-    (!teamStates || teamStates.size === 0)
+    (!teamStates || teamStates.every((ds) => ds.isEmpty()))
   ) {
     return null;
   } else if (mode === "MARKED" && !page.marked) {

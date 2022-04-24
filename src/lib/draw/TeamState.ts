@@ -63,9 +63,9 @@ export class TeamState {
     Object.entries(pageRec).forEach(([pageId, teamPage]) => {
       const { states, ratio } = teamPage;
       const pageMap = Map(
-        Object.entries(states).map(([userId, strokes]) => [
+        Object.entries(states).map(([userId, flatState]) => [
           userId,
-          DrawState.loadFromFlat({ strokes }, width, width * ratio),
+          DrawState.loadFromFlat(flatState, width, width * ratio),
         ])
       );
       record = record
@@ -85,31 +85,14 @@ export class TeamState {
   }
 
   pushOperation(setOp: SetOperation, userId: string, width: number) {
-    const { type, pageId } = setOp;
+    const { pageId, ...op } = setOp;
     const ratio = this.getPageRatio(pageId);
     if (!this.includesPage(pageId) || !ratio) return this;
     const prevDs =
       this.getOneState(pageId, userId) ||
       DrawState.createEmpty(width, width * ratio);
 
-    let ds: DrawState;
-    switch (type) {
-      case "add":
-        ds = DrawState.pushStroke(prevDs, setOp.stroke);
-        break;
-      case "erase":
-        ds = DrawState.eraseStrokes(prevDs, setOp.erased);
-        break;
-      case "mutate":
-        ds = DrawState.mutateStroke(prevDs, setOp.mutations);
-        break;
-      case "undo":
-        ds = DrawState.undo(prevDs);
-        break;
-      case "redo":
-        ds = DrawState.redo(prevDs);
-        break;
-    }
+    const ds = DrawState.pushOperation(prevDs, op);
     return this.setState(pageId, userId, ds);
   }
 }

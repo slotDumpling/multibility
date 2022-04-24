@@ -64,7 +64,7 @@ export const ReaderMethodCtx = createContext({
   setPageOrder: (() => {}) as Dispatch<SetStateAction<string[] | undefined>>,
   setPageState: (() => {}) as (uid: string, ds: DrawState) => void,
   addPage: (() => {}) as (prevPageId: string, copy?: boolean) => void,
-  addFinalPage: (() => {}) as () => void,
+  addFinalPage: (() => {}),
   deletePage: (() => {}) as (pageId: string) => void,
   setMode: (() => {}) as Dispatch<SetStateAction<CtrlMode>>,
   setDrawCtrl: (() => {}) as Dispatch<SetStateAction<DrawCtrl>>,

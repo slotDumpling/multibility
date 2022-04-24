@@ -48,6 +48,7 @@ const defaultFactory = Record(defaultRecord);
 
 export interface FlatState {
   strokes: StrokeRecord;
+  operations?: Operation[];
 }
 
 export const getDefaultFlatState = (): FlatState => {
@@ -74,18 +75,18 @@ export class DrawState {
     return this.getImmutable().get("historyStack");
   }
 
-  getStrokes() {
+  getStrokesMap() {
     return this.getImmutable().get("strokes");
   }
 
   getValidStrokes(): Stroke[] {
-    return this.getStrokes()
+    return this.getStrokesMap()
       .toArray()
       .map(([uid, pathData]) => ({ uid, pathData }));
   }
 
   isEmpty() {
-    return this.getStrokes().size === 0;
+    return this.getStrokesMap().size === 0;
   }
 
   static createEmpty(width: number, height: number) {
@@ -160,21 +161,39 @@ export class DrawState {
     return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
   }
 
+  static pushOperation(drawState: DrawState, op: Operation) {
+    switch (op.type) {
+      case "add":
+        return DrawState.pushStroke(drawState, op.stroke);
+      case "erase":
+        return DrawState.eraseStrokes(drawState, op.erased);
+      case "mutate":
+        return DrawState.mutateStroke(drawState, op.mutations);
+      case "undo":
+        return DrawState.undo(drawState);
+      case "redo":
+        return DrawState.redo(drawState);
+    }
+  }
+
   static flaten(drawState: DrawState): FlatState {
     const strokes = drawState.getImmutable().get("strokes").toObject();
     return { strokes };
   }
 
   static loadFromFlat(
-    { strokes }: FlatState,
+    flatState: FlatState,
     width: number,
     height: number
   ): DrawState {
-    return new DrawState(
+    const { strokes, operations } = flatState;
+    let ds = new DrawState(
       defaultFactory().set("strokes", Map(strokes)),
       width,
       height
     );
+    operations?.forEach((op) => (ds = DrawState.pushOperation(ds, op)));
+    return ds;
   }
 }
 
