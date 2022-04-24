@@ -1,12 +1,12 @@
-import React from "react";
+import React, { Suspense } from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import MainMenu from "./component/menu/MainMenu";
-import Reader from "./component/reader/Reader";
 import Test from "./component/Test";
-import Team from "./component/reader/Team";
 import { message } from "antd";
+const Reader = React.lazy(() => import("./component/reader/Reader"));
+const Team = React.lazy(() => import("./component/reader/Team"));
 
 message.config({ top: 60 });
 
@@ -17,10 +17,24 @@ ReactDOM.render(
     <Routes>
       <Route path="/" element={<MainMenu />} />
       <Route path="/reader">
-        <Route path=":noteID" element={<Reader teamOn={false} />} />
+        <Route
+          path=":noteID"
+          element={
+            <Suspense fallback={<></>}>
+              <Reader teamOn={false} />
+            </Suspense>
+          }
+        />
       </Route>
       <Route path="/team">
-        <Route path=":noteID" element={<Team />} />
+        <Route
+          path=":noteID"
+          element={
+            <Suspense fallback={<></>}>
+              <Team />
+            </Suspense>
+          }
+        />
       </Route>
       <Route path="/test" element={<Test />} />
       <Route path="*" element={placeholderEl} />
