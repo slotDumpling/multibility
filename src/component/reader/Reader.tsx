@@ -29,7 +29,7 @@ import { debounce, last, omit } from "lodash";
 import { putNote, updatePages } from "../../lib/network/http";
 import { useBeforeunload } from "react-beforeunload";
 import DrawTools from "./DrawTools";
-import { getOnePageImage } from "../../lib/note/pdfImage";
+// import { getOnePageImage } from "../../lib/note/pdfImage";
 import { useInView } from "react-intersection-observer";
 import { Map, Set } from "immutable";
 import { insertAfter } from "../../lib/array";
@@ -64,7 +64,7 @@ export const ReaderMethodCtx = createContext({
   setPageOrder: (() => {}) as Dispatch<SetStateAction<string[] | undefined>>,
   setPageState: (() => {}) as (uid: string, ds: DrawState) => void,
   addPage: (() => {}) as (prevpageID: string, copy?: boolean) => void,
-  addFinalPage: (() => {}),
+  addFinalPage: () => {},
   deletePage: (() => {}) as (pageID: string) => void,
   setMode: (() => {}) as Dispatch<SetStateAction<CtrlMode>>,
   setDrawCtrl: (() => {}) as Dispatch<SetStateAction<DrawCtrl>>,
@@ -380,6 +380,7 @@ export const PageWrapper = ({
       return async () => {
         if (preview || !pdfIndex || called) return;
         called = true;
+        const { getOnePageImage } = await import("../../lib/note/pdfImage");
         setFullImg(await getOnePageImage(noteID, pdfIndex));
       };
     })(),

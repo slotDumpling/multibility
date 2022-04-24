@@ -16,7 +16,6 @@ import {
   useState,
 } from "react";
 import { createNewNote } from "../../lib/note/archive";
-import { LoadPDF } from "../../lib/note/pdfImage";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import {
   TeamOutlined,
@@ -107,6 +106,7 @@ function UploadPdfPage() {
   async function handleFile(file: File) {
     if (file.type !== "application/pdf") return;
     setLoading(true);
+    const { LoadPDF } = await import('../../lib/note/pdfImage')
     const note = await LoadPDF(file, setPercent);
     note.tagID = tagUid;
     const { tags, allNotes } = await createNewNote(note);

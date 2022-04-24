@@ -8,16 +8,16 @@ import { createVirtualCanvas, releaseCanvas } from "../draw/drawer";
 import { createEmptyNote, Note, NotePage } from "./note";
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
-async function getPDFDocument(file: Blob) {
+const getPDFDocument = async (file: Blob) => {
   const data = new Uint8Array(await file.arrayBuffer());
   return pdfjs.getDocument(data).promise;
-}
+};
 
-async function getPageImage(
+const getPageImage = async (
   doc: PDFDocumentProxy,
   pageNum: number,
   scale: number
-): Promise<[string, number]> {
+): Promise<[string, number]> => {
   const page = await doc.getPage(pageNum);
   const viewport = page.getViewport({ scale });
   console.log({ viewport });
@@ -40,7 +40,7 @@ async function getPageImage(
   releaseCanvas(canvas);
 
   return [data, ratio];
-}
+};
 
 export async function getPDFImages(
   file: Blob,
@@ -73,7 +73,7 @@ export async function getOneImage(file: Blob, index: number, scale = 2) {
 }
 
 const IMAGE_CACHE_NUMBER = 10;
-async function getImageCache(noteID: string, index: number) {
+const getImageCache = async (noteID: string, index: number) => {
   let cacheList = ((await localforage.getItem("IMAGE_CACHE")) ||
     []) as string[];
   const key = `IMAGE_${noteID}_${index}`;
@@ -81,9 +81,9 @@ async function getImageCache(noteID: string, index: number) {
   cacheList = [key, ...cacheList.filter((id) => id !== key)];
   await localforage.setItem("IMAGE_CACHE", cacheList);
   return (await localforage.getItem(key)) as string;
-}
+};
 
-async function setImageCache(noteID: string, index: number, data: string) {
+const setImageCache = async (noteID: string, index: number, data: string) => {
   let cacheList = ((await localforage.getItem("IMAGE_CACHE")) ||
     []) as string[];
   const key = `IMAGE_${noteID}_${index}`;
@@ -97,7 +97,7 @@ async function setImageCache(noteID: string, index: number, data: string) {
   }
   await localforage.setItem("IMAGE_CACHE", cacheList);
   await localforage.setItem(key, data);
-}
+};
 
 export async function getOnePageImage(noteID: string, index: number) {
   const cached = await getImageCache(noteID, index);

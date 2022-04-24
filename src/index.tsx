@@ -10,11 +10,7 @@ import { message } from "antd";
 
 message.config({ top: 60 });
 
-const placeholderEl = (
-  <main style={{ padding: "1rem" }}>
-    <p>There's nothing here!</p>
-  </main>
-);
+const placeholderEl = <p>There's nothing here!</p>;
 
 ReactDOM.render(
   <HashRouter>

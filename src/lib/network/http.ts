@@ -7,7 +7,7 @@ import {
   updateTeamNote,
 } from "../note/archive";
 import { getuserID } from "../user";
-import { getPDFImages } from "../note/pdfImage";
+// import { getPDFImages } from "../note/pdfImage";
 
 export let BASE_URL = "https://api.slotdumpling.top/paint";
 BASE_URL = "http://100.81.113.84:8090/paint";
@@ -67,6 +67,7 @@ export async function loadTeamNoteInfo(noteID: string) {
       console.log(data);
       file = new Blob([data], { type: "application/pdf" });
 
+      const { getPDFImages } = await import("../note/pdfImage");
       const { images } = await getPDFImages(file);
       for (let page of Object.values(pageInfos)) {
         const { pdfIndex } = page;

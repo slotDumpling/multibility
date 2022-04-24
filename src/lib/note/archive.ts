@@ -1,4 +1,3 @@
-import localforage from "localforage";
 import {
   Note,
   NoteInfo,
@@ -7,11 +6,11 @@ import {
   TeamNoteInfo,
   TeamPageState,
 } from "./note";
-import { v4 as getUid } from "uuid";
 import { getDefaultFlatState } from "../draw/DrawState";
-import { getuserID } from "../user";
 import { getRandomColor } from "../color";
-import { getOneImage } from "./pdfImage";
+import localforage from "localforage";
+import { v4 as getUid } from "uuid";
+import { getuserID } from "../user";
 
 export interface NoteTag {
   uid: string;
@@ -205,6 +204,7 @@ export async function updateTeamNote(
   const { pageOrder } = noteInfo;
   if (pageOrder.length < note.pageOrder.length) return true;
   const { pageRec, pdf } = note;
+  const { getOneImage } = await import('./pdfImage');
   for (let [pageID, page] of Object.entries(pageInfos)) {
     if (!(pageID in pageRec)) {
       const { ratio, pdfIndex } = page;
