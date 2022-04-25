@@ -10,7 +10,11 @@ const Team = React.lazy(() => import("./component/reader/Team"));
 
 message.config({ top: 60 });
 
-const placeholderEl = <p>There's nothing here!</p>;
+const placeholderEl = (
+  <h1>
+    There's nothing here! <a href="/">Go Back.</a>
+  </h1>
+);
 
 ReactDOM.render(
   <HashRouter>

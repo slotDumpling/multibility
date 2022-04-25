@@ -110,6 +110,7 @@ export default function NoteList({ noteList }: { noteList: NoteInfo[] }) {
         setSearchText={setSearchText}
         onDelete={() => removeNotes(selectedNotes.toArray())}
         onMove={(tagID) => moveNotes(selectedNotes.toArray(), tagID)}
+        disabled={selectedNotes.size === 0}
       />
       {filterdList.map((noteInfo) => {
         const { uid, team } = noteInfo;
@@ -150,6 +151,7 @@ const HeadTools: FC<{
   setSearchText: Dispatch<SetStateAction<string>>;
   onDelete: () => void;
   onMove: (tagID: string) => void;
+  disabled: boolean;
 }> = ({
   sortType,
   setSortType,
@@ -157,6 +159,7 @@ const HeadTools: FC<{
   setSearchText,
   onDelete,
   onMove,
+  disabled = true,
 }) => {
   const { Item } = Menu;
   const { editing, allTags } = useContext(MenuStateCtx);
@@ -175,6 +178,16 @@ const HeadTools: FC<{
     </Menu>
   );
 
+  const sortButton = (
+    <Dropdown overlay={sortMenu} trigger={["click"]}>
+      <Button
+        className="sort-btn"
+        icon={<SwapOutlined rotate={90} />}
+        size="small"
+      />
+    </Dropdown>
+  );
+
   const deleteButton = (
     <Popconfirm
       title="Notes will be deleted."
@@ -186,7 +199,13 @@ const HeadTools: FC<{
       okType="danger"
       okButtonProps={{ type: "primary" }}
     >
-      <Button className="del-btn" size="small" danger icon={<DeleteOutlined />}>
+      <Button
+        className="del-btn"
+        size="small"
+        danger
+        icon={<DeleteOutlined />}
+        disabled={disabled}
+      >
         Delete
       </Button>
     </Popconfirm>
@@ -212,7 +231,12 @@ const HeadTools: FC<{
   );
 
   const tagButton = (
-    <Dropdown overlay={overlay} trigger={["click"]} placement="bottom">
+    <Dropdown
+      disabled={disabled}
+      overlay={overlay}
+      trigger={["click"]}
+      placement="bottom"
+    >
       <Button className="tag-btn" size="small" icon={<TagsOutlined />}>
         Tag
       </Button>
@@ -244,13 +268,7 @@ const HeadTools: FC<{
               <AppstoreOutlined />
             </Radio.Button>
           </Radio.Group>
-          <Dropdown overlay={sortMenu} trigger={["click"]}>
-            <Button
-              className="sort-btn"
-              icon={<SwapOutlined rotate={90} />}
-              size="small"
-            />
-          </Dropdown>
+          {sortButton}
         </>
       )}
     </div>
