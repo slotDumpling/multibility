@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-import { getuserID, getUserName } from "../user";
+import { getUserID, getUserName } from "../user";
 import { BASE_URL } from "./http";
 
 export const IoFactory = (noteID: string) => {
@@ -7,7 +7,7 @@ export const IoFactory = (noteID: string) => {
     io(BASE_URL, {
       autoConnect: false,
       query: {
-        userID: getuserID(),
+        userID: getUserID(),
         userName: getUserName(),
         noteID,
       },

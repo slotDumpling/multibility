@@ -11,7 +11,7 @@ import { SetOperation } from "../../lib/draw/StateSet";
 import { getTeamNoteState, loadTeamNoteInfo } from "../../lib/network/http";
 import { IoFactory } from "../../lib/network/io";
 import Reader, { WIDTH } from "./Reader";
-import { getuserID, UserInfo } from "../../lib/user";
+import { getUserID, UserInfo } from "../../lib/user";
 import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
 import { createTeamPage, NotePage } from "../../lib/note/note";
 import { TeamState } from "../../lib/draw/TeamState";
@@ -23,7 +23,7 @@ export const TeamCtx = createContext({
   ignores: Set<string>(),
   setIgnores: (() => {}) as Dispatch<SetStateAction<Set<string>>>,
   loadInfo: undefined as undefined | (() => Promise<boolean>),
-  teamStateSet: undefined as TeamState | undefined,
+  teamState: undefined as TeamState | undefined,
   pushOperation: undefined as undefined | ((op: SetOperation) => void),
   teamUpdate: undefined as undefined | TeamUpdate,
   updateReorder: (() => {}) as undefined | ((pageOrder: string[]) => void),
@@ -47,7 +47,7 @@ type TeamUpdate =
 
 export default function Team() {
   const noteID = useParams().noteID ?? "";
-  const [teamStateSet, setTeamStateSet] = useState<TeamState>();
+  const [teamState, setTeamState] = useState<TeamState>();
   const [code, setCode] = useState(-2);
   const [userList, setUserList] = useState<UserInfo[]>([]);
   const [ignores, setIgnores] = useState(Set<string>());
@@ -63,7 +63,7 @@ export default function Team() {
       message.error("Failed loading the team note state");
       return false;
     }
-    setTeamStateSet(TeamState.createFromTeamPages(teamNote, WIDTH));
+    setTeamState(TeamState.createFromTeamPages(teamNote, WIDTH));
     return true;
   };
 
@@ -86,13 +86,13 @@ export default function Team() {
     dismiss();
     setLoaded(true);
     ws.on("push", ({ operation, userID }) => {
-      setTeamStateSet((prev) => prev?.pushOperation(operation, userID, WIDTH));
+      setTeamState((prev) => prev?.pushOperation(operation, userID, WIDTH));
     });
 
     ws.on("joined", ({ joined, members }) => {
       const { userID, userName } = joined;
       setUserList(members);
-      if (userID === getuserID()) return;
+      if (userID === getUserID()) return;
       message.destroy(userID);
       message.success({
         icon: <LoginOutlined />,
@@ -104,7 +104,7 @@ export default function Team() {
     ws.on("leaved", ({ leaved, members }) => {
       const { userID, userName } = leaved;
       setUserList(members);
-      if (userID === getuserID()) return;
+      if (userID === getUserID()) return;
       message.destroy(userID);
       message.warning({
         icon: <LogoutOutlined />,
@@ -129,7 +129,7 @@ export default function Team() {
         pageID: string;
         newPage: NotePage;
       }) => {
-        setTeamStateSet((prev) => prev?.addPage(pageID, newPage));
+        setTeamState((prev) => prev?.addPage(pageID, newPage));
         newPage = createTeamPage(newPage);
         setTeamUpdate({
           type: "newPage",
@@ -139,6 +139,11 @@ export default function Team() {
         });
       }
     );
+
+    ws.on("reset", ({ userID, pageRec }) => {
+      if (userID === getUserID()) return;
+      setTeamState((prev) => prev?.resetUser(userID, pageRec));
+    });
 
     ws.on("connect", () => setConnected(true));
     ws.on("disconnect", () => setConnected(false));
@@ -169,11 +174,12 @@ export default function Team() {
     pageID: string,
     newPage: NotePage
   ) => {
-    setTeamStateSet((prev) => prev?.addPage(pageID, newPage));
+    setTeamState((prev) => prev?.addPage(pageID, newPage));
     const { image, marked, ...newTeamPage } = newPage;
     ws.emit("newPage", { pageOrder, pageID, newPage: newTeamPage });
   };
 
+  if (!loaded) return null;
   return (
     <TeamCtx.Provider
       value={{
@@ -184,13 +190,13 @@ export default function Team() {
         connected,
         setIgnores,
         teamUpdate,
-        teamStateSet,
+        teamState,
         pushOperation,
         updateReorder,
         updateNewPage,
       }}
     >
-      {loaded && <Reader teamOn />}
+      <Reader teamOn />
     </TeamCtx.Provider>
   );
 }

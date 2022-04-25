@@ -95,4 +95,19 @@ export class TeamState {
     const ds = DrawState.pushOperation(prevDs, op);
     return this.setState(pageID, userID, ds);
   }
+
+  resetUser(userID: string, pageRec: globalThis.Record<string, NotePage>) {
+    let newTS: TeamState = this;
+    for (let [pageID, { state, ratio }] of Object.entries(pageRec)) {
+      const prevDS = newTS.getOneState(pageID, userID);
+      if (!prevDS) continue;
+      const { width } = prevDS;
+      newTS = newTS.setState(
+        pageID,
+        userID,
+        DrawState.loadFromFlat(state, width, width * ratio)
+      );
+    }
+    return newTS;
+  }
 }

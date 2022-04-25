@@ -1,10 +1,10 @@
 import React, { Suspense } from "react";
 import ReactDOM from "react-dom";
-import "./index.css";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import MainMenu from "./component/menu/MainMenu";
 import Test from "./component/Test";
 import { message } from "antd";
+import "./index.sass";
 const Reader = React.lazy(() => import("./component/reader/Reader"));
 const Team = React.lazy(() => import("./component/reader/Team"));
 
@@ -20,7 +20,7 @@ ReactDOM.render(
         <Route
           path=":noteID"
           element={
-            <Suspense fallback={<></>}>
+            <Suspense fallback={null}>
               <Reader teamOn={false} />
             </Suspense>
           }
@@ -30,7 +30,7 @@ ReactDOM.render(
         <Route
           path=":noteID"
           element={
-            <Suspense fallback={<></>}>
+            <Suspense fallback={null}>
               <Team />
             </Suspense>
           }

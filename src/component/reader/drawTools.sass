@@ -1,4 +1,4 @@
-.reader-container
+.reader.container
   header
     min-height: 55px
     padding: 10px
@@ -6,13 +6,13 @@
     align-items: center
     justify-content: space-between
     border-bottom: 1px solid #ddd
-    div > button
+    & > div > button
       margin: 0 5px
       &.redo
         margin-right: 30px 
 
 @media screen and (max-width: 500px)
-  .reader-container
+  .reader.container
     .middle
       border-left: 1px solid #eee
       border-right: 1px solid #eee
@@ -23,7 +23,7 @@
       content: ""
 
 @media screen and (min-width: 500px)
-  .reader-container br
+  .reader.container br
     display: none
 
 .pen-panel

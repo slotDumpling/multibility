@@ -5,14 +5,14 @@ export interface UserInfo {
   userName: string;
 }
 
-export const getuserID = (() => {
+export const getUserID = (() => {
   let cached: string;
   return () => {
     if (cached) return cached;
-    let userID = localStorage.getItem("user_id");
+    let userID = localStorage.getItem("USER_ID");
     if (!userID) {
       userID = getUid();
-      localStorage.setItem("user_id", userID);
+      localStorage.setItem("USER_ID", userID);
     }
     cached = userID;
     return userID;

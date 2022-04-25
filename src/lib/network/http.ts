@@ -6,11 +6,10 @@ import {
   saveTeamNote,
   updateTeamNote,
 } from "../note/archive";
-import { getuserID } from "../user";
-// import { getPDFImages } from "../note/pdfImage";
+import { getUserID } from "../user";
 
 export let BASE_URL = "https://api.slotdumpling.top/paint";
-BASE_URL = "http://100.81.113.84:8090/paint";
+// BASE_URL = "http://100.81.113.84:8090/paint";
 axios.defaults.baseURL = BASE_URL;
 
 axios.interceptors.request.use((config) => {
@@ -91,7 +90,7 @@ export async function putNote(noteID: string) {
 
   try {
     const { data } = await axios.put(`create/${noteID}`, {
-      userID: getuserID(),
+      userID: getUserID(),
       pageRec,
       noteInfo: { uid, name, withImg, pageOrder },
     });
@@ -123,7 +122,7 @@ export async function updatePages(noteID: string) {
   const { uid, name, withImg, pageOrder, pageRec } = note;
   try {
     const { data } = await axios.put(`update/${noteID}`, {
-      userID: getuserID(),
+      userID: getUserID(),
       pageRec,
       noteInfo: { uid, name, withImg, pageOrder },
     });

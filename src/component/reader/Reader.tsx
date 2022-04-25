@@ -11,9 +11,6 @@ import React, {
   SetStateAction,
   useLayoutEffect,
 } from "react";
-import { message } from "antd";
-import { useParams, useNavigate } from "react-router-dom";
-import Draw from "../draw/Draw";
 import {
   DrawCtrl,
   CtrlMode,
@@ -21,22 +18,24 @@ import {
   saveDrawCtrl,
   defaultDrawCtrl,
 } from "../../lib/draw/drawCtrl";
-import { DrawState } from "../../lib/draw/DrawState";
 import { createPage, NoteInfo, NotePage } from "../../lib/note/note";
-import { StateSet } from "../../lib/draw/StateSet";
 import { loadNote, editNoteData } from "../../lib/note/archive";
-import { debounce, last, omit } from "lodash";
 import { putNote, updatePages } from "../../lib/network/http";
-import { useBeforeunload } from "react-beforeunload";
-import DrawTools from "./DrawTools";
-// import { getOnePageImage } from "../../lib/note/pdfImage";
+import { useParams, useNavigate } from "react-router-dom";
 import { useInView } from "react-intersection-observer";
-import { Map, Set } from "immutable";
+import { useBeforeunload } from "react-beforeunload";
+import { TeamState } from "../../lib/draw/TeamState";
+import { DrawState } from "../../lib/draw/DrawState";
+import { StateSet } from "../../lib/draw/StateSet";
+import { debounce, last, omit } from "lodash";
 import { insertAfter } from "../../lib/array";
 import { AddPageButton } from "./ReaderTools";
 import { useMounted } from "../../lib/hooks";
+import { Map, Set } from "immutable";
+import DrawTools from "./DrawTools";
 import { TeamCtx } from "./Team";
-import { TeamState } from "../../lib/draw/TeamState";
+import Draw from "../draw/Draw";
+import { message } from "antd";
 import "./reader.sass";
 
 export const WIDTH = 2000;
@@ -45,7 +44,7 @@ export const ReaderStateCtx = createContext({
   noteID: "",
   noteInfo: undefined as NoteInfo | undefined,
   stateSet: undefined as StateSet | undefined,
-  teamStateSet: undefined as TeamState | undefined,
+  teamState: undefined as TeamState | undefined,
   pageRec: undefined as Record<string, NotePage> | undefined,
   pageOrder: undefined as string[] | undefined,
   saved: true,
@@ -86,7 +85,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   const refRec = useRef<Record<string, HTMLElement>>({});
   const mounted = useMounted();
 
-  const { teamStateSet, pushOperation, teamUpdate, updateNewPage } =
+  const { teamState, pushOperation, teamUpdate, updateNewPage } =
     useContext(TeamCtx);
 
   const loadNotePages = async () => {
@@ -263,7 +262,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   };
 
   const renderResult = (
-    <div className="reader-container">
+    <div className="reader container">
       <DrawTools
         instantSave={instantSave}
         handleUndo={handleUndo}
@@ -284,7 +283,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
         noteID,
         noteInfo,
         stateSet,
-        teamStateSet,
+        teamState,
         saved,
         teamOn,
         pageRec,
@@ -317,12 +316,12 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
 }
 
 const PageContainer: FC<{ uid: string }> = ({ uid }) => {
-  const { pageRec, stateSet, teamStateSet } = useContext(ReaderStateCtx);
+  const { pageRec, stateSet, teamState } = useContext(ReaderStateCtx);
   const { setPageState } = useContext(ReaderMethodCtx);
 
   const page = pageRec && pageRec[uid];
   const drawState = stateSet?.getOneState(uid);
-  const teamStates = teamStateSet?.getOnePageState(uid);
+  const teamStateMap = teamState?.getOnePageState(uid);
   const updateState = useCallback(
     (ds: DrawState) => setPageState(uid, ds),
     [uid, setPageState]
@@ -332,7 +331,7 @@ const PageContainer: FC<{ uid: string }> = ({ uid }) => {
   return (
     <PageWrapper
       drawState={drawState}
-      teamStates={teamStates}
+      teamStateMap={teamStateMap}
       updateState={updateState}
       pdfIndex={page.pdfIndex}
       uid={uid}
@@ -343,7 +342,7 @@ const PageContainer: FC<{ uid: string }> = ({ uid }) => {
 export const PageWrapper = ({
   thumbnail,
   drawState,
-  teamStates,
+  teamStateMap,
   updateState,
   pdfIndex,
   preview = false,
@@ -351,7 +350,7 @@ export const PageWrapper = ({
 }: {
   uid: string;
   drawState: DrawState;
-  teamStates?: Map<string, DrawState>;
+  teamStateMap?: Map<string, DrawState>;
   thumbnail?: string;
   pdfIndex?: number;
   updateState?: (ds: DrawState) => void;
@@ -399,8 +398,8 @@ export const PageWrapper = ({
 
   const { ignores } = useContext(TeamCtx);
   const otherStates = useMemo(
-    () => teamStates && Array.from(teamStates.deleteAll(ignores).values()),
-    [teamStates, ignores]
+    () => teamStateMap && Array.from(teamStateMap.deleteAll(ignores).values()),
+    [teamStateMap, ignores]
   );
 
   const imageLoaded = fullImg || !pdfIndex;

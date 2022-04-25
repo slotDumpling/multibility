@@ -74,7 +74,7 @@ export default function MainMenu() {
       <MenuMethodCtx.Provider
         value={{ setAllNotes, setAllTags, setEditing, setTagUid, menuInit }}
       >
-        <div className="menu-container">
+        <div className="main-menu container">
           <header>
             <LeftTools />
             <Title level={4}>{selectedTag.name}</Title>

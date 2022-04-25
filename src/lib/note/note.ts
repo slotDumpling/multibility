@@ -1,5 +1,6 @@
 import { getDefaultFlatState, FlatState } from "../draw/DrawState";
 import { v4 as getUid } from "uuid";
+import moment from 'moment';
 
 export interface NotePage {
   ratio: number;
@@ -31,8 +32,8 @@ export interface NoteInfo {
   tagID: string;
   team: boolean;
   withImg: boolean;
-  createTime?: Date;
-  lastTime?: Date;
+  createTime: number;
+  lastTime: number;
   thumbnail?: string;
 }
 
@@ -51,12 +52,15 @@ export interface TeamNoteInfo {
 
 export function createEmptyNote(): Note {
   const pageID = getUid();
+  const time = moment.now();
   return {
     uid: getUid(),
-    name: `New note ${Date.now()}`,
+    name: `Note ${moment(time).format('LT, ddd MMM D')}`,
     tagID: "DEFAULT",
     team: false,
     withImg: false,
+    createTime: time,
+    lastTime: time,
     pageRec: {
       [pageID]: {
         ratio: 1.5,

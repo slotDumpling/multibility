@@ -24,20 +24,21 @@ export const colors = [
 export const getRandomColor = () => {
   const index = Math.floor(Math.random() * colors.length);
   return colors[index];
-}
+};
 
 const hashCode = (str: string) => {
   let hash = 0;
+  console.log({str})
   if (str.length === 0) return hash;
   for (let i = 0; i < str.length; i++) {
     const chr = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + chr;
+    hash = (hash << 5) - hash + chr;
     hash |= 0;
   }
-  return hash;
+  return Math.abs(hash);
 };
 
 export const getHashedColor = (str: string) => {
   const index = hashCode(str) % colors.length;
   return colors[index];
-}
+};

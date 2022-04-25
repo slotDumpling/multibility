@@ -56,20 +56,22 @@ const OthersMenu = () => {
   const { setActive } = useContext(OthersStateCtx);
   const { Item } = Menu;
   return (
-    <Menu onClick={({ key }) => setActive(key)}>
-      <Item key="PDF">
-        <FilePdfOutlined />
-        <span>Import PDF</span>
-      </Item>
-      <Item key="PROFILE">
-        <UserOutlined />
-        <span>My profile</span>
-      </Item>
-      <Item key="SETTINGS">
-        <SettingOutlined />
-        <span>Settings</span>
-      </Item>
-    </Menu>
+    <div className="other-menu">
+      <Menu onClick={({ key }) => setActive(key)}>
+        <Item key="PDF">
+          <FilePdfOutlined />
+          <span>Import PDF</span>
+        </Item>
+        <Item key="PROFILE">
+          <UserOutlined />
+          <span>My profile</span>
+        </Item>
+        <Item key="SETTINGS">
+          <SettingOutlined />
+          <span>Settings</span>
+        </Item>
+      </Menu>
+    </div>
   );
 };
 
@@ -106,7 +108,7 @@ function UploadPdfPage() {
   async function handleFile(file: File) {
     if (file.type !== "application/pdf") return;
     setLoading(true);
-    const { LoadPDF } = await import('../../lib/note/pdfImage')
+    const { LoadPDF } = await import("../../lib/note/pdfImage");
     const note = await LoadPDF(file, setPercent);
     note.tagID = tagUid;
     const { tags, allNotes } = await createNewNote(note);
@@ -146,7 +148,7 @@ const ProfilePage = () => {
   const handleEnter = () => {
     if (!name) return;
     setUserName(name);
-    setActive('MENU');
+    setActive("MENU");
   };
   return (
     <SeconaryMenu title="My profile">

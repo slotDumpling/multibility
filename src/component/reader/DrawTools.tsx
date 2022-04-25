@@ -27,7 +27,7 @@ import { ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { TeamCtx } from "./Team";
 import DigitDisplay from "../ui/DigitDisplay";
 import { colors, getHashedColor } from "../../lib/color";
-import { getuserID, UserInfo } from "../../lib/user";
+import { getUserID, UserInfo } from "../../lib/user";
 import { CtrlMode, DrawCtrl } from "../../lib/draw/drawCtrl";
 import PageNav from "./PageNav";
 import {
@@ -306,8 +306,8 @@ const SelectMenu: FC<{
 const UserCard: FC<{ userInfo: UserInfo }> = ({ userInfo }) => {
   const { userName, userID } = userInfo;
   const { ignores, setIgnores } = useContext(TeamCtx);
-  const color = useMemo(() => getHashedColor(userName), [userName]);
-  const self = userID === getuserID();
+  const color = useMemo(() => getHashedColor(userID), [userID]);
+  const self = userID === getUserID();
   const ignored = ignores.has(userID) && !self;
 
   const switchIgnore = () => {

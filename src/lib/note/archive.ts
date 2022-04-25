@@ -10,7 +10,8 @@ import { getDefaultFlatState } from "../draw/DrawState";
 import { getRandomColor } from "../color";
 import localforage from "localforage";
 import { v4 as getUid } from "uuid";
-import { getuserID } from "../user";
+import { getUserID } from "../user";
+import moment from "moment";
 
 export interface NoteTag {
   uid: string;
@@ -81,16 +82,17 @@ export async function loadNote(uid: string) {
   return { ...note, pdf };
 }
 
-export async function editNoteData(uid: string, noteDate: Partial<Note>) {
-  console.log("edit note data", noteDate);
+export async function editNoteData(uid: string, noteData: Partial<Note>) {
+  console.log("edit note data", noteData);
   const allNotes = await getAllNotes();
-  const { pageRec, ...noteInfo } = noteDate;
-  allNotes[uid] = { ...allNotes[uid], ...noteInfo };
+  const { pageRec, ...noteInfo } = noteData;
+  const lastTime = moment.now();
+  allNotes[uid] = { ...allNotes[uid], ...noteInfo, lastTime };
 
   await localforage.setItem("ALL_NOTES", allNotes);
   const prevNote = await loadNote(uid);
   if (!prevNote) return;
-  await localforage.setItem(uid, { ...prevNote, ...noteDate });
+  await localforage.setItem(uid, { ...prevNote, ...noteData, lastTime });
 }
 
 export async function saveNoteInfo(noteInfo: NoteInfo) {
@@ -164,7 +166,7 @@ export async function convertTeamPage(
     const { states } = page;
     const { ratio } = pageRec[key];
     if (!ratio) continue;
-    delete states[getuserID()];
+    delete states[getUserID()];
     teamNote.pageRec[key] = {
       ratio,
       states,
@@ -184,12 +186,15 @@ export async function saveTeamNote(
   for (let page of Object.values(teamPages)) {
     page.state = getDefaultFlatState();
   }
+  const time = moment.now();
   note = {
     ...noteInfo,
     tagID: "DEFAULT",
     team: true,
     pageRec: teamPages,
     pdf,
+    createTime: time,
+    lastTime: time,
   };
   await createNewNote(note);
 }
