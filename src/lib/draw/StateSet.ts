@@ -1,5 +1,5 @@
 import { List, Map, Record } from "immutable";
-import { DrawState, Operation } from "./DrawState";
+import { DrawState, Operation, WIDTH } from "./DrawState";
 import { NotePage } from "../note/note";
 
 interface StateSetRecordType {
@@ -31,7 +31,7 @@ export class StateSet {
 
   static createFromPages(
     pageRec: globalThis.Record<string, NotePage>,
-    width: number
+    width = WIDTH
   ) {
     const entries = Object.entries(pageRec);
     return StateSet.createFromList(
@@ -76,7 +76,7 @@ export class StateSet {
     return new StateSet(currRecord, lastSetOp);
   }
 
-  addState(pageID: string, notePage: NotePage, width: number) {
+  addState(pageID: string, notePage: NotePage, width = WIDTH) {
     const { state, ratio } = notePage;
     const newDS = DrawState.loadFromFlat(state, width, width * ratio);
     const currRecord = this.getImmutable().update("states", (s) =>

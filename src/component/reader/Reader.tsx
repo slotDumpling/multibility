@@ -20,14 +20,14 @@ import {
 } from "../../lib/draw/drawCtrl";
 import { createPage, NoteInfo, NotePage } from "../../lib/note/note";
 import { loadNote, editNoteData } from "../../lib/note/archive";
-import { putNote, updatePages } from "../../lib/network/http";
+import { updatePages } from "../../lib/network/http";
 import { useParams, useNavigate } from "react-router-dom";
 import { useInView } from "react-intersection-observer";
 import { useBeforeunload } from "react-beforeunload";
 import { TeamState } from "../../lib/draw/TeamState";
 import { DrawState } from "../../lib/draw/DrawState";
 import { StateSet } from "../../lib/draw/StateSet";
-import { debounce, last, omit } from "lodash";
+import { debounce, last } from "lodash";
 import { insertAfter } from "../../lib/array";
 import { AddPageButton } from "./ReaderTools";
 import { useMounted } from "../../lib/hooks";
@@ -35,10 +35,9 @@ import { Map, Set } from "immutable";
 import DrawTools from "./DrawTools";
 import { TeamCtx } from "./Team";
 import Draw from "../draw/Draw";
-import { message } from "antd";
+import { Button, message } from "antd";
 import "./reader.sass";
 
-export const WIDTH = 2000;
 
 export const ReaderStateCtx = createContext({
   noteID: "",
@@ -56,17 +55,19 @@ export const ReaderStateCtx = createContext({
 });
 
 export const ReaderMethodCtx = createContext({
-  createRoom: () => {},
   scrollPage: (() => {}) as (pageID: string) => void,
   setInviewPages: (() => {}) as Dispatch<SetStateAction<Set<string>>>,
   switchPageMarked: (() => {}) as (pageID: string) => void,
-  setPageOrder: (() => {}) as Dispatch<SetStateAction<string[] | undefined>>,
   setPageState: (() => {}) as (uid: string, ds: DrawState) => void,
   addPage: (() => {}) as (prevpageID: string, copy?: boolean) => void,
   addFinalPage: () => {},
   deletePage: (() => {}) as (pageID: string) => void,
   setMode: (() => {}) as Dispatch<SetStateAction<CtrlMode>>,
   setDrawCtrl: (() => {}) as Dispatch<SetStateAction<DrawCtrl>>,
+  saveReorder: (async () => {}) as (
+    order: string[],
+    push: boolean
+  ) => Promise<void>,
 });
 
 export default function Reader({ teamOn }: { teamOn: boolean }) {
@@ -85,7 +86,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   const refRec = useRef<Record<string, HTMLElement>>({});
   const mounted = useMounted();
 
-  const { teamState, pushOperation, teamUpdate, updateNewPage } =
+  const { teamState, pushOperation, teamUpdate, pushNewPage, pushReorder } =
     useContext(TeamCtx);
 
   const loadNotePages = async () => {
@@ -98,7 +99,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     setPageRec(pageRec);
     setPageOrder(pageOrder);
     setNoteInfo(noteInfo);
-    setStateSet(StateSet.createFromPages(pageRec, WIDTH));
+    setStateSet(StateSet.createFromPages(pageRec));
     setDrawCtrl(await getDrawCtrl());
     setLoaded(true);
     if (teamOn) updatePages(noteID);
@@ -111,36 +112,17 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
       const data = canvas?.toDataURL();
       data && editNoteData(noteID, { thumbnail: data });
       mounted.current && setSaved(true);
-    }, 5000),
+    }, 3000),
     []
   );
   const instantSave = debouncedSave.flush;
 
-  const createRoom = async () => {
-    await instantSave();
-    const resCode = await putNote(noteID);
-    if (!resCode) {
-      message.error("Can't create room.");
-      return;
-    }
-    await editNoteData(noteID, { team: true });
-    nav("/team/" + noteID);
-  };
-
-  const noteInit = () => {
-    loadNotePages();
-  };
-
-  const noteDestroy = () => {
-    instantSave();
-  };
-
   useLayoutEffect(() => {
-    noteInit();
-    return noteDestroy;
+    loadNotePages();
+    return () => void instantSave();
   }, [noteID, teamOn]);
 
-  useBeforeunload(noteDestroy);
+  useBeforeunload(instantSave);
 
   useEffect(() => {
     if (!noteInfo) return;
@@ -152,7 +134,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   }, [drawCtrl]);
 
   useEffect(() => {
-    if (!stateSet?.lastOp || !pushOperation) return;
+    if (!stateSet?.lastOp) return;
     pushOperation(stateSet.lastOp);
   }, [stateSet]);
 
@@ -163,28 +145,20 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   }, [pageRec]);
 
   useEffect(() => {
-    const handleReorder = async () => {
-      if (!pageOrder || !loaded) return;
-      await editNoteData(noteID, { pageOrder });
-      await instantSave();
-      const teamOrder = teamUpdate?.pageOrder;
-      if (teamOn && JSON.stringify(pageOrder) !== JSON.stringify(teamOrder)) {
-        updatePages(noteID);
-      }
-    };
-    handleReorder();
-  }, [pageOrder]);
-
-  useEffect(() => {
     if (!teamUpdate) return;
     const { type, pageOrder } = teamUpdate;
     if (type === "reorder") {
-      setPageOrder(pageOrder);
+      saveReorder(pageOrder);
+
+      if (!teamUpdate.deleted) return;
+      showPageDelMsg(() => {
+        saveReorder(teamUpdate.prevOrder, true);
+      });
     } else if (type === "newPage") {
-      setPageOrder(pageOrder);
+      saveReorder(pageOrder);
       let { pageID, newPage } = teamUpdate;
       setPageRec((prev) => prev && { ...prev, [pageID]: newPage });
-      setStateSet((prev) => prev?.addState(pageID, newPage, WIDTH));
+      setStateSet((prev) => prev?.addState(pageID, newPage));
     }
   }, [teamUpdate]);
 
@@ -195,9 +169,9 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     );
   };
 
-  const setPageState = useCallback((uid: string, ds: DrawState) => {
-    setStateSet((prev) => prev?.setState(uid, ds));
-    updatePageRec(uid, ds);
+  const setPageState = useCallback((pageID: string, ds: DrawState) => {
+    setStateSet((prev) => prev?.setState(pageID, ds));
+    updatePageRec(pageID, ds);
   }, []);
 
   const switchPageMarked = (pageID: string) => {
@@ -233,17 +207,22 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     refRec.current[pageID]?.scrollIntoView();
   };
 
+  const saveReorder = async (newOrder: string[], push = false) => {
+    setPageOrder(newOrder);
+    await editNoteData(noteID, { pageOrder: newOrder });
+    await instantSave();
+    push && pushReorder(newOrder);
+  };
+
   const addPage = (prevpageID: string, copy = false) => {
+    if (!pageOrder) return;
     const prevPage = copy ? pageRec && pageRec[prevpageID] : undefined;
     const [pageID, newPage] = createPage(prevPage);
-    setPageOrder((prev) => {
-      if (!prev) return;
-      const newOrder = insertAfter(prev, prevpageID, pageID);
-      updateNewPage && updateNewPage(newOrder, pageID, newPage);
-      return newOrder;
-    });
+    const newOrder = insertAfter(pageOrder, prevpageID, pageID);
+    pushNewPage(newOrder, pageID, newPage);
+    saveReorder(newOrder);
     setPageRec((prev) => prev && { ...prev, [pageID]: newPage });
-    setStateSet((prev) => prev?.addState(pageID, newPage, WIDTH));
+    setStateSet((prev) => prev?.addState(pageID, newPage));
   };
 
   const addFinalPage = () => {
@@ -252,13 +231,8 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   };
 
   const deletePage = (pageID: string) => {
-    if (teamOn) {
-      message.error("You can't delete pages from a team note.");
-      return;
-    }
-    setPageOrder((prev) => prev?.filter((id) => id !== pageID));
-    setPageRec((prev) => prev && omit(prev, pageID));
-    setStateSet((prev) => prev?.deleteState(pageID));
+    const newOrder = pageOrder?.filter((id) => id !== pageID);
+    newOrder && saveReorder(newOrder, true);
   };
 
   const renderResult = (
@@ -296,17 +270,16 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     >
       <ReaderMethodCtx.Provider
         value={{
-          createRoom,
           scrollPage,
           setInviewPages,
           switchPageMarked,
-          setPageOrder,
           setPageState,
           addPage,
           addFinalPage,
           deletePage,
           setMode,
           setDrawCtrl,
+          saveReorder,
         }}
       >
         {renderResult}
@@ -314,6 +287,28 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     </ReaderStateCtx.Provider>
   );
 }
+
+const showPageDelMsg = (onUndo: () => void) => {
+  message.warning({
+    content: (
+      <>
+        One page was deleted.
+        <Button
+          size="small"
+          type="link"
+          onClick={() => {
+            message.destroy("DELETE");
+            onUndo();
+          }}
+        >
+          Undo
+        </Button>
+      </>
+    ),
+    key: "DELETE",
+    duration: 10,
+  });
+};
 
 const PageContainer: FC<{ uid: string }> = ({ uid }) => {
   const { pageRec, stateSet, teamState } = useContext(ReaderStateCtx);

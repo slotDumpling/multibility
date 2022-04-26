@@ -10,46 +10,56 @@ import { useNavigate, useParams } from "react-router-dom";
 import { SetOperation } from "../../lib/draw/StateSet";
 import { getTeamNoteState, loadTeamNoteInfo } from "../../lib/network/http";
 import { IoFactory } from "../../lib/network/io";
-import Reader, { WIDTH } from "./Reader";
+import Reader from "./Reader";
 import { getUserID, UserInfo } from "../../lib/user";
 import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
-import { createTeamPage, NotePage } from "../../lib/note/note";
+import { NotePage } from "../../lib/note/note";
 import { TeamState } from "../../lib/draw/TeamState";
 import { Set } from "immutable";
 
 export const TeamCtx = createContext({
   code: -2,
-  userList: [] as UserInfo[],
+  userRec: {} as Record<string, UserInfo>,
   ignores: Set<string>(),
   setIgnores: (() => {}) as Dispatch<SetStateAction<Set<string>>>,
-  loadInfo: undefined as undefined | (() => Promise<boolean>),
+  loadInfo: (() => {}) as () => Promise<boolean>,
   teamState: undefined as TeamState | undefined,
-  pushOperation: undefined as undefined | ((op: SetOperation) => void),
+  pushOperation: (() => {}) as (op: SetOperation) => void,
   teamUpdate: undefined as undefined | TeamUpdate,
-  updateReorder: (() => {}) as undefined | ((pageOrder: string[]) => void),
-  updateNewPage: (() => {}) as
-    | undefined
-    | ((pageOrder: string[], pageID: string, newPage: NotePage) => void),
+  pushReorder: (() => {}) as (pageOrder: string[]) => void,
+  pushNewPage: (() => {}) as (
+    pageOrder: string[],
+    pageID: string,
+    newPage: NotePage
+  ) => void,
   connected: false,
 });
 
+interface ReorderInfo {
+  pageOrder: string[];
+  deleted: boolean;
+  prevOrder: string[];
+}
+
+interface NewPageInfo {
+  pageOrder: string[];
+  pageID: string;
+  newPage: NotePage;
+}
+
 type TeamUpdate =
-  | {
+  | ({
       type: "reorder";
-      pageOrder: string[];
-    }
-  | {
+    } & ReorderInfo)
+  | ({
       type: "newPage";
-      pageOrder: string[];
-      pageID: string;
-      newPage: NotePage;
-    };
+    } & NewPageInfo);
 
 export default function Team() {
   const noteID = useParams().noteID ?? "";
   const [teamState, setTeamState] = useState<TeamState>();
   const [code, setCode] = useState(-2);
-  const [userList, setUserList] = useState<UserInfo[]>([]);
+  const [userRec, setUserRec] = useState<Record<string, UserInfo>>({});
   const [ignores, setIgnores] = useState(Set<string>());
   const [ws] = useState(IoFactory(noteID));
   const [teamUpdate, setTeamUpdate] = useState<TeamUpdate>();
@@ -63,7 +73,7 @@ export default function Team() {
       message.error("Failed loading the team note state");
       return false;
     }
-    setTeamState(TeamState.createFromTeamPages(teamNote, WIDTH));
+    setTeamState(TeamState.createFromTeamPages(teamNote));
     return true;
   };
 
@@ -78,20 +88,24 @@ export default function Team() {
   };
 
   const roomInit = async () => {
-    const dismiss = message.loading("Loading team note...", 0);
+    message.loading({
+      content: "Loading team note...",
+      duration: 0,
+      key: "TEAM_LOADING",
+    });
     if (!((await loadInfo()) && (await loadState()))) {
-      dismiss();
+      message.destroy("TEAM_LOADING");
       return nav("/");
     }
-    dismiss();
+    message.destroy("TEAM_LOADING");
     setLoaded(true);
     ws.on("push", ({ operation, userID }) => {
-      setTeamState((prev) => prev?.pushOperation(operation, userID, WIDTH));
+      setTeamState((prev) => prev?.pushOperation(operation, userID));
     });
 
     ws.on("joined", ({ joined, members }) => {
       const { userID, userName } = joined;
-      setUserList(members);
+      setUserRec(members);
       if (userID === getUserID()) return;
       message.destroy(userID);
       message.success({
@@ -103,7 +117,7 @@ export default function Team() {
 
     ws.on("leaved", ({ leaved, members }) => {
       const { userID, userName } = leaved;
-      setUserList(members);
+      setUserRec(members);
       if (userID === getUserID()) return;
       message.destroy(userID);
       message.warning({
@@ -113,32 +127,15 @@ export default function Team() {
       });
     });
 
-    ws.on("reorder", ({ pageOrder }: { pageOrder: string[] }) => {
-      setTeamUpdate({ type: "reorder", pageOrder });
+    ws.on("reorder", (info: ReorderInfo) => {
+      setTeamUpdate({ type: "reorder", ...info });
     });
 
-    ws.on(
-      "newPage",
-      ({
-        pageID,
-        newPage,
-        pageOrder,
-      }: {
-        userID: string;
-        pageOrder: string[];
-        pageID: string;
-        newPage: NotePage;
-      }) => {
-        setTeamState((prev) => prev?.addPage(pageID, newPage));
-        newPage = createTeamPage(newPage);
-        setTeamUpdate({
-          type: "newPage",
-          pageOrder,
-          pageID,
-          newPage,
-        });
-      }
-    );
+    ws.on("newPage", (info: NewPageInfo) => {
+      const { pageID, newPage } = info;
+      setTeamState((prev) => prev?.addPage(pageID, newPage));
+      setTeamUpdate({ type: "newPage", ...info });
+    });
 
     ws.on("reset", ({ userID, pageRec }) => {
       if (userID === getUserID()) return;
@@ -154,6 +151,7 @@ export default function Team() {
   const roomDestroy = () => {
     ws.removeAllListeners();
     ws.disconnect();
+    message.destroy("TEAM_LOADING");
   };
 
   useEffect(() => {
@@ -161,15 +159,15 @@ export default function Team() {
     return roomDestroy;
   }, [noteID]);
 
-  const pushOperation = (op: SetOperation) => {
-    ws.emit("push", { operation: op });
+  const pushOperation = (operation: SetOperation) => {
+    ws.emit("push", { operation });
   };
 
-  const updateReorder = (pageOrder: string[]) => {
+  const pushReorder = (pageOrder: string[]) => {
     ws.emit("reorder", { pageOrder });
   };
 
-  const updateNewPage = (
+  const pushNewPage = (
     pageOrder: string[],
     pageID: string,
     newPage: NotePage
@@ -185,15 +183,15 @@ export default function Team() {
       value={{
         code,
         ignores,
-        userList,
+        userRec,
         loadInfo,
         connected,
+        teamState,
         setIgnores,
         teamUpdate,
-        teamState,
         pushOperation,
-        updateReorder,
-        updateNewPage,
+        pushReorder,
+        pushNewPage,
       }}
     >
       <Reader teamOn />

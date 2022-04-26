@@ -29,7 +29,6 @@ import {
 import { AddPageButton } from "./ReaderTools";
 import { exchange } from "../../lib/array";
 import classNames from "classnames";
-import { TeamCtx } from "./Team";
 import "./preview.sass";
 
 const PageNavContent = ({
@@ -40,8 +39,7 @@ const PageNavContent = ({
   setActiveKey: Dispatch<SetStateAction<string>>;
 }) => {
   const { pageOrder, inviewPages } = useContext(ReaderStateCtx);
-  const { setPageOrder, scrollPage } = useContext(ReaderMethodCtx);
-  const { updateReorder } = useContext(TeamCtx);
+  const { scrollPage, saveReorder } = useContext(ReaderMethodCtx);
   const refRec = useRef<Record<string, HTMLElement>>({});
   const listEl = useRef<HTMLDivElement>();
 
@@ -50,12 +48,8 @@ const PageNavContent = ({
     const { index: fromIndex } = source;
     const { index: toIndex } = destination;
     const pageID = pageOrder[fromIndex];
-    setPageOrder((prev) => {
-      if (!prev) return;
-      const newOrder = exchange(prev, fromIndex, toIndex);
-      updateReorder && updateReorder(newOrder);
-      return newOrder;
-    });
+    const newOrder = exchange(pageOrder, fromIndex, toIndex);
+    saveReorder(newOrder, true);
     requestAnimationFrame(() => scrollPage(pageID));
   };
 
@@ -181,7 +175,6 @@ const PagePreview: FC<{
 const PreviewOption = ({ uid }: { uid: string }) => {
   const [popShow, setPopShow] = useState(false);
   const { addPage, deletePage } = useContext(ReaderMethodCtx);
-  const { teamOn } = useContext(ReaderStateCtx);
   const { Item } = Menu;
 
   const menu = (
@@ -204,7 +197,7 @@ const PreviewOption = ({ uid }: { uid: string }) => {
       <Item key="COPY" icon={<CopyOutlined />}>
         Duplicate
       </Item>
-      <Item key="DELETE" danger icon={<DeleteOutlined />} disabled={teamOn}>
+      <Item key="DELETE" danger icon={<DeleteOutlined />}>
         Delete
       </Item>
     </Menu>

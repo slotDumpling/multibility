@@ -3,6 +3,7 @@ import { v4 as getUid } from "uuid";
 export interface UserInfo {
   userID: string;
   userName: string;
+  online: boolean;
 }
 
 export const getUserID = (() => {

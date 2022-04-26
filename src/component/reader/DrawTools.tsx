@@ -51,6 +51,8 @@ import {
 } from "@ant-design/icons";
 import IconFont from "../ui/IconFont";
 import "./drawTools.sass";
+import { putNote } from "../../lib/network/http";
+import { editNoteData } from "../../lib/note/archive";
 
 export default function DrawTools({
   handleUndo,
@@ -59,7 +61,7 @@ export default function DrawTools({
 }: {
   handleUndo: () => void;
   handleRedo: () => void;
-  instantSave: () => void;
+  instantSave: () => Promise<void> | undefined;
 }) {
   const { saved, stateSet, teamOn, mode, drawCtrl } =
     useContext(ReaderStateCtx);
@@ -138,7 +140,7 @@ export default function DrawTools({
       </div>
       <div className="right">
         {teamOn && <RoomInfo />}
-        {teamOn || <JoinRoom />}
+        {teamOn || <JoinRoom instantSave={instantSave} />}
         <br />
         <PageNav />
       </div>
@@ -303,11 +305,13 @@ const SelectMenu: FC<{
   );
 };
 
-const UserCard: FC<{ userInfo: UserInfo }> = ({ userInfo }) => {
-  const { userName, userID } = userInfo;
+const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
+  userInfo,
+  self = false,
+}) => {
+  const { userName, userID, online } = userInfo;
   const { ignores, setIgnores } = useContext(TeamCtx);
   const color = useMemo(() => getHashedColor(userID), [userID]);
-  const self = userID === getUserID();
   const ignored = ignores.has(userID) && !self;
 
   const switchIgnore = () => {
@@ -322,7 +326,7 @@ const UserCard: FC<{ userInfo: UserInfo }> = ({ userInfo }) => {
       <Avatar
         className="avatar"
         size="small"
-        style={{ backgroundColor: color }}
+        style={{ backgroundColor: color, opacity: online ? 1 : 0.5 }}
       >
         {userName.slice(0, 4)}
       </Avatar>
@@ -331,7 +335,6 @@ const UserCard: FC<{ userInfo: UserInfo }> = ({ userInfo }) => {
         <Tag className="me-tag">Me</Tag>
       ) : (
         <Button
-          disabled={self}
           type="text"
           icon={ignored ? <EyeInvisibleOutlined /> : <EyeOutlined />}
           onClick={switchIgnore}
@@ -342,7 +345,7 @@ const UserCard: FC<{ userInfo: UserInfo }> = ({ userInfo }) => {
 };
 
 function RoomInfo() {
-  const { code, userList, loadInfo, connected } = useContext(TeamCtx);
+  const { code, userRec, loadInfo, connected } = useContext(TeamCtx);
   const link = window.location.href;
   const copy = () => {
     navigator.clipboard.writeText(link);
@@ -353,6 +356,19 @@ function RoomInfo() {
       key: "copy",
     });
   };
+
+  const userList = useMemo(() => {
+    const values = Object.values(userRec);
+    const selfID = getUserID();
+    const selfInfo = userRec[selfID];
+    const list = selfInfo ? [selfInfo] : [];
+    list.push(
+      ...values.filter(({ online, userID }) => online && userID !== selfID),
+      ...values.filter(({ online, userID }) => !online && userID !== selfID)
+    );
+    return list;
+  }, [userRec]);
+  const onlineNum = userList.filter((u) => u.online).length;
 
   const content = (
     <div className="team-popover">
@@ -376,7 +392,11 @@ function RoomInfo() {
       <Divider />
       <div className="user-list">
         {userList.map((u) => (
-          <UserCard key={u.userID} userInfo={u} />
+          <UserCard
+            key={u.userID}
+            userInfo={u}
+            self={u.userID === getUserID()}
+          />
         ))}
       </div>
     </div>
@@ -409,7 +429,7 @@ function RoomInfo() {
         icon={
           <Badge
             status={connected ? "success" : "error"}
-            count={connected ? userList.length : "!"}
+            count={connected ? onlineNum : "!"}
             size="small"
           >
             <TeamOutlined />
@@ -420,8 +440,21 @@ function RoomInfo() {
   );
 }
 
-const JoinRoom = () => {
-  const { createRoom } = useContext(ReaderMethodCtx);
+const JoinRoom: FC<{ instantSave: () => Promise<void> | undefined }> = ({
+  instantSave,
+}) => {
+  const { noteID } = useContext(ReaderStateCtx);
+  const nav = useNavigate();
+  const createRoom = async () => {
+    await instantSave();
+    const resCode = await putNote(noteID);
+    if (!resCode) {
+      message.error("Can't create room.");
+      return;
+    }
+    await editNoteData(noteID, { team: true });
+    nav("/team/" + noteID);
+  };
   return (
     <Popconfirm
       placement="bottomRight"

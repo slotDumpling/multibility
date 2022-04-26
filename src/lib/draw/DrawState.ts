@@ -1,6 +1,8 @@
-import { List, Record, Map } from "immutable";
+import { List, Record, OrderedMap } from "immutable";
 import { Dispatch, SetStateAction } from "react";
 import { v4 as getUid } from "uuid";
+
+export const WIDTH = 2000;
 
 export interface Stroke {
   uid: string;
@@ -31,7 +33,7 @@ export type Operation =
     };
 
 interface DrawStateRecordType {
-  strokes: Map<string, string>;
+  strokes: OrderedMap<string, string>;
   undoStack: List<DrawStateRecord>;
   historyStack: List<DrawStateRecord>;
 }
@@ -39,7 +41,7 @@ interface DrawStateRecordType {
 type DrawStateRecord = Record<DrawStateRecordType>;
 
 const defaultRecord: Readonly<DrawStateRecordType> = {
-  strokes: Map(),
+  strokes: OrderedMap(),
   undoStack: List(),
   historyStack: List(),
 };
@@ -188,7 +190,7 @@ export class DrawState {
   ): DrawState {
     const { strokes, operations } = flatState;
     let ds = new DrawState(
-      defaultFactory().set("strokes", Map(strokes)),
+      defaultFactory().set("strokes", OrderedMap(strokes)),
       width,
       height
     );

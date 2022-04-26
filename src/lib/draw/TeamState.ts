@@ -1,6 +1,6 @@
 import { Map, Record } from "immutable";
 import { NotePage, TeamNote, TeamPageInfo } from "../note/note";
-import { DrawState } from "./DrawState";
+import { DrawState, WIDTH } from "./DrawState";
 import { SetOperation } from "./StateSet";
 
 interface TeamStateRecordType {
@@ -57,7 +57,7 @@ export class TeamState {
     );
   }
 
-  static createFromTeamPages(teamNote: TeamNote, width: number) {
+  static createFromTeamPages(teamNote: TeamNote, width = WIDTH) {
     const { pageRec } = teamNote;
     let record = defaultFactory();
     Object.entries(pageRec).forEach(([pageID, teamPage]) => {
@@ -84,7 +84,7 @@ export class TeamState {
     );
   }
 
-  pushOperation(setOp: SetOperation, userID: string, width: number) {
+  pushOperation(setOp: SetOperation, userID: string, width = WIDTH) {
     const { pageID, ...op } = setOp;
     const ratio = this.getPageRatio(pageID);
     if (!this.includesPage(pageID) || !ratio) return this;

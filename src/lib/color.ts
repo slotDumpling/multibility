@@ -28,7 +28,6 @@ export const getRandomColor = () => {
 
 const hashCode = (str: string) => {
   let hash = 0;
-  console.log({str})
   if (str.length === 0) return hash;
   for (let i = 0; i < str.length; i++) {
     const chr = str.charCodeAt(i);

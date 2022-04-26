@@ -80,9 +80,9 @@ export function createPage(page?: NotePage): [string, NotePage] {
   return [pageID, newPage];
 }
 
-export function createTeamPage(pageInfo: TeamPageInfo): NotePage {
-  return {
-    ...pageInfo,
-    state: getDefaultFlatState(),
-  };
-}
+// export function createTeamPage(pageInfo: TeamPageInfo): NotePage {
+//   return {
+//     ...pageInfo,
+//     state: getDefaultFlatState(),
+//   };
+// }
