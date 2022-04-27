@@ -83,6 +83,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   const [inviewPages, setInviewPages] = useState(Set<string>());
   const [pageOrder, setPageOrder] = useState<string[]>();
   const [loaded, setLoaded] = useState(false);
+  
   const refRec = useRef<Record<string, HTMLElement>>({});
   const mounted = useMounted();
 

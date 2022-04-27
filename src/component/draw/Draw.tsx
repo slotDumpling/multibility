@@ -10,6 +10,7 @@ import { CtrlMode, defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
 import { DrawState, SetDrawState, Stroke } from "../../lib/draw/DrawState";
 import { releaseCanvas } from "../../lib/draw/drawer";
 import { isStylus } from "../../lib/touch/touch";
+import { usePinch } from "@use-gesture/react";
 import { Set } from "immutable";
 import paper from "paper";
 import "./draw.sass";
@@ -41,11 +42,11 @@ const Draw = ({
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const scope = useRef(new paper.PaperScope());
   const group = useRef<paper.Path[]>();
-  const ratio = useRef(1);
   const path = useRef<paper.Path>();
   const [rect, setRect] = useState<paper.Shape.Rectangle>();
   const selectGroup = useRef<paper.Group>();
   const [erased, setErased] = useState(Set<string>());
+  const ratio = useRef(1);
 
   let { color, finger, lineWidth, highlight, eraserWidth } = drawCtrl;
 
@@ -58,6 +59,16 @@ const Draw = ({
     if (clientWidth) ratio.current = width / clientWidth;
   };
 
+  const transformPoint = (point: paper.Point) => {
+    const { center, zoom } = scope.current.view;
+    const offsetP = new paper.Point(width, height)
+      .divide(2)
+      .subtract(center.multiply(zoom));
+    const projP = scope.current.view.projectToView(point);
+    const absoluteP = projP.multiply(ratio.current);
+    return absoluteP.subtract(offsetP).divide(zoom);
+  };
+
   const setupPaper = () => {
     if (!canvasEl.current) return;
     scope.current.setup(canvasEl.current);
@@ -66,12 +77,19 @@ const Draw = ({
     scope.current.view.viewSize.width = width * r;
     scope.current.view.viewSize.height = height * r;
     scope.current.view.scale(r, new paper.Point(0, 0));
+    const bgRect = new paper.Shape.Rectangle(
+      new paper.Point(0, 0),
+      new paper.Point(width, height)
+    );
+    bgRect.fillColor = new paper.Color("#fff");
+    bgRect.name = "BACKGROUND";
+    bgRect.sendToBack();
   };
 
   const setNewRect = (e: paper.MouseEvent) => {
     updateRatio();
     scope.current.activate();
-    const point = e.point.multiply(ratio.current);
+    const point = transformPoint(e.point);
     const rectangle = new paper.Shape.Rectangle(point, new paper.Size(0, 0));
     rectangle.strokeColor = new paper.Color("#1890ff");
     rectangle.strokeWidth = 3;
@@ -110,7 +128,7 @@ const Draw = ({
     },
     selected(e: paper.MouseEvent) {
       scope.current.activate();
-      const point = e.point.multiply(ratio.current);
+      const point = transformPoint(e.point);
       if (!rect) return;
       if (!point.isInside(rect.strokeBounds)) {
         setNewRect(e);
@@ -124,7 +142,7 @@ const Draw = ({
     draw(e: paper.MouseEvent) {
       if (!path.current) return;
       scope.current.activate();
-      const point = e.point.multiply(ratio.current);
+      const point = transformPoint(e.point);
       path.current.add(point);
       path.current.smooth();
     },
@@ -132,13 +150,13 @@ const Draw = ({
       const eraserPath = path.current;
       if (!eraserPath) return;
       scope.current.activate();
-      const point = e.point.multiply(ratio.current);
+      const point = transformPoint(e.point);
       eraserPath.add(point);
       eraserPath.smooth();
 
       const newErased = group.current
         ?.filter((p) => !erased.has(p.name))
-        .filter((p) => checkErase(p, eraserPath, e, ratio.current, eraserWidth))
+        .filter((p) => checkErase(p, eraserPath))
         .map((p) => p.name);
       newErased && setErased((prev) => prev.concat(newErased));
     },
@@ -227,6 +245,7 @@ const Draw = ({
       let r = width / img.width;
       raster.scale(r);
       raster.sendToBack();
+      raster.parent.getItem({ name: "BACKGROUND" })?.sendToBack();
     };
 
     return () => void raster?.remove();
@@ -305,6 +324,46 @@ const Draw = ({
     };
   }, [rect]);
 
+  const bind = usePinch(
+    (state) => {
+      const { memo, offset, last, first, origin } = state;
+
+      first && updateRatio();
+
+      const [lastScale, lastOX, lastOY] = memo ?? [1, origin[0], origin[1]];
+      const scale = first ? 1 : offset[0] / lastScale;
+      const r = ratio.current;
+      const [oX, oY] = origin;
+      const originP = new paper.Point(oX, oY).multiply(r);
+      scope.current.view.scale(scale, originP);
+      
+      const [dX, dY] = [oX - lastOX, oY - lastOY];
+      const transP = new paper.Point(dX, dY).multiply(r / offset[0]);
+      scope.current.view.translate(transP);
+      
+      if (offset[0] === 1) {
+        scope.current.view.center = new paper.Point(width, height).divide(2);
+      }
+      
+      if (!last) return [offset[0], origin[0], origin[1]];
+    },
+    {
+      scaleBounds: { max: 3, min: 1 },
+    }
+  );
+
+  useEffect(() => {
+    const handler = (e: Event) => e.preventDefault();
+    document.addEventListener("gesturestart", handler);
+    document.addEventListener("gesturechange", handler);
+    document.addEventListener("gestureend", handler);
+    return () => {
+      document.removeEventListener("gesturestart", handler);
+      document.removeEventListener("gesturechange", handler);
+      document.removeEventListener("gestureend", handler);
+    };
+  }, []);
+
   return (
     <canvas
       ref={canvasEl}
@@ -312,6 +371,7 @@ const Draw = ({
       data-paper-hidpi={false}
       onTouchStartCapture={preventTouch}
       onTouchMoveCapture={preventTouch}
+      {...bind()}
     />
   );
 };
@@ -336,30 +396,26 @@ const paintStroke = (
 };
 
 const getCheckPoints = (() => {
-  const cache = new WeakMap<paper.MouseEvent, paper.Point[]>();
-  return (e: paper.MouseEvent, ratio: number, eraserWidth: number) => {
-    const cached = cache.get(e);
+  const cache = new WeakMap<paper.Segment, paper.Point[]>();
+  return (segment: paper.Segment, width: number) => {
+    const cached = cache.get(segment);
     if (cached) return cached;
 
-    const point = e.point.multiply(ratio);
-    const delta = e.delta.multiply(ratio);
-    const times = (delta.length / eraserWidth) * 2;
+    const { point } = segment;
+    const prevPoint = segment.previous?.point;
+    if (!prevPoint) return [];
+    const delta = point.subtract(prevPoint);
+    const times = (delta.length / width) * 2;
     const checkPoints: paper.Point[] = [];
     for (let i = 0; i < times; i += 1) {
       checkPoints.push(point.subtract(delta.multiply(i / times)));
     }
-    cache.set(e, checkPoints);
+    cache.set(segment, checkPoints);
     return checkPoints;
   };
 })();
 
-const checkErase = (
-  checkedPath: paper.Path,
-  eraserPath: paper.Path,
-  e: paper.MouseEvent,
-  ratio: number,
-  eraserWidth: number
-) => {
+const checkErase = (checkedPath: paper.Path, eraserPath: paper.Path) => {
   const curveBound = eraserPath.lastSegment.curve?.strokeBounds;
   if (
     !(checkedPath instanceof paper.Path) ||
@@ -370,9 +426,10 @@ const checkErase = (
 
   if (eraserPath.intersects(checkedPath)) return true;
 
-  const checkPoints = getCheckPoints(e, ratio, eraserWidth);
+  const { strokeWidth, lastSegment } = eraserPath;
+  const checkPoints = getCheckPoints(lastSegment, strokeWidth);
   return checkPoints.some((cPoint) => {
     const d = checkedPath.getNearestPoint(cPoint)?.getDistance(cPoint);
-    return d && d < (checkedPath.strokeWidth + eraserWidth) / 2;
+    return d && d < (checkedPath.strokeWidth + strokeWidth) / 2;
   });
 };
