@@ -9,7 +9,9 @@ import React, {
   SetStateAction,
 } from "react";
 import {
+  Tag,
   Badge,
+  Alert,
   Avatar,
   Button,
   Slider,
@@ -18,8 +20,6 @@ import {
   Popover,
   Popconfirm,
   ButtonProps,
-  Tag,
-  Alert,
 } from "antd";
 import Search from "antd/lib/input/Search";
 import { useNavigate } from "react-router-dom";
@@ -77,11 +77,11 @@ export default function DrawTools({
   useEffect(() => {
     if (mode === "selected") {
       message.info({
-        className: "select-message",
         icon: <DragOutlined style={{ display: "none" }} />,
         content: <SelectMenu setMode={setMode} />,
-        duration: 0,
+        className: "select-message",
         key: "selected",
+        duration: 0,
       });
       return () => message.destroy("selected");
     }
@@ -92,7 +92,10 @@ export default function DrawTools({
       <div className="left">
         <Button
           type="text"
-          onClick={() => nav("/")}
+          onClick={async () => {
+            await instantSave();
+            nav("/");
+          }}
           icon={<HomeFilled style={{ opacity: 0.8 }} />}
         />
         <br />
