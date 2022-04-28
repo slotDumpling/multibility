@@ -1,14 +1,12 @@
 import { Button, Drawer, Menu, Popover, Tabs } from "antd";
 import React, {
   FC,
+  useRef,
   useMemo,
-  Dispatch,
   useState,
+  useEffect,
   useContext,
   MouseEvent,
-  SetStateAction,
-  useEffect,
-  useRef,
 } from "react";
 import { PageWrapper, ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import {
@@ -30,13 +28,14 @@ import { AddPageButton } from "./ReaderTools";
 import { exchange } from "../../lib/array";
 import classNames from "classnames";
 import "./preview.sass";
+import { Setter } from "../../lib/hooks";
 
 const PageNavContent = ({
   activeKey,
   setActiveKey,
 }: {
   activeKey: string;
-  setActiveKey: Dispatch<SetStateAction<string>>;
+  setActiveKey: Setter<string>;
 }) => {
   const { pageOrder, inviewPages } = useContext(ReaderStateCtx);
   const { scrollPage, saveReorder } = useContext(ReaderMethodCtx);

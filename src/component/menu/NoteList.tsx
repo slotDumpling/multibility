@@ -2,10 +2,8 @@ import {
   FC,
   useMemo,
   useState,
-  Dispatch,
   useEffect,
   useContext,
-  SetStateAction,
   MouseEventHandler,
 } from "react";
 import {
@@ -37,6 +35,7 @@ import { TagCircle } from "./SideMenu";
 import classNames from "classnames";
 import { Set } from "immutable";
 import moment from "moment";
+import { Setter } from "../../lib/hooks";
 
 export default function NoteList({ noteList }: { noteList: NoteInfo[] }) {
   const [nowSwiped, setNowSwiped] = useState("");
@@ -146,9 +145,9 @@ export default function NoteList({ noteList }: { noteList: NoteInfo[] }) {
 
 const HeadTools: FC<{
   sortType: string;
-  setSortType: Dispatch<SetStateAction<string>>;
+  setSortType: Setter<string>;
   searchText: string;
-  setSearchText: Dispatch<SetStateAction<string>>;
+  setSearchText: Setter<string>;
   onDelete: () => void;
   onMove: (tagID: string) => void;
   disabled: boolean;

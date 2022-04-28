@@ -1,5 +1,4 @@
 import { List, Record, OrderedMap } from "immutable";
-import { Dispatch, SetStateAction } from "react";
 import { v4 as getUid } from "uuid";
 
 export const WIDTH = 2000;
@@ -198,5 +197,3 @@ export class DrawState {
     return ds;
   }
 }
-
-export type SetDrawState = Dispatch<SetStateAction<DrawState>>;

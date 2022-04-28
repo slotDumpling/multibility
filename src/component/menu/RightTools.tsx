@@ -9,9 +9,7 @@ import {
 } from "antd";
 import {
   createContext,
-  Dispatch,
   ReactNode,
-  SetStateAction,
   useContext,
   useState,
 } from "react";
@@ -38,9 +36,10 @@ import localforage from "localforage";
 import { useEffect } from "react";
 import "./right.sass";
 import "animate.css";
+import { Setter } from "../../lib/hooks";
 
 const OthersStateCtx = createContext({
-  setActive: (() => {}) as Dispatch<SetStateAction<string>>,
+  setActive: (() => {}) as Setter<string>,
 });
 
 export default function RightTools() {

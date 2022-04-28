@@ -1,10 +1,8 @@
 import { message } from "antd";
 import React, {
   useState,
-  Dispatch,
   useEffect,
   createContext,
-  SetStateAction,
 } from "react";
 import { getTeamNoteState, loadTeamNoteInfo } from "../../lib/network/http";
 import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
@@ -16,6 +14,7 @@ import { IoFactory } from "../../lib/network/io";
 import { NotePage } from "../../lib/note/note";
 import { Set } from "immutable";
 import Reader from "./Reader";
+import { Setter } from "../../lib/hooks";
 
 export const TeamCtx = createContext({
   code: -2,
@@ -28,7 +27,7 @@ export const TeamCtx = createContext({
   pushOperation: (op: SetOperation) => {},
   pushReorder: (pageOrder: string[]) => {},
   pushNewPage: (pageOrder: string[], pageID: string, newPage: NotePage) => {},
-  setIgnores: (() => {}) as Dispatch<SetStateAction<Set<string>>>,
+  setIgnores: (() => {}) as Setter<Set<string>>,
 });
 
 interface ReorderInfo {

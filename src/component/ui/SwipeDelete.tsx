@@ -1,8 +1,6 @@
 import classNames from "classnames";
 import React, {
-  Dispatch,
   FC,
-  SetStateAction,
   useEffect,
   useRef,
   useState,
@@ -10,12 +8,13 @@ import React, {
 import { useSwipeable } from "react-swipeable";
 import { DeleteOutlined } from "@ant-design/icons";
 import "./swipe-delete.sass";
+import { Setter } from "../../lib/hooks";
 
 const SwipeDelete: FC<{
   onDelete: () => void;
   uid: string;
   nowSwiped?: string;
-  setNowSwiped?: Dispatch<SetStateAction<string>>;
+  setNowSwiped?: Setter<string>;
   disable?: boolean;
   icon?: boolean;
 }> = ({

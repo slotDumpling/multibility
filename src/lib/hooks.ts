@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useRef } from "react";
 
 export function useObjectUrl(obj: Blob | MediaSource | undefined) {
   const url = useMemo(
@@ -40,3 +40,5 @@ export function usePreventGesture() {
     };
   }, []);
 }
+
+export type Setter<T> = Dispatch<SetStateAction<T>>;

@@ -3,12 +3,10 @@ import React, {
   useRef,
   useMemo,
   useState,
-  Dispatch,
   useEffect,
   useContext,
   useCallback,
   createContext,
-  SetStateAction,
   useLayoutEffect,
 } from "react";
 import {
@@ -29,7 +27,7 @@ import { TeamState } from "../../lib/draw/TeamState";
 import { DrawState } from "../../lib/draw/DrawState";
 import { StateSet } from "../../lib/draw/StateSet";
 import { insertAfter } from "../../lib/array";
-import { useMounted } from "../../lib/hooks";
+import { Setter, useMounted } from "../../lib/hooks";
 import { debounce, last } from "lodash";
 import { Map, Set } from "immutable";
 import DrawTools from "./DrawTools";
@@ -61,9 +59,9 @@ export const ReaderMethodCtx = createContext({
   addFinalPage: () => {},
   deletePage: (pageID: string) => {},
   saveReorder: async (order: string[], push: boolean) => {},
-  setInviewPages: (() => {}) as Dispatch<SetStateAction<Set<string>>>,
-  setMode: (() => {}) as Dispatch<SetStateAction<CtrlMode>>,
-  setDrawCtrl: (() => {}) as Dispatch<SetStateAction<DrawCtrl>>,
+  setInviewPages: (() => {}) as Setter<Set<string>>,
+  setMode: (() => {}) as Setter<CtrlMode>,
+  setDrawCtrl: (() => {}) as Setter<DrawCtrl>,
 });
 
 export default function Reader({ teamOn }: { teamOn: boolean }) {

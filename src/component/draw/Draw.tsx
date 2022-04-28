@@ -1,20 +1,13 @@
-import React, {
-  useRef,
-  Dispatch,
-  useState,
-  useEffect,
-  TouchEvent,
-  SetStateAction,
-} from "react";
+import React, { useRef, useState, useEffect, TouchEvent } from "react";
 import { CtrlMode, defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
-import { DrawState, SetDrawState, Stroke } from "../../lib/draw/DrawState";
+import { DrawState, Stroke } from "../../lib/draw/DrawState";
 import { releaseCanvas } from "../../lib/draw/drawer";
+import { Setter, usePreventGesture } from "../../lib/hooks";
 import { isStylus } from "../../lib/touch/touch";
 import { usePinch } from "@use-gesture/react";
 import { Set } from "immutable";
 import paper from "paper";
 import "./draw.sass";
-import { usePreventGesture } from "../../lib/hooks";
 
 const PREVIEW_WIDTH = 200;
 const {
@@ -40,10 +33,10 @@ const Draw = ({
 }: {
   drawState: DrawState;
   otherStates?: DrawState[];
-  onChange?: SetDrawState;
+  onChange?: Setter<DrawState>;
   drawCtrl?: DrawCtrl;
   mode?: CtrlMode;
-  setMode?: Dispatch<SetStateAction<CtrlMode>>;
+  setMode?: Setter<CtrlMode>;
   readonly?: boolean;
   preview?: boolean;
   imgSrc?: string;

@@ -1,7 +1,5 @@
 import React, {
   createContext,
-  Dispatch,
-  SetStateAction,
   useContext,
   useEffect,
   useMemo,
@@ -22,6 +20,7 @@ import NoteList from "./NoteList";
 import Title from "antd/lib/typography/Title";
 import { Button } from "antd";
 import { FormOutlined } from "@ant-design/icons";
+import { Setter } from "../../lib/hooks";
 
 export const MenuStateCtx = createContext({
   tagUid: "DEFAULT",
@@ -31,10 +30,10 @@ export const MenuStateCtx = createContext({
 });
 
 export const MenuMethodCtx = createContext({
-  setAllNotes: (() => {}) as Dispatch<SetStateAction<Record<string, NoteInfo>>>,
-  setAllTags: (() => {}) as Dispatch<SetStateAction<Record<string, NoteTag>>>,
-  setTagUid: (() => {}) as Dispatch<SetStateAction<string>>,
-  setEditing: (() => {}) as Dispatch<SetStateAction<boolean>>,
+  setAllNotes: (() => {}) as Setter<Record<string, NoteInfo>>,
+  setAllTags: (() => {}) as Setter<Record<string, NoteTag>>,
+  setTagUid: (() => {}) as Setter<string>,
+  setEditing: (() => {}) as Setter<boolean>,
   menuInit: () => {},
 });
 

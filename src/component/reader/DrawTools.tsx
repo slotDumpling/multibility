@@ -2,11 +2,9 @@ import React, {
   FC,
   useMemo,
   useState,
-  Dispatch,
   useEffect,
   useContext,
   CSSProperties,
-  SetStateAction,
 } from "react";
 import {
   Tag,
@@ -53,6 +51,7 @@ import IconFont from "../ui/IconFont";
 import "./drawTools.sass";
 import { putNote } from "../../lib/network/http";
 import { editNoteData } from "../../lib/note/archive";
+import { Setter } from "../../lib/hooks";
 
 export default function DrawTools({
   handleUndo,
@@ -280,7 +279,7 @@ const EraserButton: FC<{
 };
 
 const SelectMenu: FC<{
-  setMode: Dispatch<SetStateAction<CtrlMode>>;
+  setMode: Setter<CtrlMode>;
 }> = ({ setMode }) => {
   const buttonProps: ButtonProps = {
     type: "text",
