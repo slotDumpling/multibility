@@ -14,8 +14,18 @@ import { usePinch } from "@use-gesture/react";
 import { Set } from "immutable";
 import paper from "paper";
 import "./draw.sass";
+import { usePreventGesture } from "../../lib/hooks";
 
 const PREVIEW_WIDTH = 200;
+const {
+  Point,
+  Path,
+  Group,
+  Shape: { Rectangle },
+  Color,
+  Size,
+  Raster,
+} = paper;
 
 const Draw = ({
   drawState,
@@ -50,8 +60,9 @@ const Draw = ({
 
   let { color, finger, lineWidth, highlight, eraserWidth } = drawCtrl;
 
-  const isEventValid = (e: TouchEvent<HTMLCanvasElement>) => {
-    return finger || isStylus(e);
+  const isEventValid = (e: TouchEvent) => finger || isStylus(e);
+  const preventTouch = (e: TouchEvent) => {
+    isEventValid(e) || e.stopPropagation();
   };
 
   const updateRatio = () => {
@@ -59,13 +70,13 @@ const Draw = ({
     if (clientWidth) ratio.current = width / clientWidth;
   };
 
-  const transformPoint = (point: paper.Point) => {
+  const transformPoint = (projP: paper.Point) => {
     const { center, zoom } = scope.current.view;
-    const offsetP = new paper.Point(width, height)
+    const viewP = scope.current.view.projectToView(projP);
+    const absoluteP = viewP.multiply(ratio.current);
+    const offsetP = new Point(width, height)
       .divide(2)
       .subtract(center.multiply(zoom));
-    const projP = scope.current.view.projectToView(point);
-    const absoluteP = projP.multiply(ratio.current);
     return absoluteP.subtract(offsetP).divide(zoom);
   };
 
@@ -74,27 +85,16 @@ const Draw = ({
     scope.current.setup(canvasEl.current);
 
     const r = preview ? PREVIEW_WIDTH / width : 1;
-    scope.current.view.viewSize.width = width * r;
-    scope.current.view.viewSize.height = height * r;
-    scope.current.view.scale(r, new paper.Point(0, 0));
-    const bgRect = new paper.Shape.Rectangle(
-      new paper.Point(0, 0),
-      new paper.Point(width, height)
-    );
-    bgRect.fillColor = new paper.Color("#fff");
-    bgRect.name = "BACKGROUND";
-    bgRect.sendToBack();
+    scope.current.view.viewSize = new Size(width, height).multiply(r);
+    scope.current.view.scale(r, new Point(0, 0));
+    paintBackground(width, height);
   };
 
   const setNewRect = (e: paper.MouseEvent) => {
     updateRatio();
     scope.current.activate();
     const point = transformPoint(e.point);
-    const rectangle = new paper.Shape.Rectangle(point, new paper.Size(0, 0));
-    rectangle.strokeColor = new paper.Color("#1890ff");
-    rectangle.strokeWidth = 3;
-    rectangle.dashOffset = 0;
-    rectangle.dashArray = [30, 20];
+    const rectangle = startSelectRect(point);
     setRect(rectangle);
   };
 
@@ -102,26 +102,12 @@ const Draw = ({
     draw() {
       updateRatio();
       scope.current.activate();
-      path.current = new scope.current.Path();
-      const strokeColor = new paper.Color(color);
-      if (highlight) {
-        strokeColor.alpha /= 2;
-        path.current.blendMode = "multiply";
-      }
-      path.current.strokeColor = strokeColor;
-      path.current.strokeWidth = lineWidth;
-      path.current.strokeJoin = "round";
-      path.current.strokeCap = "round";
+      path.current = startStroke(color, lineWidth, highlight);
     },
     erase() {
       updateRatio();
       scope.current.activate();
-      path.current = new scope.current.Path();
-      const strokeColor = new paper.Color("#0003");
-      path.current.strokeColor = strokeColor;
-      path.current.strokeWidth = eraserWidth;
-      path.current.strokeJoin = "round";
-      path.current.strokeCap = "round";
+      path.current = startStroke("#0003", eraserWidth);
     },
     select(e: paper.MouseEvent) {
       setNewRect(e);
@@ -164,7 +150,7 @@ const Draw = ({
       if (!rect) return;
       scope.current.activate();
       const delta = e.delta.multiply(ratio.current);
-      rect.size = rect.size.add(new paper.Size(delta.x, delta.y));
+      rect.size = rect.size.add(new Size(delta.x, delta.y));
       rect.position = rect.position.add(delta.divide(2));
     },
     selected(e: paper.MouseEvent) {
@@ -200,7 +186,7 @@ const Draw = ({
       scope.current.activate();
 
       const bounds = rect.strokeBounds;
-      selectGroup.current = new paper.Group();
+      selectGroup.current = new Group();
       group.current?.forEach((p) => {
         if (!(p instanceof paper.Path)) return;
         if (p.isInside(bounds) || p.intersects(rect)) {
@@ -228,10 +214,6 @@ const Draw = ({
   };
   useEffect(handlePaper);
 
-  const preventTouch = (e: TouchEvent<HTMLCanvasElement>) => {
-    isEventValid(e) || e.stopPropagation();
-  };
-
   useEffect(() => {
     if (!imgSrc) return;
     const img = new Image();
@@ -240,12 +222,12 @@ const Draw = ({
 
     img.onload = () => {
       scope.current.activate();
-      raster = new paper.Raster(img);
+      raster = new Raster(img);
       raster.position = scope.current.view.center;
       let r = width / img.width;
       raster.scale(r);
       raster.sendToBack();
-      raster.parent.getItem({ name: "BACKGROUND" })?.sendToBack();
+      raster.parent.getItem({ name: "BGRECT" })?.sendToBack();
     };
 
     return () => void raster?.remove();
@@ -312,10 +294,8 @@ const Draw = ({
     if (!rect) return;
     let id = 0;
     const moveDash = () => {
-      id = requestAnimationFrame(() => {
-        rect.dashOffset += 3;
-        moveDash();
-      });
+      rect.dashOffset += 3;
+      id = requestAnimationFrame(moveDash);
     };
     moveDash();
     return () => {
@@ -324,46 +304,48 @@ const Draw = ({
     };
   }, [rect]);
 
-  const bind = usePinch(
-    (state) => {
-      const { memo, offset, last, first, origin } = state;
+  usePinch(
+    ({ memo, offset, last, first, origin }) => {
+      if (!canvasEl.current) return;
 
-      first && updateRatio();
+      let lastScale, lastOX, lastOY, osX, osY: number;
+      if (first || !memo) {
+        updateRatio();
+        scope.current.activate();
+        const { x, y } = canvasEl.current.getBoundingClientRect();
+        [lastScale, [lastOX, lastOY], [osX, osY]] = [
+          1,
+          [origin[0] - x, origin[1] - y],
+          [x, y],
+        ];
+      } else {
+        [lastScale, [lastOX, lastOY], [osX, osY]] = memo;
+      }
 
-      const [lastScale, lastOX, lastOY] = memo ?? [1, origin[0], origin[1]];
+      const { view } = scope.current;
+
       const scale = first ? 1 : offset[0] / lastScale;
       const r = ratio.current;
-      const [oX, oY] = origin;
-      const originP = new paper.Point(oX, oY).multiply(r);
-      scope.current.view.scale(scale, originP);
-      
+      const [oX, oY] = [origin[0] - osX, origin[1] - osY];
+      const originViewP = new Point(oX, oY).multiply(r);
+      const originProjP = view.viewToProject(originViewP);
+      view.scale(scale, originProjP);
+
       const [dX, dY] = [oX - lastOX, oY - lastOY];
-      const transP = new paper.Point(dX, dY).multiply(r / offset[0]);
-      scope.current.view.translate(transP);
-      
-      if (offset[0] === 1) {
-        scope.current.view.center = new paper.Point(width, height).divide(2);
-      }
-      
-      if (!last) return [offset[0], origin[0], origin[1]];
+      const transP = new Point(dX, dY).multiply(r / offset[0]);
+      view.translate(transP);
+
+      if (!last) return [offset[0], [oX, oY], [osX, osY]];
+      putCenterBack(view);
     },
     {
-      scaleBounds: { max: 3, min: 1 },
+      scaleBounds: { max: 5, min: 1 },
+      target: canvasEl,
+      enabled: !finger,
     }
   );
 
-  useEffect(() => {
-    const handler = (e: Event) => e.preventDefault();
-    document.addEventListener("gesturestart", handler);
-    document.addEventListener("gesturechange", handler);
-    document.addEventListener("gestureend", handler);
-    return () => {
-      document.removeEventListener("gesturestart", handler);
-      document.removeEventListener("gesturechange", handler);
-      document.removeEventListener("gestureend", handler);
-    };
-  }, []);
-
+  usePreventGesture();
   return (
     <canvas
       ref={canvasEl}
@@ -371,7 +353,6 @@ const Draw = ({
       data-paper-hidpi={false}
       onTouchStartCapture={preventTouch}
       onTouchMoveCapture={preventTouch}
-      {...bind()}
     />
   );
 };
@@ -385,7 +366,7 @@ const paintStroke = (
 ) => {
   let { pathData, uid } = stroke;
   try {
-    const path = new paper.Path();
+    const path = new Path();
     path.importJSON(pathData);
     path.name = uid;
     if (erased?.has(uid)) path.opacity /= 2;
@@ -432,4 +413,66 @@ const checkErase = (checkedPath: paper.Path, eraserPath: paper.Path) => {
     const d = checkedPath.getNearestPoint(cPoint)?.getDistance(cPoint);
     return d && d < (checkedPath.strokeWidth + strokeWidth) / 2;
   });
+};
+
+const paintBackground = (width: number, height: number) => {
+  const bgRect = new Rectangle(new Point(0, 0), new Point(width, height));
+  bgRect.fillColor = new Color("#fff");
+  bgRect.name = "BGRECT";
+  bgRect.sendToBack();
+  bgRect.strokeColor = new Color("#ddd");
+  bgRect.strokeWidth = 1;
+  return bgRect;
+};
+
+const startSelectRect = (point: paper.Point) => {
+  const rect = new Rectangle(point, new Size(0, 0));
+  rect.strokeColor = new Color("#1890ff");
+  rect.strokeWidth = 3;
+  rect.dashOffset = 0;
+  rect.dashArray = [30, 20];
+  return rect;
+};
+
+const startStroke = (color: string, lineWidth: number, highlight = false) => {
+  const path = new Path();
+  const strokeColor = new Color(color);
+  if (highlight) {
+    strokeColor.alpha /= 2;
+    path.blendMode = "multiply";
+  }
+  path.strokeColor = strokeColor;
+  path.strokeWidth = lineWidth;
+  path.strokeJoin = "round";
+  path.strokeCap = "round";
+  return path;
+};
+
+const getCenterTranslate = (view: paper.View) => {
+  const { center, zoom } = view;
+  const { height, width } = view.viewSize;
+  const dX = (width * (zoom - 1)) / zoom / 2;
+  const dY = (height * (zoom - 1)) / zoom / 2;
+  const [minX, maxX, minY, maxY] = [
+    width / 2 - dX,
+    width / 2 + dX,
+    height / 2 - dY,
+    height / 2 + dY,
+  ];
+
+  const { x, y } = center;
+  const deltaX = x < minX ? minX - x : x > maxX ? maxX - x : 0;
+  const deltaY = y < minY ? minY - y : y > maxY ? maxY - y : 0;
+  return [deltaX, deltaY];
+};
+
+const putCenterBack = (view: paper.View) => {
+  const [deltaX, deltaY] = getCenterTranslate(view);
+  let count = 10;
+  const dP = new Point(deltaX, deltaY).divide(count);
+  const move = () => {
+    view.center = view.center.add(dP);
+    if (--count > 0) requestAnimationFrame(move);
+  };
+  move();
 };
