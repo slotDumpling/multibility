@@ -151,11 +151,9 @@ export default function DrawTools({
   );
 }
 
-const PenButton = ({
-  updateDrawCtrl,
-}: {
+const PenButton: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
-}) => {
+}> = ({ updateDrawCtrl }) => {
   const { mode } = useContext(ReaderStateCtx);
   const { setMode } = useContext(ReaderMethodCtx);
   return mode === "draw" ? (
@@ -178,11 +176,9 @@ const PenButton = ({
   );
 };
 
-const PenPanel = ({
-  updateDrawCtrl,
-}: {
+const PenPanel: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
-}) => {
+}> = ({ updateDrawCtrl }) => {
   const {
     drawCtrl: { lineWidth, highlight },
   } = useContext(ReaderStateCtx);
@@ -211,11 +207,9 @@ const PenPanel = ({
   );
 };
 
-const ColorSelect = ({
-  updateDrawCtrl,
-}: {
+const ColorSelect: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
-}) => {
+}> = ({ updateDrawCtrl }) => {
   const {
     drawCtrl: { color },
   } = useContext(ReaderStateCtx);
@@ -240,11 +234,9 @@ const ColorSelect = ({
   );
 };
 
-const EraserButton = ({
-  updateDrawCtrl,
-}: {
+const EraserButton: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
-}) => {
+}> = ({ updateDrawCtrl }) => {
   const { setMode } = useContext(ReaderMethodCtx);
   const {
     mode,

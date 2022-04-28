@@ -11,7 +11,7 @@ export interface DrawCtrl {
 }
 
 export const defaultDrawCtrl: Readonly<DrawCtrl> = {
-  finger: false,
+  finger: true,
   lineWidth: 10,
   eraserWidth: 10,
   color: "#000000",
