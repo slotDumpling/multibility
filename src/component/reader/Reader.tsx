@@ -20,24 +20,23 @@ import {
 } from "../../lib/draw/drawCtrl";
 import { createPage, NoteInfo, NotePage } from "../../lib/note/note";
 import { loadNote, editNoteData } from "../../lib/note/archive";
-import { updatePages } from "../../lib/network/http";
+import { AddPageButton, showPageDelMsg } from "./ReaderTools";
 import { useParams, useNavigate } from "react-router-dom";
 import { useInView } from "react-intersection-observer";
+import { updatePages } from "../../lib/network/http";
 import { useBeforeunload } from "react-beforeunload";
 import { TeamState } from "../../lib/draw/TeamState";
 import { DrawState } from "../../lib/draw/DrawState";
 import { StateSet } from "../../lib/draw/StateSet";
-import { debounce, last } from "lodash";
 import { insertAfter } from "../../lib/array";
-import { AddPageButton } from "./ReaderTools";
 import { useMounted } from "../../lib/hooks";
+import { debounce, last } from "lodash";
 import { Map, Set } from "immutable";
 import DrawTools from "./DrawTools";
 import { TeamCtx } from "./Team";
 import Draw from "../draw/Draw";
-import { Button, message } from "antd";
+import { message } from "antd";
 import "./reader.sass";
-
 
 export const ReaderStateCtx = createContext({
   noteID: "",
@@ -55,19 +54,16 @@ export const ReaderStateCtx = createContext({
 });
 
 export const ReaderMethodCtx = createContext({
-  scrollPage: (() => {}) as (pageID: string) => void,
-  setInviewPages: (() => {}) as Dispatch<SetStateAction<Set<string>>>,
-  switchPageMarked: (() => {}) as (pageID: string) => void,
-  setPageState: (() => {}) as (uid: string, ds: DrawState) => void,
-  addPage: (() => {}) as (prevpageID: string, copy?: boolean) => void,
+  scrollPage: (pageID: string) => {},
+  switchPageMarked: (pageID: string) => {},
+  setPageState: (uid: string, ds: DrawState) => {},
+  addPage: (prevpageID: string, copy?: boolean) => {},
   addFinalPage: () => {},
-  deletePage: (() => {}) as (pageID: string) => void,
+  deletePage: (pageID: string) => {},
+  saveReorder: async (order: string[], push: boolean) => {},
+  setInviewPages: (() => {}) as Dispatch<SetStateAction<Set<string>>>,
   setMode: (() => {}) as Dispatch<SetStateAction<CtrlMode>>,
   setDrawCtrl: (() => {}) as Dispatch<SetStateAction<DrawCtrl>>,
-  saveReorder: (async () => {}) as (
-    order: string[],
-    push: boolean
-  ) => Promise<void>,
 });
 
 export default function Reader({ teamOn }: { teamOn: boolean }) {
@@ -83,7 +79,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   const [inviewPages, setInviewPages] = useState(Set<string>());
   const [pageOrder, setPageOrder] = useState<string[]>();
   const [loaded, setLoaded] = useState(false);
-  
+
   const refRec = useRef<Record<string, HTMLElement>>({});
   const mounted = useMounted();
 
@@ -108,12 +104,11 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
 
   const debouncedSave = useCallback(
     debounce(async (pr: Record<string, NotePage>) => {
-      await editNoteData(noteID, { pageRec: pr });
       const canvas = document.querySelector("canvas");
       const data = canvas?.toDataURL();
-      data && editNoteData(noteID, { thumbnail: data });
+      await editNoteData(noteID, { pageRec: pr, thumbnail: data });
       mounted.current && setSaved(true);
-    }, 3000),
+    }, 2000),
     []
   );
   const instantSave = debouncedSave.flush;
@@ -288,28 +283,6 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     </ReaderStateCtx.Provider>
   );
 }
-
-const showPageDelMsg = (onUndo: () => void) => {
-  message.warning({
-    content: (
-      <>
-        One page was deleted.
-        <Button
-          size="small"
-          type="link"
-          onClick={() => {
-            message.destroy("DELETE");
-            onUndo();
-          }}
-        >
-          Undo
-        </Button>
-      </>
-    ),
-    key: "DELETE",
-    duration: 10,
-  });
-};
 
 const PageContainer: FC<{ uid: string }> = ({ uid }) => {
   const { pageRec, stateSet, teamState } = useContext(ReaderStateCtx);
