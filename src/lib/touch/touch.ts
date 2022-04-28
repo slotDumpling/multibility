@@ -5,7 +5,7 @@ export type iOSTouch = Touch & {
   touchType?: "stylus" | "direct";
 };
 
-export function isStylus(e: TouchEvent<HTMLCanvasElement> | globalThis.TouchEvent) {
+export function isStylus(e: TouchEvent) {
   const touch = e.touches[0] as iOSTouch;
   return touch?.touchType === "stylus";
 }

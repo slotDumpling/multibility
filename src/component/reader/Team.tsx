@@ -6,33 +6,29 @@ import React, {
   createContext,
   SetStateAction,
 } from "react";
+import { getTeamNoteState, loadTeamNoteInfo } from "../../lib/network/http";
+import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import { SetOperation } from "../../lib/draw/StateSet";
-import { getTeamNoteState, loadTeamNoteInfo } from "../../lib/network/http";
-import { IoFactory } from "../../lib/network/io";
-import Reader from "./Reader";
-import { getUserID, UserInfo } from "../../lib/user";
-import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
-import { NotePage } from "../../lib/note/note";
 import { TeamState } from "../../lib/draw/TeamState";
+import { getUserID, UserInfo } from "../../lib/user";
+import { IoFactory } from "../../lib/network/io";
+import { NotePage } from "../../lib/note/note";
 import { Set } from "immutable";
+import Reader from "./Reader";
 
 export const TeamCtx = createContext({
   code: -2,
-  userRec: {} as Record<string, UserInfo>,
-  ignores: Set<string>(),
-  setIgnores: (() => {}) as Dispatch<SetStateAction<Set<string>>>,
-  loadInfo: (() => {}) as () => Promise<boolean>,
-  teamState: undefined as TeamState | undefined,
-  pushOperation: (() => {}) as (op: SetOperation) => void,
-  teamUpdate: undefined as undefined | TeamUpdate,
-  pushReorder: (() => {}) as (pageOrder: string[]) => void,
-  pushNewPage: (() => {}) as (
-    pageOrder: string[],
-    pageID: string,
-    newPage: NotePage
-  ) => void,
   connected: false,
+  ignores: Set<string>(),
+  userRec: {} as Record<string, UserInfo>,
+  teamState: undefined as TeamState | undefined,
+  teamUpdate: undefined as undefined | TeamUpdate,
+  loadInfo: async () => false,
+  pushOperation: (op: SetOperation) => {},
+  pushReorder: (pageOrder: string[]) => {},
+  pushNewPage: (pageOrder: string[], pageID: string, newPage: NotePage) => {},
+  setIgnores: (() => {}) as Dispatch<SetStateAction<Set<string>>>,
 });
 
 interface ReorderInfo {
@@ -99,6 +95,7 @@ export default function Team() {
     }
     message.destroy("TEAM_LOADING");
     setLoaded(true);
+
     ws.on("push", ({ operation, userID }) => {
       setTeamState((prev) => prev?.pushOperation(operation, userID));
     });
@@ -109,8 +106,8 @@ export default function Team() {
       if (userID === getUserID()) return;
       message.destroy(userID);
       message.success({
-        icon: <LoginOutlined />,
         content: `${userName} joined room`,
+        icon: <LoginOutlined />,
         key: userID,
       });
     });
@@ -121,8 +118,8 @@ export default function Team() {
       if (userID === getUserID()) return;
       message.destroy(userID);
       message.warning({
-        icon: <LogoutOutlined />,
         content: `${userName} leaved room`,
+        icon: <LogoutOutlined />,
         key: userID,
       });
     });
@@ -149,9 +146,9 @@ export default function Team() {
   };
 
   const roomDestroy = () => {
+    message.destroy("TEAM_LOADING");
     ws.removeAllListeners();
     ws.disconnect();
-    message.destroy("TEAM_LOADING");
   };
 
   useEffect(() => {
@@ -184,14 +181,14 @@ export default function Team() {
         code,
         ignores,
         userRec,
-        loadInfo,
         connected,
         teamState,
-        setIgnores,
         teamUpdate,
-        pushOperation,
+        loadInfo,
+        setIgnores,
         pushReorder,
         pushNewPage,
+        pushOperation,
       }}
     >
       <Reader teamOn />

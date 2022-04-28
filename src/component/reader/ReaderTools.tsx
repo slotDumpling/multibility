@@ -1,4 +1,4 @@
-import { Button, Input } from "antd";
+import { Button, Input, message } from "antd";
 import React, { useContext, useEffect, useState } from "react";
 import { ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { PlusOutlined } from "@ant-design/icons";
@@ -16,7 +16,7 @@ export const AddPageButton = () => {
         block
         onClick={addFinalPage}
       >
-        Add page
+        New page
       </Button>
     </div>
   );
@@ -37,4 +37,26 @@ export const NoteHeader = () => {
       <Input value={noteName} bordered={false} />
     </div>
   );
+};
+
+export const showPageDelMsg = (onUndo: () => void) => {
+  message.warning({
+    content: (
+      <>
+        One page was deleted.
+        <Button
+          size="small"
+          type="link"
+          onClick={() => {
+            message.destroy("DELETE");
+            onUndo();
+          }}
+        >
+          Undo
+        </Button>
+      </>
+    ),
+    key: "DELETE",
+    duration: 10,
+  });
 };

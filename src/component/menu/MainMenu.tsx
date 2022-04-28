@@ -35,7 +35,7 @@ export const MenuMethodCtx = createContext({
   setAllTags: (() => {}) as Dispatch<SetStateAction<Record<string, NoteTag>>>,
   setTagUid: (() => {}) as Dispatch<SetStateAction<string>>,
   setEditing: (() => {}) as Dispatch<SetStateAction<boolean>>,
-  menuInit: (() => {}) as () => void,
+  menuInit: () => {},
 });
 
 export default function MainMenu() {
