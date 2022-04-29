@@ -295,6 +295,8 @@ const NoteItem: FC<{
     }));
   };
 
+  const date = useMemo(() => moment(lastTime).calendar(), [lastTime]);
+
   return (
     <div className={classNames("note-item", { selected })} onClick={onClick}>
       <div className="timg-wrapper">
@@ -315,7 +317,7 @@ const NoteItem: FC<{
             onBlur={saveNoteName}
           />
         )}
-        <p className="date">{moment(lastTime).calendar()}</p>
+        <p className="date">{date}</p>
       </div>
     </div>
   );

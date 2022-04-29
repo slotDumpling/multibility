@@ -61,8 +61,10 @@
   align-items: center
 .aside-btn
   margin-right: 10px
-.aside-drawer .side-menu
-  background: #0000
+.aside-drawer
+  top: 55px !important
+  .side-menu
+    background: #0000
 
 @media screen and (max-width: 500px)
   button.large
@@ -162,13 +164,11 @@ button.team-btn
       position: absolute
       top: 0
       left: -20px
-      bottom: 0
+      bottom: -1px
       right: -20px
       transition: background 0.3s
     &.selected::before
       background-color: var(--blue-color-light)
-    &.selected
-      border-bottom: 1px solid #0000
     .timg-wrapper
       width: 3em
       margin-right: 1em

@@ -4,6 +4,7 @@ import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import {
   EditOutlined,
   CheckOutlined,
+  MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
 import SideMenu from "./SideMenu";
@@ -39,28 +40,21 @@ export default function LeftTools() {
     </Button>
   );
 
-  const AsideTitle = (
-    <div className="aside-drawer-title">
-      <span>Tags</span>
-      {SmallEditButton}
-    </div>
-  );
-
   const AsideButton = (
     <div className="aside-btn">
       <Button
         type="text"
-        icon={<MenuUnfoldOutlined />}
-        onClick={() => setAsideOn(true)}
+        icon={asideOn ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
+        onClick={() => setAsideOn(prev => !prev)}
       />
       <Drawer
         className="aside-drawer"
-        visible={asideOn}
-        onClose={() => setAsideOn(false)}
-        placement="left"
-        title={AsideTitle}
-        closable={false}
         width={300}
+        placement="left"
+        visible={asideOn}
+        closable={false}
+        onClose={() => setAsideOn(false)}
+        contentWrapperStyle={{ boxShadow: 'none' }}
         bodyStyle={{ padding: 0, overflow: "hidden" }}
         destroyOnClose
       >

@@ -26,9 +26,9 @@ import {
 } from "react-beautiful-dnd";
 import { AddPageButton } from "./ReaderTools";
 import { exchange } from "../../lib/array";
+import { Setter } from "../../lib/hooks";
 import classNames from "classnames";
 import "./preview.sass";
-import { Setter } from "../../lib/hooks";
 
 const PageNavContent = ({
   activeKey,
@@ -260,7 +260,7 @@ export default function PageNav() {
     <>
       <Button
         type="text"
-        icon={<MenuFoldOutlined />}
+        icon={navOn?<MenuUnfoldOutlined />: <MenuFoldOutlined />}
         onClick={() => setNavOn((prev) => !prev)}
       />
       <Drawer
@@ -268,7 +268,10 @@ export default function PageNav() {
         onClose={() => setNavOn(false)}
         width={200}
         title={title}
-        closeIcon={<MenuUnfoldOutlined />}
+        closable={false}
+        className="preview-drawer"
+        headerStyle={{textAlign: 'center'}}
+        contentWrapperStyle={{ boxShadow: 'none' }}
         bodyStyle={{ padding: 0, overflow: "hidden" }}
         destroyOnClose
       >

@@ -1,6 +1,9 @@
+$header-low-height: 55px
+$header-high-height: 100px
+
 .reader.container
   header
-    min-height: 55px
+    min-height: $header-low-height
     padding: 10px
     display: flex
     align-items: center
@@ -13,18 +16,24 @@
 
 @media screen and (max-width: 500px)
   .reader.container
-    .middle
-      border-left: 1px solid #eee
-      border-right: 1px solid #eee
-      padding: 0 20px
-    br
-      display: block !important
-      height: 10px
-      content: ""
+    header
+      height: $header-high-height
+      .middle
+        border-left: 1px solid #eee
+        border-right: 1px solid #eee
+        padding: 0 20px
+      br
+        content: ""
+        display: block
+        height: 10px
+  .preview-drawer
+    top: $header-high-height
 
 @media screen and (min-width: 500px)
   .reader.container br
     display: none
+  .preview-drawer
+    top: $header-low-height
 
 .pen-panel
   width: 200px
