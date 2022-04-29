@@ -85,16 +85,17 @@ export async function loadNote(uid: string) {
 
 export async function editNoteData(uid: string, noteData: Partial<Note>) {
   noteData = pickBy(noteData, (v) => v !== undefined);
+  if ("pageRec" in noteData) noteData.lastTime = moment.now();
   console.log("edit note data", noteData);
+  
   const allNotes = await getAllNotes();
   const { pageRec, ...noteInfo } = noteData;
-  const lastTime = moment.now();
-  allNotes[uid] = { ...allNotes[uid], ...noteInfo, lastTime };
+  allNotes[uid] = { ...allNotes[uid], ...noteInfo };
 
   await localforage.setItem("ALL_NOTES", allNotes);
   const prevNote = await loadNote(uid);
   if (!prevNote) return;
-  await localforage.setItem(uid, { ...prevNote, ...noteData, lastTime });
+  await localforage.setItem(uid, { ...prevNote, ...noteData });
 }
 
 export async function saveNoteInfo(noteInfo: NoteInfo) {
