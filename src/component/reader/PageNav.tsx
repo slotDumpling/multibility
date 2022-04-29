@@ -260,7 +260,7 @@ export default function PageNav() {
     <>
       <Button
         type="text"
-        icon={navOn?<MenuUnfoldOutlined />: <MenuFoldOutlined />}
+        icon={navOn ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
         onClick={() => setNavOn((prev) => !prev)}
       />
       <Drawer
@@ -270,9 +270,9 @@ export default function PageNav() {
         title={title}
         closable={false}
         className="preview-drawer"
-        headerStyle={{textAlign: 'center'}}
-        contentWrapperStyle={{ boxShadow: 'none' }}
+        contentWrapperStyle={{ boxShadow: "none" }}
         bodyStyle={{ padding: 0, overflow: "hidden" }}
+        headerStyle={{ textAlign: "center", borderTop: "1px solid #eee" }}
         destroyOnClose
       >
         <PageNavContent activeKey={activeKey} setActiveKey={setActiveKey} />

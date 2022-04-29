@@ -51,8 +51,8 @@ export default function LeftTools() {
         className="aside-drawer"
         width={300}
         placement="left"
-        visible={asideOn}
         closable={false}
+        visible={asideOn}
         onClose={() => setAsideOn(false)}
         contentWrapperStyle={{ boxShadow: 'none' }}
         bodyStyle={{ padding: 0, overflow: "hidden" }}
