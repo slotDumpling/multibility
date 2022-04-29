@@ -1,3 +1,4 @@
+import Heap from "heap";
 import { List, Record, OrderedMap } from "immutable";
 import { v4 as getUid } from "uuid";
 
@@ -6,9 +7,10 @@ export const WIDTH = 2000;
 export interface Stroke {
   uid: string;
   pathData: string;
+  timestamp: number;
 }
 
-export type StrokeRecord = globalThis.Record<string, string>;
+export type StrokeRecord = globalThis.Record<string, Stroke>;
 export type Mutation = [string, string];
 
 export type Operation =
@@ -32,7 +34,7 @@ export type Operation =
     };
 
 interface DrawStateRecordType {
-  strokes: OrderedMap<string, string>;
+  strokes: OrderedMap<string, Stroke>;
   undoStack: List<DrawStateRecord>;
   historyStack: List<DrawStateRecord>;
 }
@@ -80,14 +82,22 @@ export class DrawState {
     return this.getImmutable().get("strokes");
   }
 
-  getValidStrokes(): Stroke[] {
+  getStrokeList(): Stroke[] {
     return this.getStrokesMap()
       .toArray()
-      .map(([uid, pathData]) => ({ uid, pathData }));
+      .map(([_, stroke]) => stroke);
+  }
+
+  getLastStroke() {
+    return this.getStrokesMap().last();
   }
 
   isEmpty() {
     return this.getStrokesMap().size === 0;
+  }
+
+  hasStroke(uid: string) {
+    return this.getStrokesMap().has(uid);
   }
 
   static createEmpty(width: number, height: number) {
@@ -119,15 +129,16 @@ export class DrawState {
 
   static addStroke(drawState: DrawState, pathData: string) {
     const uid = getUid();
-    const stroke = { pathData, uid };
+    const timestamp = Date.now();
+    const stroke = { pathData, uid, timestamp };
     return DrawState.pushStroke(drawState, stroke);
   }
 
   static pushStroke(drawState: DrawState, stroke: Stroke) {
-    const { uid, pathData } = stroke;
+    const { uid } = stroke;
     const prevRecord = drawState.getImmutable();
     const currRecord = prevRecord
-      .update("strokes", (s) => s.set(uid, pathData))
+      .update("strokes", (s) => s.set(uid, stroke))
       .update("historyStack", (s) => s.push(prevRecord))
       .delete("undoStack");
 
@@ -152,8 +163,14 @@ export class DrawState {
   static mutateStroke(drawState: DrawState, mutations: Mutation[]) {
     if (mutations.length === 0) return drawState;
     const prevRecord = drawState.getImmutable();
+    let strokes = drawState.getStrokesMap();
+    mutations.forEach(([uid, pathData]) => {
+      strokes = strokes.update(uid, (s) =>
+        s ? { ...s, pathData } : { uid, pathData, timestamp: Date.now() }
+      );
+    });
     const currRecord = prevRecord
-      .update("strokes", (m) => m.merge(mutations))
+      .set("strokes", strokes)
       .update("historyStack", (s) => s.push(prevRecord))
       .delete("undoStack");
 
@@ -197,3 +214,51 @@ export class DrawState {
     return ds;
   }
 }
+
+export const mergeStates = (() => {
+  const cache = new WeakMap<DrawState, List<Stroke>>();
+
+  const findCachedList = (drawStates: DrawState[]) => {
+    const preservedDs = drawStates.find((ds) => cache.has(ds));
+    const cachedList = preservedDs && cache.get(preservedDs);
+    if (!cachedList) return;
+
+    const updatedDs = drawStates.find((ds) => !cache.has(ds));
+    if (updatedDs?.lastOp?.type === "add") {
+      const result = cachedList.push(updatedDs.lastOp.stroke);
+      drawStates.forEach((ds) => cache.set(ds, result));
+      return result;
+    }
+  };
+
+  return (drawStates: DrawState[]): List<Stroke> => {
+    const cachedList = findCachedList(drawStates);
+    if (cachedList) return cachedList;
+
+    const mapList = drawStates.map((ds) => ds.getStrokesMap());
+    const heap = new Heap<[Stroke, number]>(
+      ([s0], [s1]) => s0.timestamp - s1.timestamp
+    );
+    let result = List<Stroke>();
+    mapList.forEach((map, index) => {
+      const stroke = map.first();
+      stroke && heap.push([stroke, index]);
+    });
+
+    while (heap.size() > 0) {
+      const record = heap.pop();
+      if (!record) break;
+      const [stroke, index] = record;
+      result = result.push(stroke);
+      
+      const prevMap = mapList[index];
+      if (prevMap.size <= 1) continue;
+      const newMap = prevMap.skip(1);
+      mapList[index] = newMap;
+      const newStroke = newMap.first();
+      if (newStroke) heap.push([newStroke, index]);
+    }
+    drawStates.forEach((ds) => cache.set(ds, result));
+    return result;
+  };
+})();

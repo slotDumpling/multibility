@@ -1,6 +1,6 @@
-import React, { useRef, useState, useEffect, TouchEvent } from "react";
+import React, { useRef, useState, useEffect, TouchEvent, useMemo } from "react";
 import { CtrlMode, defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
-import { DrawState, Stroke } from "../../lib/draw/DrawState";
+import { DrawState, mergeStates, Stroke } from "../../lib/draw/DrawState";
 import { releaseCanvas } from "../../lib/draw/drawer";
 import { Setter, usePreventGesture } from "../../lib/hooks";
 import { isStylus } from "../../lib/touch/touch";
@@ -226,29 +226,28 @@ const Draw = ({
     return () => void raster?.remove();
   }, [imgSrc]);
 
+  const mergedStrokes = useMemo(() => {
+    if (!otherStates) return drawState.getStrokeList();
+    else return mergeStates([drawState, ...otherStates]);
+  }, [drawState, otherStates]);
+
   useEffect(() => {
     scope.current.activate();
     group.current = [];
-
-    drawState.getValidStrokes().forEach((stroke) => {
-      paintStroke(stroke, group.current, erased);
-    });
-
-    return () => group.current?.forEach((item) => item.remove());
-  }, [drawState, erased]);
-
-  useEffect(() => {
-    scope.current.activate();
     const otherGroup: paper.Path[] = [];
 
-    otherStates?.forEach((ds) => {
-      ds.getValidStrokes().forEach((stroke) => {
-        paintStroke(stroke, otherGroup);
-      });
+    mergedStrokes.forEach((stroke) => {
+      const passedGroup = drawState.hasStroke(stroke.uid)
+        ? group.current
+        : otherGroup;
+      paintStroke(stroke, passedGroup, erased);
     });
 
-    return () => otherGroup.forEach((item) => item.remove());
-  }, [otherStates]);
+    return () => {
+      group.current?.forEach((item) => item.remove());
+      otherGroup.forEach((item) => item.remove());
+    };
+  }, [mergedStrokes, erased]);
 
   const updateMutation = () => {
     const list = selectGroup.current?.children;

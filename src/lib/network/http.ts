@@ -9,7 +9,7 @@ import {
 import { getUserID } from "../user";
 
 export let BASE_URL = "https://api.slotdumpling.top/paint";
-// BASE_URL = "http://100.81.113.84:8090/paint";
+BASE_URL = "http://100.81.113.84:8090/paint";
 axios.defaults.baseURL = BASE_URL;
 
 axios.interceptors.request.use((config) => {
