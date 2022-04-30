@@ -24,6 +24,7 @@ export const TeamCtx = createContext({
   pushReorder: (pageOrder: string[]) => {},
   pushNewPage: (pageOrder: string[], pageID: string, newPage: NotePage) => {},
   setIgnores: (() => {}) as Setter<Set<string>>,
+  pushRename: (name: string) => {},
 });
 
 interface ReorderInfo {
@@ -119,6 +120,10 @@ export default function Team() {
       });
     });
 
+    io.on("rename", ({members}) => {
+      setUserRec(members)
+    })
+
     io.on("reorder", (info: ReorderInfo) => {
       setTeamUpdate({ type: "reorder", ...info });
     });
@@ -169,6 +174,10 @@ export default function Team() {
     io.emit("newPage", { pageOrder, pageID, newPage: newTeamPage });
   };
 
+  const pushRename = (name: string) => {
+    io.emit("rename", { name });
+  };
+
   if (!loaded) return null;
   return (
     <TeamCtx.Provider
@@ -181,6 +190,7 @@ export default function Team() {
         teamUpdate,
         loadInfo,
         setIgnores,
+        pushRename,
         pushReorder,
         pushNewPage,
         pushOperation,

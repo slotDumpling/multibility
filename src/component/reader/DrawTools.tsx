@@ -7,7 +7,6 @@ import React, {
   CSSProperties,
 } from "react";
 import {
-  Tag,
   Badge,
   Alert,
   Avatar,
@@ -25,18 +24,20 @@ import { ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { TeamCtx } from "./Team";
 import DigitDisplay from "../ui/DigitDisplay";
 import { colors, getHashedColor } from "../../lib/color";
-import { getUserID, UserInfo } from "../../lib/user";
+import { getUserID, setUserName, UserInfo } from "../../lib/user";
 import { CtrlMode, DrawCtrl } from "../../lib/draw/drawCtrl";
 import PageNav from "./PageNav";
 import {
   HomeFilled,
   EyeOutlined,
+  FormOutlined,
   UndoOutlined,
   RedoOutlined,
   SaveOutlined,
   TeamOutlined,
   CopyOutlined,
   DragOutlined,
+  CheckOutlined,
   ExpandOutlined,
   ReloadOutlined,
   DeleteOutlined,
@@ -52,6 +53,7 @@ import "./drawTools.sass";
 import { putNote } from "../../lib/network/http";
 import { editNoteData } from "../../lib/note/archive";
 import { Setter } from "../../lib/hooks";
+import classNames from "classnames";
 
 export default function DrawTools({
   handleUndo,
@@ -304,9 +306,10 @@ const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
   self = false,
 }) => {
   const { userName, userID, online } = userInfo;
-  const { ignores, setIgnores } = useContext(TeamCtx);
+  const { ignores, setIgnores, pushRename } = useContext(TeamCtx);
   const color = useMemo(() => getHashedColor(userID), [userID]);
   const ignored = ignores.has(userID) && !self;
+  const [renaming, setRenaming] = useState(false);
 
   const switchIgnore = () => {
     setIgnores((prev) => {
@@ -316,17 +319,37 @@ const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
   };
 
   return (
-    <div className="user-item">
+    <div className={classNames("user-item", { online })}>
       <Avatar
         className="avatar"
         size="small"
-        style={{ backgroundColor: color, opacity: online ? 1 : 0.5 }}
+        style={{ backgroundColor: color }}
       >
         {userName.slice(0, 4)}
       </Avatar>
-      <span className="user-name">{userName}</span>
+      {renaming || <span className="user-name">{userName}</span>}
+      {renaming && (
+        <Search
+          className="rename-input"
+          defaultValue={userName}
+          onSearch={(val) => {
+            const name = val.trim();
+            if (!name) return setRenaming(false);
+            pushRename(name);
+            setUserName(name);
+            setRenaming(false);
+          }}
+          enterButton={<Button icon={<CheckOutlined />} />}
+        />
+      )}
       {self ? (
-        <Tag className="me-tag">Me</Tag>
+        renaming || (
+          <Button
+            type="text"
+            icon={<FormOutlined />}
+            onClick={() => setRenaming(true)}
+          />
+        )
       ) : (
         <Button
           type="text"
