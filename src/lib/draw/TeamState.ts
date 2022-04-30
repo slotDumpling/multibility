@@ -1,5 +1,5 @@
 import { Map, Record } from "immutable";
-import { NotePage, TeamNote, TeamPage, TeamPageInfo } from "../note/note";
+import { NotePage, TeamPage, TeamPageInfo } from "../note/note";
 import { DrawState, WIDTH } from "./DrawState";
 import { SetOperation } from "./StateSet";
 

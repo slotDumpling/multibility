@@ -1,17 +1,8 @@
-import {
-  Note,
-  NoteInfo,
-  NotePage,
-  TeamNote,
-  TeamNoteInfo,
-  TeamPage,
-  TeamPageState,
-} from "./note";
+import { Note, NoteInfo, NotePage, TeamNoteInfo } from "./note";
 import { getDefaultFlatState } from "../draw/DrawState";
 import { getRandomColor } from "../color";
 import localforage from "localforage";
 import { v4 as getUid } from "uuid";
-import { getUserID } from "../user";
 import { pickBy } from "lodash";
 import moment from "moment";
 
@@ -88,7 +79,7 @@ export async function editNoteData(uid: string, noteData: Partial<Note>) {
   noteData = pickBy(noteData, (v) => v !== undefined);
   if ("pageRec" in noteData) noteData.lastTime = moment.now();
   console.log("edit note data", noteData);
-  
+
   const allNotes = await getAllNotes();
   const { pageRec, ...noteInfo } = noteData;
   allNotes[uid] = { ...allNotes[uid], ...noteInfo };
