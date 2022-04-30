@@ -209,64 +209,27 @@ export class DrawState {
   }
 }
 
-export const mergeStates = (() => {
-  const cache = new WeakMap<DrawState, OrderedMap<string, Stroke>>();
+export const mergeStates = (states: DrawState[]) => {
+  const iterList = states.map((ds) => ds.getStrokesMap().values());
 
-  const findCachedList = (drawStates: DrawState[]) => {
-    const preservedDs = drawStates.find((ds) => cache.has(ds));
-    const cachedList = preservedDs && cache.get(preservedDs);
-    if (!cachedList) return;
+  let mergedStrokes = List<Stroke>();
+  const heap = new Heap<[Stroke, number]>(
+    ([s0], [s1]) => s0.timestamp - s1.timestamp
+  );
 
-    const updatedDs = drawStates.find((ds) => !cache.has(ds));
-    const lastOp = updatedDs?.lastOp;
-    if (!lastOp) return;
-    if (lastOp.type === "add") {
-      const { stroke } = lastOp;
-      const result = cachedList.set(stroke.uid, stroke);
-      drawStates.forEach((ds) => cache.set(ds, result));
-      return result;
-    } else if (lastOp.type === "erase") {
-      const result = cachedList.deleteAll(lastOp.erased);
-      drawStates.forEach((ds) => cache.set(ds, result));
-      return result;
-    } else if (lastOp.type === 'mutate') {
-      const result = cachedList.merge(lastOp.mutations);
-      drawStates.forEach((ds) => cache.set(ds, result));
-      return result; 
-    }
-  };
+  iterList.forEach((iter, index) => {
+    const { value, done } = iter.next();
+    done || heap.push([value, index]);
+  });
 
-  return (drawStates: DrawState[]): OrderedMap<string, Stroke> => {
-    const cachedList = findCachedList(drawStates);
-    if (cachedList) return cachedList;
+  while (heap.size() > 0) {
+    const record = heap.pop();
+    if (!record) break;
+    const [stroke, index] = record;
+    mergedStrokes = mergedStrokes.push(stroke);
 
-    console.time("merge");
-    const mapList = drawStates.map((ds) => ds.getStrokesMap());
-    let count = mapList.map((m) => m.size).reduce((p, c) => p + c);
-    let result = OrderedMap<string, Stroke>();
-    const heap = new Heap<[Stroke, number]>(
-      ([s0], [s1]) => s0.timestamp - s1.timestamp
-    );
-    mapList.forEach((map, index) => {
-      const stroke = map.first();
-      stroke && heap.push([stroke, index]);
-    });
-
-    while (heap.size() > 0 && count-- > 0) {
-      const record = heap.pop();
-      if (!record) break;
-      const [stroke, index] = record;
-      result = result.set(stroke.uid, stroke);
-
-      const prevMap = mapList[index];
-      if (!prevMap || prevMap.size <= 1) continue;
-      const newMap = prevMap.rest();
-      mapList[index] = newMap;
-      const newStroke = newMap.first();
-      if (newStroke) heap.push([newStroke, index]);
-    }
-    drawStates.forEach((ds) => cache.set(ds, result));
-    console.timeEnd("merge");
-    return result;
-  };
-})();
+    const { value, done } = iterList[index].next();
+    done || heap.push([value, index]);
+  }
+  return mergedStrokes;
+};
