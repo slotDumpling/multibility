@@ -11,7 +11,7 @@ export interface Stroke {
 }
 
 export type StrokeRecord = globalThis.Record<string, Stroke>;
-export type Mutation = [string, Stroke];
+export type Mutation = [string, string];
 
 export type Operation =
   | {
@@ -163,8 +163,14 @@ export class DrawState {
   static mutateStroke(drawState: DrawState, mutations: Mutation[]) {
     if (mutations.length === 0) return drawState;
     const prevRecord = drawState.getImmutable();
+    let strokes = drawState.getStrokesMap();
+    mutations.forEach(([uid, pathData]) => {
+      strokes = strokes.update(uid, (s) =>
+        s ? { ...s, pathData } : { uid, pathData, timestamp: Date.now() }
+      );
+    });
     const currRecord = prevRecord
-      .update("strokes", (m) => m.merge(mutations))
+      .set("strokes", strokes)
       .update("historyStack", (s) => s.push(prevRecord))
       .delete("undoStack");
 

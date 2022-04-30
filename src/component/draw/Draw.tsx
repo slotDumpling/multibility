@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, TouchEvent, useMemo } from "react";
 import { CtrlMode, defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
-import { DrawState, Stroke } from "../../lib/draw/DrawState";
+import { DrawState, Mutation, Stroke } from "../../lib/draw/DrawState";
 import { releaseCanvas } from "../../lib/draw/drawer";
 import { Setter, usePreventGesture } from "../../lib/hooks";
 import { isStylus } from "../../lib/touch/touch";
@@ -168,7 +168,6 @@ const Draw = ({
       if (!path.current || path.current.segments.length === 0) return;
       path.current.simplify();
       if (path.current.segments.length === 0) return;
-      path.current.data = null;
       const pathData = path.current.exportJSON();
       path.current.remove();
       onChange((prev) => DrawState.addStroke(prev, pathData));
@@ -259,11 +258,10 @@ const Draw = ({
     const list = sg.children;
     if (!list.length) return;
 
-    const mutations: [string, Stroke][] = list.map((p) => {
-      const stroke = p.data;
-      p.data = null;
-      return [p.name, { ...stroke, pathData: p.exportJSON() }];
-    });
+    const mutations: Mutation[] = list.map((p) => [
+      p.name,
+      p.exportJSON(),
+    ]);
     onChange((prev) => DrawState.mutateStroke(prev, mutations));
   };
 
@@ -369,7 +367,6 @@ const paintStroke = (
     const path = new Path();
     path.importJSON(pathData);
     path.name = uid;
-    path.data = stroke;
     if (erased?.has(uid)) path.opacity /= 2;
     group?.push(path);
   } catch (e) {
