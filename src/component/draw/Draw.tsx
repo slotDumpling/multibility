@@ -168,6 +168,7 @@ const Draw = ({
       if (!path.current || path.current.segments.length === 0) return;
       path.current.simplify();
       if (path.current.segments.length === 0) return;
+      path.current.data = null;
       const pathData = path.current.exportJSON();
       path.current.remove();
       onChange((prev) => DrawState.addStroke(prev, pathData));
@@ -186,6 +187,8 @@ const Draw = ({
           selectGroup.current?.addChild(p);
         }
       });
+      selectGroup.current.shadowColor = new Color("#0005");
+      selectGroup.current.shadowBlur = 10;
       setMode("selected");
     },
     selected() {},
@@ -250,12 +253,17 @@ const Draw = ({
   }, [mergedStrokes, erased]);
 
   const updateMutation = () => {
-    const list = selectGroup.current?.children;
-    if (!list?.length) return;
-    const mutations: [string, string][] = list.map((p) => [
-      p.name,
-      p.exportJSON(),
-    ]);
+    const sg = selectGroup.current;
+    if (!sg) return;
+    sg.shadowColor = null;
+    const list = sg.children;
+    if (!list.length) return;
+
+    const mutations: [string, Stroke][] = list.map((p) => {
+      const stroke = p.data;
+      p.data = null;
+      return [p.name, { ...stroke, pathData: p.exportJSON() }];
+    });
     onChange((prev) => DrawState.mutateStroke(prev, mutations));
   };
 
@@ -361,6 +369,7 @@ const paintStroke = (
     const path = new Path();
     path.importJSON(pathData);
     path.name = uid;
+    path.data = stroke;
     if (erased?.has(uid)) path.opacity /= 2;
     group?.push(path);
   } catch (e) {

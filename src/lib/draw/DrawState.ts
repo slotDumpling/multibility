@@ -11,7 +11,7 @@ export interface Stroke {
 }
 
 export type StrokeRecord = globalThis.Record<string, Stroke>;
-export type Mutation = [string, string];
+export type Mutation = [string, Stroke];
 
 export type Operation =
   | {
@@ -163,14 +163,8 @@ export class DrawState {
   static mutateStroke(drawState: DrawState, mutations: Mutation[]) {
     if (mutations.length === 0) return drawState;
     const prevRecord = drawState.getImmutable();
-    let strokes = drawState.getStrokesMap();
-    mutations.forEach(([uid, pathData]) => {
-      strokes = strokes.update(uid, (s) =>
-        s ? { ...s, pathData } : { uid, pathData, timestamp: Date.now() }
-      );
-    });
     const currRecord = prevRecord
-      .set("strokes", strokes)
+      .update("strokes", (m) => m.merge(mutations))
       .update("historyStack", (s) => s.push(prevRecord))
       .delete("undoStack");
 
@@ -216,7 +210,7 @@ export class DrawState {
 }
 
 export const mergeStates = (() => {
-  const cache = new WeakMap<DrawState, List<Stroke>>();
+  const cache = new WeakMap<DrawState, OrderedMap<string, Stroke>>();
 
   const findCachedList = (drawStates: DrawState[]) => {
     const preservedDs = drawStates.find((ds) => cache.has(ds));
@@ -224,41 +218,55 @@ export const mergeStates = (() => {
     if (!cachedList) return;
 
     const updatedDs = drawStates.find((ds) => !cache.has(ds));
-    if (updatedDs?.lastOp?.type === "add") {
-      const result = cachedList.push(updatedDs.lastOp.stroke);
+    const lastOp = updatedDs?.lastOp;
+    if (!lastOp) return;
+    if (lastOp.type === "add") {
+      const { stroke } = lastOp;
+      const result = cachedList.set(stroke.uid, stroke);
       drawStates.forEach((ds) => cache.set(ds, result));
       return result;
+    } else if (lastOp.type === "erase") {
+      const result = cachedList.deleteAll(lastOp.erased);
+      drawStates.forEach((ds) => cache.set(ds, result));
+      return result;
+    } else if (lastOp.type === 'mutate') {
+      const result = cachedList.merge(lastOp.mutations);
+      drawStates.forEach((ds) => cache.set(ds, result));
+      return result; 
     }
   };
 
-  return (drawStates: DrawState[]): List<Stroke> => {
+  return (drawStates: DrawState[]): OrderedMap<string, Stroke> => {
     const cachedList = findCachedList(drawStates);
     if (cachedList) return cachedList;
 
+    console.time("merge");
     const mapList = drawStates.map((ds) => ds.getStrokesMap());
+    let count = mapList.map((m) => m.size).reduce((p, c) => p + c);
+    let result = OrderedMap<string, Stroke>();
     const heap = new Heap<[Stroke, number]>(
       ([s0], [s1]) => s0.timestamp - s1.timestamp
     );
-    let result = List<Stroke>();
     mapList.forEach((map, index) => {
       const stroke = map.first();
       stroke && heap.push([stroke, index]);
     });
 
-    while (heap.size() > 0) {
+    while (heap.size() > 0 && count-- > 0) {
       const record = heap.pop();
       if (!record) break;
       const [stroke, index] = record;
-      result = result.push(stroke);
-      
+      result = result.set(stroke.uid, stroke);
+
       const prevMap = mapList[index];
-      if (prevMap.size <= 1) continue;
-      const newMap = prevMap.skip(1);
+      if (!prevMap || prevMap.size <= 1) continue;
+      const newMap = prevMap.rest();
       mapList[index] = newMap;
       const newStroke = newMap.first();
       if (newStroke) heap.push([newStroke, index]);
     }
     drawStates.forEach((ds) => cache.set(ds, result));
+    console.timeEnd("merge");
     return result;
   };
 })();
