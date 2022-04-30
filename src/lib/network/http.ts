@@ -136,7 +136,9 @@ export async function updatePages(noteID: string) {
 
 export async function getTeamNoteState(noteID: string) {
   try {
-    const { data } = await axios.get(`state/${noteID}`);
+    const { data } = await axios.get(`state/${noteID}`, {
+      params: { userID: getUserID() },
+    });
     if (data.statusCode !== 200) return null;
     const { teamPages } = data;
     const pageRec = await convertTeamPage(noteID, teamPages);

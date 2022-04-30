@@ -1,9 +1,5 @@
 import { message } from "antd";
-import React, {
-  useState,
-  useEffect,
-  createContext,
-} from "react";
+import React, { useState, useEffect, createContext } from "react";
 import { getTeamNoteState, loadTeamNoteInfo } from "../../lib/network/http";
 import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
@@ -56,7 +52,7 @@ export default function Team() {
   const [code, setCode] = useState(-2);
   const [userRec, setUserRec] = useState<Record<string, UserInfo>>({});
   const [ignores, setIgnores] = useState(Set<string>());
-  const [ws] = useState(IoFactory(noteID));
+  const [io] = useState(IoFactory(noteID));
   const [teamUpdate, setTeamUpdate] = useState<TeamUpdate>();
   const [loaded, setLoaded] = useState(false);
   const [connected, setConnected] = useState(true);
@@ -95,11 +91,11 @@ export default function Team() {
     message.destroy("TEAM_LOADING");
     setLoaded(true);
 
-    ws.on("push", ({ operation, userID }) => {
+    io.compress(true).on("push", ({ operation, userID }) => {
       setTeamState((prev) => prev?.pushOperation(operation, userID));
     });
 
-    ws.on("joined", ({ joined, members }) => {
+    io.on("joined", ({ joined, members }) => {
       const { userID, userName } = joined;
       setUserRec(members);
       if (userID === getUserID()) return;
@@ -111,10 +107,14 @@ export default function Team() {
       });
     });
 
-    ws.on("leaved", ({ leaved, members }) => {
+    io.on("leaved", ({ leaved, members }) => {
       const { userID, userName } = leaved;
       setUserRec(members);
-      if (userID === getUserID()) return;
+      if (userID === getUserID()) {
+        io.emit("join");
+        console.log("re-join");
+        return;
+      }
       message.destroy(userID);
       message.warning({
         content: `${userName} leaved room`,
@@ -123,31 +123,31 @@ export default function Team() {
       });
     });
 
-    ws.on("reorder", (info: ReorderInfo) => {
+    io.on("reorder", (info: ReorderInfo) => {
       setTeamUpdate({ type: "reorder", ...info });
     });
 
-    ws.on("newPage", (info: NewPageInfo) => {
+    io.on("newPage", (info: NewPageInfo) => {
       const { pageID, newPage } = info;
       setTeamState((prev) => prev?.addPage(pageID, newPage));
       setTeamUpdate({ type: "newPage", ...info });
     });
 
-    ws.on("reset", ({ userID, pageRec }) => {
+    io.on("reset", ({ userID, pageRec }) => {
       if (userID === getUserID()) return;
       setTeamState((prev) => prev?.resetUser(userID, pageRec));
     });
 
-    ws.on("connect", () => setConnected(true));
-    ws.on("disconnect", () => setConnected(false));
+    io.on("connect", () => setConnected(true));
+    io.on("disconnect", () => setConnected(false));
 
-    ws.connect();
+    io.connect();
   };
 
   const roomDestroy = () => {
     message.destroy("TEAM_LOADING");
-    ws.removeAllListeners();
-    ws.disconnect();
+    io.removeAllListeners();
+    io.disconnect();
   };
 
   useEffect(() => {
@@ -156,11 +156,11 @@ export default function Team() {
   }, [noteID]);
 
   const pushOperation = (operation: SetOperation) => {
-    ws.emit("push", { operation });
+    io.emit("push", { operation });
   };
 
   const pushReorder = (pageOrder: string[]) => {
-    ws.emit("reorder", { pageOrder });
+    io.emit("reorder", { pageOrder });
   };
 
   const pushNewPage = (
@@ -170,7 +170,7 @@ export default function Team() {
   ) => {
     setTeamState((prev) => prev?.addPage(pageID, newPage));
     const { image, marked, ...newTeamPage } = newPage;
-    ws.emit("newPage", { pageOrder, pageID, newPage: newTeamPage });
+    io.emit("newPage", { pageOrder, pageID, newPage: newTeamPage });
   };
 
   if (!loaded) return null;
