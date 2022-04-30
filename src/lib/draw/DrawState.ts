@@ -207,29 +207,29 @@ export class DrawState {
     operations?.forEach((op) => (ds = DrawState.pushOperation(ds, op)));
     return ds;
   }
-}
 
-export const mergeStates = (states: DrawState[]) => {
-  const iterList = states.map((ds) => ds.getStrokesMap().values());
+  static mergeStates(states: DrawState[]) {
+    const iterList = states.map((ds) => ds.getStrokesMap().values());
 
-  let mergedStrokes = List<Stroke>();
-  const heap = new Heap<[Stroke, number]>(
-    ([s0], [s1]) => s0.timestamp - s1.timestamp
-  );
+    let mergedStrokes: Stroke[] = [];
+    const heap = new Heap<[Stroke, number]>(
+      ([s0], [s1]) => s0.timestamp - s1.timestamp
+    );
 
-  iterList.forEach((iter, index) => {
-    const { value, done } = iter.next();
-    done || heap.push([value, index]);
-  });
+    iterList.forEach((iter, index) => {
+      const { value, done } = iter.next();
+      done || heap.push([value, index]);
+    });
 
-  while (heap.size() > 0) {
-    const record = heap.pop();
-    if (!record) break;
-    const [stroke, index] = record;
-    mergedStrokes = mergedStrokes.push(stroke);
+    while (heap.size() > 0) {
+      const record = heap.pop();
+      if (!record) break;
+      const [stroke, index] = record;
+      mergedStrokes.push(stroke);
 
-    const { value, done } = iterList[index].next();
-    done || heap.push([value, index]);
+      const { value, done } = iterList[index].next();
+      done || heap.push([value, index]);
+    }
+    return mergedStrokes;
   }
-  return mergedStrokes;
-};
+}

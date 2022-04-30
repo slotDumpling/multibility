@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, TouchEvent, useMemo } from "react";
 import { CtrlMode, defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
-import { DrawState, mergeStates, Stroke } from "../../lib/draw/DrawState";
+import { DrawState, Stroke } from "../../lib/draw/DrawState";
 import { releaseCanvas } from "../../lib/draw/drawer";
 import { Setter, usePreventGesture } from "../../lib/hooks";
 import { isStylus } from "../../lib/touch/touch";
@@ -231,7 +231,7 @@ const Draw = ({
 
   const mergedStrokes = useMemo(() => {
     if (!otherStates) return drawState.getStrokeList();
-    else return mergeStates([drawState, ...otherStates]);
+    else return DrawState.mergeStates([drawState, ...otherStates]);
   }, [drawState, otherStates]);
 
   useEffect(() => {
