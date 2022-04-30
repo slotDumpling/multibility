@@ -110,11 +110,7 @@ export default function Team() {
     io.on("leaved", ({ leaved, members }) => {
       const { userID, userName } = leaved;
       setUserRec(members);
-      if (userID === getUserID()) {
-        io.emit("join");
-        console.log("re-join");
-        return;
-      }
+      if (userID === getUserID()) return io.emit("join");
       message.destroy(userID);
       message.warning({
         content: `${userName} leaved room`,
