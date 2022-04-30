@@ -1,15 +1,10 @@
 import axios from "axios";
-import { Note, NotePage, TeamNoteInfo } from "../note/note";
-import {
-  convertTeamPage,
-  loadNote,
-  saveTeamNote,
-  updateTeamNote,
-} from "../note/archive";
+import { Note, NotePage, TeamNoteInfo, TeamPage } from "../note/note";
+import { loadNote, saveTeamNote, updateTeamNote } from "../note/archive";
 import { getUserID } from "../user";
 
 export let BASE_URL = "https://api.slotdumpling.top/paint";
-// BASE_URL = "http://100.81.113.84:8090/paint";
+BASE_URL = "http://100.81.113.84:8090/paint";
 axios.defaults.baseURL = BASE_URL;
 
 axios.interceptors.request.use((config) => {
@@ -141,8 +136,7 @@ export async function getTeamNoteState(noteID: string) {
     });
     if (data.statusCode !== 200) return null;
     const { teamPages } = data;
-    const pageRec = await convertTeamPage(noteID, teamPages);
-    return pageRec;
+    return teamPages as Record<string, TeamPage>;
   } catch (e) {
     console.error(e);
     return null;

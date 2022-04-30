@@ -4,6 +4,7 @@ import {
   NotePage,
   TeamNote,
   TeamNoteInfo,
+  TeamPage,
   TeamPageState,
 } from "./note";
 import { getDefaultFlatState } from "../draw/DrawState";
@@ -156,26 +157,6 @@ export async function moveNoteTag(noteID: string, tagID: string) {
   tags[tagID]?.notes?.push(noteID);
   await localforage.setItem("ALL_TAGS", tags);
   return { tags, allNotes };
-}
-
-export async function convertTeamPage(
-  noteID: string,
-  teamPages: Record<string, TeamPageState>
-): Promise<TeamNote | undefined> {
-  const pageRec = (await loadNote(noteID))?.pageRec;
-  if (!pageRec) return;
-  const teamNote: TeamNote = { uid: noteID, pageRec: {} };
-  for (let [key, page] of Object.entries(teamPages)) {
-    const { states } = page;
-    const { ratio } = pageRec[key];
-    if (!ratio) continue;
-    delete states[getUserID()];
-    teamNote.pageRec[key] = {
-      ratio,
-      states,
-    };
-  }
-  return teamNote;
 }
 
 export async function saveTeamNote(

@@ -1,5 +1,5 @@
 import { Map, Record } from "immutable";
-import { NotePage, TeamNote, TeamPageInfo } from "../note/note";
+import { NotePage, TeamNote, TeamPage, TeamPageInfo } from "../note/note";
 import { DrawState, WIDTH } from "./DrawState";
 import { SetOperation } from "./StateSet";
 
@@ -57,10 +57,12 @@ export class TeamState {
     );
   }
 
-  static createFromTeamPages(teamNote: TeamNote, width = WIDTH) {
-    const { pageRec } = teamNote;
+  static createFromTeamPages(
+    teamPages: globalThis.Record<string, TeamPage>,
+    width = WIDTH
+  ) {
     let record = defaultFactory();
-    Object.entries(pageRec).forEach(([pageID, teamPage]) => {
+    Object.entries(teamPages).forEach(([pageID, teamPage]) => {
       const { states, ratio } = teamPage;
       const pageMap = Map(
         Object.entries(states).map(([userID, flatState]) => [
