@@ -3,12 +3,9 @@ import ReactDOM from "react-dom";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import MainMenu from "./component/menu/MainMenu";
 import Test from "./component/Test";
-import { message } from "antd";
 import "./index.sass";
 const Reader = React.lazy(() => import("./component/reader/Reader"));
 const Team = React.lazy(() => import("./component/reader/Team"));
-
-message.config({ top: 60 });
 
 const placeholderEl = (
   <h1>

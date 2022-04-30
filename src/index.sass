@@ -10,6 +10,9 @@ body
 code, .code-font
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace
 
+#root
+  height: 100%
+
 ::-webkit-scrollbar
   width: 6px
   height: 6px
@@ -30,8 +33,13 @@ code, .code-font
 .ant-input-group *
   box-shadow: none !important
 
-#root
-  height: 100%
+@media screen and (min-width: 500px)
+  .ant-message
+    top: 60px
+
+@media screen and (max-width: 500px)
+  .ant-message
+    top: 105px
 
 .container
   position: fixed
