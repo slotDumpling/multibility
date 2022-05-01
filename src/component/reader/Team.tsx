@@ -138,7 +138,6 @@ export default function Team() {
       if (userID === getUserID()) return;
       setTeamState((prev) => prev?.resetUser(userID, pageRec));
     });
-    io.connect();
 
     io.on('connect_error', console.error)
     io.on("connect", () => setConnected(true));
