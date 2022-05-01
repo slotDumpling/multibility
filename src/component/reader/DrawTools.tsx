@@ -327,7 +327,7 @@ const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
     } catch (e) {
       message.error("Failed to reset socket.io client");
     } finally {
-      setRenaming(false);
+      requestAnimationFrame(() => setRenaming(false));
     }
   };
 
