@@ -215,14 +215,14 @@ export class DrawState {
   }
 
   static mergeStates(states: DrawState[]) {
-    const iterList = states.map((ds) => ds.getStrokesMap().values());
+    const iterators = states.map((ds) => ds.getStrokesMap().values());
 
     let mergedStrokes: Stroke[] = [];
     const heap = new Heap<[Stroke, number]>(
       ([s0], [s1]) => s0.timestamp - s1.timestamp
     );
 
-    iterList.forEach((iter, index) => {
+    iterators.forEach((iter, index) => {
       const { value, done } = iter.next();
       done || heap.push([value, index]);
     });
@@ -233,7 +233,7 @@ export class DrawState {
       const [stroke, index] = record;
       mergedStrokes.push(stroke);
 
-      const { value, done } = iterList[index].next();
+      const { value, done } = iterators[index].next();
       done || heap.push([value, index]);
     }
     return mergedStrokes;
