@@ -1,3 +1,5 @@
+@import "../_base"
+
 .main-menu.container
   display: flex
   flex-direction: column
@@ -14,13 +16,10 @@
       display: flex
       align-items: center
     h4
+      @extend .text-overflow
       flex: 1
       margin: 0 30px !important
       text-align: center
-      overflow: hidden
-      display: -webkit-box
-      -webkit-box-orient: vertical
-      -webkit-line-clamp: 1
   main
     flex: 1
     overflow: hidden
@@ -187,14 +186,11 @@ button.team-btn
       flex: 1
       margin-right: 10px
       .name
+        @extend .text-overflow
         flex: 1
         margin: 1px 0
         font-size: 1.2em
         overflow: hidden
-        text-overflow: ellipsis
-        display: -webkit-box
-        -webkit-box-orient: vertical
-        -webkit-line-clamp: 1
       .name-input
         flex: 1
         font-size: 1.2em

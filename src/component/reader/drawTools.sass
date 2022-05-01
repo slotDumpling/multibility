@@ -1,5 +1,5 @@
-$header-low-height: 55px
-$header-high-height: 100px
+@import "var"
+@import "../_base"
 
 .reader.container
   header
@@ -93,9 +93,8 @@ $header-high-height: 100px
       .avatar
         margin-right: 10px
       .user-name
+        @extend .text-overflow
         flex: 1
-        overflow: hidden
-        text-overflow: ellipsis
       .me-tag
         margin: 0
   .rename-input
