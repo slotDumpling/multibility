@@ -318,6 +318,19 @@ const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
     });
   };
 
+  const submitRename = async (value: string) => {
+    const name = value.trim();
+    if (!name) return setRenaming(false);
+    setUserName(name);
+    try {
+      await resetIO();
+    } catch (e) {
+      message.error("Failed to reset socket.io client");
+    } finally {
+      setRenaming(false);
+    }
+  };
+
   return (
     <div className={classNames("user-item", { online })}>
       <Avatar
@@ -333,13 +346,7 @@ const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
           autoFocus
           className="rename-input"
           defaultValue={userName}
-          onSearch={(val) => {
-            const name = val.trim();
-            if (!name) return setRenaming(false);
-            setUserName(name);
-            resetIO();
-            setRenaming(false);
-          }}
+          onSearch={submitRename}
           enterButton={<Button icon={<CheckOutlined />} />}
         />
       )}

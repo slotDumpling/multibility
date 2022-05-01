@@ -24,7 +24,7 @@ export const TeamCtx = createContext({
   pushReorder: (pageOrder: string[]) => {},
   pushNewPage: (pageOrder: string[], pageID: string, newPage: NotePage) => {},
   setIgnores: (() => {}) as Setter<Set<string>>,
-  resetIO: () => {},
+  resetIO: async () => {},
 });
 
 interface ReorderInfo {
@@ -82,8 +82,8 @@ export default function Team() {
   const roomInit = async () => {
     message.loading({
       content: "Loading team note...",
-      duration: 0,
       key: "TEAM_LOADING",
+      duration: 0,
     });
     if (!((await loadInfo()) && (await loadState()))) {
       message.destroy("TEAM_LOADING");
@@ -139,7 +139,7 @@ export default function Team() {
       setTeamState((prev) => prev?.resetUser(userID, pageRec));
     });
 
-    io.on('connect_error', console.error)
+    io.on("connect_error", console.error);
     io.on("connect", () => setConnected(true));
     io.on("disconnect", () => setConnected(false));
 
@@ -176,7 +176,13 @@ export default function Team() {
     io.emit("newPage", { pageOrder, pageID, newPage: newTeamPage });
   };
 
-  const resetIO = () => setIO(IoFactory(noteID));
+  const resetIO = () =>
+    new Promise<void>((res, rej) => {
+      const newIO = IoFactory(noteID)();
+      newIO.on("join", () => res());
+      setIO(newIO);
+      setTimeout(rej, 5_000, "reset io timeout");
+    });
 
   if (!loaded) return null;
   return (
