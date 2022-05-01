@@ -204,14 +204,12 @@ export async function updateTeamNote(
 
   // parse timgs & set empty states for new pages.
   for (let [pageID, page] of Object.entries(pageInfos)) {
-    if (!(pageID in pageRec)) {
-      const { pdfIndex } = page;
-      const state = getDefaultFlatState();
-      pageRec[pageID] = { ...page, state };
-      if (pdf && pdfIndex) {
-        pageRec[pageID].image = await getOneImage(pdf, pdfIndex, 0.5);
-      }
-    }
+    if (pageID in pageRec) continue;
+    const { pdfIndex } = page;
+    const state = getDefaultFlatState();
+    pageRec[pageID] = { ...page, state };
+    if (!pdf || !pdfIndex) continue;
+    pageRec[pageID].image = await getOneImage(pdf, pdfIndex, 0.5);
   }
   await editNoteData(noteID, { pageOrder, pageRec });
   return true;
