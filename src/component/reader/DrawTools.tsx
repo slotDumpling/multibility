@@ -330,6 +330,7 @@ const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
       {renaming || <span className="user-name">{userName}</span>}
       {renaming && (
         <Search
+          autoFocus
           className="rename-input"
           defaultValue={userName}
           onSearch={(val) => {

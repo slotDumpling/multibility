@@ -1,4 +1,4 @@
-@import "drawTools"
+@use "drawTools"
 
 .preview-container
   display: flex
@@ -78,8 +78,8 @@
 
 @media screen and (max-width: 500px)
   .preview-drawer
-    top: $header-high-height
+    top: drawTools.$header-high-height
 
 @media screen and (min-width: 500px)
   .preview-drawer
-    top: $header-low-height
+    top: drawTools.$header-low-height
