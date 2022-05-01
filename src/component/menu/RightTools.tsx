@@ -26,7 +26,7 @@ import {
   ArrowLeftOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { getnoteID } from "../../lib/network/http";
+import { getNoteID } from "../../lib/network/http";
 import DigitInput from "../ui/DigitInput";
 import { CSSTransition } from "react-transition-group";
 import Title from "antd/lib/typography/Title";
@@ -267,7 +267,7 @@ function JoinTeamButton() {
 
   const nav = useNavigate();
   async function handleSubmit(code: number) {
-    const noteID = await getnoteID(code);
+    const noteID = await getNoteID(code);
     if (!noteID) {
       setRoomCode(0);
       setAnimated(true);

@@ -4,7 +4,7 @@ import { loadNote, saveTeamNote, updateTeamNote } from "../note/archive";
 import { getUserID } from "../user";
 
 export let BASE_URL = "https://api.slotdumpling.top/paint";
-// BASE_URL = "http://100.81.113.84:8090/paint";
+BASE_URL = "http://100.81.113.84:8090/paint";
 axios.defaults.baseURL = BASE_URL;
 
 axios.interceptors.request.use((config) => {
@@ -12,7 +12,7 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
-export async function getnoteID(roomCode: number) {
+export async function getNoteID(roomCode: number) {
   try {
     const { data } = await axios.get(`code/${roomCode}`);
     console.log({ data });
