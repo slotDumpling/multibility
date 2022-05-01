@@ -130,7 +130,6 @@ export class DrawState {
   static addStroke(drawState: DrawState, pathData: string) {
     const uid = getUid();
     const timestamp = Date.now();
-    console.log('local: ', timestamp);
     const stroke = { pathData, uid, timestamp };
     return DrawState.pushStroke(drawState, stroke);
   }
@@ -183,7 +182,6 @@ export class DrawState {
   static updateStroke(drawState: DrawState, stroke: Stroke) {
     const { uid } = stroke;
     const prevRecord = drawState.getImmutable();
-    console.log('sync: ', stroke.timestamp);
     return new DrawState(
       prevRecord.update("strokes", (s) => s.set(uid, stroke)),
       drawState.width,
