@@ -116,8 +116,6 @@ export default function Team() {
       });
     });
 
-    io.on("rejoin", ({ members }) => setUserRec(members));
-
     io.on("leave", ({ leaved, members }) => {
       const { userID, userName } = leaved;
       setUserRec(members);
