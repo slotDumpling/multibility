@@ -11,6 +11,7 @@ import { NotePage } from "../../lib/note/note";
 import { Set } from "immutable";
 import Reader from "./Reader";
 import { Setter } from "../../lib/hooks";
+import { Stroke } from "../../lib/draw/DrawState";
 
 export const TeamCtx = createContext({
   code: -2,
@@ -45,7 +46,12 @@ type TeamUpdate =
     } & ReorderInfo)
   | ({
       type: "newPage";
-    } & NewPageInfo);
+    } & NewPageInfo)
+  | {
+      type: "sync";
+      stroke: Stroke;
+      pageID: string;
+    };
 
 export default function Team() {
   const noteID = useParams().noteID ?? "";
@@ -94,7 +100,7 @@ export default function Team() {
   };
 
   useEffect(() => {
-    io.compress(true).on("push", ({ operation, userID }) => {
+    io.on("push", ({ operation, userID }) => {
       setTeamState((prev) => prev?.pushOperation(operation, userID));
     });
 
@@ -159,7 +165,13 @@ export default function Team() {
   }, [noteID]);
 
   const pushOperation = (operation: SetOperation) => {
-    io.emit("push", { operation });
+    io.emit(
+      "push",
+      { operation },
+      ({ stroke, pageID }: { stroke: Stroke; pageID: string }) => {
+        setTeamUpdate({ type: "sync", stroke, pageID });
+      }
+    );
   };
 
   const pushReorder = (pageOrder: string[]) => {

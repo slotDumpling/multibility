@@ -76,6 +76,15 @@ export class StateSet {
     return new StateSet(currRecord, lastSetOp);
   }
 
+  updateState(pageID: string, cb: (prevDS: DrawState) => DrawState) {
+    const prevDS = this.getOneState(pageID);
+    if (!prevDS) return this;
+    const currDS = cb(prevDS);
+    return new StateSet(
+      this.getImmutable().update("states", (s) => s.set(pageID, currDS))
+    );
+  }
+
   addState(pageID: string, notePage: NotePage, width = WIDTH) {
     const { state, ratio } = notePage;
     const newDS = DrawState.loadFromFlat(state, width, width * ratio);

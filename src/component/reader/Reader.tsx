@@ -140,8 +140,9 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
 
   useEffect(() => {
     if (!teamUpdate) return;
-    const { type, pageOrder } = teamUpdate;
+    const { type } = teamUpdate;
     if (type === "reorder") {
+      const { pageOrder } = teamUpdate;
       saveReorder(pageOrder);
 
       if (!teamUpdate.deleted) return;
@@ -149,10 +150,18 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
         saveReorder(teamUpdate.prevOrder, true);
       });
     } else if (type === "newPage") {
+      const { pageOrder } = teamUpdate;
       saveReorder(pageOrder);
       let { pageID, newPage } = teamUpdate;
       setPageRec((prev) => prev && { ...prev, [pageID]: newPage });
       setStateSet((prev) => prev?.addState(pageID, newPage));
+    } else if (type === "sync") {
+      const { pageID, stroke } = teamUpdate;
+      setStateSet((prevSS) =>
+        prevSS?.updateState(pageID, (prevDS) =>
+          DrawState.updateStroke(prevDS, stroke)
+        )
+      );
     }
   }, [teamUpdate]);
 

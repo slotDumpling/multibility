@@ -58,7 +58,6 @@ export async function loadTeamNoteInfo(noteID: string) {
         url: noteID,
         responseType: "blob",
       });
-      console.log(data);
       file = new Blob([data], { type: "application/pdf" });
     }
     await saveTeamNote(noteID, noteInfo, pageInfos, file);
