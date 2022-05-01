@@ -306,7 +306,7 @@ const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
   self = false,
 }) => {
   const { userName, userID, online } = userInfo;
-  const { ignores, setIgnores, pushRename } = useContext(TeamCtx);
+  const { ignores, setIgnores, resetIO } = useContext(TeamCtx);
   const color = useMemo(() => getHashedColor(userID), [userID]);
   const ignored = ignores.has(userID) && !self;
   const [renaming, setRenaming] = useState(false);
@@ -325,7 +325,7 @@ const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
         size="small"
         style={{ backgroundColor: color }}
       >
-        {userName.slice(0, 4)}
+        {userName?.slice(0, 4)}
       </Avatar>
       {renaming || <span className="user-name">{userName}</span>}
       {renaming && (
@@ -336,8 +336,8 @@ const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
           onSearch={(val) => {
             const name = val.trim();
             if (!name) return setRenaming(false);
-            pushRename(name);
             setUserName(name);
+            resetIO();
             setRenaming(false);
           }}
           enterButton={<Button icon={<CheckOutlined />} />}
@@ -363,7 +363,7 @@ const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
 };
 
 function RoomInfo() {
-  const { code, userRec, loadInfo, connected } = useContext(TeamCtx);
+  const { code, userRec, connected, loadInfo, resetIO } = useContext(TeamCtx);
   const link = window.location.href;
   const copy = () => {
     navigator.clipboard.writeText(link);
@@ -428,7 +428,10 @@ function RoomInfo() {
         type="text"
         size="small"
         icon={<ReloadOutlined />}
-        onClick={loadInfo}
+        onClick={() => {
+          loadInfo();
+          resetIO();
+        }}
       />
     </div>
   );

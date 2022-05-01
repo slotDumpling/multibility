@@ -24,13 +24,13 @@ export const TeamCtx = createContext({
   pushReorder: (pageOrder: string[]) => {},
   pushNewPage: (pageOrder: string[], pageID: string, newPage: NotePage) => {},
   setIgnores: (() => {}) as Setter<Set<string>>,
-  pushRename: (name: string) => {},
+  resetIO: () => {},
 });
 
 interface ReorderInfo {
   pageOrder: string[];
-  deleted: boolean;
   prevOrder: string[];
+  deleted: boolean;
 }
 
 interface NewPageInfo {
@@ -53,10 +53,10 @@ export default function Team() {
   const [code, setCode] = useState(-2);
   const [userRec, setUserRec] = useState<Record<string, UserInfo>>({});
   const [ignores, setIgnores] = useState(Set<string>());
-  const [io] = useState(IoFactory(noteID));
+  const [io, setIO] = useState(IoFactory(noteID));
   const [teamUpdate, setTeamUpdate] = useState<TeamUpdate>();
   const [loaded, setLoaded] = useState(false);
-  const [connected, setConnected] = useState(true);
+  const [connected, setConnected] = useState(false);
   const nav = useNavigate();
 
   const loadState = async () => {
@@ -91,12 +91,14 @@ export default function Team() {
     }
     message.destroy("TEAM_LOADING");
     setLoaded(true);
+  };
 
+  useEffect(() => {
     io.compress(true).on("push", ({ operation, userID }) => {
       setTeamState((prev) => prev?.pushOperation(operation, userID));
     });
 
-    io.on("joined", ({ joined, members }) => {
+    io.on("join", ({ joined, members }) => {
       const { userID, userName } = joined;
       setUserRec(members);
       if (userID === getUserID()) return;
@@ -108,7 +110,9 @@ export default function Team() {
       });
     });
 
-    io.on("leaved", ({ leaved, members }) => {
+    io.on("rejoin", ({ members }) => setUserRec(members));
+
+    io.on("leave", ({ leaved, members }) => {
       const { userID, userName } = leaved;
       setUserRec(members);
       if (userID === getUserID()) return io.emit("join");
@@ -119,10 +123,6 @@ export default function Team() {
         key: userID,
       });
     });
-
-    io.on("rename", ({members}) => {
-      setUserRec(members)
-    })
 
     io.on("reorder", (info: ReorderInfo) => {
       setTeamUpdate({ type: "reorder", ...info });
@@ -138,17 +138,20 @@ export default function Team() {
       if (userID === getUserID()) return;
       setTeamState((prev) => prev?.resetUser(userID, pageRec));
     });
+    io.connect();
 
+    io.on('connect_error', console.error)
     io.on("connect", () => setConnected(true));
     io.on("disconnect", () => setConnected(false));
 
-    io.connect();
-  };
+    return () => {
+      io.removeAllListeners();
+      io.close();
+    };
+  }, [io]);
 
   const roomDestroy = () => {
     message.destroy("TEAM_LOADING");
-    io.removeAllListeners();
-    io.disconnect();
   };
 
   useEffect(() => {
@@ -174,9 +177,7 @@ export default function Team() {
     io.emit("newPage", { pageOrder, pageID, newPage: newTeamPage });
   };
 
-  const pushRename = (name: string) => {
-    io.emit("rename", { name });
-  };
+  const resetIO = () => setIO(IoFactory(noteID));
 
   if (!loaded) return null;
   return (
@@ -188,9 +189,9 @@ export default function Team() {
         connected,
         teamState,
         teamUpdate,
+        resetIO,
         loadInfo,
         setIgnores,
-        pushRename,
         pushReorder,
         pushNewPage,
         pushOperation,

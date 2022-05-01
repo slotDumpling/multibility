@@ -1,4 +1,4 @@
-import { Note, NoteInfo, NotePage, TeamNoteInfo } from "./note";
+import { Note, NoteInfo, NotePage, TeamNoteInfo, TeamPageInfo } from "./note";
 import { getDefaultFlatState } from "../draw/DrawState";
 import { getRandomColor } from "../color";
 import localforage from "localforage";
@@ -153,31 +153,47 @@ export async function moveNoteTag(noteID: string, tagID: string) {
 export async function saveTeamNote(
   noteID: string,
   noteInfo: TeamNoteInfo,
-  teamPages: Record<string, NotePage>,
-  pdf?: Blob
+  teamPages: Record<string, TeamPageInfo>,
+  file?: Blob
 ) {
   let note = await loadNote(noteID);
   if (note) return;
-  for (let page of Object.values(teamPages)) {
-    page.state = getDefaultFlatState();
-  }
   const time = moment.now();
+  const pageRec: Record<string, NotePage> = {};
   note = {
     ...noteInfo,
     tagID: "DEFAULT",
     team: true,
-    pageRec: teamPages,
-    pdf,
+    pageRec,
+    pdf: file,
     createTime: time,
     lastTime: time,
   };
+
+  // set empty state for each page
+  Object.entries(teamPages).forEach(([pageID, page]) => {
+    pageRec[pageID] = { ...page, state: getDefaultFlatState() };
+  });
+
+  // parse timg for each page
+  if (file) {
+    const { getPDFImages } = await import("../note/pdfImage");
+    const { images } = await getPDFImages(file);
+    Object.values(pageRec).forEach((page) => {
+      const { pdfIndex } = page;
+      if (!pdfIndex) return;
+      page.image = images[pdfIndex - 1];
+    });
+    note.thumbnail = images[0];
+  }
+
   await createNewNote(note);
 }
 
 export async function updateTeamNote(
   noteID: string,
   noteInfo: TeamNoteInfo,
-  pageInfos: Record<string, NotePage>
+  pageInfos: Record<string, TeamPageInfo>
 ) {
   let note = await loadNote(noteID);
   if (!note) return false;
@@ -185,19 +201,16 @@ export async function updateTeamNote(
   if (pageOrder.length < note.pageOrder.length) return true;
   const { pageRec, pdf } = note;
   const { getOneImage } = await import("./pdfImage");
+
+  // parse timgs & set empty states for new pages.
   for (let [pageID, page] of Object.entries(pageInfos)) {
     if (!(pageID in pageRec)) {
-      const { ratio, pdfIndex } = page;
-      let image: string | undefined = undefined;
+      const { pdfIndex } = page;
+      const state = getDefaultFlatState();
+      pageRec[pageID] = { ...page, state };
       if (pdf && pdfIndex) {
-        image = await getOneImage(pdf, pdfIndex, 0.5);
+        pageRec[pageID].image = await getOneImage(pdf, pdfIndex, 0.5);
       }
-      pageRec[pageID] = {
-        ratio,
-        state: getDefaultFlatState(),
-        pdfIndex,
-        image,
-      };
     }
   }
   await editNoteData(noteID, { pageOrder, pageRec });

@@ -1,10 +1,10 @@
 import axios from "axios";
-import { Note, NotePage, TeamNoteInfo, TeamPage } from "../note/note";
+import { TeamNoteInfo, TeamPage, TeamPageInfo } from "../note/note";
 import { loadNote, saveTeamNote, updateTeamNote } from "../note/archive";
 import { getUserID } from "../user";
 
 export let BASE_URL = "https://api.slotdumpling.top/paint";
-BASE_URL = "http://100.81.113.84:8090/paint";
+// BASE_URL = "http://100.81.113.84:8090/paint";
 axios.defaults.baseURL = BASE_URL;
 
 axios.interceptors.request.use((config) => {
@@ -27,8 +27,8 @@ export async function getNoteID(roomCode: number) {
 interface InfoRes {
   statusCode: number;
   code: number;
-  noteInfo: TeamNoteInfo & Partial<Note>;
-  pageInfos: Record<string, NotePage>;
+  noteInfo: TeamNoteInfo;
+  pageInfos: Record<string, TeamPageInfo>;
 }
 
 export async function getTeamNoteInfo(noteID: string) {
@@ -60,15 +60,6 @@ export async function loadTeamNoteInfo(noteID: string) {
       });
       console.log(data);
       file = new Blob([data], { type: "application/pdf" });
-
-      const { getPDFImages } = await import("../note/pdfImage");
-      const { images } = await getPDFImages(file);
-      for (let page of Object.values(pageInfos)) {
-        const { pdfIndex } = page;
-        if (!pdfIndex) continue;
-        page.image = images[pdfIndex - 1];
-      }
-      noteInfo.thumbnail = images[0];
     }
     await saveTeamNote(noteID, noteInfo, pageInfos, file);
     return infoRes;
