@@ -411,10 +411,7 @@ const RoomInfo: FC = () => {
   const share = async () => {
     const selfName = userRec[getUserID()]?.userName;
     try {
-      await copy(
-        `${selfName} invited you to join the shared note at 𝐌𝐮𝐥𝐭𝐢𝐛𝐢𝐥𝐢𝐭𝐲.
-${link}`
-      );
+      await copy(`${selfName} shared a note with you at 𝐌𝐮𝐥𝐭𝐢𝐛𝐢𝐥𝐢𝐭𝐲.\n${link}`);
       message.destroy("copy");
       message.success({
         content: "Share link copied!",

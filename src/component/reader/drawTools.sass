@@ -65,24 +65,24 @@
   align-items: center
 
 .team-popover
-  width: 200px
+  $pop-width: 200px
+  width: $pop-width
   display: flex
   flex-direction: column
   align-items: center
   .disconn-alert
-    width: 232px
+    width: $pop-width + 2 * 16px
     transform: translateY(-12px)
   .share-btn
+    width: $pop-width - 30px
     margin-top: 20px
   .user-list
-    width: 100%
     display: flex
     flex-direction: column
     align-items: center
     .user-item
       display: flex
-      width: 180px
-      height: 32px
+      width: $pop-width - 20px
       margin-bottom: 10px
       align-items: center
       &:not(.online)
