@@ -39,6 +39,12 @@ export class TeamState {
     return this.getPageStates().get(pageID);
   }
 
+  getOnePageValidUser(pageID: string) {
+    const map = this.getOnePageState(pageID);
+    if (!map) return [];
+    return Array.from(map?.filter((ds) => !ds.isEmpty()).keys());
+  }
+
   getPageRatio(pageID: string) {
     return this.getPageInfos().get(pageID)?.ratio;
   }

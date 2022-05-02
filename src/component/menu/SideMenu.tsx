@@ -193,7 +193,7 @@ export default function SideMenu({ onSelect }: { onSelect?: () => void }) {
       className={classNames("tag-item", { curr: tagUid === "DEFAULT" })}
       onClick={() => selectTag("DEFAULT")}
     >
-      <ProfileOutlined id="all-note-icon" />
+      <ProfileOutlined className="all-note-icon" />
       <span className="tag-name">All Notes</span>
       <span className="tag-num">{Object.keys(allNotes).length}</span>
     </div>
@@ -210,6 +210,7 @@ export default function SideMenu({ onSelect }: { onSelect?: () => void }) {
             <SwipeDelete
               key={uid}
               uid={uid}
+              className="tag-swipe"
               onDelete={removeTag}
               nowSwiped={nowSwiped}
               setNowSwiped={setNowSwiped}

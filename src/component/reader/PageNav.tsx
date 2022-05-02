@@ -1,4 +1,4 @@
-import { Button, Drawer, Menu, Popover, Tabs } from "antd";
+import { Avatar, Button, Drawer, Menu, Popover, Tabs } from "antd";
 import React, {
   FC,
   useRef,
@@ -29,6 +29,8 @@ import { exchange } from "../../lib/array";
 import { Setter } from "../../lib/hooks";
 import classNames from "classnames";
 import "./preview.sass";
+import { UserAvatar } from "./DrawTools";
+import { TeamCtx } from "./Team";
 
 const PageNavContent = ({
   activeKey,
@@ -107,9 +109,19 @@ const PagePreview: FC<{
 }> = ({ uid, pageIndex, mode, currpageID, refRec }) => {
   const { stateSet, teamState, pageRec } = useContext(ReaderStateCtx);
   const { scrollPage, switchPageMarked } = useContext(ReaderMethodCtx);
+  const { ignores } = useContext(TeamCtx);
+  const [chosen, setChosen] = useState("");
+
   const page = pageRec && pageRec[uid];
   const drawState = stateSet?.getOneState(uid);
   const teamStateMap = teamState?.getOnePageState(uid);
+  const userIDs = useMemo(
+    () =>
+      teamState
+        ?.getOnePageValidUser(uid)
+        .filter((userID) => !ignores.has(userID)),
+    [teamState, ignores, uid]
+  );
   if (!page || !drawState) return null;
 
   if (
@@ -153,8 +165,8 @@ const PagePreview: FC<{
           >
             <PageWrapper
               uid={uid}
-              drawState={drawState}
-              teamStateMap={teamStateMap}
+              drawState={teamStateMap?.get(chosen) || drawState}
+              teamStateMap={chosen ? undefined : teamStateMap}
               thumbnail={image}
               preview
             />
@@ -163,6 +175,11 @@ const PagePreview: FC<{
               onClickCapture={switchMarked}
             />
             <span className="index">{pageIndex + 1}</span>
+            <TeamAvatars
+              userIDs={userIDs}
+              chosen={chosen}
+              setChosen={setChosen}
+            />
             <PreviewOption uid={uid} />
           </div>
         );
@@ -171,10 +188,34 @@ const PagePreview: FC<{
   );
 };
 
+const TeamAvatars: FC<{
+  userIDs?: string[];
+  chosen: string;
+  setChosen: Setter<string>;
+}> = ({ userIDs, chosen, setChosen }) => {
+  return (
+    <Avatar.Group
+      maxCount={2}
+      size="default"
+      className={classNames("team-group", { chosen })}
+    >
+      {userIDs?.map((userID) => (
+        <UserAvatar
+          key={userID}
+          size="default"
+          userID={userID}
+          className="preview-avatar"
+          chosen={chosen === userID}
+          onClick={() => setChosen((prev) => (prev === userID ? "" : userID))}
+        />
+      ))}
+    </Avatar.Group>
+  );
+};
+
 const PreviewOption = ({ uid }: { uid: string }) => {
   const [popShow, setPopShow] = useState(false);
   const { addPage, deletePage } = useContext(ReaderMethodCtx);
-  const { Item } = Menu;
 
   const menu = (
     <Menu
@@ -189,17 +230,17 @@ const PreviewOption = ({ uid }: { uid: string }) => {
         domEvent.stopPropagation();
         setPopShow(false);
       }}
-    >
-      <Item key="ADD" icon={<PlusOutlined />}>
-        Add page
-      </Item>
-      <Item key="COPY" icon={<CopyOutlined />}>
-        Duplicate
-      </Item>
-      <Item key="DELETE" danger icon={<DeleteOutlined />}>
-        Delete
-      </Item>
-    </Menu>
+      items={[
+        { key: "ADD", icon: <PlusOutlined />, label: "Add page" },
+        { key: "COPY", icon: <CopyOutlined />, label: "Duplicate" },
+        {
+          key: "DELETE",
+          icon: <DeleteOutlined />,
+          label: "Delete",
+          danger: true,
+        },
+      ]}
+    ></Menu>
   );
   return (
     <Popover

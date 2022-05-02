@@ -7,12 +7,7 @@ import {
   Popover,
   Progress,
 } from "antd";
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useState,
-} from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
 import { createNewNote } from "../../lib/note/archive";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import {
@@ -53,23 +48,16 @@ export default function RightTools() {
 
 const OthersMenu = () => {
   const { setActive } = useContext(OthersStateCtx);
-  const { Item } = Menu;
   return (
     <div className="other-menu">
-      <Menu onClick={({ key }) => setActive(key)}>
-        <Item key="PDF">
-          <FilePdfOutlined />
-          <span>Import PDF</span>
-        </Item>
-        <Item key="PROFILE">
-          <UserOutlined />
-          <span>My profile</span>
-        </Item>
-        <Item key="SETTINGS">
-          <SettingOutlined />
-          <span>Settings</span>
-        </Item>
-      </Menu>
+      <Menu
+        onClick={({ key }) => setActive(key)}
+        items={[
+          { key: "PDF", icon: <FilePdfOutlined />, label: "Import PDF" },
+          { key: "PROFILE", icon: <UserOutlined />, label: "My profile" },
+          { key: "SETTINGS", icon: <SettingOutlined />, label: "Settings" },
+        ]}
+      />
     </div>
   );
 };
@@ -119,7 +107,7 @@ function UploadPdfPage() {
   }
 
   return (
-    <SeconaryMenu title="Load PDF">
+    <SeconaryMenu title="Import PDF">
       <Dragger
         disabled={loading}
         multiple={false}
@@ -172,7 +160,6 @@ const ProfilePage = () => {
 };
 
 const SettingsPage = () => {
-  const { Item } = Menu;
   const { menuInit } = useContext(MenuMethodCtx);
 
   const clearAll = async () => {
@@ -182,23 +169,20 @@ const SettingsPage = () => {
 
   return (
     <SeconaryMenu title="Settings">
-      <Menu>
-        <Popconfirm
-          title="Everything will be deleted."
-          onConfirm={clearAll}
-          icon={<ClearOutlined />}
-          okText="Delete"
-          okType="danger"
-          okButtonProps={{ type: "primary" }}
-          cancelText="Cancel"
-          placement="bottom"
-        >
-          <Item key="CLEAR" danger>
-            <ClearOutlined />
-            <span>Clear all</span>
-          </Item>
-        </Popconfirm>
-      </Menu>
+      <Popconfirm
+        title="Everything will be deleted."
+        onConfirm={clearAll}
+        icon={<ClearOutlined />}
+        okText="Delete"
+        okType="danger"
+        okButtonProps={{ type: "primary" }}
+        cancelText="Cancel"
+        placement="bottom"
+      >
+        <Button icon={<ClearOutlined />} danger block>
+          Clear all
+        </Button>
+      </Popconfirm>
     </SeconaryMenu>
   );
 };

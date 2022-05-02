@@ -55,7 +55,7 @@ export const ReaderMethodCtx = createContext({
   scrollPage: (pageID: string) => {},
   switchPageMarked: (pageID: string) => {},
   setPageState: (uid: string, ds: DrawState) => {},
-  addPage: (prevpageID: string, copy?: boolean) => {},
+  addPage: (prevPageID: string, copy?: boolean) => {},
   addFinalPage: () => {},
   deletePage: (pageID: string) => {},
   saveReorder: async (order: string[], push: boolean) => {},
@@ -217,11 +217,11 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     push && pushReorder(newOrder);
   };
 
-  const addPage = (prevpageID: string, copy = false) => {
+  const addPage = (prevPageID: string, copy = false) => {
     if (!pageOrder) return;
-    const prevPage = copy ? pageRec && pageRec[prevpageID] : undefined;
+    const prevPage = copy ? pageRec && pageRec[prevPageID] : undefined;
     const [pageID, newPage] = createPage(prevPage);
-    const newOrder = insertAfter(pageOrder, prevpageID, pageID);
+    const newOrder = insertAfter(pageOrder, prevPageID, pageID);
     pushNewPage(newOrder, pageID, newPage);
     saveReorder(newOrder);
     setPageRec((prev) => prev && { ...prev, [pageID]: newPage });
@@ -229,13 +229,14 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   };
 
   const addFinalPage = () => {
-    const lastpageID = last(pageOrder);
-    lastpageID && addPage(lastpageID);
+    const lastPageID = last(pageOrder);
+    console.log(lastPageID)
+    lastPageID && addPage(lastPageID);
   };
 
   const deletePage = (pageID: string) => {
     const newOrder = pageOrder?.filter((id) => id !== pageID);
-    newOrder && saveReorder(newOrder, true);
+    newOrder?.length &&saveReorder(newOrder, true);
   };
 
   const renderResult = (

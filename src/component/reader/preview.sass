@@ -1,4 +1,6 @@
-@import "var"
+@import var
+@import ../_var
+@import ../_mixins
 
 .preview-container
   display: flex
@@ -11,17 +13,17 @@
       margin: 0 15px
   .page-list
     flex: 1
-    overflow: hidden scroll
+    overflow: hidden auto
     padding: 0 25px
     & > div
     .page
       margin-top: 25px
       cursor: pointer
       position: relative
-      border: 1px solid #eee
+      border: $default-border
       &.curr
-        border-color: var(--blue-color)
-        outline: 2px solid var(--blue-color)
+        border-color: $blue-color
+        outline: 2px solid $blue-color
       &.drag
         box-shadow: 0 0 20px 10px #0002
       .bookmark
@@ -32,45 +34,54 @@
         width: 40px
         cursor: pointer
         &::after
-          content: ""
-          position: absolute
-          top: 10px
-          right: 10px
-          height: 30px
-          width: 20px
+          @include pseudo-el(10px, 10px, 10px, 10px)
           clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 75%, 0 100%)
           background-color: #ddd
           transition: background 0.3s
         &.marked::after
-          background-color: var(--blue-color)
-      .index
+          background-color: $blue-color
+      @mixin page-corner
         position: absolute
+        background-color: #444
+        color: #fff
+        padding: 0 .5em
+      .index
+        @include page-corner
         right: 0px
         bottom: 0px
-        background-color: #444
-        color: #fff
-        padding: 0 .5em
         border-radius: 5px 0 0 0
       .option
-        position: absolute
+        @include page-corner
         left: 0px
         bottom: 0px
-        background-color: #444
-        color: #fff
-        padding: 0 .5em
         border-radius: 0 5px 0 0
-        transition: opacity 0.2s
         &:active
           opacity: 0.7
         &::after
-          content: ""
-          position: absolute
-          top: -10px
-          bottom: -10px
-          left: -10px
-          right: -10px
+          @include pseudo-el(-10px, -10px, -10px, -10px)
+      .team-group
+        position: absolute
+        top: 5px
+        left: 5px
+        & > span
+          box-sizing: content-box
+          border-width: 3px
+          .avatar-wrapper::before
+            @include pseudo-el(-20px, -20px, -20px, -20px)
+        &.chosen
+          opacity: 0.5
+          .preview-avatar:not(.chosen)
+            filter: grayscale(0.8)
     .add-btn-wrapper
       margin: 25px 0
+
+.ant-popover .preview-avatar
+  box-sizing: content-box
+  border-width: 3px
+  border-style: solid
+
+.preview-avatar.chosen
+  border-color: $blue-color
 
 .preview-drawer
   bottom: 0 !important

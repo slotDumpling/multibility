@@ -2,14 +2,11 @@ import { Button, Input, message } from "antd";
 import React, { useContext, useEffect, useState } from "react";
 import { ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { PlusOutlined } from "@ant-design/icons";
-import classNames from "classnames";
 
 export const AddPageButton = () => {
   const { addFinalPage } = useContext(ReaderMethodCtx);
-  const { pageOrder } = useContext(ReaderStateCtx);
-  const empty = Boolean(pageOrder && !pageOrder.length);
   return (
-    <div className={classNames("add-btn-wrapper", { empty })}>
+    <div className="add-btn-wrapper">
       <Button
         type="dashed"
         icon={<PlusOutlined />}

@@ -1,22 +1,25 @@
-@import "../_base"
+@import ../_mixins
+@import ../_var
+
+$header-height: 55px
 
 .main-menu.container
   display: flex
   flex-direction: column
   header
     position: relative
-    height: 55px
+    height: $header-height
     padding: 10px 15px
     display: flex
     justify-content: space-between
     align-items: center
-    border-bottom: 1px solid #ddd
+    border-bottom: $dark-border
     .left-tools
       width: 70px
       display: flex
       align-items: center
     h4
-      @extend .text-overflow
+      @include text-overflow
       flex: 1
       margin: 0 30px !important
       text-align: center
@@ -36,45 +39,34 @@
   height: 100%
   display: flex
   flex-direction: column
-  border-right: 1px solid #eee
+  border-right: $default-border
   background-color: #eee3
   .tag-list
     flex: 1
-    overflow-y: auto
-    overflow-x: hidden
-    border: none
-    & > div:first-of-type
-      margin-top: 20px
-    & > div:last-of-type
-      margin-bottom: 20px
+    overflow: hidden auto
+    padding: 20px 0
     & > div:not(:last-of-type)
       margin-bottom: 10px
   footer
-    border-top: 1px solid #eee
+    border-top: $default-border
     padding: 10px 15px 30px 15px
     overflow: hidden
 
 .aside-btn
   margin-right: 10px
 .aside-drawer
-  top: 55px !important
+  top: $header-height !important
   bottom: 0 !important
   height: unset !important
   .side-menu
     background: #0000
 
 @media screen and (max-width: 500px)
-  button.large
-    display: none
-  main > .side-menu
+  button.large, main > .side-menu
     display: none
 
 @media screen and (min-width: 500px)
-  button.small
-    display: none
-  .aside-btn
-    display: none
-  .aside-drawer
+  button.small, .aside-btn, .aside-drawer
     display: none
 
 .tag-circle
@@ -90,7 +82,7 @@
   display: flex
   align-items: center
   cursor: pointer
-  transition-property: height, background, padding
+  transition: height, background, padding
   transition-duration: 0.3s
   &.editing
     height: 8em
@@ -105,19 +97,14 @@
     background-color: #f1f0f5
   & > .tag-circle
     margin: 0 12px 0 7px
-  #all-note-icon
+  .all-note-icon
     margin: 0 10px 0 7px
   .tag-name
-    margin: 0 10px 0 0 !important
+    @include text-overflow
     flex: 1
-    overflow: hidden
-    text-overflow: ellipsis
+    margin: 0 10px 0 0 !important
   .tag-num
     margin-right: 10px
-  .ant-input-group-addon
-    padding: 0 5px !important
-  .ant-select-arrow
-    transform: scale(0.8)
   .ant-select-selection-item
     display: flex
     align-items: center
@@ -128,7 +115,7 @@ button.team-btn
 .note-list
   flex: 1
   padding-bottom: 100px
-  overflow: hidden scroll
+  overflow: hidden auto
   position: relative
   .head-tools
     position: sticky
@@ -139,7 +126,7 @@ button.team-btn
     align-items: center
     justify-content: center
     height: 50px
-    border-bottom: 1px solid #eee
+    border-bottom: $default-border
     .search-input
       width: 150px
       margin-right: 20px
@@ -148,7 +135,7 @@ button.team-btn
     .tag-btn
       margin-right: 20px
   .note-item
-    border-bottom: 1px solid #eee
+    border-bottom: $default-border
     height: 5em
     padding: 0 1em
     margin: 0 20px
@@ -157,25 +144,20 @@ button.team-btn
     cursor: pointer
     position: relative
     &::before
-      content: ""
-      position: absolute
-      top: 0
-      left: -20px
-      bottom: -1px
-      right: -20px
+      @include pseudo-el(0, -20px, -1px, -20px)
       transition: background 0.3s
     &.selected::before
-      background-color: var(--blue-color-light)
+      background-color: $blue-color-light
     .timg-wrapper
       width: 3em
-      margin-right: 1.5em
+      margin-right: 1em
       display: flex
       justify-content: center
       position: relative
       .timg
         max-width: 3em
         max-height: 3.5em
-        border: 1px solid #eee
+        border: $default-border
         background-color: white
       .cloud-icon
         position: absolute
@@ -185,26 +167,27 @@ button.team-btn
     .content
       flex: 1
       margin-right: 10px
+      overflow: hidden
       .name
-        @extend .text-overflow
-        flex: 1
-        margin: 1px 0
+        @include text-overflow
+        margin: 1px 0 1px 6px
         font-size: 1.2em
         overflow: hidden
       .name-input
-        flex: 1
         font-size: 1.2em
         padding: 0 0 0 5px
-        margin-left: -6px
         background: #0000
         border-color: #eee
       .date
+        @include text-overflow
         font-size: 0.8em
-        margin: 0
+        margin: 0 0 0 6px
         color: #0006
 
 .tag-select
   display: flex
   align-items: center
-  .tag-circle, .none-tag-icon
+  .tag-circle
     margin-right: 10px
+  .none-tag-icon
+    margin-right: 8px

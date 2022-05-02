@@ -1,10 +1,5 @@
 import classNames from "classnames";
-import React, {
-  FC,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { FC, useEffect, useRef, useState } from "react";
 import { useSwipeable } from "react-swipeable";
 import { DeleteOutlined } from "@ant-design/icons";
 import "./swipe-delete.sass";
@@ -17,6 +12,7 @@ const SwipeDelete: FC<{
   setNowSwiped?: Setter<string>;
   disable?: boolean;
   icon?: boolean;
+  className?: string;
 }> = ({
   children,
   nowSwiped,
@@ -25,6 +21,7 @@ const SwipeDelete: FC<{
   onDelete,
   disable = false,
   icon = false,
+  className,
 }) => {
   const [deleted, setDeleted] = useState(false);
   const [swiped, setSwiped] = useState(false);
@@ -60,7 +57,11 @@ const SwipeDelete: FC<{
 
   return (
     <div
-      className={classNames("swipe-wrapper", { deleted, deleting, icon })}
+      className={classNames("swipe-wrapper", className, {
+        deleted,
+        deleting,
+        icon,
+      })}
       {...swipeHandler}
       style={{ height }}
     >

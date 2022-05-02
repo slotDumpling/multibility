@@ -24,7 +24,7 @@ import { ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { TeamCtx } from "./Team";
 import DigitDisplay from "../ui/DigitDisplay";
 import { colors, getHashedColor } from "../../lib/color";
-import { getUserID, setUserName, UserInfo } from "../../lib/user";
+import { getUserID, setUserName } from "../../lib/user";
 import { CtrlMode, DrawCtrl } from "../../lib/draw/drawCtrl";
 import PageNav from "./PageNav";
 import {
@@ -41,6 +41,7 @@ import {
   ExpandOutlined,
   ReloadOutlined,
   DeleteOutlined,
+  ShareAltOutlined,
   HighlightOutlined,
   DisconnectOutlined,
   RotateLeftOutlined,
@@ -54,6 +55,7 @@ import { putNote } from "../../lib/network/http";
 import { editNoteData } from "../../lib/note/archive";
 import { Setter } from "../../lib/hooks";
 import classNames from "classnames";
+import { AvatarSize } from "antd/lib/avatar/SizeContext";
 
 export default function DrawTools({
   handleUndo,
@@ -301,15 +303,15 @@ const SelectMenu: FC<{
   );
 };
 
-const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
-  userInfo,
-  self = false,
-}) => {
-  const { userName, userID, online } = userInfo;
-  const { ignores, setIgnores, resetIO } = useContext(TeamCtx);
-  const color = useMemo(() => getHashedColor(userID), [userID]);
-  const ignored = ignores.has(userID) && !self;
+const UserCard: FC<{ userID: string }> = ({ userID }) => {
   const [renaming, setRenaming] = useState(false);
+  const { ignores, setIgnores, resetIO, userRec } = useContext(TeamCtx);
+  const userInfo = userRec[userID];
+  if (!userInfo) return null;
+
+  const { userName, online } = userInfo;
+  const self = userID === getUserID();
+  const ignored = ignores.has(userID) && !self;
 
   const switchIgnore = () => {
     setIgnores((prev) => {
@@ -320,11 +322,12 @@ const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
 
   const submitRename = async (value: string) => {
     const name = value.trim();
-    if (!name) return setRenaming(false);
+    if (!name || name === userName) return setRenaming(false);
     setUserName(name);
     try {
       await resetIO();
     } catch (e) {
+      console.error(e);
       message.error("Failed to reset socket.io client");
     } finally {
       requestAnimationFrame(() => setRenaming(false));
@@ -333,13 +336,7 @@ const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
 
   return (
     <div className={classNames("user-item", { online })}>
-      <Avatar
-        className="avatar"
-        size="small"
-        style={{ backgroundColor: color }}
-      >
-        {userName?.slice(0, 4)}
-      </Avatar>
+      <UserAvatar userID={userID} size="small" className="room-avatar" />
       {renaming || <span className="user-name">{userName}</span>}
       {renaming && (
         <Search
@@ -369,11 +366,52 @@ const UserCard: FC<{ userInfo: UserInfo; self?: boolean }> = ({
   );
 };
 
-function RoomInfo() {
+export const UserAvatar: FC<{
+  userID: string;
+  size?: AvatarSize;
+  onClick?: () => void;
+  chosen?: boolean;
+  className?: string;
+}> = ({
+  userID,
+  size = "default",
+  onClick = () => {},
+  chosen = false,
+  className,
+}) => {
+  const { userRec } = useContext(TeamCtx);
+  const color = useMemo(() => getHashedColor(userID), [userID]);
+  const userInfo = userRec[userID];
+  if (!userInfo) return null;
+  const { userName } = userInfo;
+
+  return (
+    <Avatar
+      className={classNames(className, { chosen })}
+      size={size}
+      style={{ backgroundColor: color }}
+    >
+      <div
+        className="avatar-wrapper"
+        onClickCapture={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
+      >
+        {userName?.slice(0, 3)}
+      </div>
+    </Avatar>
+  );
+};
+
+const RoomInfo: FC = () => {
   const { code, userRec, connected, loadInfo, resetIO } = useContext(TeamCtx);
   const link = window.location.href;
   const copy = () => {
-    navigator.clipboard.writeText(link);
+    const selfName = userRec[getUserID()]?.userName;
+    navigator.clipboard.writeText(
+      `${selfName} invited you to join the shared note at Multibility.\n${link}`
+    );
     message.destroy("copy");
     message.success({
       content: "Share link copied!",
@@ -408,20 +446,18 @@ function RoomInfo() {
         />
       )}
       <DigitDisplay value={code} />
-      <Search
-        className="copy-link code-font"
-        value={link}
-        enterButton={<Button icon={<CopyOutlined />} />}
-        onSearch={copy}
-      />
+      <Button
+        icon={<ShareAltOutlined />}
+        className="share-btn"
+        onClick={copy}
+        block
+      >
+        Share
+      </Button>
       <Divider />
       <div className="user-list">
         {userList.map((u) => (
-          <UserCard
-            key={u.userID}
-            userInfo={u}
-            self={u.userID === getUserID()}
-          />
+          <UserCard key={u.userID} userID={u.userID} />
         ))}
       </div>
     </div>
@@ -466,7 +502,7 @@ function RoomInfo() {
       />
     </Popover>
   );
-}
+};
 
 const JoinRoom: FC<{ instantSave: () => Promise<void> | undefined }> = ({
   instantSave,

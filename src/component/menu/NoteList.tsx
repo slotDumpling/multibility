@@ -160,21 +160,18 @@ const HeadTools: FC<{
   onMove,
   disabled = true,
 }) => {
-  const { Item } = Menu;
   const { editing, allTags } = useContext(MenuStateCtx);
 
   const sortMenu = (
-    <Menu onClick={({ key }) => setSortType(key)} selectedKeys={[sortType]}>
-      <Item icon={<ClockCircleOutlined />} key="CREATE">
-        Created Time
-      </Item>
-      <Item icon={<EditOutlined />} key="LAST">
-        Modified Time
-      </Item>
-      <Item icon={<SortAscendingOutlined />} key="NAME">
-        Name
-      </Item>
-    </Menu>
+    <Menu
+      onClick={({ key }) => setSortType(key)}
+      selectedKeys={[sortType]}
+      items={[
+        { icon: <ClockCircleOutlined />, key: "CREATE", label: "Created Time" },
+        { icon: <EditOutlined />, key: "LAST", label: "Modified Time" },
+        { icon: <SortAscendingOutlined />, key: "NAME", label: "Name" },
+      ]}
+    />
   );
 
   const sortButton = (
@@ -211,22 +208,29 @@ const HeadTools: FC<{
   );
 
   const overlay = (
-    <Menu onClick={({ key }) => onMove(key)}>
-      <Item key="DEFAULT">
-        <div className="tag-select">
-          <CloseOutlined className="none-tag-icon" />
-          <span>No Tag</span>
-        </div>
-      </Item>
-      {Object.values(allTags).map((t) => (
-        <Item key={t.uid}>
-          <div className="tag-select">
-            <TagCircle color={t.color} />
-            <span>{t.name}</span>
-          </div>
-        </Item>
-      ))}
-    </Menu>
+    <Menu
+      onClick={({ key }) => onMove(key)}
+      items={[
+        {
+          key: "DEFAULT",
+          label: (
+            <div className="tag-select">
+              <CloseOutlined className="none-tag-icon" />
+              <span>No Tag</span>
+            </div>
+          ),
+        },
+        ...Object.values(allTags).map((t) => ({
+          key: t.uid,
+          label: (
+            <div className="tag-select">
+              <TagCircle color={t.color} />
+              <span>{t.name}</span>
+            </div>
+          ),
+        })),
+      ]}
+    />
   );
 
   const tagButton = (

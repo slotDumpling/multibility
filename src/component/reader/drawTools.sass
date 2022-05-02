@@ -1,31 +1,30 @@
-@import "var"
-@import "../_base"
+@import var
+@import ../_mixins
+@import ../_var
 
-.reader.container
-  header
-    min-height: $header-low-height
-    padding: 10px
-    display: flex
-    align-items: center
-    justify-content: space-between
-    border-bottom: 1px solid #ddd
-    & > div > button
-      margin: 0 5px
-      &.redo
-        margin-right: 30px
+.reader.container header
+  min-height: $header-low-height
+  padding: 10px
+  display: flex
+  align-items: center
+  justify-content: space-between
+  border-bottom: $dark-border
+  & > div > button
+    margin: 0 5px
+    &.redo
+      margin-right: 30px
 
 @media screen and (max-width: 500px)
-  .reader.container
-    header
-      height: $header-high-height
-      .middle
-        border-left: 1px solid #eee
-        border-right: 1px solid #eee
-        padding: 0 20px
-      br
-        content: ""
-        display: block
-        height: 10px
+  .reader.container header
+    height: $header-high-height
+    .middle
+      border-left: $default-border
+      border-right: $default-border
+      padding: 0 20px
+    br
+      content: ""
+      display: block
+      height: 10px
 
 @media screen and (min-width: 500px)
   .reader.container br
@@ -73,8 +72,7 @@
   .disconn-alert
     width: 232px
     transform: translateY(-12px)
-  .copy-link
-    width: 180px
+  .share-btn
     margin-top: 20px
   .user-list
     width: 100%
@@ -88,15 +86,13 @@
       margin-bottom: 10px
       align-items: center
       &:not(.online)
-        .avatar, .user-name
+        .room-avatar, .user-name
           opacity: 0.5
-      .avatar
+      .room-avatar
         margin-right: 10px
       .user-name
-        @extend .text-overflow
+        @include text-overflow
         flex: 1
-      .me-tag
-        margin: 0
   .rename-input
     flex: 1
     margin-left: -6px
