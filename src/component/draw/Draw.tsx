@@ -53,10 +53,10 @@ const Draw = ({
 
   let { color, finger, lineWidth, highlight, eraserWidth } = drawCtrl;
 
-  const isEventValid = (e: TouchEvent) => finger || isStylus(e);
-  const preventTouch = (e: TouchEvent) => {
+  const isEventValid = (e: TouchEvent) =>
+    isStylus(e) || (finger && e.touches.length === 1);
+  const preventTouch = (e: TouchEvent) =>
     isEventValid(e) || e.stopPropagation();
-  };
 
   const updateRatio = () => {
     const clientWidth = canvasEl.current?.clientWidth;
@@ -258,10 +258,7 @@ const Draw = ({
     const list = sg.children;
     if (!list.length) return;
 
-    const mutations: Mutation[] = list.map((p) => [
-      p.name,
-      p.exportJSON(),
-    ]);
+    const mutations: Mutation[] = list.map((p) => [p.name, p.exportJSON()]);
     onChange((prev) => DrawState.mutateStroke(prev, mutations));
   };
 
@@ -303,7 +300,7 @@ const Draw = ({
   }, [rect]);
 
   usePinch(
-    ({ memo, offset, last, first, origin }) => {
+    ({ memo, offset, last, first, origin, event }) => {
       if (!canvasEl.current) return;
 
       let lastScale, lastOX, lastOY, osX, osY: number;
@@ -339,7 +336,6 @@ const Draw = ({
     {
       scaleBounds: { max: 5, min: 1 },
       target: canvasEl,
-      enabled: !finger,
     }
   );
 
