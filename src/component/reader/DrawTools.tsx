@@ -56,6 +56,7 @@ import { editNoteData } from "../../lib/note/archive";
 import { Setter } from "../../lib/hooks";
 import classNames from "classnames";
 import { AvatarSize } from "antd/lib/avatar/SizeContext";
+import copy from "clipboard-copy";
 
 export default function DrawTools({
   handleUndo,
@@ -407,17 +408,22 @@ export const UserAvatar: FC<{
 const RoomInfo: FC = () => {
   const { code, userRec, connected, loadInfo, resetIO } = useContext(TeamCtx);
   const link = window.location.href;
-  const copy = () => {
+  const share = async () => {
     const selfName = userRec[getUserID()]?.userName;
-    navigator.clipboard.writeText(
-      `${selfName} invited you to join the shared note at Multibility.\n${link}`
-    );
-    message.destroy("copy");
-    message.success({
-      content: "Share link copied!",
-      icon: <CopyOutlined />,
-      key: "copy",
-    });
+    try {
+      await copy(
+        `${selfName} invited you to join the shared note at 𝐌𝐮𝐥𝐭𝐢𝐛𝐢𝐥𝐢𝐭𝐲.
+${link}`
+      );
+      message.destroy("copy");
+      message.success({
+        content: "Share link copied!",
+        icon: <CopyOutlined />,
+        key: "copy",
+      });
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   const userList = useMemo(() => {
@@ -449,7 +455,7 @@ const RoomInfo: FC = () => {
       <Button
         icon={<ShareAltOutlined />}
         className="share-btn"
-        onClick={copy}
+        onClick={share}
         block
       >
         Share
