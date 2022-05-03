@@ -78,26 +78,26 @@ export class DrawState {
     return this.getImmutable().get("historyStack");
   }
 
-  getStrokesMap() {
+  getStrokeMap() {
     return this.getImmutable().get("strokes");
   }
 
   getStrokeList(): Stroke[] {
-    return this.getStrokesMap()
+    return this.getStrokeMap()
       .toArray()
       .map(([_, stroke]) => stroke);
   }
 
   getLastStroke() {
-    return this.getStrokesMap().last();
+    return this.getStrokeMap().last();
   }
 
   isEmpty() {
-    return this.getStrokesMap().size === 0;
+    return this.getStrokeMap().size === 0;
   }
 
   hasStroke(uid: string) {
-    return this.getStrokesMap().has(uid);
+    return this.getStrokeMap().has(uid);
   }
 
   static createEmpty(width: number, height: number) {
@@ -163,7 +163,7 @@ export class DrawState {
   static mutateStroke(drawState: DrawState, mutations: Mutation[]) {
     if (mutations.length === 0) return drawState;
     const prevRecord = drawState.getImmutable();
-    let strokes = drawState.getStrokesMap();
+    let strokes = drawState.getStrokeMap();
     mutations.forEach(([uid, pathData]) => {
       strokes = strokes.update(uid, (s) =>
         s ? { ...s, pathData } : { uid, pathData, timestamp: Date.now() }
@@ -225,7 +225,7 @@ export class DrawState {
   }
 
   static mergeStates(states: DrawState[]) {
-    const iterators = states.map((ds) => ds.getStrokesMap().values());
+    const iterators = states.map((ds) => ds.getStrokeMap().values());
 
     let mergedStrokes: Stroke[] = [];
     const heap = new Heap<[Stroke, number]>(
