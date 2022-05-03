@@ -24,7 +24,7 @@ import { ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { TeamCtx } from "./Team";
 import DigitDisplay from "../ui/DigitDisplay";
 import { colors, getHashedColor } from "../../lib/color";
-import { getUserID, setUserName } from "../../lib/user";
+import { getUserID, saveUserName } from "../../lib/user";
 import { CtrlMode, DrawCtrl } from "../../lib/draw/drawCtrl";
 import PageNav from "./PageNav";
 import {
@@ -308,6 +308,7 @@ const UserCard: FC<{ userID: string }> = ({ userID }) => {
   const [renaming, setRenaming] = useState(false);
   const { ignores, setIgnores, resetIO, userRec } = useContext(TeamCtx);
   const userInfo = userRec[userID];
+  useEffect(() => setRenaming(false), [userInfo]);
   if (!userInfo) return null;
 
   const { userName, online } = userInfo;
@@ -321,18 +322,11 @@ const UserCard: FC<{ userID: string }> = ({ userID }) => {
     });
   };
 
-  const submitRename = async (value: string) => {
+  const submitRename = (value: string) => {
     const name = value.trim();
     if (!name || name === userName) return setRenaming(false);
-    setUserName(name);
-    try {
-      await resetIO();
-    } catch (e) {
-      console.error(e);
-      message.error("Failed to reset socket.io client");
-    } finally {
-      requestAnimationFrame(() => setRenaming(false));
-    }
+    saveUserName(name);
+    resetIO();
   };
 
   return (

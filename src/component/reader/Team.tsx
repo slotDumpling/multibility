@@ -6,12 +6,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { SetOperation } from "../../lib/draw/StateSet";
 import { TeamState } from "../../lib/draw/TeamState";
 import { getUserID, UserInfo } from "../../lib/user";
+import { Stroke } from "../../lib/draw/DrawState";
 import { IoFactory } from "../../lib/network/io";
 import { NotePage } from "../../lib/note/note";
+import { Setter } from "../../lib/hooks";
 import { Set } from "immutable";
 import Reader from "./Reader";
-import { Setter } from "../../lib/hooks";
-import { Stroke } from "../../lib/draw/DrawState";
 
 export const TeamCtx = createContext({
   code: -2,
@@ -20,12 +20,12 @@ export const TeamCtx = createContext({
   userRec: {} as Record<string, UserInfo>,
   teamState: undefined as TeamState | undefined,
   teamUpdate: undefined as undefined | TeamUpdate,
+  resetIO: () => {},
   loadInfo: async () => false,
-  pushOperation: (op: SetOperation) => {},
+  setIgnores: (() => {}) as Setter<Set<string>>,
   pushReorder: (pageOrder: string[]) => {},
   pushNewPage: (pageOrder: string[], pageID: string, newPage: NotePage) => {},
-  setIgnores: (() => {}) as Setter<Set<string>>,
-  resetIO: async () => {},
+  pushOperation: (op: SetOperation) => {},
 });
 
 interface ReorderInfo {
@@ -186,13 +186,7 @@ export default function Team() {
     io.emit("newPage", { pageOrder, pageID, newPage: newTeamPage });
   };
 
-  const resetIO = () =>
-    new Promise<void>((res, rej) => {
-      const newIO = IoFactory(noteID)();
-      newIO.on("join", () => res());
-      setIO(newIO);
-      setTimeout(rej, 5_000, "reset io timeout");
-    });
+  const resetIO = () => setIO(IoFactory(noteID));
 
   if (!loaded) return null;
   return (

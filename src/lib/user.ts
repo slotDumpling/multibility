@@ -29,7 +29,7 @@ export const getUserName = () => {
   return name;
 };
 
-export const setUserName = (name: string) => {
+export const saveUserName = (name: string) => {
   name = name.trim();
   if (!name) return false;
   else localStorage.setItem("USER_NAME", name);

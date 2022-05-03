@@ -26,7 +26,7 @@ import DigitInput from "../ui/DigitInput";
 import { CSSTransition } from "react-transition-group";
 import Title from "antd/lib/typography/Title";
 import Dragger from "antd/lib/upload/Dragger";
-import { getUserName, setUserName } from "../../lib/user";
+import { getUserName, saveUserName } from "../../lib/user";
 import localforage from "localforage";
 import { useEffect } from "react";
 import "./right.sass";
@@ -134,7 +134,7 @@ const ProfilePage = () => {
   const { setActive } = useContext(OthersStateCtx);
   const handleEnter = () => {
     if (!name) return;
-    setUserName(name);
+    saveUserName(name);
     setActive("MENU");
   };
   return (
