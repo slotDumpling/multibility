@@ -14,32 +14,34 @@ const placeholderEl = (
 );
 
 ReactDOM.render(
-  <HashRouter>
-    <Routes>
-      <Route path="/" element={<MainMenu />} />
-      <Route path="/reader">
-        <Route
-          path=":noteID"
-          element={
-            <Suspense fallback={null}>
-              <Reader teamOn={false} />
-            </Suspense>
-          }
-        />
-      </Route>
-      <Route path="/team">
-        <Route
-          path=":noteID"
-          element={
-            <Suspense fallback={null}>
-              <Team />
-            </Suspense>
-          }
-        />
-      </Route>
-      <Route path="/test" element={<Test />} />
-      <Route path="*" element={placeholderEl} />
-    </Routes>
-  </HashRouter>,
+  <React.StrictMode>
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<MainMenu />} />
+        <Route path="/reader">
+          <Route
+            path=":noteID"
+            element={
+              <Suspense fallback={null}>
+                <Reader teamOn={false} />
+              </Suspense>
+            }
+          />
+        </Route>
+        <Route path="/team">
+          <Route
+            path=":noteID"
+            element={
+              <Suspense fallback={null}>
+                <Team />
+              </Suspense>
+            }
+          />
+        </Route>
+        <Route path="/test" element={<Test />} />
+        <Route path="*" element={placeholderEl} />
+      </Routes>
+    </HashRouter>
+  </React.StrictMode>,
   document.getElementById("root")
 );
