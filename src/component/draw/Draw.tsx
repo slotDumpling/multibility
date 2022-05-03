@@ -300,7 +300,7 @@ const Draw = ({
   }, [rect]);
 
   usePinch(
-    ({ memo, offset, last, first, origin, event }) => {
+    ({ memo, offset, last, first, origin }) => {
       if (!canvasEl.current) return;
 
       let lastScale, lastOX, lastOY, osX, osY: number;
@@ -334,7 +334,7 @@ const Draw = ({
       putCenterBack(view);
     },
     {
-      scaleBounds: { max: 5, min: 1 },
+      scaleBounds: { max: 5, min: 0.3 },
       target: canvasEl,
     }
   );
@@ -445,6 +445,9 @@ const startStroke = (color: string, lineWidth: number, highlight = false) => {
 const getCenterTranslate = (view: paper.View) => {
   const { center, zoom } = view;
   const { height, width } = view.viewSize;
+  const { x, y } = center;
+  if (zoom <= 1) return [width / 2 - x, height / 2 - y];
+
   const dX = (width * (zoom - 1)) / zoom / 2;
   const dY = (height * (zoom - 1)) / zoom / 2;
   const [minX, maxX, minY, maxY] = [
@@ -454,7 +457,6 @@ const getCenterTranslate = (view: paper.View) => {
     height / 2 + dY,
   ];
 
-  const { x, y } = center;
   const deltaX = x < minX ? minX - x : x > maxX ? maxX - x : 0;
   const deltaY = y < minY ? minY - y : y > maxY ? maxY - y : 0;
   return [deltaX, deltaY];
