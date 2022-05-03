@@ -23,7 +23,7 @@ export const getUserID = (() => {
 export const getUserName = () => {
   let name = localStorage.getItem("USER_NAME");
   if (!name) {
-    name = "User_" + getUid().slice(0, 8);
+    name = getUid().slice(0, 8);
     localStorage.setItem("USER_NAME", name);
   }
   return name;
