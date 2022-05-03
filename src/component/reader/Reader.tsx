@@ -230,12 +230,13 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
 
   const addFinalPage = () => {
     const lastPageID = last(pageOrder);
+    console.log(lastPageID)
     lastPageID && addPage(lastPageID);
   };
 
   const deletePage = (pageID: string) => {
     const newOrder = pageOrder?.filter((id) => id !== pageID);
-    newOrder?.length && saveReorder(newOrder, true);
+    newOrder?.length &&saveReorder(newOrder, true);
   };
 
   const renderResult = (

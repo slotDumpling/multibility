@@ -48,6 +48,7 @@ const PageNavContent = ({
     if (!destination || !pageOrder) return;
     const { index: fromIndex } = source;
     const { index: toIndex } = destination;
+    if (fromIndex === toIndex) return; 
     const pageID = pageOrder[fromIndex];
     const newOrder = exchange(pageOrder, fromIndex, toIndex);
     saveReorder(newOrder, true);
