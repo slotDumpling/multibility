@@ -24,7 +24,7 @@ import { TeamCtx } from "./Team";
 import DigitDisplay from "../ui/DigitDisplay";
 import { colors, getHashedColor } from "../../lib/color";
 import { getUserID, saveUserName } from "../../lib/user";
-import { DrawCtrl } from "../../lib/draw/drawCtrl";
+import { DrawCtrl, saveDrawCtrl } from "../../lib/draw/drawCtrl";
 import PageNav from "./PageNav";
 import {
   HomeFilled,
@@ -69,7 +69,11 @@ export default function DrawTools({
   const nav = useNavigate();
 
   const updateDrawCtrl = (updated: Partial<DrawCtrl>) => {
-    setDrawCtrl((prev) => ({ ...prev, ...updated }));
+    setDrawCtrl((prev) => {
+      const newCtrl = { ...prev, ...updated };
+      saveDrawCtrl(newCtrl);
+      return newCtrl;
+    });
   };
 
   return (
