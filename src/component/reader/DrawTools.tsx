@@ -16,7 +16,6 @@ import {
   message,
   Popover,
   Popconfirm,
-  ButtonProps,
 } from "antd";
 import Search from "antd/lib/input/Search";
 import { useNavigate } from "react-router-dom";
@@ -25,7 +24,7 @@ import { TeamCtx } from "./Team";
 import DigitDisplay from "../ui/DigitDisplay";
 import { colors, getHashedColor } from "../../lib/color";
 import { getUserID, saveUserName } from "../../lib/user";
-import { CtrlMode, DrawCtrl } from "../../lib/draw/drawCtrl";
+import { DrawCtrl } from "../../lib/draw/drawCtrl";
 import PageNav from "./PageNav";
 import {
   HomeFilled,
@@ -36,16 +35,12 @@ import {
   SaveOutlined,
   TeamOutlined,
   CopyOutlined,
-  DragOutlined,
   CheckOutlined,
   ExpandOutlined,
   ReloadOutlined,
-  DeleteOutlined,
   ShareAltOutlined,
   HighlightOutlined,
   DisconnectOutlined,
-  RotateLeftOutlined,
-  RotateRightOutlined,
   EyeInvisibleOutlined,
   UsergroupAddOutlined,
 } from "@ant-design/icons";
@@ -53,7 +48,6 @@ import IconFont from "../ui/IconFont";
 import "./drawTools.sass";
 import { putNote } from "../../lib/network/http";
 import { editNoteData } from "../../lib/note/archive";
-import { Setter } from "../../lib/hooks";
 import classNames from "classnames";
 import { AvatarSize } from "antd/lib/avatar/SizeContext";
 import copy from "clipboard-copy";
@@ -77,19 +71,6 @@ export default function DrawTools({
   const updateDrawCtrl = (updated: Partial<DrawCtrl>) => {
     setDrawCtrl((prev) => ({ ...prev, ...updated }));
   };
-
-  useEffect(() => {
-    if (mode === "selected") {
-      message.info({
-        icon: <DragOutlined style={{ display: "none" }} />,
-        content: <SelectMenu setMode={setMode} />,
-        className: "select-message",
-        key: "selected",
-        duration: 0,
-      });
-      return () => message.destroy("selected");
-    }
-  }, [mode]);
 
   return (
     <header>
@@ -158,11 +139,11 @@ export default function DrawTools({
 const PenButton: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
 }> = ({ updateDrawCtrl }) => {
-  const { mode } = useContext(ReaderStateCtx);
+  const { mode, drawCtrl } = useContext(ReaderStateCtx);
   const { setMode } = useContext(ReaderMethodCtx);
   return mode === "draw" ? (
     <Popover
-      content={<PenPanel updateDrawCtrl={updateDrawCtrl} />}
+      content={<PenPanel updateDrawCtrl={updateDrawCtrl} drawCtrl={drawCtrl} />}
       trigger="click"
       placement="bottom"
       getPopupContainer={(e) => e}
@@ -180,12 +161,11 @@ const PenButton: FC<{
   );
 };
 
-const PenPanel: FC<{
+export const PenPanel: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
-}> = ({ updateDrawCtrl }) => {
-  const {
-    drawCtrl: { lineWidth, highlight },
-  } = useContext(ReaderStateCtx);
+  drawCtrl: DrawCtrl;
+}> = ({ updateDrawCtrl, drawCtrl }) => {
+  const { lineWidth, highlight, color } = drawCtrl;
   const [tempLineWidth, setTempLineWidth] = useState(lineWidth);
 
   return (
@@ -194,7 +174,7 @@ const PenPanel: FC<{
         <Slider
           min={5}
           max={100}
-          value={tempLineWidth}
+          defaultValue={tempLineWidth}
           onChange={setTempLineWidth}
           onAfterChange={(lineWidth) => updateDrawCtrl({ lineWidth })}
         />
@@ -206,18 +186,15 @@ const PenPanel: FC<{
           onClick={() => updateDrawCtrl({ highlight: !highlight })}
         />
       </div>
-      <ColorSelect updateDrawCtrl={updateDrawCtrl} />
+      <ColorSelect updateDrawCtrl={updateDrawCtrl} color={color} />
     </div>
   );
 };
 
 const ColorSelect: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
-}> = ({ updateDrawCtrl }) => {
-  const {
-    drawCtrl: { color },
-  } = useContext(ReaderStateCtx);
-
+  color: string;
+}> = ({ updateDrawCtrl, color }) => {
   return (
     <div className="color-select">
       {colors.map((c) => (
@@ -253,7 +230,7 @@ const EraserButton: FC<{
       <Slider
         min={5}
         max={100}
-        value={tempEraserWidth}
+        defaultValue={tempEraserWidth}
         onChange={setTempEraserWidth}
         onAfterChange={(eraserWidth) => updateDrawCtrl({ eraserWidth })}
       />
@@ -280,27 +257,6 @@ const EraserButton: FC<{
       onClick={() => setMode("erase")}
       icon={<IconFont type="icon-eraser" />}
     />
-  );
-};
-
-const SelectMenu: FC<{
-  setMode: Setter<CtrlMode>;
-}> = ({ setMode }) => {
-  const buttonProps: ButtonProps = {
-    type: "text",
-    shape: "round",
-  };
-  return (
-    <>
-      <Button icon={<RotateLeftOutlined />} {...buttonProps} />
-      <Button icon={<RotateRightOutlined />} {...buttonProps} />
-      <Button
-        danger
-        icon={<DeleteOutlined />}
-        onClick={() => setMode("delete")}
-        {...buttonProps}
-      />
-    </>
   );
 };
 

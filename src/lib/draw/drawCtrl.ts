@@ -1,6 +1,6 @@
 import localforage from "localforage";
 
-export type CtrlMode = "draw" | "erase" | "select" | "selected" | "delete";
+export type CtrlMode = "draw" | "erase" | "select";
 
 export interface DrawCtrl {
   finger: boolean;

@@ -28,6 +28,7 @@ import { DrawState } from "../../lib/draw/DrawState";
 import { Setter, useMounted } from "../../lib/hooks";
 import { StateSet } from "../../lib/draw/StateSet";
 import { insertAfter } from "../../lib/array";
+import SelectTool from "../draw/SelectTool";
 import { debounce, last } from "lodash";
 import { Map, Set } from "immutable";
 import DrawTools from "./DrawTools";
@@ -230,13 +231,13 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
 
   const addFinalPage = () => {
     const lastPageID = last(pageOrder);
-    console.log(lastPageID)
+    console.log(lastPageID);
     lastPageID && addPage(lastPageID);
   };
 
   const deletePage = (pageID: string) => {
     const newOrder = pageOrder?.filter((id) => id !== pageID);
-    newOrder?.length &&saveReorder(newOrder, true);
+    newOrder?.length && saveReorder(newOrder, true);
   };
 
   const renderResult = (
@@ -418,7 +419,6 @@ const DrawWrapper = ({
   imgSrc?: string;
 }) => {
   const { mode, drawCtrl } = useContext(ReaderStateCtx);
-  const { setMode } = useContext(ReaderMethodCtx);
 
   const handleChange = useCallback(
     (arg: ((s: DrawState) => DrawState) | DrawState) => {
@@ -429,28 +429,24 @@ const DrawWrapper = ({
     [updateState, drawState]
   );
 
-  return (
-    <div className="page-draw">
-      {preview ? (
-        <Draw
-          drawState={drawState}
-          otherStates={otherStates}
-          imgSrc={imgSrc}
-          readonly
-          preview
-        />
-      ) : (
-        <Draw
-          drawState={drawState}
-          otherStates={otherStates}
-          onChange={handleChange}
-          imgSrc={imgSrc}
-          drawCtrl={drawCtrl}
-          mode={mode}
-          setMode={setMode}
-        />
-      )}
-    </div>
+  return preview ? (
+    <Draw
+      drawState={drawState}
+      otherStates={otherStates}
+      imgSrc={imgSrc}
+      readonly
+      preview
+    />
+  ) : (
+    <Draw
+      drawState={drawState}
+      otherStates={otherStates}
+      onChange={handleChange}
+      imgSrc={imgSrc}
+      drawCtrl={drawCtrl}
+      mode={mode}
+      SelectTool={SelectTool}
+    />
   );
 };
 DrawWrapper.displayName = "DrawWrapper";

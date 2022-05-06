@@ -1,13 +1,28 @@
-import React, { useRef, useState, useEffect, TouchEvent, useMemo } from "react";
+import React, {
+  FC,
+  useRef,
+  useMemo,
+  useState,
+  useEffect,
+  TouchEvent,
+} from "react";
 import { CtrlMode, defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
 import { DrawState, Mutation, Stroke } from "../../lib/draw/DrawState";
-import { releaseCanvas } from "../../lib/draw/drawer";
 import { Setter, usePreventGesture } from "../../lib/hooks";
+import { releaseCanvas } from "../../lib/draw/drawer";
 import { isStylus } from "../../lib/touch/touch";
 import { usePinch } from "@use-gesture/react";
 import { Set } from "immutable";
 import paper from "paper";
 import "./draw.sass";
+
+export type SelectToolType = FC<{
+  onDelete: () => void;
+  onRotate: (angle: number, smooth?: boolean) => void;
+  mutateStyle: (updated: Partial<DrawCtrl>) => void;
+  currDrawCtrl: DrawCtrl;
+}>;
+
 
 const PREVIEW_WIDTH = 200;
 const {
@@ -20,26 +35,26 @@ const {
   Raster,
 } = paper;
 
-const Draw = ({
-  drawState,
-  onChange = () => {},
-  otherStates,
-  drawCtrl = defaultDrawCtrl,
-  mode = "draw",
-  setMode = () => {},
-  readonly = false,
-  preview = false,
-  imgSrc,
-}: {
+const Draw: FC<{
   drawState: DrawState;
   otherStates?: DrawState[];
   onChange?: Setter<DrawState>;
   drawCtrl?: DrawCtrl;
   mode?: CtrlMode;
-  setMode?: Setter<CtrlMode>;
   readonly?: boolean;
   preview?: boolean;
   imgSrc?: string;
+  SelectTool?: SelectToolType;
+}> = ({
+  drawState,
+  onChange = () => {},
+  otherStates,
+  drawCtrl = defaultDrawCtrl,
+  mode = "draw",
+  readonly = false,
+  preview = false,
+  imgSrc,
+  SelectTool,
 }) => {
   const { width, height } = drawState;
   const canvasEl = useRef<HTMLCanvasElement>(null);
@@ -50,6 +65,12 @@ const Draw = ({
   const selectGroup = useRef<paper.Group>();
   const [erased, setErased] = useState(Set<string>());
   const ratio = useRef(1);
+
+  const [selected, setSelected] = useState(false);
+  const paperMode =
+    mode === "select" ? (selected ? "selected" : "select") : mode;
+
+  const [currDrawCtrl, setCurrDrawCtrl] = useState(defaultDrawCtrl);
 
   let { color, finger, lineWidth, highlight, eraserWidth } = drawCtrl;
 
@@ -111,11 +132,11 @@ const Draw = ({
       if (!rect) return;
       if (!point.isInside(rect.strokeBounds)) {
         setNewRect(e);
-        setMode("select");
+        setSelected(false);
       }
     },
     delete() {},
-  }[mode];
+  }[paperMode];
 
   const handleDrag = {
     draw(e: paper.MouseEvent) {
@@ -144,17 +165,17 @@ const Draw = ({
       scope.current.activate();
       const delta = e.delta.multiply(ratio.current);
       rect.size = rect.size.add(new Size(delta.x, delta.y));
-      rect.position = rect.position.add(delta.divide(2));
+      rect.translate(delta.divide(2));
     },
     selected(e: paper.MouseEvent) {
       const sGroup = selectGroup.current;
       if (!rect || !sGroup) return;
       const delta = e.delta.multiply(ratio.current);
-      rect.position = rect.position.add(delta);
-      sGroup.position = sGroup.position.add(delta);
+      rect.translate(delta);
+      sGroup.translate(delta);
     },
     delete() {},
-  }[mode];
+  }[paperMode];
 
   const handleUp = {
     erase() {
@@ -173,26 +194,32 @@ const Draw = ({
       onChange((prev) => DrawState.addStroke(prev, pathData));
     },
     select() {
-      if (!rect || rect.size.width < 10 || rect.size.height < 10) {
+      if (!rect || rect.size.abs().width < 10 || rect.size.abs().height < 10) {
         return setRect(undefined);
       }
       scope.current.activate();
 
       const bounds = rect.strokeBounds;
-      selectGroup.current = new Group();
+      const sg = new Group();
+      selectGroup.current = sg;
       group.current?.forEach((p) => {
         if (!(p instanceof paper.Path)) return;
         if (p.isInside(bounds) || p.intersects(rect)) {
-          selectGroup.current?.addChild(p);
+          sg.addChild(p);
         }
       });
-      selectGroup.current.shadowColor = new Color("#0005");
-      selectGroup.current.shadowBlur = 10;
-      setMode("selected");
+      const tempStyle: Partial<DrawCtrl> = {};
+      if (sg.strokeColor) tempStyle.color = sg.strokeColor.toCSS(true);
+      if (sg.strokeWidth) tempStyle.lineWidth = sg.strokeWidth;
+      if (sg.children.every((p) => p.strokeColor?.alpha === 0.5))
+        tempStyle.highlight = true;
+
+      setCurrDrawCtrl((prev) => ({ ...prev, ...tempStyle }));
+      setSelected(true);
     },
     selected() {},
     delete() {},
-  }[mode];
+  }[paperMode];
 
   useEffect(() => {
     setupPaper();
@@ -254,7 +281,6 @@ const Draw = ({
   const updateMutation = () => {
     const sg = selectGroup.current;
     if (!sg) return;
-    sg.shadowColor = null;
     const list = sg.children;
     if (!list.length) return;
 
@@ -267,23 +293,62 @@ const Draw = ({
     if (!list?.length) return;
     const deleted = list.map((item) => item.name);
     onChange((prev) => DrawState.eraseStrokes(prev, deleted));
+    setRect(undefined);
+    setSelected(false);
+  };
+
+  const rotateSelected = (angle: number, smooth = false) => {
+    const sg = selectGroup.current;
+    if (!sg) return;
+    let count = smooth ? 10 : 1;
+    const dAngle = angle / count;
+    const rotate = () => {
+      sg.rotate(dAngle);
+      if (--count > 0) requestAnimationFrame(rotate);
+    };
+    rotate();
+  };
+
+  const mutateStyle = (updated: Partial<DrawCtrl>) => {
+    const sg = selectGroup.current;
+    if (!sg) return;
+    const { lineWidth, color, highlight } = updated;
+    if (color) sg.strokeColor = new Color(color);
+    if (lineWidth) sg.strokeWidth = lineWidth;
+    if (highlight === true || currDrawCtrl.highlight === true) {
+      sg.children.forEach((p) => {
+        const { strokeColor } = p;
+        if (!strokeColor) return;
+        if (strokeColor.alpha === 1) strokeColor.alpha /= 2;
+        p.blendMode = "multiply";
+      });
+    }
+    if (highlight === false) {
+      sg.children.forEach((p) => {
+        const { strokeColor } = p;
+        if (!strokeColor) return;
+        strokeColor.alpha = 1;
+        p.blendMode = "normal";
+      });
+    }
+    setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
   };
 
   useEffect(() => {
-    if (mode === "select") {
+    if (paperMode === "select") {
       //
-    } else if (mode === "selected") {
+    } else if (paperMode === "selected") {
       if (rect?.strokeColor) rect.strokeColor.alpha /= 2;
       scope.current.activate();
-      return updateMutation;
-    } else if (mode === "delete") {
-      deleteSelected();
-      setMode("select");
-      setRect(undefined);
+      return () => {
+        updateMutation();
+        setCurrDrawCtrl(defaultDrawCtrl);
+      };
     } else {
+      setSelected(false);
       setRect(undefined);
     }
-  }, [mode]);
+  }, [paperMode]);
 
   useEffect(() => {
     if (!rect) return;
@@ -341,13 +406,23 @@ const Draw = ({
 
   usePreventGesture();
   return (
-    <canvas
-      ref={canvasEl}
-      className="draw-canvas"
-      data-paper-hidpi={false}
-      onTouchStartCapture={preventTouch}
-      onTouchMoveCapture={preventTouch}
-    />
+    <div className="draw-wrapper">
+      <canvas
+        ref={canvasEl}
+        className="draw-canvas"
+        data-paper-hidpi={false}
+        onTouchStartCapture={preventTouch}
+        onTouchMoveCapture={preventTouch}
+      />
+      {SelectTool && paperMode === "selected" && (
+        <SelectTool
+          onDelete={deleteSelected}
+          onRotate={rotateSelected}
+          mutateStyle={mutateStyle}
+          currDrawCtrl={currDrawCtrl}
+        />
+      )}
+    </div>
   );
 };
 
@@ -414,8 +489,6 @@ const paintBackground = (width: number, height: number) => {
   bgRect.fillColor = new Color("#fff");
   bgRect.name = "BGRECT";
   bgRect.sendToBack();
-  bgRect.strokeColor = new Color("#ddd");
-  bgRect.strokeWidth = 1;
   return bgRect;
 };
 
@@ -465,9 +538,9 @@ const getCenterTranslate = (view: paper.View) => {
 const putCenterBack = (view: paper.View) => {
   const [deltaX, deltaY] = getCenterTranslate(view);
   let count = 10;
-  const dP = new Point(deltaX, deltaY).divide(count);
+  const dP = new Point(deltaX, deltaY).divide(-count);
   const move = () => {
-    view.center = view.center.add(dP);
+    view.translate(dP);
     if (--count > 0) requestAnimationFrame(move);
   };
   move();
