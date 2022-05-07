@@ -10,6 +10,14 @@
   left: 0
   right: 0
 
+@mixin absolute($top: 0, $right: 0, $bottom: 0, $left: 0)
+  position: absolute
+  content: ""
+  top: $top
+  left: $left
+  bottom: $bottom
+  right: $right
+
 @mixin pseudo-el($top: 0, $right: 0, $bottom: 0, $left: 0)
   position: absolute
   content: ""

@@ -1,3 +1,5 @@
+@import ../_mixins
+
 .select-tool
   position: fixed
   left: 50%
@@ -6,6 +8,26 @@
   border-radius: 50px
   background: #fffd
   border: 1px solid #dddd
+  display: flex
+  .rotate-wrapper
+    position: relative
+    width: 40px
+    display: flex
+    justify-content: center
+    touch-action: none
+    transition: width 0.3s
+    &.dragged
+      overflow: hidden
+      width: 90px
+      &::after
+        @include pseudo-el
+        background: linear-gradient(to right, #fff, #0000 20% 80%, #fff)
+      .gear
+        @include absolute(5px, -45px, 5px, -45px)
+        background: linear-gradient(to right, #aaa 20%, #0000 0)
+        background-size: 5px 100%
+      button
+        opacity: 0
 
 @media screen and (max-width: 600px)
   .select-tool

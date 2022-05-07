@@ -1,7 +1,5 @@
 import localforage from "localforage";
 
-// export type CtrlMode = ;
-
 export interface DrawCtrl {
   mode: "draw" | "erase" | "select"
   finger: boolean;
