@@ -65,7 +65,7 @@ const Draw: FC<{
   const [erased, setErased] = useState(Set<string>());
   const ratio = useRef(1);
   const [currDrawCtrl, setCurrDrawCtrl] = useState(defaultDrawCtrl);
-  
+
   const [rect, setRect] = useState<paper.Shape.Rectangle>();
   useEffect(() => {
     if (!rect) return;
@@ -80,7 +80,7 @@ const Draw: FC<{
       cancelAnimationFrame(id);
     };
   }, [rect]);
-  
+
   const [selectedGroup, setSelectedGroup] = useState<paper.Group>();
   useEffect(() => {
     const prevSG = selectedGroup;
@@ -88,7 +88,7 @@ const Draw: FC<{
   }, [selectedGroup]);
 
   const [selected, setSelected] = useState(false);
-  const paperMode = selected ? "selected" : mode;
+  const paperMode = mode === "select" && selected ? "selected" : mode;
   useEffect(() => {
     if (mode !== "select") {
       setSelected(false);
