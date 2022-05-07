@@ -160,15 +160,16 @@ export class DrawState {
     return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
   }
 
-  static mutateStroke(drawState: DrawState, mutations: Mutation[]) {
+  static mutateStrokes(drawState: DrawState, mutations: Mutation[]) {
     if (mutations.length === 0) return drawState;
     const prevRecord = drawState.getImmutable();
     let strokes = drawState.getStrokeMap();
-    mutations.forEach(([uid, pathData]) => {
-      strokes = strokes.update(uid, (s) =>
-        s ? { ...s, pathData } : { uid, pathData, timestamp: Date.now() }
-      );
-    });
+    mutations.forEach(
+      ([uid, pathData]) =>
+        (strokes = strokes.update(uid, (s) =>
+          s ? { ...s, pathData } : { uid, pathData, timestamp: Date.now() }
+        ))
+    );
     const currRecord = prevRecord
       .set("strokes", strokes)
       .update("historyStack", (s) => s.push(prevRecord))
@@ -196,7 +197,7 @@ export class DrawState {
       case "erase":
         return DrawState.eraseStrokes(drawState, op.erased);
       case "mutate":
-        return DrawState.mutateStroke(drawState, op.mutations);
+        return DrawState.mutateStrokes(drawState, op.mutations);
       case "undo":
         return DrawState.undo(drawState);
       case "redo":

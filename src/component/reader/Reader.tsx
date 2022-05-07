@@ -11,7 +11,6 @@ import React, {
 } from "react";
 import {
   DrawCtrl,
-  CtrlMode,
   getDrawCtrl,
   defaultDrawCtrl,
 } from "../../lib/draw/drawCtrl";
@@ -48,19 +47,17 @@ export const ReaderStateCtx = createContext({
   inviewPages: Set<string>(),
   refRec: {} as Record<string, HTMLElement>,
   drawCtrl: defaultDrawCtrl,
-  mode: "draw" as CtrlMode,
 });
 
 export const ReaderMethodCtx = createContext({
   scrollPage: (pageID: string) => {},
   switchPageMarked: (pageID: string) => {},
-  setPageState: (uid: string, ds: DrawState) => {},
+  setPageState: (uid: string, cb: (ds: DrawState) => DrawState) => {},
   addPage: (prevPageID: string, copy?: boolean) => {},
   addFinalPage: () => {},
   deletePage: (pageID: string) => {},
   saveReorder: async (order: string[], push: boolean) => {},
   setInviewPages: (() => {}) as Setter<Set<string>>,
-  setMode: (() => {}) as Setter<CtrlMode>,
   setDrawCtrl: (() => {}) as Setter<DrawCtrl>,
 });
 
@@ -72,7 +69,6 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   const [noteInfo, setNoteInfo] = useState<NoteInfo>();
   const [stateSet, setStateSet] = useState<StateSet>();
   const [drawCtrl, setDrawCtrl] = useState(defaultDrawCtrl);
-  const [mode, setMode] = useState<CtrlMode>("draw");
   const [saved, setSaved] = useState(true);
   const [inviewPages, setInviewPages] = useState(Set<string>());
   const [pageOrder, setPageOrder] = useState<string[]>();
@@ -122,17 +118,15 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     if (!teamUpdate) return;
     const { type } = teamUpdate;
     if (type === "reorder") {
-      const { pageOrder } = teamUpdate;
+      const { pageOrder, deleted, prevOrder } = teamUpdate;
       saveReorder(pageOrder);
-
-      if (!teamUpdate.deleted) return;
+      if (!deleted) return;
       showPageDelMsg(() => {
-        saveReorder(teamUpdate.prevOrder, true);
+        saveReorder(prevOrder, true);
       });
     } else if (type === "newPage") {
-      const { pageOrder } = teamUpdate;
+      const { pageOrder, pageID, newPage } = teamUpdate;
       saveReorder(pageOrder);
-      let { pageID, newPage } = teamUpdate;
       savePageRec(pageID, () => newPage);
       setStateSet((prev) => prev?.addState(pageID, newPage));
     } else if (type === "sync") {
@@ -166,15 +160,21 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     savePageRec(pageID, (prev) => prev && { ...prev, state });
   };
 
-  const setPageState = useCallback((pageID: string, ds: DrawState) => {
-    setStateSet((prev) => {
-      if (!prev) return;
-      const newSS = prev.setState(pageID, ds);
-      newSS.lastOp && pushOperation(newSS.lastOp);
-      return newSS;
-    });
-    updatePageRec(pageID, ds);
-  }, []);
+  const setPageState = useCallback(
+    (pageID: string, cb: (ds: DrawState) => DrawState) => {
+      setStateSet((prev) => {
+        if (!prev) return;
+        const prevDS = prev.getOneState(pageID);
+        if (!prevDS) return prev;
+        const newDS = cb(prevDS);
+        const newSS = prev.setState(pageID, newDS);
+        newSS.lastOp && pushOperation(newSS.lastOp);
+        updatePageRec(pageID, newDS);
+        return newSS;
+      });
+    },
+    []
+  );
 
   const switchPageMarked = (pageID: string) => {
     savePageRec(pageID, (prev) => prev && { ...prev, marked: !prev.marked });
@@ -263,7 +263,6 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
         pageOrder,
         inviewPages,
         refRec: refRec.current,
-        mode,
         drawCtrl,
       }}
     >
@@ -276,7 +275,6 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
           addPage,
           addFinalPage,
           deletePage,
-          setMode,
           setDrawCtrl,
           saveReorder,
         }}
@@ -295,7 +293,7 @@ const PageContainer: FC<{ uid: string }> = ({ uid }) => {
   const drawState = stateSet?.getOneState(uid);
   const teamStateMap = teamState?.getOnePageState(uid);
   const updateState = useCallback(
-    (ds: DrawState) => setPageState(uid, ds),
+    (cb: (ds: DrawState) => DrawState) => setPageState(uid, cb),
     [uid, setPageState]
   );
   if (!page || !drawState) return null;
@@ -325,7 +323,7 @@ export const PageWrapper = ({
   teamStateMap?: Map<string, DrawState>;
   thumbnail?: string;
   pdfIndex?: number;
-  updateState?: (ds: DrawState) => void;
+  updateState?: (cb: (ds: DrawState) => DrawState) => void;
   preview?: boolean;
 }) => {
   const { setInviewPages } = useContext(ReaderMethodCtx);
@@ -408,19 +406,19 @@ const DrawWrapper = ({
 }: {
   drawState: DrawState;
   otherStates?: DrawState[];
-  updateState?: (ds: DrawState) => void;
+  updateState?: (cb: (ds: DrawState) => DrawState) => void;
   preview?: boolean;
   imgSrc?: string;
 }) => {
-  const { mode, drawCtrl } = useContext(ReaderStateCtx);
+  const { drawCtrl } = useContext(ReaderStateCtx);
 
   const handleChange = useCallback(
     (arg: ((s: DrawState) => DrawState) | DrawState) => {
       if (!updateState) return;
-      let ds = arg instanceof DrawState ? arg : arg(drawState);
-      updateState(ds);
+      const cb = arg instanceof DrawState ? () => arg : arg;
+      updateState(cb);
     },
-    [updateState, drawState]
+    [updateState]
   );
 
   return preview ? (
@@ -438,7 +436,6 @@ const DrawWrapper = ({
       onChange={handleChange}
       imgSrc={imgSrc}
       drawCtrl={drawCtrl}
-      mode={mode}
       SelectTool={SelectTool}
     />
   );

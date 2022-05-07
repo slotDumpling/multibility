@@ -6,12 +6,13 @@ import React, {
   useEffect,
   TouchEvent,
 } from "react";
-import { CtrlMode, defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
 import { DrawState, Mutation, Stroke } from "../../lib/draw/DrawState";
+import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
 import { Setter, usePreventGesture } from "../../lib/hooks";
 import { releaseCanvas } from "../../lib/draw/drawer";
 import { isStylus } from "../../lib/touch/touch";
 import { usePinch } from "@use-gesture/react";
+import { v4 as getUid } from "uuid";
 import { Set } from "immutable";
 import paper from "paper";
 import "./draw.sass";
@@ -19,6 +20,7 @@ import "./draw.sass";
 export type SelectToolType = FC<{
   onDelete: () => void;
   onRotate: (angle: number, smooth?: boolean) => void;
+  onDuplicate: () => void;
   mutateStyle: (updated: Partial<DrawCtrl>) => void;
   currDrawCtrl: DrawCtrl;
 }>;
@@ -39,7 +41,6 @@ const Draw: FC<{
   otherStates?: DrawState[];
   onChange?: Setter<DrawState>;
   drawCtrl?: DrawCtrl;
-  mode?: CtrlMode;
   readonly?: boolean;
   preview?: boolean;
   imgSrc?: string;
@@ -49,29 +50,61 @@ const Draw: FC<{
   onChange = () => {},
   otherStates,
   drawCtrl = defaultDrawCtrl,
-  mode = "draw",
   readonly = false,
   preview = false,
   imgSrc,
   SelectTool,
 }) => {
   const { width, height } = drawState;
+  let { mode, color, finger, lineWidth, highlight, eraserWidth } = drawCtrl;
+
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const scope = useRef(new paper.PaperScope());
   const group = useRef<paper.Path[]>();
   const path = useRef<paper.Path>();
-  const [rect, setRect] = useState<paper.Shape.Rectangle>();
-  const selectedGroup = useRef<paper.Group>();
   const [erased, setErased] = useState(Set<string>());
   const ratio = useRef(1);
+  const [currDrawCtrl, setCurrDrawCtrl] = useState(defaultDrawCtrl);
+  
+  const [rect, setRect] = useState<paper.Shape.Rectangle>();
+  useEffect(() => {
+    if (!rect) return;
+    let id = 0;
+    const moveDash = () => {
+      rect.dashOffset += 3;
+      id = requestAnimationFrame(moveDash);
+    };
+    moveDash();
+    return () => {
+      rect.remove();
+      cancelAnimationFrame(id);
+    };
+  }, [rect]);
+  
+  const [selectedGroup, setSelectedGroup] = useState<paper.Group>();
+  useEffect(() => {
+    const prevSG = selectedGroup;
+    return () => void prevSG?.removeChildren();
+  }, [selectedGroup]);
 
   const [selected, setSelected] = useState(false);
-  const paperMode =
-    mode === "select" ? (selected ? "selected" : "select") : mode;
-
-  const [currDrawCtrl, setCurrDrawCtrl] = useState(defaultDrawCtrl);
-
-  let { color, finger, lineWidth, highlight, eraserWidth } = drawCtrl;
+  const paperMode = selected ? "selected" : mode;
+  useEffect(() => {
+    if (mode !== "select") {
+      setSelected(false);
+      setRect(undefined);
+    }
+  }, [mode]);
+  useEffect(() => {
+    if (selected) {
+      if (!rect?.strokeColor) return;
+      rect.strokeColor.alpha /= 2;
+    } else {
+      updateMutation();
+      setSelectedGroup(undefined);
+      setCurrDrawCtrl(defaultDrawCtrl);
+    }
+  }, [selected]);
 
   const isEventValid = (e: TouchEvent) =>
     isStylus(e) || (finger && e.touches.length === 1);
@@ -84,6 +117,7 @@ const Draw: FC<{
   };
 
   const transformPoint = (projP: paper.Point) => {
+    scope.current.activate();
     const { center, zoom } = scope.current.view;
     const viewP = scope.current.view.projectToView(projP);
     const absoluteP = viewP.multiply(ratio.current);
@@ -126,7 +160,6 @@ const Draw: FC<{
       setNewRect(e);
     },
     selected(e: paper.MouseEvent) {
-      scope.current.activate();
       const point = transformPoint(e.point);
       if (!rect || point.isInside(rect.strokeBounds)) return;
       setNewRect(e);
@@ -164,12 +197,11 @@ const Draw: FC<{
       rect.translate(delta.divide(2));
     },
     selected(e: paper.MouseEvent) {
-      const sGroup = selectedGroup.current;
-      if (!rect || !sGroup) return;
+      if (!rect || !selectedGroup) return;
       scope.current.activate();
       const delta = e.delta.multiply(ratio.current);
       rect.translate(delta);
-      sGroup.translate(delta);
+      selectedGroup.translate(delta);
     },
   }[paperMode];
 
@@ -197,8 +229,9 @@ const Draw: FC<{
       scope.current.activate();
       const paths = group.current;
       if (!paths) return;
-      selectedGroup.current = new Group(checkSelection(rect, paths));
-      const tempStyle = parseGroupStyle(selectedGroup.current);
+      const newSG = new Group(checkSelection(rect, paths));
+      setSelectedGroup(newSG);
+      const tempStyle = parseGroupStyle(newSG);
       setCurrDrawCtrl((prev) => ({ ...prev, ...tempStyle }));
       setSelected(true);
     },
@@ -263,72 +296,50 @@ const Draw: FC<{
   }, [mergedStrokes, erased]);
 
   const updateMutation = () => {
-    const list = selectedGroup.current?.children;
+    const list = selectedGroup?.children;
     if (!list?.length) return;
-
     const mutations: Mutation[] = list.map((p) => [p.name, p.exportJSON()]);
-    onChange((prev) => DrawState.mutateStroke(prev, mutations));
+    onChange((prev) => DrawState.mutateStrokes(prev, mutations));
   };
 
   const deleteSelected = () => {
-    const list = selectedGroup.current?.children;
+    const list = selectedGroup?.children;
+    console.log(selectedGroup);
     if (!list?.length) return;
-    
+
     const deleted = list.map((item) => item.name);
     onChange((prev) => DrawState.eraseStrokes(prev, deleted));
     setRect(undefined);
+    setSelectedGroup(undefined);
     setSelected(false);
   };
 
   const rotateSelected = (angle: number, smooth = false) => {
-    const sg = selectedGroup.current;
-    if (!sg) return;
+    if (!selectedGroup) return;
     let count = smooth ? 10 : 1;
     const dAngle = angle / count;
     const rotate = () => {
-      sg.rotate(dAngle);
+      selectedGroup.rotate(dAngle, rect?.position);
+      rect?.rotate(dAngle, rect.position);
       if (--count > 0) requestAnimationFrame(rotate);
     };
     rotate();
   };
 
   const mutateStyle = (updated: Partial<DrawCtrl>) => {
-    if (!selectedGroup.current) return;
+    if (!selectedGroup) return;
     scope.current.activate();
-    updateGroupStyle(selectedGroup.current, updated, currDrawCtrl.highlight);
+    updateGroupStyle(selectedGroup, updated, currDrawCtrl.highlight);
     setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
   };
 
-  useEffect(() => {
-    if (paperMode === "select") {
-      //
-    } else if (paperMode === "selected") {
-      if (rect?.strokeColor) rect.strokeColor.alpha /= 2;
-      scope.current.activate();
-      return () => {
-        updateMutation();
-        setCurrDrawCtrl(defaultDrawCtrl);
-        selectedGroup.current = undefined;
-      };
-    } else {
-      setSelected(false);
-      setRect(undefined);
-    }
-  }, [paperMode]);
-
-  useEffect(() => {
-    if (!rect) return;
-    let id = 0;
-    const moveDash = () => {
-      rect.dashOffset += 3;
-      id = requestAnimationFrame(moveDash);
-    };
-    moveDash();
-    return () => {
-      rect.remove();
-      cancelAnimationFrame(id);
-    };
-  }, [rect]);
+  const duplicateSelected = () => {
+    scope.current.activate();
+    const newSG = selectedGroup?.clone();
+    updateMutation();
+    setSelectedGroup(newSG);
+    newSG?.children.forEach((p) => (p.name = getUid()));
+  };
 
   usePreventGesture();
   usePinch(
@@ -382,6 +393,7 @@ const Draw: FC<{
         <SelectTool
           onDelete={deleteSelected}
           onRotate={rotateSelected}
+          onDuplicate={duplicateSelected}
           mutateStyle={mutateStyle}
           currDrawCtrl={currDrawCtrl}
         />

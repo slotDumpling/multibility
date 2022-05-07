@@ -61,9 +61,9 @@ export default function DrawTools({
   handleRedo: () => void;
   instantSave: () => Promise<void> | undefined;
 }) {
-  const { saved, stateSet, teamOn, mode, drawCtrl } =
-    useContext(ReaderStateCtx);
-  const { setDrawCtrl, setMode } = useContext(ReaderMethodCtx);
+  const { saved, stateSet, teamOn, drawCtrl } = useContext(ReaderStateCtx);
+  const { mode } = drawCtrl;
+  const { setDrawCtrl } = useContext(ReaderMethodCtx);
   const { finger } = drawCtrl;
 
   const nav = useNavigate();
@@ -118,7 +118,7 @@ export default function DrawTools({
         <Button
           type={["select", "selected"].includes(mode) ? "default" : "text"}
           shape="circle"
-          onClick={() => setMode("select")}
+          onClick={() => updateDrawCtrl({ mode: "select" })}
           icon={<ExpandOutlined />}
         />
         <Button
@@ -143,8 +143,8 @@ export default function DrawTools({
 const PenButton: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
 }> = ({ updateDrawCtrl }) => {
-  const { mode, drawCtrl } = useContext(ReaderStateCtx);
-  const { setMode } = useContext(ReaderMethodCtx);
+  const { drawCtrl } = useContext(ReaderStateCtx);
+  const { mode } = drawCtrl;
   return mode === "draw" ? (
     <Popover
       content={<PenPanel updateDrawCtrl={updateDrawCtrl} drawCtrl={drawCtrl} />}
@@ -159,7 +159,7 @@ const PenButton: FC<{
     <Button
       type="text"
       shape="circle"
-      onClick={() => setMode("draw")}
+      onClick={() => updateDrawCtrl({ mode: "draw" })}
       icon={<HighlightOutlined />}
     />
   );
@@ -222,10 +222,8 @@ const ColorSelect: FC<{
 const EraserButton: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
 }> = ({ updateDrawCtrl }) => {
-  const { setMode } = useContext(ReaderMethodCtx);
   const {
-    mode,
-    drawCtrl: { eraserWidth },
+    drawCtrl: { eraserWidth, mode },
   } = useContext(ReaderStateCtx);
   const [tempEraserWidth, setTempEraserWidth] = useState(eraserWidth);
 
@@ -258,7 +256,7 @@ const EraserButton: FC<{
     <Button
       type="text"
       shape="circle"
-      onClick={() => setMode("erase")}
+      onClick={() => updateDrawCtrl({ mode: "erase" })}
       icon={<IconFont type="icon-eraser" />}
     />
   );
