@@ -335,9 +335,15 @@ const Draw: FC<{
 
   const duplicateSelected = () => {
     scope.current.activate();
-    const newSG = selectedGroup?.clone();
+    if (!rect || !selectedGroup) return;
+    const newSG = selectedGroup.clone();
     updateMutation();
     setSelectedGroup(newSG);
+    
+    const { width, height } = rect.size;
+    const transP = new Point(width, height).divide(10);
+    newSG.translate(transP);
+    rect.translate(transP);
     newSG?.children.forEach((p) => (p.name = getUid()));
   };
 
