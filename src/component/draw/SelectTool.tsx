@@ -34,22 +34,22 @@ const SelectTool: SelectToolType = ({
     : undefined;
 
   const [rotateCount, setRotateCount] = useState(0);
-  const shakeShow = rotateCount && rotateCount % 4 === 0;
+  const shakeShow = rotateCount % 4 === 1;
   const btnClass = shakeShow
     ? "animate__animated animate__headShake"
     : undefined;
 
   useDrag(
-    (state) => {
-      const { first, last, offset, delta } = state;
+    ({ first, last, offset, delta }) => {
       setTransX(offset[0]);
-      onRotate(delta[0] / 2);
+      onRotate(delta[0] / 2, last);
       first && setDragged(true);
       last && setDragged(false);
     },
     {
       target: rotateEl,
       filterTaps: true,
+      rubberband: true,
       bounds: { left: -90, right: 90 },
     }
   );
