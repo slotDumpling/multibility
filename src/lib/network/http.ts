@@ -1,5 +1,5 @@
 import axios from "axios";
-import { TeamNoteInfo, TeamPage, TeamPageInfo } from "../note/note";
+import { removePageTimg, TeamNoteInfo, TeamPage, TeamPageInfo } from "../note/note";
 import { loadNote, saveTeamNote, updateTeamNote } from "../note/archive";
 import { getUserID } from "../user";
 
@@ -72,6 +72,7 @@ export async function putNote(noteID: string) {
   const note = await loadNote(noteID);
   if (!note) return null;
   const { uid, name, withImg, pdf, pageOrder, pageRec } = note;
+  removePageTimg(pageRec);
 
   try {
     const { data } = await axios.put(`create/${noteID}`, {
@@ -105,6 +106,8 @@ export async function updatePages(noteID: string) {
   const note = await loadNote(noteID);
   if (!note) return null;
   const { uid, name, withImg, pageOrder, pageRec } = note;
+  removePageTimg(pageRec);
+  
   try {
     const { data } = await axios.put(`update/${noteID}`, {
       userID: getUserID(),

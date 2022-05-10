@@ -84,3 +84,10 @@ export function createPage(page?: NotePage): [string, NotePage] {
   };
   return [pageID, newPage];
 }
+
+export function removePageTimg(pageRec: Record<string, NotePage>) {
+  Object.values(pageRec).forEach((page) => {
+    delete page.image;
+    delete page.marked;
+  });
+}
