@@ -68,16 +68,8 @@ const Draw: FC<{
   const [rect, setRect] = useState<paper.Shape.Rectangle>();
   useEffect(() => {
     if (!rect) return;
-    let id = 0;
-    const moveDash = () => {
-      rect.dashOffset += 3;
-      id = requestAnimationFrame(moveDash);
-    };
-    moveDash();
-    return () => {
-      rect.remove();
-      cancelAnimationFrame(id);
-    };
+    rect.onFrame = () => (rect.dashOffset += 3);
+    return () => void rect.remove();
   }, [rect]);
 
   const [selectedGroup, setSelectedGroup] = useState<paper.Group>();
@@ -100,7 +92,7 @@ const Draw: FC<{
       setSelectedGroup(undefined);
       setCurrDrawCtrl(defaultDrawCtrl);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
 
   const ratio = useRef(1);
@@ -234,7 +226,9 @@ const Draw: FC<{
       setCurrDrawCtrl((prev) => ({ ...prev, ...tempStyle }));
       setSelected(true);
     },
-    selected() {},
+    selected() {
+      updateMutation();
+    },
   }[paperMode];
 
   const handlePaper = () => {
