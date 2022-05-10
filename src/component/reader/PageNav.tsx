@@ -48,7 +48,7 @@ const PageNavContent = ({
     if (!destination || !pageOrder) return;
     const { index: fromIndex } = source;
     const { index: toIndex } = destination;
-    if (fromIndex === toIndex) return; 
+    if (fromIndex === toIndex) return;
     const pageID = pageOrder[fromIndex];
     const newOrder = exchange(pageOrder, fromIndex, toIndex);
     saveReorder(newOrder, true);
@@ -65,7 +65,7 @@ const PageNavContent = ({
     const itemHeight = refRec.current[currpageID]?.clientHeight || 0;
     const listHeight = listEl.current?.clientHeight || 0;
     listEl.current?.scrollBy(0, -listHeight / 2 + itemHeight / 2);
-  }, []);
+  }, [currpageID]);
 
   return (
     <div className="preview-container">
@@ -113,7 +113,7 @@ const PagePreview: FC<{
   const { ignores } = useContext(TeamCtx);
   const [chosen, setChosen] = useState("");
 
-  const page = pageRec && pageRec[uid];
+  const page = pageRec?.get(uid);
   const drawState = stateSet?.getOneState(uid);
   const teamStateMap = teamState?.getOnePageState(uid);
   const userIDs = useMemo(

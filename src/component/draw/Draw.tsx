@@ -50,8 +50,8 @@ const Draw: FC<{
   onChange = () => {},
   otherStates,
   drawCtrl = defaultDrawCtrl,
-  readonly = false,
   preview = false,
+  readonly = preview,
   imgSrc,
   SelectTool,
 }) => {
@@ -60,10 +60,9 @@ const Draw: FC<{
 
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const scope = useRef(new paper.PaperScope());
-  const group = useRef<paper.Path[]>();
+  const group = useRef<paper.Path[]>([]);
   const path = useRef<paper.Path>();
   const [erased, setErased] = useState(Set<string>());
-  const ratio = useRef(1);
   const [currDrawCtrl, setCurrDrawCtrl] = useState(defaultDrawCtrl);
 
   const [rect, setRect] = useState<paper.Shape.Rectangle>();
@@ -82,10 +81,7 @@ const Draw: FC<{
   }, [rect]);
 
   const [selectedGroup, setSelectedGroup] = useState<paper.Group>();
-  useEffect(() => {
-    const prevSG = selectedGroup;
-    return () => void prevSG?.removeChildren();
-  }, [selectedGroup]);
+  useEffect(() => () => void selectedGroup?.remove(), [selectedGroup]);
 
   const [selected, setSelected] = useState(false);
   const paperMode = mode === "select" && selected ? "selected" : mode;
@@ -104,13 +100,10 @@ const Draw: FC<{
       setSelectedGroup(undefined);
       setCurrDrawCtrl(defaultDrawCtrl);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
 
-  const isEventValid = (e: TouchEvent) =>
-    isStylus(e) || (finger && e.touches.length === 1);
-  const preventTouch = (e: TouchEvent) =>
-    isEventValid(e) || e.stopPropagation();
-
+  const ratio = useRef(1);
   const updateRatio = () => {
     const clientWidth = canvasEl.current?.clientWidth;
     if (clientWidth) ratio.current = width / clientWidth;
@@ -127,15 +120,22 @@ const Draw: FC<{
     return absoluteP.subtract(offsetP).divide(zoom);
   };
 
-  const setupPaper = () => {
-    if (!canvasEl.current) return;
-    scope.current.setup(canvasEl.current);
+  useEffect(() => {
+    const setupPaper = () => {
+      if (!canvasEl.current) return;
+      scope.current.setup(canvasEl.current);
 
-    const r = preview ? PREVIEW_WIDTH / width : 1;
-    scope.current.view.viewSize = new Size(width, height).multiply(r);
-    scope.current.view.scale(r, new Point(0, 0));
-    paintBackground(width, height);
-  };
+      const r = preview ? PREVIEW_WIDTH / width : 1;
+      scope.current.view.viewSize = new Size(width, height).multiply(r);
+      scope.current.view.scale(r, new Point(0, 0));
+      paintBackground(width, height);
+    };
+
+    setupPaper();
+    scope.current.activate();
+    const cvs = canvasEl.current;
+    return () => void (cvs && releaseCanvas(cvs));
+  }, [height, width, preview]);
 
   const setNewRect = (e: paper.MouseEvent) => {
     updateRatio();
@@ -161,7 +161,7 @@ const Draw: FC<{
     },
     selected(e: paper.MouseEvent) {
       const point = transformPoint(e.point);
-      if (!rect || point.isInside(rect.strokeBounds)) return;
+      if (rect && point.isInside(rect.strokeBounds)) return;
       setNewRect(e);
       setSelected(false);
     },
@@ -184,10 +184,10 @@ const Draw: FC<{
       eraserPath.smooth();
 
       const newErased = group.current
-        ?.filter((p) => !erased.has(p.name))
+        .filter((p) => !erased.has(p.name))
         .filter((p) => checkErase(p, eraserPath))
         .map((p) => p.name);
-      newErased && setErased((prev) => prev.concat(newErased));
+      setErased((prev) => prev.concat(newErased));
     },
     select(e: paper.MouseEvent) {
       if (!rect) return;
@@ -228,7 +228,6 @@ const Draw: FC<{
 
       scope.current.activate();
       const paths = group.current;
-      if (!paths) return;
       const newSG = new Group(checkSelection(rect, paths));
       setSelectedGroup(newSG);
       const tempStyle = parseGroupStyle(newSG);
@@ -237,13 +236,6 @@ const Draw: FC<{
     },
     selected() {},
   }[paperMode];
-
-  useEffect(() => {
-    setupPaper();
-    scope.current.activate();
-    const cvs = canvasEl.current;
-    return () => void (cvs && releaseCanvas(cvs));
-  }, []);
 
   const handlePaper = () => {
     if (readonly) return;
@@ -270,30 +262,34 @@ const Draw: FC<{
     };
 
     return () => void raster?.remove();
-  }, [imgSrc]);
+  }, [imgSrc, width]);
 
-  const mergedStrokes = useMemo(() => {
-    if (!otherStates) return drawState.getStrokeList();
-    else return DrawState.mergeStates([drawState, ...otherStates]);
-  }, [drawState, otherStates]);
+  const mergedStrokes = useMemo(
+    () =>
+      otherStates
+        ? DrawState.mergeStates([drawState, ...otherStates])
+        : drawState.getStrokeList(),
+    [drawState, otherStates]
+  );
 
   useEffect(() => {
     scope.current.activate();
     group.current = [];
     const otherGroup: paper.Path[] = [];
 
-    mergedStrokes.forEach((stroke) => {
-      const passedGroup = drawState.hasStroke(stroke.uid)
-        ? group.current
-        : otherGroup;
-      paintStroke(stroke, passedGroup, erased);
-    });
+    mergedStrokes.forEach((stroke) =>
+      paintStroke(
+        stroke,
+        drawState.hasStroke(stroke.uid) ? group.current : otherGroup,
+        erased.has(stroke.uid)
+      )
+    );
 
     return () => {
-      group.current?.forEach((item) => item.remove());
+      group.current.forEach((item) => item.remove());
       otherGroup.forEach((item) => item.remove());
     };
-  }, [mergedStrokes, erased]);
+  }, [mergedStrokes, erased, drawState]);
 
   const updateMutation = () => {
     const list = selectedGroup?.children;
@@ -339,7 +335,7 @@ const Draw: FC<{
     const newSG = selectedGroup.clone();
     updateMutation();
     setSelectedGroup(newSG);
-    
+
     const { width, height } = rect.size;
     const transP = new Point(width, height).divide(10);
     newSG.translate(transP);
@@ -386,6 +382,11 @@ const Draw: FC<{
     }
   );
 
+  const isEventValid = (e: TouchEvent) =>
+    isStylus(e) || (finger && e.touches.length === 1);
+  const preventTouch = (e: TouchEvent) =>
+    isEventValid(e) || e.stopPropagation();
+
   return (
     <div className="draw-wrapper">
       <canvas
@@ -410,17 +411,13 @@ const Draw: FC<{
 
 export default React.memo(Draw);
 
-const paintStroke = (
-  stroke: Stroke,
-  group?: paper.Path[],
-  erased?: Set<string>
-) => {
+const paintStroke = (stroke: Stroke, group?: paper.Path[], erased = false) => {
   let { pathData, uid } = stroke;
   try {
     const path = new Path();
     path.importJSON(pathData);
     path.name = uid;
-    if (erased?.has(uid)) path.opacity /= 2;
+    if (erased) path.opacity /= 2;
     group?.push(path);
   } catch (e) {
     console.error(e);

@@ -2,56 +2,28 @@ import { message } from "antd";
 import React, { useState, useEffect, createContext } from "react";
 import { getTeamNoteState, loadTeamNoteInfo } from "../../lib/network/http";
 import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
+import { IoFactory, NewPageInfo } from "../../lib/network/io";
 import { useNavigate, useParams } from "react-router-dom";
-import { SetOperation } from "../../lib/draw/StateSet";
 import { TeamState } from "../../lib/draw/TeamState";
 import { getUserID, UserInfo } from "../../lib/user";
-import { Stroke } from "../../lib/draw/DrawState";
-import { IoFactory } from "../../lib/network/io";
 import { NotePage } from "../../lib/note/note";
+import { Socket } from "socket.io-client";
 import { Setter } from "../../lib/hooks";
 import { Set } from "immutable";
 import Reader from "./Reader";
 
 export const TeamCtx = createContext({
+  io: undefined as Socket | undefined,
   code: -2,
   connected: false,
   ignores: Set<string>(),
   userRec: {} as Record<string, UserInfo>,
   teamState: undefined as TeamState | undefined,
-  teamUpdate: undefined as undefined | TeamUpdate,
   resetIO: () => {},
   loadInfo: async () => false,
   setIgnores: (() => {}) as Setter<Set<string>>,
-  pushReorder: (pageOrder: string[]) => {},
-  pushNewPage: (pageOrder: string[], pageID: string, newPage: NotePage) => {},
-  pushOperation: (op: SetOperation) => {},
+  addTeamStatePage: (pageID: string, newPage: NotePage) => {},
 });
-
-interface ReorderInfo {
-  pageOrder: string[];
-  prevOrder: string[];
-  deleted: boolean;
-}
-
-interface NewPageInfo {
-  pageOrder: string[];
-  pageID: string;
-  newPage: NotePage;
-}
-
-type TeamUpdate =
-  | ({
-      type: "reorder";
-    } & ReorderInfo)
-  | ({
-      type: "newPage";
-    } & NewPageInfo)
-  | {
-      type: "sync";
-      stroke: Stroke;
-      pageID: string;
-    };
 
 export default function Team() {
   const noteID = useParams().noteID ?? "";
@@ -60,7 +32,6 @@ export default function Team() {
   const [userRec, setUserRec] = useState<Record<string, UserInfo>>({});
   const [ignores, setIgnores] = useState(Set<string>());
   const [io, setIO] = useState(IoFactory(noteID));
-  const [teamUpdate, setTeamUpdate] = useState<TeamUpdate>();
   const [loaded, setLoaded] = useState(false);
   const [connected, setConnected] = useState(false);
   const nav = useNavigate();
@@ -128,14 +99,9 @@ export default function Team() {
       });
     });
 
-    io.on("reorder", (info: ReorderInfo) => {
-      setTeamUpdate({ type: "reorder", ...info });
-    });
-
     io.on("newPage", (info: NewPageInfo) => {
       const { pageID, newPage } = info;
       setTeamState((prev) => prev?.addPage(pageID, newPage));
-      setTeamUpdate({ type: "newPage", ...info });
     });
 
     io.on("reset", ({ userID, pageRec }) => {
@@ -160,30 +126,11 @@ export default function Team() {
   useEffect(() => {
     roomInit();
     return roomDestroy;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [noteID]);
 
-  const pushOperation = (operation: SetOperation) => {
-    io.emit(
-      "push",
-      { operation },
-      ({ stroke, pageID }: { stroke: Stroke; pageID: string }) => {
-        setTeamUpdate({ type: "sync", stroke, pageID });
-      }
-    );
-  };
-
-  const pushReorder = (pageOrder: string[]) => {
-    io.emit("reorder", { pageOrder });
-  };
-
-  const pushNewPage = (
-    pageOrder: string[],
-    pageID: string,
-    newPage: NotePage
-  ) => {
+  const addTeamStatePage = (pageID: string, newPage: NotePage) => {
     setTeamState((prev) => prev?.addPage(pageID, newPage));
-    const { image, marked, ...newTeamPage } = newPage;
-    io.emit("newPage", { pageOrder, pageID, newPage: newTeamPage });
   };
 
   const resetIO = () => setIO(IoFactory(noteID));
@@ -192,18 +139,16 @@ export default function Team() {
   return (
     <TeamCtx.Provider
       value={{
+        io,
         code,
         ignores,
         userRec,
         connected,
         teamState,
-        teamUpdate,
         resetIO,
         loadInfo,
         setIgnores,
-        pushReorder,
-        pushNewPage,
-        pushOperation,
+        addTeamStatePage,
       }}
     >
       <Reader teamOn />

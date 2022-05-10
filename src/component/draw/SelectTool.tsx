@@ -29,9 +29,7 @@ const SelectTool: SelectToolType = ({
   const rotateEl = useRef<HTMLDivElement>(null);
   const [dragged, setDragged] = useState(false);
   const [transX, setTransX] = useState(0);
-  const gearStyle = dragged
-    ? { transform: `translateX(${transX}px)` }
-    : undefined;
+  const gearStyle = { transform: `translateX(${transX}px)` }
 
   const [rotateCount, setRotateCount] = useState(0);
   const shakeShow = rotateCount % 4 === 1;

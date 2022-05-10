@@ -166,8 +166,10 @@ export class DrawState {
     let strokes = drawState.getStrokeMap();
     mutations.forEach(
       ([uid, pathData]) =>
-        (strokes = strokes.update(uid, (s) =>
-          s ? { ...s, pathData } : { uid, pathData, timestamp: Date.now() }
+        (strokes = strokes.update(
+          uid,
+          { uid, pathData, timestamp: Date.now() },
+          (s) => ({ ...s, pathData })
         ))
     );
     const currRecord = prevRecord

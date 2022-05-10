@@ -1,6 +1,6 @@
 import { getDefaultFlatState, FlatState } from "../draw/DrawState";
 import { v4 as getUid } from "uuid";
-import moment from 'moment';
+import moment from "moment";
 
 export interface NotePage {
   ratio: number;
@@ -9,6 +9,11 @@ export interface NotePage {
   marked?: boolean;
   pdfIndex?: number;
 }
+
+export const defaultNotePage: Readonly<NotePage> = {
+  ratio: 1.5,
+  state: { strokes: {} },
+};
 
 export interface TeamPageState {
   states: Record<string, FlatState>;
@@ -55,7 +60,7 @@ export function createEmptyNote(): Note {
   const time = moment.now();
   return {
     uid: getUid(),
-    name: `Note ${moment(time).format('LT, ddd MMM D')}`,
+    name: `Note ${moment(time).format("LT, ddd MMM D")}`,
     tagID: "DEFAULT",
     team: false,
     withImg: false,
@@ -79,10 +84,3 @@ export function createPage(page?: NotePage): [string, NotePage] {
   };
   return [pageID, newPage];
 }
-
-// export function createTeamPage(pageInfo: TeamPageInfo): NotePage {
-//   return {
-//     ...pageInfo,
-//     state: getDefaultFlatState(),
-//   };
-// }

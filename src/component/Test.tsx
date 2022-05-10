@@ -1,14 +1,13 @@
-import { Avatar } from "antd";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./test.sass";
 
 export default function Test() {
+  const [count, setCount] = useState(1);
+  useEffect(() => () => console.log(count), [count]);
   return (
-    <Avatar.Group>
-      <Avatar size="large">已二三</Avatar>
-      <Avatar size="large">已二三</Avatar>
-      <Avatar size="large">已二三</Avatar>
-      <Avatar size="large">已二三</Avatar>
-    </Avatar.Group>
+    <div>
+      <h1>{count}</h1>
+      <button onClick={() => setCount((prev) => prev + 1)}>click</button>
+    </div>
   );
 }

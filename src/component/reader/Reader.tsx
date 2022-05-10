@@ -14,17 +14,23 @@ import {
   getDrawCtrl,
   defaultDrawCtrl,
 } from "../../lib/draw/drawCtrl";
-import { createPage, NoteInfo, NotePage } from "../../lib/note/note";
+import {
+  createPage,
+  defaultNotePage,
+  NoteInfo,
+  NotePage,
+} from "../../lib/note/note";
+import { SetOperation, StateSet } from "../../lib/draw/StateSet";
 import { loadNote, editNoteData } from "../../lib/note/archive";
+import { NewPageInfo, ReorderInfo, SyncInfo } from "../../lib/network/io";
 import { AddPageButton, showPageDelMsg } from "./ReaderTools";
 import { useParams, useNavigate } from "react-router-dom";
 import { useInView } from "react-intersection-observer";
+import { DrawState } from "../../lib/draw/DrawState";
 import { updatePages } from "../../lib/network/http";
 import { useBeforeunload } from "react-beforeunload";
 import { TeamState } from "../../lib/draw/TeamState";
-import { DrawState } from "../../lib/draw/DrawState";
 import { Setter, useMounted } from "../../lib/hooks";
-import { StateSet } from "../../lib/draw/StateSet";
 import { insertAfter } from "../../lib/array";
 import SelectTool from "../draw/SelectTool";
 import { debounce, last } from "lodash";
@@ -40,7 +46,7 @@ export const ReaderStateCtx = createContext({
   noteInfo: undefined as NoteInfo | undefined,
   stateSet: undefined as StateSet | undefined,
   teamState: undefined as TeamState | undefined,
-  pageRec: undefined as Record<string, NotePage> | undefined,
+  pageRec: undefined as Map<string, NotePage> | undefined,
   pageOrder: undefined as string[] | undefined,
   saved: true,
   teamOn: false,
@@ -52,7 +58,7 @@ export const ReaderStateCtx = createContext({
 export const ReaderMethodCtx = createContext({
   scrollPage: (pageID: string) => {},
   switchPageMarked: (pageID: string) => {},
-  setPageState: (uid: string, cb: (ds: DrawState) => DrawState) => {},
+  updateStateSet: (cb: (prevSS: StateSet) => StateSet) => {},
   addPage: (prevPageID: string, copy?: boolean) => {},
   addFinalPage: () => {},
   deletePage: (pageID: string) => {},
@@ -65,36 +71,38 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   const noteID = useParams().noteID ?? "";
   const nav = useNavigate();
 
-  const [pageRec, setPageRec] = useState<Record<string, NotePage>>();
+  const [pageRec, setPageRec] = useState<Map<string, NotePage>>();
   const [noteInfo, setNoteInfo] = useState<NoteInfo>();
   const [stateSet, setStateSet] = useState<StateSet>();
   const [drawCtrl, setDrawCtrl] = useState(defaultDrawCtrl);
-  const [saved, setSaved] = useState(true);
   const [inviewPages, setInviewPages] = useState(Set<string>());
   const [pageOrder, setPageOrder] = useState<string[]>();
+  const [saved, setSaved] = useState(true);
 
   const refRec = useRef<Record<string, HTMLElement>>({});
   const mounted = useMounted();
 
-  const { teamState, teamUpdate, pushOperation, pushNewPage, pushReorder } =
-    useContext(TeamCtx);
+  const { io, teamState, addTeamStatePage } = useContext(TeamCtx);
 
-  const loadNotePages = async () => {
-    const storedNote = await loadNote(noteID);
-    if (!storedNote) {
-      message.error("Note not found");
-      return nav("/");
-    }
-    const { pageRec, pdf, pageOrder, ...noteInfo } = storedNote;
-    setPageRec(pageRec);
-    setPageOrder(pageOrder);
-    setNoteInfo(noteInfo);
-    setStateSet(StateSet.createFromPages(pageRec));
-    setDrawCtrl(await getDrawCtrl());
-    if (teamOn) updatePages(noteID);
-  };
-  useEffect(() => void loadNotePages(), [noteID, teamOn]);
+  useEffect(() => {
+    const loadNotePages = async () => {
+      const storedNote = await loadNote(noteID);
+      if (!storedNote) {
+        message.error("Note not found");
+        return nav("/");
+      }
+      const { pageRec, pdf, pageOrder, ...noteInfo } = storedNote;
+      setPageRec(Map(pageRec));
+      setPageOrder(pageOrder);
+      setNoteInfo(noteInfo);
+      setStateSet(StateSet.createFromPages(pageRec));
+      setDrawCtrl(await getDrawCtrl());
+      if (teamOn) updatePages(noteID);
+    };
+    loadNotePages();
+  }, [nav, noteID, teamOn]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSave = useCallback(
     debounce(async (pr: Record<string, NotePage>) => {
       const canvas = document.querySelector("canvas");
@@ -105,9 +113,38 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     []
   );
   const instantSave = debouncedSave.flush;
-
-  useLayoutEffect(() => () => void instantSave(), []);
+  useLayoutEffect(() => () => void instantSave(), [instantSave]);
   useBeforeunload(instantSave);
+
+  const prRef = useRef(pageRec);
+  prRef.current = pageRec;
+  const savePageRec = useCallback(
+    (pageID: string, cb: (prev: NotePage) => NotePage) => {
+      const newRec = prRef.current?.update(pageID, defaultNotePage, cb);
+      if (!newRec) return;
+      setPageRec(newRec);
+      setSaved(false);
+      debouncedSave(newRec.toObject());
+    },
+    [debouncedSave]
+  );
+
+  const pushReorder = useCallback(
+    (pageOrder: string[]) => {
+      io?.emit("reorder", { pageOrder });
+    },
+    [io]
+  );
+
+  const saveReorder = useCallback(
+    async (newOrder: string[], push = false) => {
+      setPageOrder(newOrder);
+      await editNoteData(noteID, { pageOrder: newOrder });
+      await instantSave();
+      push && pushReorder(newOrder);
+    },
+    [noteID, instantSave, pushReorder]
+  );
 
   useEffect(() => {
     if (!noteInfo) return;
@@ -115,107 +152,79 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   }, [noteInfo]);
 
   useEffect(() => {
-    if (!teamUpdate) return;
-    const { type } = teamUpdate;
-    if (type === "reorder") {
-      const { pageOrder, deleted, prevOrder } = teamUpdate;
+    io?.on("reorder", ({ deleted, pageOrder, prevOrder }: ReorderInfo) => {
       saveReorder(pageOrder);
-      if (!deleted) return;
-      showPageDelMsg(() => {
-        saveReorder(prevOrder, true);
-      });
-    } else if (type === "newPage") {
-      const { pageOrder, pageID, newPage } = teamUpdate;
+      if (deleted) showPageDelMsg(() => saveReorder(prevOrder, true));
+    });
+
+    io?.on("newPage", ({ pageOrder, pageID, newPage }: NewPageInfo) => {
       saveReorder(pageOrder);
       savePageRec(pageID, () => newPage);
       setStateSet((prev) => prev?.addState(pageID, newPage));
-    } else if (type === "sync") {
-      const { pageID, stroke } = teamUpdate;
-      setStateSet((prevSS) =>
-        prevSS?.updateState(pageID, (prevDS) =>
-          DrawState.updateStroke(prevDS, stroke)
-        )
-      );
-    }
-  }, [teamUpdate]);
-
-  const savePageRec = (
-    pageID: string,
-    cb: (prev?: NotePage) => NotePage | undefined
-  ) => {
-    setPageRec((prevRec) => {
-      if (!prevRec) return;
-      const prevPage = prevRec[pageID];
-      const newPage = cb(prevPage);
-      if (!newPage) return;
-      const newRec = { ...prevRec, [pageID]: newPage };
-      debouncedSave(newRec);
-      return newRec;
     });
-    setSaved(false);
-  };
 
-  const updatePageRec = (pageID: string, ds: DrawState) => {
-    const state = DrawState.flaten(ds);
-    savePageRec(pageID, (prev) => prev && { ...prev, state });
-  };
+    return () => void io?.removeAllListeners();
+  }, [io, savePageRec, saveReorder]);
 
-  const setPageState = useCallback(
-    (pageID: string, cb: (ds: DrawState) => DrawState) => {
-      setStateSet((prev) => {
-        if (!prev) return;
-        const prevDS = prev.getOneState(pageID);
-        if (!prevDS) return prev;
-        const newDS = cb(prevDS);
-        const newSS = prev.setState(pageID, newDS);
-        newSS.lastOp && pushOperation(newSS.lastOp);
-        updatePageRec(pageID, newDS);
-        return newSS;
-      });
+  const pushOperation = useCallback(
+    (operation: SetOperation) => {
+      const handleSync = ({ stroke, pageID }: SyncInfo) =>
+        setStateSet((prevSS) =>
+          prevSS?.updateState(pageID, (prevDS) =>
+            DrawState.updateStroke(prevDS, stroke)
+          )
+        );
+
+      io?.emit("push", { operation }, handleSync);
     },
-    []
+    [io]
+  );
+
+  const pushNewPage = (
+    pageOrder: string[],
+    pageID: string,
+    newPage: NotePage
+  ) => {
+    const { image, marked, ...newTeamPage } = newPage;
+    io?.emit("newPage", { pageOrder, pageID, newPage: newTeamPage });
+    addTeamStatePage(pageID, newPage);
+  };
+
+  const updatePageRec = useCallback(
+    (pageID: string, ds: DrawState) => {
+      const state = DrawState.flaten(ds);
+      savePageRec(pageID, (prev) => ({ ...prev, state }));
+    },
+    [savePageRec]
+  );
+
+  const ssRef = useRef(stateSet);
+  ssRef.current = stateSet;
+  const updateStateSet = useCallback(
+    (cb: (prevSS: StateSet) => StateSet) => {
+      if (!ssRef.current) return;
+      const newSS = cb(ssRef.current);
+      setStateSet(newSS);
+      const lastDS = newSS.getLastDS();
+      const lastOp = newSS.lastOp;
+      if (!lastDS || !lastOp) return;
+      updatePageRec(...lastDS);
+      pushOperation(lastOp);
+    },
+    [updatePageRec, pushOperation]
   );
 
   const switchPageMarked = (pageID: string) => {
-    savePageRec(pageID, (prev) => prev && { ...prev, marked: !prev.marked });
-  };
-
-  const handleUndo = () => {
-    setStateSet((prev) => {
-      if (!prev) return;
-      const newSS = prev.undo();
-      const lastDS = newSS.getLastDS();
-      lastDS && updatePageRec(...lastDS);
-      newSS.lastOp && pushOperation(newSS.lastOp);
-      return newSS;
-    });
-  };
-
-  const handleRedo = () => {
-    setStateSet((prev) => {
-      if (!prev) return;
-      const newSS = prev.redo();
-      const lastDS = newSS.getLastDS();
-      lastDS && updatePageRec(...lastDS);
-      newSS.lastOp && pushOperation(newSS.lastOp);
-      return newSS;
-    });
+    savePageRec(pageID, (prev) => ({ ...prev, marked: !prev.marked }));
   };
 
   const scrollPage = (pageID: string) => {
     refRec.current[pageID]?.scrollIntoView();
   };
 
-  const saveReorder = async (newOrder: string[], push = false) => {
-    setPageOrder(newOrder);
-    await editNoteData(noteID, { pageOrder: newOrder });
-    await instantSave();
-    push && pushReorder(newOrder);
-  };
-
   const addPage = (prevPageID: string, copy = false) => {
     if (!pageOrder) return;
-    const prevPage = copy ? pageRec && pageRec[prevPageID] : undefined;
+    const prevPage = copy ? pageRec?.get(prevPageID) : undefined;
     const [pageID, newPage] = createPage(prevPage);
     const newOrder = insertAfter(pageOrder, prevPageID, pageID);
     pushNewPage(newOrder, pageID, newPage);
@@ -237,8 +246,8 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   const renderResult = (
     <div className="reader container">
       <DrawTools
-        handleUndo={handleUndo}
-        handleRedo={handleRedo}
+        handleUndo={() => updateStateSet((prev) => prev.undo())}
+        handleRedo={() => updateStateSet((prev) => prev.redo())}
         instantSave={instantSave}
       />
       <main>
@@ -253,30 +262,30 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   return (
     <ReaderStateCtx.Provider
       value={{
+        saved,
+        teamOn,
         noteID,
+        pageRec,
+        drawCtrl,
         noteInfo,
         stateSet,
         teamState,
-        saved,
-        teamOn,
-        pageRec,
         pageOrder,
         inviewPages,
         refRec: refRec.current,
-        drawCtrl,
       }}
     >
       <ReaderMethodCtx.Provider
         value={{
-          scrollPage,
-          setInviewPages,
-          switchPageMarked,
-          setPageState,
           addPage,
-          addFinalPage,
+          scrollPage,
           deletePage,
           setDrawCtrl,
           saveReorder,
+          addFinalPage,
+          updateStateSet,
+          setInviewPages,
+          switchPageMarked,
         }}
       >
         {renderResult}
@@ -287,17 +296,17 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
 
 const PageContainer: FC<{ uid: string }> = ({ uid }) => {
   const { pageRec, stateSet, teamState } = useContext(ReaderStateCtx);
-  const { setPageState } = useContext(ReaderMethodCtx);
+  const { updateStateSet } = useContext(ReaderMethodCtx);
 
-  const page = pageRec && pageRec[uid];
+  const page = pageRec?.get(uid);
   const drawState = stateSet?.getOneState(uid);
   const teamStateMap = teamState?.getOnePageState(uid);
   const updateState = useCallback(
-    (cb: (ds: DrawState) => DrawState) => setPageState(uid, cb),
-    [uid, setPageState]
+    (ds: DrawState) => updateStateSet((prev) => prev.setState(uid, ds)),
+    [uid, updateStateSet]
   );
-  if (!page || !drawState) return null;
 
+  if (!page || !drawState) return null;
   return (
     <PageWrapper
       drawState={drawState}
@@ -323,7 +332,7 @@ export const PageWrapper = ({
   teamStateMap?: Map<string, DrawState>;
   thumbnail?: string;
   pdfIndex?: number;
-  updateState?: (cb: (ds: DrawState) => DrawState) => void;
+  updateState?: (ds: DrawState) => void;
   preview?: boolean;
 }) => {
   const { setInviewPages } = useContext(ReaderMethodCtx);
@@ -340,20 +349,21 @@ export const PageWrapper = ({
       visibleRef(e);
       if (!preview && refRec) refRec[uid] = e;
     },
-    [refRec]
+    [preview, refRec, uid, visibleRef]
   );
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const loadImage = useCallback(
     (() => {
       let called = false;
       return async () => {
-        if (preview || !pdfIndex || called) return;
+        if (!pdfIndex || called) return;
         called = true;
         const { getOnePageImage } = await import("../../lib/note/pdfImage");
         setFullImg(await getOnePageImage(noteID, pdfIndex));
       };
     })(),
-    [preview, pdfIndex]
+    [pdfIndex, noteID]
   );
 
   useEffect(() => {
@@ -364,7 +374,7 @@ export const PageWrapper = ({
     } else {
       setInviewPages((prev) => prev.delete(uid));
     }
-  }, [visible, loadImage, preview]);
+  }, [visible, loadImage, preview, setInviewPages, uid]);
 
   const { ignores } = useContext(TeamCtx);
   const otherStates = useMemo(
@@ -406,17 +416,19 @@ const DrawWrapper = ({
 }: {
   drawState: DrawState;
   otherStates?: DrawState[];
-  updateState?: (cb: (ds: DrawState) => DrawState) => void;
+  updateState?: (ds: DrawState) => void;
   preview?: boolean;
   imgSrc?: string;
 }) => {
   const { drawCtrl } = useContext(ReaderStateCtx);
 
+  const dsRef = useRef(drawState);
+  dsRef.current = drawState;
   const handleChange = useCallback(
     (arg: ((s: DrawState) => DrawState) | DrawState) => {
       if (!updateState) return;
-      const cb = arg instanceof DrawState ? () => arg : arg;
-      updateState(cb);
+      const newDS = arg instanceof DrawState ? arg : arg(dsRef.current);
+      updateState(newDS);
     },
     [updateState]
   );
