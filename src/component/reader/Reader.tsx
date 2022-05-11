@@ -300,7 +300,7 @@ const PageContainer: FC<{ uid: string }> = ({ uid }) => {
 
   const page = pageRec?.get(uid);
   const drawState = stateSet?.getOneState(uid);
-  const teamStateMap = teamState?.getOnePageState(uid);
+  const teamStateMap = teamState?.getOnePageStateMap(uid);
   const updateState = useCallback(
     (ds: DrawState) => updateStateSet((prev) => prev.setState(uid, ds)),
     [uid, updateStateSet]

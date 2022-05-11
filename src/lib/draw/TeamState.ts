@@ -1,7 +1,7 @@
-import { Map, Record } from "immutable";
 import { NotePage, TeamPage, TeamPageInfo } from "../note/note";
 import { DrawState, WIDTH } from "./DrawState";
 import { SetOperation } from "./StateSet";
+import { Map, Record } from "immutable";
 
 interface TeamStateRecordType {
   pageStates: Map<string, Map<string, DrawState>>;
@@ -35,12 +35,12 @@ export class TeamState {
     return this.getPageStates().get(pageID)?.get(userID);
   }
 
-  getOnePageState(pageID: string) {
+  getOnePageStateMap(pageID: string) {
     return this.getPageStates().get(pageID);
   }
 
-  getOnePageValidUser(pageID: string) {
-    const map = this.getOnePageState(pageID);
+  getPageValidUsers(pageID: string) {
+    const map = this.getOnePageStateMap(pageID);
     if (!map) return [];
     return Array.from(map?.filter((ds) => !ds.isEmpty()).keys());
   }

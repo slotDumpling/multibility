@@ -17,7 +17,6 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
-import IconFont from "../ui/IconFont";
 import {
   Draggable,
   Droppable,
@@ -27,10 +26,11 @@ import {
 import { AddPageButton } from "./ReaderTools";
 import { exchange } from "../../lib/array";
 import { Setter } from "../../lib/hooks";
-import classNames from "classnames";
-import "./preview.sass";
 import { UserAvatar } from "./DrawTools";
+import IconFont from "../ui/IconFont";
+import classNames from "classnames";
 import { TeamCtx } from "./Team";
+import "./preview.sass";
 
 const PageNavContent = ({
   activeKey,
@@ -65,7 +65,8 @@ const PageNavContent = ({
     const itemHeight = refRec.current[currpageID]?.clientHeight || 0;
     const listHeight = listEl.current?.clientHeight || 0;
     listEl.current?.scrollBy(0, -listHeight / 2 + itemHeight / 2);
-  }, [currpageID]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="preview-container">
@@ -115,11 +116,11 @@ const PagePreview: FC<{
 
   const page = pageRec?.get(uid);
   const drawState = stateSet?.getOneState(uid);
-  const teamStateMap = teamState?.getOnePageState(uid);
+  const teamStateMap = teamState?.getOnePageStateMap(uid);
   const userIDs = useMemo(
     () =>
       teamState
-        ?.getOnePageValidUser(uid)
+        ?.getPageValidUsers(uid)
         .filter((userID) => !ignores.has(userID)),
     [teamState, ignores, uid]
   );
