@@ -198,13 +198,6 @@ const Draw: FC<{
   }[paperMode];
 
   const handleUp = {
-    erase() {
-      if (!path.current) return;
-      scope.current.activate();
-      path.current.remove();
-      onChange((prev) => DrawState.eraseStrokes(prev, erased.toArray()));
-      setErased(Set());
-    },
     draw() {
       if (!path.current || path.current.segments.length === 0) return;
       scope.current.activate();
@@ -212,6 +205,13 @@ const Draw: FC<{
       const pathData = path.current.exportJSON();
       path.current.remove();
       onChange((prev) => DrawState.addStroke(prev, pathData));
+    },
+    erase() {
+      if (!path.current) return;
+      scope.current.activate();
+      path.current.remove();
+      onChange((prev) => DrawState.eraseStrokes(prev, erased.toArray()));
+      setErased(Set());
     },
     select() {
       if (!rect) return;
@@ -226,9 +226,7 @@ const Draw: FC<{
       setCurrDrawCtrl((prev) => ({ ...prev, ...tempStyle }));
       setSelected(true);
     },
-    selected() {
-      updateMutation();
-    },
+    selected() {},
   }[paperMode];
 
   const handlePaper = () => {
@@ -294,7 +292,6 @@ const Draw: FC<{
 
   const deleteSelected = () => {
     const list = selectedGroup?.children;
-    console.log(selectedGroup);
     if (!list?.length) return;
 
     const deleted = list.map((item) => item.name);
