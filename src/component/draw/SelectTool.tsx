@@ -47,7 +47,7 @@ const SelectTool: SelectToolType = ({
     {
       target: rotateEl,
       filterTaps: true,
-      rubberband: true,
+      rubberband: 0.05,
       bounds: { left: -90, right: 90 },
     }
   );

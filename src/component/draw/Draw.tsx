@@ -355,13 +355,21 @@ const Draw: FC<{
       } else [lastScale, [lastOX, lastOY], [osX, osY]] = memo;
 
       const { view } = scope.current;
+      if (Math.abs(1 - offset[0]) < 0.05) offset[0] = 1;
 
-      const scale = first ? 1 : offset[0] / lastScale;
+      let scale = first ? 1 : offset[0] / lastScale;
       const r = ratio.current;
       const [oX, oY] = [origin[0] - osX, origin[1] - osY];
       const originViewP = new Point(oX, oY).multiply(r);
       const originProjP = view.viewToProject(originViewP);
-      view.scale(scale, originProjP);
+
+      let aniCount = last ? 10 : 1;
+      scale = Math.pow(scale, 1 / aniCount);
+      const scaleView = () => {
+        view.scale(scale, originProjP);
+        if (--aniCount > 0) requestAnimationFrame(scaleView);
+      };
+      scaleView();
 
       const [dX, dY] = [oX - lastOX, oY - lastOY];
       const transP = new Point(dX, dY).multiply(r / offset[0]);
@@ -372,6 +380,7 @@ const Draw: FC<{
     },
     {
       scaleBounds: { max: 5, min: 0.3 },
+      rubberband: 0.5,
       target: canvasEl,
     }
   );
