@@ -56,7 +56,7 @@ const Draw: FC<{
   SelectTool,
 }) => {
   const { width, height } = drawState;
-  let { mode, color, finger, lineWidth, highlight, eraserWidth } = drawCtrl;
+  const { mode, color, finger, lineWidth, highlight, eraserWidth } = drawCtrl;
 
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const scope = useRef(new paper.PaperScope());
@@ -69,7 +69,7 @@ const Draw: FC<{
   useEffect(() => {
     if (!rect) return;
     rect.onFrame = () => (rect.dashOffset += 3);
-    return () => void rect.remove();
+    return () => void rect.remove(); 
   }, [rect]);
 
   const [selectedGroup, setSelectedGroup] = useState<paper.Group>();
