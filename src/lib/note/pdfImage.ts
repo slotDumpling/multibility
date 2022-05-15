@@ -1,11 +1,11 @@
+import { createVirtualCanvas, releaseCanvas } from "../draw/canvas";
+import { createEmptyNote, Note, NotePage } from "./note";
 import localforage from "localforage";
+import { v4 as getUid } from "uuid";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf";
 // @ts-ignore
 import pdfjsWorker from "pdfjs-dist/legacy/build/pdf.worker.entry";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
-import { v4 as getUid } from "uuid";
-import { createVirtualCanvas, releaseCanvas } from "../draw/drawer";
-import { createEmptyNote, Note, NotePage } from "./note";
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 const getPDFDocument = async (file: Blob) => {

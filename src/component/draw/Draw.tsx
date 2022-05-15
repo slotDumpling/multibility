@@ -9,7 +9,7 @@ import React, {
 import { DrawState, Mutation, Stroke } from "../../lib/draw/DrawState";
 import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
 import { Setter, usePreventGesture } from "../../lib/hooks";
-import { releaseCanvas } from "../../lib/draw/drawer";
+import { releaseCanvas } from "../../lib/draw/canvas";
 import { isStylus } from "../../lib/touch/touch";
 import { usePinch } from "@use-gesture/react";
 import { v4 as getUid } from "uuid";
@@ -331,7 +331,7 @@ const Draw: FC<{
     const transP = new Point(width, height).divide(10);
     newSG.translate(transP);
     rect.translate(transP);
-    newSG?.children.forEach((p) => (p.name = getUid()));
+    newSG.children.forEach((p) => (p.name = getUid()));
   };
 
   usePreventGesture();

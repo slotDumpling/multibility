@@ -1,4 +1,3 @@
-import { Avatar, Button, Drawer, Menu, Popover, Tabs } from "antd";
 import React, {
   FC,
   useRef,
@@ -8,7 +7,6 @@ import React, {
   useContext,
   MouseEvent,
 } from "react";
-import { PageWrapper, ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import {
   MoreOutlined,
   PlusOutlined,
@@ -23,6 +21,8 @@ import {
   DropResult,
   DragDropContext,
 } from "react-beautiful-dnd";
+import { PageWrapper, ReaderMethodCtx, ReaderStateCtx } from "./Reader";
+import { Avatar, Button, Drawer, Menu, Popover, Tabs } from "antd";
 import { AddPageButton } from "./ReaderTools";
 import { exchange } from "../../lib/array";
 import { Setter } from "../../lib/hooks";
@@ -65,7 +65,7 @@ const PageNavContent = ({
     const itemHeight = refRec.current[currpageID]?.clientHeight || 0;
     const listHeight = listEl.current?.clientHeight || 0;
     listEl.current?.scrollBy(0, -listHeight / 2 + itemHeight / 2);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -132,22 +132,20 @@ const PagePreview: FC<{
     (!teamStateMap || teamStateMap.every((ds) => ds.isEmpty()))
   ) {
     return null;
-  } else if (mode === "MARKED" && !page.marked) {
-    return null;
   }
+  if (mode === "MARKED" && !page.marked) return null;
 
   const switchMarked = (e: MouseEvent<HTMLSpanElement>) => {
     switchPageMarked(uid);
     e.stopPropagation();
   };
   const curr = currpageID === uid;
-  const dragDisabled = mode !== "ALL";
 
   return (
     <Draggable
       draggableId={uid}
       index={pageIndex}
-      isDragDisabled={dragDisabled}
+      isDragDisabled={mode !== "ALL"}
     >
       {(
         { innerRef, draggableProps, dragHandleProps },

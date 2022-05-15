@@ -1,6 +1,5 @@
-import { message } from "antd";
-import React, { useState, useEffect, createContext } from "react";
 import { getTeamNoteState, loadTeamNoteInfo } from "../../lib/network/http";
+import React, { useState, useEffect, createContext } from "react";
 import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
 import { IoFactory, NewPageInfo } from "../../lib/network/io";
 import { useNavigate, useParams } from "react-router-dom";
@@ -10,6 +9,7 @@ import { NotePage } from "../../lib/note/note";
 import { Socket } from "socket.io-client";
 import { Setter } from "../../lib/hooks";
 import { Set } from "immutable";
+import { message } from "antd";
 import Reader from "./Reader";
 
 export const TeamCtx = createContext({

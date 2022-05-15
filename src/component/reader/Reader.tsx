@@ -130,9 +130,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   );
 
   const pushReorder = useCallback(
-    (pageOrder: string[]) => {
-      io?.emit("reorder", { pageOrder });
-    },
+    (pageOrder: string[]) => io?.emit("reorder", { pageOrder }),
     [io]
   );
 

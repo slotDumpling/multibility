@@ -32,6 +32,7 @@ import { useEffect } from "react";
 import "./right.sass";
 import "animate.css";
 import { Setter } from "../../lib/hooks";
+import { FC } from "react";
 
 const OthersStateCtx = createContext({
   setActive: (() => {}) as Setter<string>,
@@ -62,17 +63,14 @@ const OthersMenu = () => {
   );
 };
 
-const SeconaryMenu = ({
-  children,
-  title,
-}: {
+const SeconaryMenu: FC<{
   children: ReactNode;
   title: string;
-}) => {
+}> = ({ children, title }) => {
   const { setActive } = useContext(OthersStateCtx);
   return (
     <div className="secondary">
-      <div className="title">
+      <nav>
         <Button
           type="text"
           shape="circle"
@@ -80,7 +78,7 @@ const SeconaryMenu = ({
           icon={<ArrowLeftOutlined />}
         />
         <Title level={5}>{title}</Title>
-      </div>
+      </nav>
       {children}
     </div>
   );
