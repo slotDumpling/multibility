@@ -1,5 +1,5 @@
 import { getTeamNoteState, loadTeamNoteInfo } from "../../lib/network/http";
-import React, { useState, useEffect, createContext } from "react";
+import React, { useState, useEffect, createContext, useCallback } from "react";
 import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
 import { IoFactory, NewPageInfo } from "../../lib/network/io";
 import { useNavigate, useParams } from "react-router-dom";
@@ -36,7 +36,7 @@ export default function Team() {
   const [connected, setConnected] = useState(false);
   const nav = useNavigate();
 
-  const loadState = async () => {
+  const loadState = useCallback(async () => {
     const teamNote = await getTeamNoteState(noteID);
     if (!teamNote) {
       message.error("Failed loading the team note state");
@@ -44,9 +44,9 @@ export default function Team() {
     }
     setTeamState(TeamState.createFromTeamPages(teamNote));
     return true;
-  };
+  }, [noteID]);
 
-  const loadInfo = async () => {
+  const loadInfo = useCallback(async () => {
     const info = await loadTeamNoteInfo(noteID);
     if (!info) {
       message.error("Failed loading the team note info");
@@ -54,21 +54,25 @@ export default function Team() {
     }
     setCode(info.code);
     return true;
-  };
+  }, [noteID]);
 
-  const roomInit = async () => {
-    message.loading({
-      content: "Loading team note...",
-      key: "TEAM_LOADING",
-      duration: 0,
-    });
-    if (!((await loadInfo()) && (await loadState()))) {
+  useEffect(() => {
+    const roomInit = async () => {
+      message.loading({
+        content: "Loading team note...",
+        key: "TEAM_LOADING",
+        duration: 0,
+      });
+      if (!((await loadInfo()) && (await loadState()))) {
+        message.destroy("TEAM_LOADING");
+        return nav("/");
+      }
       message.destroy("TEAM_LOADING");
-      return nav("/");
-    }
-    message.destroy("TEAM_LOADING");
-    setLoaded(true);
-  };
+      setLoaded(true);
+    };
+    roomInit();
+    return () => message.destroy("TEAM_LOADING");
+  }, [loadInfo, loadState, nav]);
 
   useEffect(() => {
     io.on("push", ({ operation, userID }) => {
@@ -118,16 +122,6 @@ export default function Team() {
       io.close();
     };
   }, [io]);
-
-  const roomDestroy = () => {
-    message.destroy("TEAM_LOADING");
-  };
-
-  useEffect(() => {
-    roomInit();
-    return roomDestroy;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noteID]);
 
   const addTeamStatePage = (pageID: string, newPage: NotePage) => {
     setTeamState((prev) => prev?.addPage(pageID, newPage));
