@@ -1,26 +1,26 @@
 {
   "files": {
-    "main.css": "./static/css/main.ba160578.css",
-    "main.js": "./static/js/main.3f3f34f7.js",
-    "static/css/274.fd4eb62d.chunk.css": "./static/css/274.fd4eb62d.chunk.css",
-    "static/js/274.c1050e34.chunk.js": "./static/js/274.c1050e34.chunk.js",
-    "static/js/701.a832cd74.chunk.js": "./static/js/701.a832cd74.chunk.js",
-    "static/js/138.a408f6d0.chunk.js": "./static/js/138.a408f6d0.chunk.js",
-    "static/js/643.b2063dd1.chunk.js": "./static/js/643.b2063dd1.chunk.js",
-    "static/js/306.48385c40.chunk.js": "./static/js/306.48385c40.chunk.js",
-    "static/media/default.png": "./static/media/default.dd5512731ffc4dfd92ad.png",
-    "index.html": "./index.html",
-    "main.ba160578.css.map": "./static/css/main.ba160578.css.map",
-    "main.3f3f34f7.js.map": "./static/js/main.3f3f34f7.js.map",
-    "274.fd4eb62d.chunk.css.map": "./static/css/274.fd4eb62d.chunk.css.map",
-    "274.c1050e34.chunk.js.map": "./static/js/274.c1050e34.chunk.js.map",
-    "701.a832cd74.chunk.js.map": "./static/js/701.a832cd74.chunk.js.map",
-    "138.a408f6d0.chunk.js.map": "./static/js/138.a408f6d0.chunk.js.map",
-    "643.b2063dd1.chunk.js.map": "./static/js/643.b2063dd1.chunk.js.map",
-    "306.48385c40.chunk.js.map": "./static/js/306.48385c40.chunk.js.map"
+    "main.css": "https://slotdumpling.github.io/multibility/static/css/main.ba160578.css",
+    "main.js": "https://slotdumpling.github.io/multibility/static/js/main.77295f0c.js",
+    "static/css/274.fd4eb62d.chunk.css": "https://slotdumpling.github.io/multibility/static/css/274.fd4eb62d.chunk.css",
+    "static/js/274.c1050e34.chunk.js": "https://slotdumpling.github.io/multibility/static/js/274.c1050e34.chunk.js",
+    "static/js/701.a832cd74.chunk.js": "https://slotdumpling.github.io/multibility/static/js/701.a832cd74.chunk.js",
+    "static/js/138.a408f6d0.chunk.js": "https://slotdumpling.github.io/multibility/static/js/138.a408f6d0.chunk.js",
+    "static/js/643.b2063dd1.chunk.js": "https://slotdumpling.github.io/multibility/static/js/643.b2063dd1.chunk.js",
+    "static/js/306.48385c40.chunk.js": "https://slotdumpling.github.io/multibility/static/js/306.48385c40.chunk.js",
+    "static/media/default.png": "https://slotdumpling.github.io/multibility/static/media/default.dd5512731ffc4dfd92ad.png",
+    "index.html": "https://slotdumpling.github.io/multibility/index.html",
+    "main.ba160578.css.map": "https://slotdumpling.github.io/multibility/static/css/main.ba160578.css.map",
+    "main.77295f0c.js.map": "https://slotdumpling.github.io/multibility/static/js/main.77295f0c.js.map",
+    "274.fd4eb62d.chunk.css.map": "https://slotdumpling.github.io/multibility/static/css/274.fd4eb62d.chunk.css.map",
+    "274.c1050e34.chunk.js.map": "https://slotdumpling.github.io/multibility/static/js/274.c1050e34.chunk.js.map",
+    "701.a832cd74.chunk.js.map": "https://slotdumpling.github.io/multibility/static/js/701.a832cd74.chunk.js.map",
+    "138.a408f6d0.chunk.js.map": "https://slotdumpling.github.io/multibility/static/js/138.a408f6d0.chunk.js.map",
+    "643.b2063dd1.chunk.js.map": "https://slotdumpling.github.io/multibility/static/js/643.b2063dd1.chunk.js.map",
+    "306.48385c40.chunk.js.map": "https://slotdumpling.github.io/multibility/static/js/306.48385c40.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.ba160578.css",
-    "static/js/main.3f3f34f7.js"
+    "static/js/main.77295f0c.js"
   ]
 }
