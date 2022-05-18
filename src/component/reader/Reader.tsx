@@ -7,7 +7,6 @@ import React, {
   useContext,
   useCallback,
   createContext,
-  useLayoutEffect,
 } from "react";
 import {
   DrawCtrl,
@@ -28,7 +27,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useInView } from "react-intersection-observer";
 import { DrawState } from "../../lib/draw/DrawState";
 import { updatePages } from "../../lib/network/http";
-import { useBeforeunload } from "react-beforeunload";
 import { TeamState } from "../../lib/draw/TeamState";
 import { Setter, useMounted } from "../../lib/hooks";
 import { insertAfter } from "../../lib/array";
@@ -109,14 +107,13 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     await editNoteData(noteID, { pageRec: pr, thumbnail: data });
     mounted.current && setSaved(true);
   };
-  useLayoutEffect(() => () => void saverRef.current(), []);
-  useBeforeunload(() => saverRef.current());
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedSave = useCallback(
     debounce(() => saverRef.current(), 2000),
     []
   );
+  const instantSave = debouncedSave.flush;
 
   const savePageRec = useCallback(
     (pageID: string, cb: (prev: NotePage) => NotePage) => {
@@ -133,13 +130,13 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   );
 
   const saveReorder = useCallback(
-    async (newOrder: string[], push = false) => {
-      setPageOrder(newOrder);
-      await editNoteData(noteID, { pageOrder: newOrder });
-      await saverRef.current();
-      push && pushReorder(newOrder);
+    async (pageOrder: string[], push = false) => {
+      setPageOrder(pageOrder);
+      await editNoteData(noteID, { pageOrder });
+      await instantSave();
+      push && pushReorder(pageOrder);
     },
-    [noteID, pushReorder]
+    [instantSave, noteID, pushReorder]
   );
 
   useEffect(() => {
@@ -245,7 +242,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
       <DrawTools
         handleUndo={() => updateStateSet((prev) => prev.undo())}
         handleRedo={() => updateStateSet((prev) => prev.redo())}
-        instantSave={saverRef.current}
+        instantSave={instantSave}
       />
       <main>
         {pageOrder?.map((uid) => (
