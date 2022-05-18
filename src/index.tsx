@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import ReactDOM from "react-dom";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { HashRouter, Route, Routes } from "react-router-dom";
 import MainMenu from "./component/menu/MainMenu";
 import Test from "./component/Test";
 import "./index.sass";
@@ -15,7 +15,7 @@ const placeholderEl = (
 
 ReactDOM.render(
   <React.StrictMode>
-    <BrowserRouter basename={`/${process.env.PUBLIC_URL}`}>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<MainMenu />} />
         <Route path="/reader">
@@ -41,7 +41,7 @@ ReactDOM.render(
         <Route path="/test" element={<Test />} />
         <Route path="*" element={placeholderEl} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   </React.StrictMode>,
   document.getElementById("root")
 );
