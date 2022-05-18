@@ -20,19 +20,19 @@ import {
   CaretDownOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
-import { getNoteID } from "../../lib/network/http";
-import DigitInput from "../ui/DigitInput";
+import { getUserName, saveUserName } from "../../lib/user";
 import { CSSTransition } from "react-transition-group";
+import { getNoteID } from "../../lib/network/http";
+import { useNavigate } from "react-router-dom";
 import Title from "antd/lib/typography/Title";
 import Dragger from "antd/lib/upload/Dragger";
-import { getUserName, saveUserName } from "../../lib/user";
+import DigitInput from "../ui/DigitInput";
+import { Setter } from "../../lib/hooks";
 import localforage from "localforage";
 import { useEffect } from "react";
+import { FC } from "react";
 import "./right.sass";
 import "animate.css";
-import { Setter } from "../../lib/hooks";
-import { FC } from "react";
 
 const OthersStateCtx = createContext({
   setActive: (() => {}) as Setter<string>,

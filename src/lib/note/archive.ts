@@ -33,7 +33,7 @@ export async function getAllTags() {
   }
 }
 
-export async function storeTag(name: string) {
+export async function addNewTag(name: string) {
   const uid = getUid();
   const newTag: NoteTag = {
     uid,
@@ -41,29 +41,24 @@ export async function storeTag(name: string) {
     color: getRandomColor(),
     notes: [],
   };
-  const tags: Record<string, NoteTag> = {
-    ...(await getAllTags()),
-    [uid]: newTag,
-  };
+  const prevTags = await getAllTags();
+  const tags = { ...prevTags, [uid]: newTag };
   await localforage.setItem("ALL_TAGS", tags);
 
   return tags;
 }
 
 export async function deleteTag(uid: string) {
-  const tags = await getAllTags();
-  delete tags[uid];
+  const prevTags = await getAllTags();
+  const { [uid]: _, ...tags } = prevTags;
   await localforage.setItem("ALL_TAGS", tags);
 
   return tags;
 }
 
 export async function editTag(tag: NoteTag) {
-  const tags = await getAllTags();
-  const editedTag = tags[tag.uid];
-  editedTag.name = tag.name;
-  editedTag.color = tag.color;
-  editedTag.notes = tag.notes;
+  const prevTags = await getAllTags();
+  const tags = { ...prevTags, [tag.uid]: tag };
   await localforage.setItem("ALL_TAGS", tags);
   return tags;
 }
@@ -81,7 +76,7 @@ export async function editNoteData(uid: string, noteData: Partial<Note>) {
   console.dir(noteData);
 
   const allNotes = await getAllNotes();
-  const { pageRec, ...noteInfo } = noteData;
+  const { pageRec, pageOrder, ...noteInfo } = noteData;
   allNotes[uid] = { ...allNotes[uid], ...noteInfo };
 
   await localforage.setItem("ALL_NOTES", allNotes);
@@ -107,7 +102,7 @@ export async function createNewNote(noteWithPdf: Note) {
   const { pdf, ...note } = noteWithPdf;
   await localforage.setItem(note.uid, note);
   if (pdf) await localforage.setItem(`PDF_${note.uid}`, pdf);
-  const { pageRec, ...noteInfo } = note;
+  const { pageRec, pageOrder, ...noteInfo } = note;
   return await saveNoteInfo(noteInfo);
 }
 

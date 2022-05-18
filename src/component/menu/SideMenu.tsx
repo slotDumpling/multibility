@@ -1,6 +1,6 @@
 import { Button, Input, Popconfirm, Popover, Select } from "antd";
 import { FC, MouseEventHandler, useContext, useEffect, useState } from "react";
-import { deleteTag, editTag, NoteTag, storeTag } from "../../lib/note/archive";
+import { deleteTag, editTag, NoteTag, addNewTag } from "../../lib/note/archive";
 import { colors } from "../../lib/color";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import {
@@ -135,7 +135,7 @@ const AddTag = () => {
     if (!name) {
       return;
     } else {
-      const tags = await storeTag(name);
+      const tags = await addNewTag(name);
       setAllTags(tags);
       setPopShow(false);
     }
