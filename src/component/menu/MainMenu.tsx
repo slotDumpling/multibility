@@ -5,22 +5,22 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import "./menu.sass";
-import { createEmptyNote, NoteInfo } from "../../lib/note/note";
 import {
   createNewNote,
   getAllNotes,
   getAllTags,
   NoteTag,
 } from "../../lib/note/archive";
+import { createEmptyNote, NoteInfo } from "../../lib/note/note";
+  import { FormOutlined } from "@ant-design/icons";
+import Title from "antd/lib/typography/Title";
+import { Setter } from "../../lib/hooks";
 import RightTools from "./RightTools";
 import LeftTools from "./LeftTools";
 import SideMenu from "./SideMenu";
 import NoteList from "./NoteList";
-import Title from "antd/lib/typography/Title";
 import { Button } from "antd";
-import { FormOutlined } from "@ant-design/icons";
-import { Setter } from "../../lib/hooks";
+import "./menu.sass";
 
 export const MenuStateCtx = createContext({
   tagUid: "DEFAULT",
@@ -43,15 +43,18 @@ export default function MainMenu() {
   const [tagUid, setTagUid] = useState("DEFAULT");
   const [editing, setEditing] = useState(false);
 
-  const selectedTag =
-    tagUid === "DEFAULT"
-      ? {
-          uid: "",
-          name: "All Notes",
-          color: "#000000",
-          notes: Object.keys(allNotes),
-        }
-      : allTags[tagUid];
+  const selectedTag = useMemo(
+    () =>
+      tagUid === "DEFAULT"
+        ? {
+            uid: "",
+            name: "All Notes",
+            color: "#000000",
+            notes: Object.keys(allNotes),
+          }
+        : allTags[tagUid],
+    [allNotes, allTags, tagUid]
+  );
 
   const noteList = useMemo<NoteInfo[]>(
     () =>

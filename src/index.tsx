@@ -6,6 +6,16 @@ import Test from "./component/Test";
 import "./index.sass";
 const Reader = React.lazy(() => import("./component/reader/Reader"));
 const Team = React.lazy(() => import("./component/reader/Team"));
+const lazyReader = (
+  <Suspense fallback={null}>
+    <Reader teamOn={false} />
+  </Suspense>
+);
+const lazyTeam = (
+  <Suspense fallback={null}>
+    <Team />
+  </Suspense>
+);
 
 const placeholderEl = (
   <h1>
@@ -19,24 +29,10 @@ ReactDOM.render(
       <Routes>
         <Route path="/" element={<MainMenu />} />
         <Route path="/reader">
-          <Route
-            path=":noteID"
-            element={
-              <Suspense fallback={null}>
-                <Reader teamOn={false} />
-              </Suspense>
-            }
-          />
+          <Route path=":noteID" element={lazyReader} />
         </Route>
         <Route path="/team">
-          <Route
-            path=":noteID"
-            element={
-              <Suspense fallback={null}>
-                <Team />
-              </Suspense>
-            }
-          />
+          <Route path=":noteID" element={lazyTeam} />
         </Route>
         <Route path="/test" element={<Test />} />
         <Route path="*" element={placeholderEl} />
