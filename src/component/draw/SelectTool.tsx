@@ -8,6 +8,7 @@ import {
 import { Button, ButtonProps, Popover } from "antd";
 import { PenPanel } from "../reader/DrawTools";
 import { useDrag } from "@use-gesture/react";
+import { createPortal } from "react-dom";
 import { SelectToolType } from "./Draw";
 import classNames from "classnames";
 import "./tools.sass";
@@ -29,7 +30,7 @@ const SelectTool: SelectToolType = ({
   const rotateEl = useRef<HTMLDivElement>(null);
   const [dragged, setDragged] = useState(false);
   const [transX, setTransX] = useState(0);
-  const gearStyle = { transform: `translateX(${transX}px)` }
+  const gearStyle = { transform: `translateX(${transX}px)` };
 
   const [rotateCount, setRotateCount] = useState(0);
   const shakeShow = rotateCount % 4 === 1;
@@ -52,7 +53,7 @@ const SelectTool: SelectToolType = ({
     }
   );
 
-  return (
+  return createPortal(
     <div className="select-tool">
       <Popover
         trigger="click"
@@ -84,7 +85,8 @@ const SelectTool: SelectToolType = ({
         onClick={onDelete}
         {...btnProps}
       />
-    </div>
+    </div>,
+    document.body
   );
 };
 
