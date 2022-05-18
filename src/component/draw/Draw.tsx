@@ -16,6 +16,7 @@ import { v4 as getUid } from "uuid";
 import { Set } from "immutable";
 import paper from "paper";
 import "./draw.sass";
+import { recognizePic } from "../../lib/ocr/ocr";
 
 export type SelectToolType = FC<{
   onDelete: () => void;
@@ -69,7 +70,7 @@ const Draw: FC<{
   useEffect(() => {
     if (!rect) return;
     rect.onFrame = () => (rect.dashOffset += 3);
-    return () => void rect.remove(); 
+    return () => void rect.remove();
   }, [rect]);
 
   const [selectedGroup, setSelectedGroup] = useState<paper.Group>();
@@ -124,7 +125,6 @@ const Draw: FC<{
     };
 
     setupPaper();
-    scope.current.activate();
     const cvs = canvasEl.current;
     return () => void (cvs && releaseCanvas(cvs));
   }, [height, width, preview]);
@@ -334,6 +334,11 @@ const Draw: FC<{
     newSG.children.forEach((p) => (p.name = getUid()));
   };
 
+  const ocr = () => {
+    if (!canvasEl.current) return;
+    recognizePic(canvasEl.current);
+  };
+
   usePreventGesture();
   usePinch(
     ({ memo, offset, last, first, origin }) => {
@@ -405,6 +410,9 @@ const Draw: FC<{
           currDrawCtrl={currDrawCtrl}
         />
       )}
+      <button style={{ position: "absolute", left: 0, top: 0 }} onClick={ocr}>
+        OCR
+      </button>
     </div>
   );
 };
