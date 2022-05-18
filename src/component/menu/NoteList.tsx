@@ -31,13 +31,13 @@ import { NoteInfo } from "../../lib/note/note";
 import { useNavigate } from "react-router-dom";
 import SwipeDelete from "../ui/SwipeDelete";
 import dafaultImg from "../ui/default.png";
-import { TagCircle } from "./SideMenu";
-import classNames from "classnames";
-import { Set } from "immutable";
-import moment from "moment";
 import { Setter } from "../../lib/hooks";
+import { TagCircle } from "./SideMenu";
+import { List, Set } from "immutable";
+import classNames from "classnames";
+import moment from "moment";
 
-export default function NoteList({ noteList }: { noteList: NoteInfo[] }) {
+export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
   const [nowSwiped, setNowSwiped] = useState("");
   const { editing } = useContext(MenuStateCtx);
   const { setAllTags, setAllNotes } = useContext(MenuMethodCtx);
@@ -73,17 +73,13 @@ export default function NoteList({ noteList }: { noteList: NoteInfo[] }) {
   const sortedList = useMemo(() => {
     switch (sortType) {
       case "CREATE":
-        return noteList
-          .sort((n0, n1) => -n0.createTime + n1.createTime)
-          .slice();
+        return noteList.sortBy((n) => -n.createTime);
       case "LAST":
-        return noteList.sort((n0, n1) => -n0.lastTime + n1.lastTime).slice();
+        return noteList.sortBy((n) => -n.lastTime);
       case "NAME":
-        return noteList
-          .sort((n0, n1) => n0.name.localeCompare(n1.name))
-          .slice();
+        return noteList.sortBy((n) => n.name.toUpperCase());
       default:
-        return noteList.slice();
+        return noteList;
     }
   }, [noteList, sortType]);
 

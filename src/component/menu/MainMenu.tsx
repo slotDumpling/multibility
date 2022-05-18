@@ -12,13 +12,14 @@ import {
   NoteTag,
 } from "../../lib/note/archive";
 import { createEmptyNote, NoteInfo } from "../../lib/note/note";
-  import { FormOutlined } from "@ant-design/icons";
+import { FormOutlined } from "@ant-design/icons";
 import Title from "antd/lib/typography/Title";
 import { Setter } from "../../lib/hooks";
 import RightTools from "./RightTools";
 import LeftTools from "./LeftTools";
 import SideMenu from "./SideMenu";
 import NoteList from "./NoteList";
+import { List } from "immutable";
 import { Button } from "antd";
 import "./menu.sass";
 
@@ -56,11 +57,13 @@ export default function MainMenu() {
     [allNotes, allTags, tagUid]
   );
 
-  const noteList = useMemo<NoteInfo[]>(
+  const noteList = useMemo(
     () =>
-      selectedTag.notes
-        .filter((uid) => uid in allNotes)
-        .map((uid) => allNotes[uid]),
+      List(
+        selectedTag.notes
+          .filter((uid) => uid in allNotes)
+          .map((uid) => allNotes[uid])
+      ),
     [selectedTag, allNotes]
   );
 
