@@ -16,13 +16,13 @@ import { v4 as getUid } from "uuid";
 import { Set } from "immutable";
 import paper from "paper";
 import "./draw.sass";
-import { recognizePic } from "../../lib/ocr/ocr";
 
 export type SelectToolType = FC<{
   onDelete: () => void;
   onRotate: (angle: number, smooth?: boolean) => void;
   onDuplicate: () => void;
   mutateStyle: (updated: Partial<DrawCtrl>) => void;
+  rasterize: () => string;
   currDrawCtrl: DrawCtrl;
 }>;
 
@@ -334,9 +334,12 @@ const Draw: FC<{
     newSG.children.forEach((p) => (p.name = getUid()));
   };
 
-  const ocr = () => {
-    if (!canvasEl.current) return;
-    recognizePic(canvasEl.current);
+  const rasterize = () => {
+    if (!selectedGroup) return "";
+    const raster = selectedGroup.rasterize();
+    const data = raster.toDataURL();
+    raster.remove();
+    return data;
   };
 
   usePreventGesture();
@@ -407,12 +410,10 @@ const Draw: FC<{
           onRotate={rotateSelected}
           onDuplicate={duplicateSelected}
           mutateStyle={mutateStyle}
+          rasterize={rasterize}
           currDrawCtrl={currDrawCtrl}
         />
       )}
-      <button style={{ position: "absolute", left: 0, top: 0 }} onClick={ocr}>
-        OCR
-      </button>
     </div>
   );
 };

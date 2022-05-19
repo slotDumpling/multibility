@@ -2,15 +2,19 @@ import React, { useRef, useState } from "react";
 import {
   CopyOutlined,
   DeleteOutlined,
+  LoadingOutlined,
   BgColorsOutlined,
   RotateRightOutlined,
 } from "@ant-design/icons";
-import { Button, ButtonProps, Popover } from "antd";
+import { Button, ButtonProps, Modal, Popover } from "antd";
+import TextArea from "antd/lib/input/TextArea";
 import { PenPanel } from "../reader/DrawTools";
 import { useDrag } from "@use-gesture/react";
 import { createPortal } from "react-dom";
 import { SelectToolType } from "./Draw";
+import IconFont from "../ui/IconFont";
 import classNames from "classnames";
+import copy from "clipboard-copy";
 import "./tools.sass";
 import "animate.css";
 
@@ -19,6 +23,7 @@ const SelectTool: SelectToolType = ({
   onRotate,
   onDuplicate,
   mutateStyle,
+  rasterize,
   currDrawCtrl,
 }) => {
   const btnProps: ButtonProps = {
@@ -53,6 +58,31 @@ const SelectTool: SelectToolType = ({
     }
   );
 
+  const [recoginzing, setRecoginzing] = useState(false);
+  const [modalShow, setModalShow] = useState(false);
+  const [text, setText] = useState("");
+  const recognizeText = async () => {
+    setRecoginzing(true);
+    const data = rasterize();
+    const { createWorker } = await import("tesseract.js");
+    try {
+      const worker = createWorker({ logger: console.log });
+      await worker.load();
+      await worker.loadLanguage("eng+chi_sim");
+      await worker.initialize("eng+chi_sim");
+      const {
+        data: { text },
+      } = await worker.recognize(data);
+      await worker.terminate();
+      setText(text);
+      setModalShow(true);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRecoginzing(false);
+    }
+  };
+
   return createPortal(
     <div className="select-tool">
       <Popover
@@ -80,11 +110,30 @@ const SelectTool: SelectToolType = ({
       </div>
       <Button icon={<CopyOutlined />} onClick={onDuplicate} {...btnProps} />
       <Button
+        icon={recoginzing ? <LoadingOutlined /> : <IconFont type="icon-OCR" />}
+        onClick={recognizeText}
+        {...btnProps}
+      />
+      <Button
         danger
         icon={<DeleteOutlined />}
         onClick={onDelete}
         {...btnProps}
       />
+      <Modal
+        visible={modalShow}
+        title="OCR Result"
+        onCancel={() => setModalShow(false)}
+        onOk={() => {
+          copy(text);
+          setModalShow(false);
+          setText("");
+        }}
+        okText="Copy"
+        destroyOnClose
+      >
+        <TextArea value={text} onChange={(e) => setText(e.target.value)} />
+      </Modal>
     </div>,
     document.body
   );

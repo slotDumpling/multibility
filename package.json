@@ -12,6 +12,7 @@
     "@types/react": "^17.0.0",
     "@types/react-dom": "^17.0.0",
     "@use-gesture/react": "^10.2.11",
+    "ahooks": "^3.3.12",
     "animate.css": "^4.1.1",
     "antd": "^4.20.1",
     "axios": "^0.25.0",
