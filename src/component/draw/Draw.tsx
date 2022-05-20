@@ -26,6 +26,11 @@ export type SelectToolType = FC<{
   currDrawCtrl: DrawCtrl;
 }>;
 
+export type TextToolType = FC<{
+  onSubmit: (text: string, fontSize: number) => void;
+  onCancel: () => void;
+}>;
+
 const PREVIEW_WIDTH = 200;
 const {
   Point,
@@ -46,6 +51,7 @@ const Draw: FC<{
   preview?: boolean;
   imgSrc?: string;
   SelectTool?: SelectToolType;
+  TextTool?: TextToolType;
 }> = ({
   drawState,
   onChange = () => {},
@@ -55,13 +61,14 @@ const Draw: FC<{
   readonly = preview,
   imgSrc,
   SelectTool,
+  TextTool,
 }) => {
   const { width, height } = drawState;
   const { mode, color, finger, lineWidth, highlight, eraserWidth } = drawCtrl;
 
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const scope = useRef(new paper.PaperScope());
-  const group = useRef<paper.Path[]>([]);
+  const group = useRef<paper.Item[]>([]);
   const path = useRef<paper.Path>();
   const [erased, setErased] = useState(Set<string>());
   const [currDrawCtrl, setCurrDrawCtrl] = useState(defaultDrawCtrl);
@@ -82,6 +89,9 @@ const Draw: FC<{
     if (mode !== "select") {
       setSelected(false);
       setRect(undefined);
+    }
+    if (mode !== 'text') {
+      setPointText(undefined);
     }
   }, [mode]);
   useEffect(() => {
@@ -121,7 +131,7 @@ const Draw: FC<{
       const r = preview ? PREVIEW_WIDTH / width : 1;
       scope.current.view.viewSize = new Size(width, height).multiply(r);
       scope.current.view.scale(r, new Point(0, 0));
-      paintBackground(width, height);
+      paintBackground(scope.current.project, width, height);
     };
 
     setupPaper();
@@ -157,6 +167,12 @@ const Draw: FC<{
       setNewRect(e);
       setSelected(false);
     },
+    text(e: paper.MouseEvent) {
+      updateRatio();
+      const point = transformPoint(e.point);
+      const t = new paper.PointText(point);
+      setPointText(t);
+    },
   }[paperMode];
 
   const handleDrag = {
@@ -177,7 +193,7 @@ const Draw: FC<{
 
       const newErased = group.current
         .filter((p) => !erased.has(p.name))
-        .filter((p) => checkErase(p, eraserPath))
+        .filter((p) => p instanceof paper.Path && checkErase(p, eraserPath))
         .map((p) => p.name);
       setErased((prev) => prev.concat(newErased));
     },
@@ -195,6 +211,7 @@ const Draw: FC<{
       rect.translate(delta);
       selectedGroup.translate(delta);
     },
+    text() {},
   }[paperMode];
 
   const handleUp = {
@@ -219,14 +236,15 @@ const Draw: FC<{
       if (width < 10 || height < 10) return setRect(undefined);
 
       scope.current.activate();
-      const paths = group.current;
-      const newSG = new Group(checkSelection(rect, paths));
+      const items = group.current;
+      const newSG = new Group(checkSelection(rect, items));
       setSelectedGroup(newSG);
       const tempStyle = parseGroupStyle(newSG);
       setCurrDrawCtrl((prev) => ({ ...prev, ...tempStyle }));
       setSelected(true);
     },
     selected() {},
+    text() {},
   }[paperMode];
 
   const handlePaper = () => {
@@ -245,12 +263,12 @@ const Draw: FC<{
 
     img.onload = () => {
       scope.current.activate();
+      scope.current.project.layers[0].activate();
       raster = new Raster(img);
       raster.position = scope.current.view.center;
       let r = width / img.width;
       raster.scale(r);
-      raster.sendToBack();
-      raster.parent.getItem({ name: "BGRECT" })?.sendToBack();
+      scope.current.project.layers[1].activate();
     };
 
     return () => void raster?.remove();
@@ -267,11 +285,12 @@ const Draw: FC<{
   useEffect(() => {
     scope.current.activate();
     group.current = [];
-    const otherGroup: paper.Path[] = [];
+    const otherGroup: paper.Item[] = [];
 
     mergedStrokes.forEach((stroke) =>
       paintStroke(
         stroke,
+        scope.current.project.activeLayer,
         drawState.hasStroke(stroke.uid) ? group.current : otherGroup,
         erased.has(stroke.uid)
       )
@@ -341,6 +360,19 @@ const Draw: FC<{
     raster.remove();
     return data;
   };
+
+  const [pointText, setPointText] = useState<paper.PointText>();
+  useEffect(() => () => void pointText?.remove(), [pointText]);
+
+  const submitText = (text: string, fontSize: number) => {
+    if (!pointText) return;
+    pointText.content = text;
+    pointText.fontSize = fontSize;
+    const pathData = pointText.exportJSON()
+    onChange((prev) => DrawState.addStroke(prev, pathData));
+    setPointText(undefined);
+  };
+  const cancelText = () => setPointText(undefined);
 
   usePreventGesture();
   usePinch(
@@ -414,20 +446,27 @@ const Draw: FC<{
           currDrawCtrl={currDrawCtrl}
         />
       )}
+      {TextTool && pointText && mode === "text" && (
+        <TextTool onCancel={cancelText} onSubmit={submitText} />
+      )}
     </div>
   );
 };
 
 export default React.memo(Draw);
 
-const paintStroke = (stroke: Stroke, group?: paper.Path[], erased = false) => {
+const paintStroke = (
+  stroke: Stroke,
+  layel: paper.Layer,
+  group?: paper.Item[],
+  erased = false
+) => {
   let { pathData, uid } = stroke;
   try {
-    const path = new Path();
-    path.importJSON(pathData);
-    path.name = uid;
-    if (erased) path.opacity /= 2;
-    group?.push(path);
+    const item = layel.importJSON(pathData);
+    item.name = uid;
+    if (erased) item.opacity /= 2;
+    group?.push(item);
   } catch (e) {
     console.error(e);
   }
@@ -472,11 +511,14 @@ const checkErase = (checkedPath: paper.Path, eraserPath: paper.Path) => {
   });
 };
 
-const paintBackground = (width: number, height: number) => {
+const paintBackground = (
+  project: paper.Project,
+  width: number,
+  height: number
+) => {
   const bgRect = new Rectangle(new Point(0, 0), new Point(width, height));
   bgRect.fillColor = new Color("#fff");
-  bgRect.name = "BGRECT";
-  bgRect.sendToBack();
+  project.addLayer(new paper.Layer()).activate();
   return bgRect;
 };
 
@@ -543,9 +585,13 @@ const parseGroupStyle = (group: paper.Group) => {
   return tempStyle;
 };
 
-const checkSelection = (rect: paper.Shape.Rectangle, paths: paper.Path[]) => {
+const checkSelection = (rect: paper.Shape.Rectangle, items: paper.Item[]) => {
   const bounds = rect.strokeBounds;
-  return paths.filter((p) => p.isInside(bounds) || p.intersects(rect));
+  return items.filter((item) =>
+    item instanceof paper.Path
+      ? item.isInside(bounds) || item.intersects(rect)
+      : item.bounds.intersects(rect.bounds)
+  );
 };
 
 const updateGroupStyle = (

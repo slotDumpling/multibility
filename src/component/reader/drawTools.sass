@@ -11,8 +11,6 @@
   border-bottom: $dark-border
   & > div > button
     margin: 0 5px
-    &.redo
-      margin-right: 30px
 
 @media screen and (max-width: 600px)
   .reader.container header
@@ -27,8 +25,11 @@
       height: 10px
 
 @media screen and (min-width: 600px)
-  .reader.container br
-    display: none
+  .reader.container
+    br
+      display: none
+    button.pen
+      margin-left: 20px
 
 .pen-panel
   width: 200px

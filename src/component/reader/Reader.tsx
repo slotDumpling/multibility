@@ -30,7 +30,6 @@ import { updatePages } from "../../lib/network/http";
 import { TeamState } from "../../lib/draw/TeamState";
 import { insertAfter } from "../../lib/array";
 import { debounce, last, once } from "lodash";
-import SelectTool from "../draw/SelectTool";
 import { Setter } from "../../lib/hooks";
 import { Map, Set } from "immutable";
 import DrawTools from "./DrawTools";
@@ -38,6 +37,7 @@ import { TeamCtx } from "./Team";
 import Draw from "../draw/Draw";
 import { message } from "antd";
 import "./reader.sass";
+import { SelectTool, TextTool } from "../draw/Tools";
 
 export const ReaderStateCtx = createContext({
   noteID: "",
@@ -411,6 +411,7 @@ const DrawWrapper = ({
       imgSrc={imgSrc}
       drawCtrl={drawCtrl}
       SelectTool={SelectTool}
+      TextTool={TextTool}
     />
   );
 };

@@ -1,7 +1,7 @@
 import localforage from "localforage";
 
 export interface DrawCtrl {
-  mode: "draw" | "erase" | "select"
+  mode: "draw" | "erase" | "select" | "text";
   finger: boolean;
   lineWidth: number;
   eraserWidth: number;
@@ -10,7 +10,7 @@ export interface DrawCtrl {
 }
 
 export const defaultDrawCtrl: Readonly<DrawCtrl> = {
-  mode: 'draw',
+  mode: "draw",
   finger: true,
   lineWidth: 10,
   eraserWidth: 10,

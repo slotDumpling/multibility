@@ -6,19 +6,19 @@ import {
   BgColorsOutlined,
   RotateRightOutlined,
 } from "@ant-design/icons";
-import { Button, ButtonProps, Modal, Popover } from "antd";
+import { Button, ButtonProps, InputNumber, Modal, Popover } from "antd";
 import TextArea from "antd/lib/input/TextArea";
 import { PenPanel } from "../reader/DrawTools";
 import { useDrag } from "@use-gesture/react";
 import { createPortal } from "react-dom";
-import { SelectToolType } from "./Draw";
+import { SelectToolType, TextToolType } from "./Draw";
 import IconFont from "../ui/IconFont";
 import classNames from "classnames";
 import copy from "clipboard-copy";
 import "./tools.sass";
 import "animate.css";
 
-const SelectTool: SelectToolType = ({
+export const SelectTool: SelectToolType = ({
   onDelete,
   onRotate,
   onDuplicate,
@@ -137,4 +137,29 @@ const SelectTool: SelectToolType = ({
   );
 };
 
-export default SelectTool;
+export const TextTool: TextToolType = ({ onSubmit, onCancel }) => {
+  const [text, setText] = useState("");
+  const [fontSize, setFontSize] = useState(50);
+  return (
+    <Modal
+      visible
+      title="Insert text"
+      onCancel={onCancel}
+      onOk={() => {
+        if (!text.trim()) return onCancel();
+        onSubmit(text.trim(), fontSize);
+      }}
+      bodyStyle={{ paddingTop: 0 }}
+    >
+      <div className="insert-option">
+        <span>Font size: </span>
+        <InputNumber size="small" value={fontSize} onChange={setFontSize} />
+      </div>
+      <TextArea
+        autoFocus
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
+    </Modal>
+  );
+};

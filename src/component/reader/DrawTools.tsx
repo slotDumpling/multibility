@@ -16,6 +16,7 @@ import {
   message,
   Popover,
   Popconfirm,
+  ButtonProps,
 } from "antd";
 import Search from "antd/lib/input/Search";
 import { useNavigate } from "react-router-dom";
@@ -44,13 +45,13 @@ import {
   EyeInvisibleOutlined,
   UsergroupAddOutlined,
 } from "@ant-design/icons";
-import IconFont from "../ui/IconFont";
-import "./drawTools.sass";
-import { putNote } from "../../lib/network/http";
-import { editNoteData } from "../../lib/note/archive";
-import classNames from "classnames";
 import { AvatarSize } from "antd/lib/avatar/SizeContext";
+import { editNoteData } from "../../lib/note/archive";
+import { putNote } from "../../lib/network/http";
+import IconFont from "../ui/IconFont";
+import classNames from "classnames";
 import copy from "clipboard-copy";
+import "./drawTools.sass";
 
 export default function DrawTools({
   handleUndo,
@@ -105,29 +106,33 @@ export default function DrawTools({
           disabled={!stateSet?.isUndoable()}
         />
         <Button
-          className="redo"
           type="text"
           shape="circle"
           icon={<RedoOutlined />}
           onClick={handleRedo}
           disabled={!stateSet?.isRedoable()}
         />
-        <br />
-        <PenButton updateDrawCtrl={updateDrawCtrl} />
-        <EraserButton updateDrawCtrl={updateDrawCtrl} />
         <Button
-          type={["select", "selected"].includes(mode) ? "default" : "text"}
-          shape="circle"
-          onClick={() => updateDrawCtrl({ mode: "select" })}
-          icon={<ExpandOutlined />}
-        />
-        <Button
-          className="finger"
           type={finger ? "primary" : "text"}
           ghost={finger}
           shape="circle"
           onClick={() => updateDrawCtrl({ finger: !finger })}
           icon={<IconFont type="icon-finger" />}
+        />
+        <br />
+        <PenButton updateDrawCtrl={updateDrawCtrl} />
+        <EraserButton updateDrawCtrl={updateDrawCtrl} />
+        <Button
+          type={mode === "select" ? "default" : "text"}
+          shape="circle"
+          onClick={() => updateDrawCtrl({ mode: "select" })}
+          icon={<ExpandOutlined />}
+        />
+        <Button
+          type={mode === "text" ? "default" : "text"}
+          shape="circle"
+          onClick={() => updateDrawCtrl({ mode: "text" })}
+          icon={<IconFont type="icon-text1" />}
         />
       </div>
       <div className="right">
@@ -145,6 +150,12 @@ const PenButton: FC<{
 }> = ({ updateDrawCtrl }) => {
   const { drawCtrl } = useContext(ReaderStateCtx);
   const { mode } = drawCtrl;
+
+  const btnProps: ButtonProps = {
+    className: "pen",
+    shape: "circle",
+    icon: <HighlightOutlined />,
+  };
   return mode === "draw" ? (
     <Popover
       content={<PenPanel updateDrawCtrl={updateDrawCtrl} drawCtrl={drawCtrl} />}
@@ -153,14 +164,13 @@ const PenButton: FC<{
       getPopupContainer={(e) => e}
       destroyTooltipOnHide
     >
-      <Button type="default" shape="circle" icon={<HighlightOutlined />} />
+      <Button type="default" {...btnProps} />
     </Popover>
   ) : (
     <Button
       type="text"
-      shape="circle"
       onClick={() => updateDrawCtrl({ mode: "draw" })}
-      icon={<HighlightOutlined />}
+      {...btnProps}
     />
   );
 };
@@ -238,6 +248,12 @@ const EraserButton: FC<{
       />
     </div>
   );
+
+  const btnProps: ButtonProps = {
+    shape: "circle",
+    icon: <IconFont type="icon-eraser" />,
+  };
+
   return mode === "erase" ? (
     <Popover
       content={content}
@@ -246,18 +262,13 @@ const EraserButton: FC<{
       getPopupContainer={(e) => e}
       destroyTooltipOnHide
     >
-      <Button
-        type="default"
-        shape="circle"
-        icon={<IconFont type="icon-eraser" />}
-      />
+      <Button type="default" {...btnProps} />
     </Popover>
   ) : (
     <Button
       type="text"
-      shape="circle"
       onClick={() => updateDrawCtrl({ mode: "erase" })}
-      icon={<IconFont type="icon-eraser" />}
+      {...btnProps}
     />
   );
 };
