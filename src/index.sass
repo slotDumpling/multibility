@@ -16,10 +16,13 @@ code, .code-font
   width: 10px
 
 ::-webkit-scrollbar-thumb
+  $bg-color: #d6d6d6
   background-clip: padding-box
-  background-color: #d6d6d6
+  background-color: $bg-color
   border: 3px solid transparent
   border-radius: 20px
+  &:hover
+    background-color: darken($bg-color, 10%)
 
 *:not(input)
   user-select: none
