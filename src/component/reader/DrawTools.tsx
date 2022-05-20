@@ -88,7 +88,7 @@ export default function DrawTools({
           }}
           icon={<HomeFilled style={{ opacity: 0.8 }} />}
         />
-        <br />
+        <div className="br" />
         <Button
           type="text"
           className="save"
@@ -119,26 +119,26 @@ export default function DrawTools({
           onClick={() => updateDrawCtrl({ finger: !finger })}
           icon={<IconFont type="icon-finger" />}
         />
-        <br />
+        <div className="br" />
         <PenButton updateDrawCtrl={updateDrawCtrl} />
         <EraserButton updateDrawCtrl={updateDrawCtrl} />
-        <Button
-          type={mode === "select" ? "default" : "text"}
-          shape="circle"
-          onClick={() => updateDrawCtrl({ mode: "select" })}
-          icon={<ExpandOutlined />}
-        />
         <Button
           type={mode === "text" ? "default" : "text"}
           shape="circle"
           onClick={() => updateDrawCtrl({ mode: "text" })}
           icon={<IconFont type="icon-text1" />}
         />
+        <Button
+          type={mode === "select" ? "default" : "text"}
+          shape="circle"
+          onClick={() => updateDrawCtrl({ mode: "select" })}
+          icon={<ExpandOutlined />}
+        />
       </div>
       <div className="right">
         {teamOn && <RoomInfo />}
         {teamOn || <JoinRoom instantSave={instantSave} />}
-        <br />
+        <div className="br" />
         <PageNav />
       </div>
     </header>
