@@ -7,16 +7,29 @@ import {
   RotateRightOutlined,
 } from "@ant-design/icons";
 import { Button, ButtonProps, InputNumber, Modal, Popover } from "antd";
+import { SelectToolType, TextToolType } from "./Draw";
+import { createWorker, Worker } from "tesseract.js";
 import TextArea from "antd/lib/input/TextArea";
 import { PenPanel } from "../reader/DrawTools";
 import { useDrag } from "@use-gesture/react";
 import { createPortal } from "react-dom";
-import { SelectToolType, TextToolType } from "./Draw";
 import IconFont from "../ui/IconFont";
 import classNames from "classnames";
 import copy from "clipboard-copy";
 import "./tools.sass";
 import "animate.css";
+
+const getOcrWorker = (() => {
+  let worker: Worker;
+  return async () => {
+    if (worker) return worker;
+    worker = createWorker({ logger: console.log });
+    await worker.load();
+    await worker.loadLanguage("eng+chi_sim");
+    await worker.initialize("eng+chi_sim");
+    return worker;
+  }
+})();
 
 export const SelectTool: SelectToolType = ({
   onDelete,
@@ -64,14 +77,9 @@ export const SelectTool: SelectToolType = ({
   const recognizeText = async () => {
     setRecoginzing(true);
     const data = rasterize();
-    const { createWorker } = await import("tesseract.js");
     try {
-      const worker = createWorker({ logger: console.log });
-      await worker.load();
-      await worker.loadLanguage("eng+chi_sim");
-      await worker.initialize("eng+chi_sim");
+      const worker = await getOcrWorker();
       const result = await worker.recognize(data);
-      await worker.terminate();
       setText(result.data.text);
       setModalShow(true);
     } catch (e) {
