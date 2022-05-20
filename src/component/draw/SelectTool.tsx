@@ -70,11 +70,9 @@ const SelectTool: SelectToolType = ({
       await worker.load();
       await worker.loadLanguage("eng+chi_sim");
       await worker.initialize("eng+chi_sim");
-      const {
-        data: { text },
-      } = await worker.recognize(data);
+      const result = await worker.recognize(data);
       await worker.terminate();
-      setText(text);
+      setText(result.data.text);
       setModalShow(true);
     } catch (e) {
       console.error(e);
