@@ -90,7 +90,7 @@ const Draw: FC<{
       setSelected(false);
       setRect(undefined);
     }
-    if (mode !== 'text') {
+    if (mode !== "text") {
       setPointText(undefined);
     }
   }, [mode]);
@@ -131,7 +131,7 @@ const Draw: FC<{
       const r = preview ? PREVIEW_WIDTH / width : 1;
       scope.current.view.viewSize = new Size(width, height).multiply(r);
       scope.current.view.scale(r, new Point(0, 0));
-      paintBackground(scope.current.project, width, height);
+      paintBackground(scope.current, width, height);
     };
 
     setupPaper();
@@ -263,12 +263,11 @@ const Draw: FC<{
 
     img.onload = () => {
       scope.current.activate();
-      scope.current.project.layers[0].activate();
       raster = new Raster(img);
+      scope.current.project.layers[0].addChild(raster);
       raster.position = scope.current.view.center;
       let r = width / img.width;
       raster.scale(r);
-      scope.current.project.layers[1].activate();
     };
 
     return () => void raster?.remove();
@@ -283,22 +282,21 @@ const Draw: FC<{
   );
 
   useEffect(() => {
-    scope.current.activate();
     group.current = [];
-    const otherGroup: paper.Item[] = [];
+    const othersGroup: paper.Item[] = [];
 
     mergedStrokes.forEach((stroke) =>
       paintStroke(
         stroke,
-        scope.current.project.activeLayer,
-        drawState.hasStroke(stroke.uid) ? group.current : otherGroup,
+        scope.current,
+        drawState.hasStroke(stroke.uid) ? group.current : othersGroup,
         erased.has(stroke.uid)
       )
     );
 
     return () => {
       group.current.forEach((item) => item.remove());
-      otherGroup.forEach((item) => item.remove());
+      othersGroup.forEach((item) => item.remove());
     };
   }, [mergedStrokes, erased, drawState]);
 
@@ -368,7 +366,7 @@ const Draw: FC<{
     if (!pointText) return;
     pointText.content = text;
     pointText.fontSize = fontSize;
-    const pathData = pointText.exportJSON()
+    const pathData = pointText.exportJSON();
     onChange((prev) => DrawState.addStroke(prev, pathData));
     setPointText(undefined);
   };
@@ -457,13 +455,14 @@ export default React.memo(Draw);
 
 const paintStroke = (
   stroke: Stroke,
-  layel: paper.Layer,
+  scope: paper.PaperScope,
   group?: paper.Item[],
   erased = false
 ) => {
   let { pathData, uid } = stroke;
   try {
-    const item = layel.importJSON(pathData);
+    scope.activate();
+    const item = scope.project.activeLayer.importJSON(pathData);
     item.name = uid;
     if (erased) item.opacity /= 2;
     group?.push(item);
@@ -512,13 +511,14 @@ const checkErase = (checkedPath: paper.Path, eraserPath: paper.Path) => {
 };
 
 const paintBackground = (
-  project: paper.Project,
+  scope: paper.PaperScope,
   width: number,
   height: number
 ) => {
+  scope.activate();
   const bgRect = new Rectangle(new Point(0, 0), new Point(width, height));
   bgRect.fillColor = new Color("#fff");
-  project.addLayer(new paper.Layer()).activate();
+  scope.project.addLayer(new paper.Layer()).activate();
   return bgRect;
 };
 
