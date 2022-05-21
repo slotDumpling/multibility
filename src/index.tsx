@@ -24,20 +24,18 @@ const placeholderEl = (
 );
 
 ReactDOM.render(
-  <React.StrictMode>
-    <HashRouter>
-      <Routes>
-        <Route path="/" element={<MainMenu />} />
-        <Route path="/reader">
-          <Route path=":noteID" element={lazyReader} />
-        </Route>
-        <Route path="/team">
-          <Route path=":noteID" element={lazyTeam} />
-        </Route>
-        <Route path="/test" element={<Test />} />
-        <Route path="*" element={placeholderEl} />
-      </Routes>
-    </HashRouter>
-  </React.StrictMode>,
+  <HashRouter>
+    <Routes>
+      <Route path="/" element={<MainMenu />} />
+      <Route path="/reader">
+        <Route path=":noteID" element={lazyReader} />
+      </Route>
+      <Route path="/team">
+        <Route path=":noteID" element={lazyTeam} />
+      </Route>
+      <Route path="/test" element={<Test />} />
+      <Route path="*" element={placeholderEl} />
+    </Routes>
+  </HashRouter>,
   document.getElementById("root")
 );
