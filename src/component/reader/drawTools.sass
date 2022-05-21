@@ -37,26 +37,27 @@
     .ant-slider
       flex: 1
       margin-right: 10px
-  .color-select
-    display: grid
-    grid-template-columns: repeat(4, 1fr)
-    justify-items: center
-    grid-auto-rows: 40px
-    align-items: center
-    input[type="radio"]
-      display: none
-      &:checked + .circle
-        border-width: 6px
-        background-color: white
-    .circle
-      cursor: pointer
-      width: 30px
-      height: 30px
-      border-radius: 15px
-      border: 15px solid
-      transition: all 0.2s
-      background-color: var(--circle-color)
-      border-color: var(--circle-color)
+      
+.color-select
+  display: grid
+  grid-template-columns: repeat(4, 1fr)
+  justify-items: center
+  grid-auto-rows: 40px
+  align-items: center
+  input[type="radio"]
+    display: none
+    &:checked + .circle
+      border-width: 6px
+      background-color: white
+  .circle
+    cursor: pointer
+    width: 30px
+    height: 30px
+    border-radius: 15px
+    border: 15px solid
+    transition: all 0.2s
+    background-color: var(--circle-color)
+    border-color: var(--circle-color)
 
 .team-title
   display: flex

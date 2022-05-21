@@ -1,6 +1,6 @@
-import Heap from "heap";
 import { List, Record, OrderedMap } from "immutable";
 import { v4 as getUid } from "uuid";
+import Heap from "heap";
 
 export const WIDTH = 2000;
 
@@ -182,14 +182,11 @@ export class DrawState {
     return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
   }
 
-  static updateStroke(drawState: DrawState, stroke: Stroke) {
-    const { uid } = stroke;
-    const prevRecord = drawState.getImmutable();
-    return new DrawState(
-      prevRecord.update("strokes", (s) => s.set(uid, stroke)),
-      drawState.width,
-      drawState.height
-    );
+  static syncStrokeTime(drawState: DrawState, stroke: Stroke) {
+    const { uid, timestamp } = stroke;
+    const prevStroke = drawState.getStrokeMap().get(uid);
+    if (!prevStroke) return;
+    prevStroke.timestamp = timestamp;
   }
 
   static pushOperation(drawState: DrawState, op: Operation) {
@@ -229,8 +226,7 @@ export class DrawState {
 
   static mergeStates(states: DrawState[]): Stroke[] {
     const iterators = states.map((ds) => ds.getStrokeMap().values());
-
-    let mergedStrokes: Stroke[] = [];
+    const mergedStrokes = [];
     const heap = new Heap<[Stroke, number]>(
       ([s0], [s1]) => s0.timestamp - s1.timestamp
     );

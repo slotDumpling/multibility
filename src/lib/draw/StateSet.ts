@@ -1,5 +1,5 @@
+import { DrawState, Operation, Stroke, WIDTH } from "./DrawState";
 import { List, Map, Record } from "immutable";
-import { DrawState, Operation, WIDTH } from "./DrawState";
 import { NotePage } from "../note/note";
 
 interface StateSetRecordType {
@@ -25,20 +25,17 @@ export class StateSet {
     public lastOp?: SetOperation
   ) {}
 
-  static createFromList(list: [string, DrawState][]) {
-    return new StateSet(defaultFactory().set("states", Map(list)));
-  }
-
   static createFromPages(
     pageRec: globalThis.Record<string, NotePage>,
     width = WIDTH
   ) {
-    const entries = Object.entries(pageRec);
-    return StateSet.createFromList(
-      entries.map(([key, { state, ratio }]) => [
-        key,
-        DrawState.loadFromFlat(state, width, width * ratio),
-      ])
+    return new StateSet(
+      defaultFactory().set(
+        "states",
+        Map(pageRec).map(({ state, ratio }) =>
+          DrawState.loadFromFlat(state, width, width * ratio)
+        )
+      )
     );
   }
 
@@ -76,13 +73,11 @@ export class StateSet {
     return new StateSet(currRecord, lastSetOp);
   }
 
-  updateState(pageID: string, cb: (prevDS: DrawState) => DrawState) {
+  // sync with mutation.
+  syncStrokeTime(pageID: string, stroke: Stroke) {
     const prevDS = this.getOneState(pageID);
-    if (!prevDS) return this;
-    const currDS = cb(prevDS);
-    return new StateSet(
-      this.getImmutable().update("states", (s) => s.set(pageID, currDS))
-    );
+    prevDS && DrawState.syncStrokeTime(prevDS, stroke);
+    return this;
   }
 
   addState(pageID: string, notePage: NotePage, width = WIDTH) {
@@ -149,6 +144,6 @@ export class StateSet {
   getLastDS(): [string, DrawState] | undefined {
     const pageID = this.lastOp?.pageID;
     const ds = pageID && this.getOneState(pageID);
-    return ds ? [pageID, ds] : undefined;
+    if (ds) return [pageID, ds];
   }
 }

@@ -27,7 +27,7 @@ export type SelectToolType = FC<{
 }>;
 
 export type TextToolType = FC<{
-  onSubmit: (text: string, fontSize: number) => void;
+  onSubmit: (text: string, fontSize: number, color: string) => void;
   onCancel: () => void;
 }>;
 
@@ -362,10 +362,11 @@ const Draw: FC<{
   const [pointText, setPointText] = useState<paper.PointText>();
   useEffect(() => () => void pointText?.remove(), [pointText]);
 
-  const submitText = (text: string, fontSize: number) => {
+  const submitText = (text: string, fontSize: number, color = "#000") => {
     if (!pointText) return;
     pointText.content = text;
     pointText.fontSize = fontSize;
+    pointText.fillColor = new Color(color);
     const pathData = pointText.exportJSON();
     onChange((prev) => DrawState.addStroke(prev, pathData));
     setPointText(undefined);
@@ -463,6 +464,7 @@ const paintStroke = (
   try {
     scope.activate();
     const item = scope.project.activeLayer.importJSON(pathData);
+    if (!item) return;
     item.name = uid;
     if (erased) item.opacity /= 2;
     group?.push(item);

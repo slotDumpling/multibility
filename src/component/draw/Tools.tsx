@@ -4,18 +4,21 @@ import {
   DeleteOutlined,
   LoadingOutlined,
   BgColorsOutlined,
+  FontSizeOutlined,
+  FontColorsOutlined,
   RotateRightOutlined,
 } from "@ant-design/icons";
 import { Button, ButtonProps, InputNumber, Modal, Popover } from "antd";
 import { SelectToolType, TextToolType } from "./Draw";
 import { createWorker, Worker } from "tesseract.js";
 import TextArea from "antd/lib/input/TextArea";
-import { PenPanel } from "../reader/DrawTools";
+import { ColorSelect, PenPanel } from "../reader/DrawTools";
 import { useDrag } from "@use-gesture/react";
 import { createPortal } from "react-dom";
 import IconFont from "../ui/IconFont";
 import classNames from "classnames";
 import copy from "clipboard-copy";
+import { colors } from "../../lib/color";
 import "./tools.sass";
 import "animate.css";
 
@@ -28,7 +31,7 @@ const getOcrWorker = (() => {
     await worker.loadLanguage("eng+chi_sim");
     await worker.initialize("eng+chi_sim");
     return worker;
-  }
+  };
 })();
 
 export const SelectTool: SelectToolType = ({
@@ -76,10 +79,10 @@ export const SelectTool: SelectToolType = ({
   const [text, setText] = useState("");
   const recognizeText = async () => {
     setRecoginzing(true);
-    const data = rasterize();
+    const imageData = rasterize();
     try {
       const worker = await getOcrWorker();
-      const result = await worker.recognize(data);
+      const result = await worker.recognize(imageData);
       setText(result.data.text);
       setModalShow(true);
     } catch (e) {
@@ -148,6 +151,8 @@ export const SelectTool: SelectToolType = ({
 export const TextTool: TextToolType = ({ onSubmit, onCancel }) => {
   const [text, setText] = useState("");
   const [fontSize, setFontSize] = useState(50);
+  const [color, setColor] = useState(colors[0]);
+
   return (
     <Modal
       visible
@@ -155,13 +160,29 @@ export const TextTool: TextToolType = ({ onSubmit, onCancel }) => {
       onCancel={onCancel}
       onOk={() => {
         if (!text.trim()) return onCancel();
-        onSubmit(text.trim(), fontSize);
+        onSubmit(text.trim(), fontSize, color);
       }}
       bodyStyle={{ paddingTop: 0 }}
     >
       <div className="insert-option">
-        <span>Font size: </span>
-        <InputNumber size="small" value={fontSize} onChange={setFontSize} />
+        <span className="font-size">
+          <FontSizeOutlined />
+          <span>Font size: </span>
+          <InputNumber size="small" value={fontSize} onChange={setFontSize} />
+        </span>
+        <Popover
+          content={<ColorSelect color={color} setColor={setColor} />}
+          overlayStyle={{ width: 200 }}
+          placement="bottom"
+        >
+          <Button
+            className="tag-btn"
+            size="small"
+            icon={<FontColorsOutlined />}
+          >
+            Font color
+          </Button>
+        </Popover>
       </div>
       <TextArea
         autoFocus

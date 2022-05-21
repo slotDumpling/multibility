@@ -200,15 +200,18 @@ export const PenPanel: FC<{
           onClick={() => updateDrawCtrl({ highlight: !highlight })}
         />
       </div>
-      <ColorSelect updateDrawCtrl={updateDrawCtrl} color={color} />
+      <ColorSelect
+        color={color}
+        setColor={(c) => updateDrawCtrl({ color: c })}
+      />
     </div>
   );
 };
 
-const ColorSelect: FC<{
-  updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
+export const ColorSelect: FC<{
   color: string;
-}> = ({ updateDrawCtrl, color }) => {
+  setColor: (color: string) => void;
+}> = ({ setColor, color }) => {
   return (
     <div className="color-select">
       {colors.map((c) => (
@@ -217,7 +220,7 @@ const ColorSelect: FC<{
             checked={color === c}
             type="radio"
             name="color"
-            onChange={() => updateDrawCtrl({ color: c })}
+            onChange={() => setColor(c)}
           />
           <div
             className="circle"

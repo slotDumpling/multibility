@@ -28,16 +28,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { DrawState } from "../../lib/draw/DrawState";
 import { updatePages } from "../../lib/network/http";
 import { TeamState } from "../../lib/draw/TeamState";
+import { SelectTool, TextTool } from "../draw/Tools";
 import { insertAfter } from "../../lib/array";
-import { debounce, last, once } from "lodash";
 import { Setter } from "../../lib/hooks";
+import { debounce, once } from "lodash";
 import { Map, Set } from "immutable";
 import DrawTools from "./DrawTools";
 import { TeamCtx } from "./Team";
 import Draw from "../draw/Draw";
 import { message } from "antd";
 import "./reader.sass";
-import { SelectTool, TextTool } from "../draw/Tools";
 
 export const ReaderStateCtx = createContext({
   noteID: "",
@@ -106,8 +106,8 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   const saver = useMemoizedFn(async () => {
     const pr = pageRec?.toObject();
     const canvas = document.querySelector("canvas");
-    const data = canvas?.toDataURL();
-    await editNoteData(noteID, { pageRec: pr, thumbnail: data });
+    const thumbnail = canvas?.toDataURL();
+    await editNoteData(noteID, { pageRec: pr, thumbnail });
     setSaved(true);
   });
 
@@ -155,12 +155,8 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   }, [io, handleReorder, handleNewPage]);
 
   const pushOperation = (operation: SetOperation) => {
-    const handleSync = ({ stroke, pageID }: SyncInfo) =>
-      setStateSet((prevSS) =>
-        prevSS?.updateState(pageID, (prevDS) =>
-          DrawState.updateStroke(prevDS, stroke)
-        )
-      );
+    const handleSync = ({ pageID, stroke }: SyncInfo) =>
+      setStateSet((prev) => prev?.syncStrokeTime(pageID, stroke));
 
     io?.emit("push", { operation }, handleSync);
   };
@@ -211,7 +207,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
   };
 
   const addFinalPage = () => {
-    const lastPageID = last(pageOrder);
+    const lastPageID = pageOrder?.at(-1);
     lastPageID && addPage(lastPageID);
   };
 

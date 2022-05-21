@@ -1,9 +1,9 @@
-import classNames from "classnames";
 import React, { FC, useEffect, useRef, useState } from "react";
-import { useSwipeable } from "react-swipeable";
 import { DeleteOutlined } from "@ant-design/icons";
-import "./swipe-delete.sass";
+import { useSwipeable } from "react-swipeable";
 import { Setter } from "../../lib/hooks";
+import classNames from "classnames";
+import "./swipe-delete.sass";
 
 const SwipeDelete: FC<{
   onDelete: () => void;
