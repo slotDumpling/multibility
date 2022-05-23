@@ -1,3 +1,4 @@
+import { Skeleton } from "antd";
 import React, { Suspense } from "react";
 import ReactDOM from "react-dom";
 import { HashRouter, Route, Routes } from "react-router-dom";
@@ -6,13 +7,14 @@ import Test from "./component/Test";
 import "./index.sass";
 const Reader = React.lazy(() => import("./component/reader/Reader"));
 const Team = React.lazy(() => import("./component/reader/Team"));
+const fbSkeleton = <Skeleton className="skeleton" active />;
 const lazyReader = (
-  <Suspense fallback={null}>
-    <Reader teamOn={false} />
+  <Suspense fallback={fbSkeleton}>
+    <Reader />
   </Suspense>
 );
 const lazyTeam = (
-  <Suspense fallback={null}>
+  <Suspense fallback={fbSkeleton}>
     <Team />
   </Suspense>
 );

@@ -47,7 +47,6 @@ export const ReaderStateCtx = createContext({
   pageRec: undefined as Map<string, NotePage> | undefined,
   pageOrder: undefined as string[] | undefined,
   saved: true,
-  teamOn: false,
   inviewPages: Set<string>(),
   drawCtrl: defaultDrawCtrl,
 });
@@ -64,7 +63,7 @@ export const ReaderMethodCtx = createContext({
   setDrawCtrl: (() => {}) as Setter<DrawCtrl>,
 });
 
-export default function Reader({ teamOn }: { teamOn: boolean }) {
+export default function Reader() {
   const noteID = useParams().noteID ?? "";
   const nav = useNavigate();
 
@@ -78,7 +77,7 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
 
   const refRec = useRef<Record<string, HTMLElement>>({});
 
-  const { io, teamState, addTeamStatePage } = useContext(TeamCtx);
+  const { io, teamOn, teamState, addTeamStatePage } = useContext(TeamCtx);
 
   useEffect(() => {
     const loadNotePages = async () => {
@@ -242,7 +241,6 @@ export default function Reader({ teamOn }: { teamOn: boolean }) {
     <ReaderStateCtx.Provider
       value={{
         saved,
-        teamOn,
         noteID,
         pageRec,
         drawCtrl,
@@ -366,7 +364,6 @@ export const PageWrapper = ({
     </div>
   );
 };
-PageWrapper.displayName = "PageWrapper";
 
 const DrawWrapper = ({
   drawState,

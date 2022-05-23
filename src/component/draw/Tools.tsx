@@ -9,16 +9,16 @@ import {
   RotateRightOutlined,
 } from "@ant-design/icons";
 import { Button, ButtonProps, InputNumber, Modal, Popover } from "antd";
+import { ColorSelect, PenPanel } from "../reader/DrawTools";
 import { SelectToolType, TextToolType } from "./Draw";
 import { createWorker, Worker } from "tesseract.js";
 import TextArea from "antd/lib/input/TextArea";
-import { ColorSelect, PenPanel } from "../reader/DrawTools";
 import { useDrag } from "@use-gesture/react";
+import { colors } from "../../lib/color";
 import { createPortal } from "react-dom";
 import IconFont from "../ui/IconFont";
 import classNames from "classnames";
 import copy from "clipboard-copy";
-import { colors } from "../../lib/color";
 import "./tools.sass";
 import "animate.css";
 
@@ -152,15 +152,20 @@ export const TextTool: TextToolType = ({ onSubmit, onCancel }) => {
   const [text, setText] = useState("");
   const [fontSize, setFontSize] = useState(50);
   const [color, setColor] = useState(colors[0]);
+  const [modalShow, setModalShow] = useState(true);
 
   return (
     <Modal
-      visible
+      visible={modalShow}
       title="Insert text"
-      onCancel={onCancel}
+      onCancel={() => {
+        setModalShow(false);
+        setTimeout(onCancel, 300);
+      }}
       onOk={() => {
-        if (!text.trim()) return onCancel();
-        onSubmit(text.trim(), fontSize, color);
+        const content = text.trim();
+        if (!content) return onCancel();
+        onSubmit(content, fontSize, color);
       }}
       bodyStyle={{ paddingTop: 0 }}
     >

@@ -62,10 +62,10 @@ export default function DrawTools({
   handleRedo: () => void;
   instantSave: () => Promise<void> | undefined;
 }) {
-  const { saved, stateSet, teamOn, drawCtrl } = useContext(ReaderStateCtx);
-  const { mode } = drawCtrl;
+  const { saved, stateSet, drawCtrl } = useContext(ReaderStateCtx);
   const { setDrawCtrl } = useContext(ReaderMethodCtx);
-  const { finger } = drawCtrl;
+  const { teamOn } = useContext(TeamCtx);
+  const { mode, finger } = drawCtrl;
 
   const nav = useNavigate();
 

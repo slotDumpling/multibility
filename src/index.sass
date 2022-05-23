@@ -12,18 +12,6 @@ code, .code-font
 #root
   height: 100%
 
-::-webkit-scrollbar
-  width: 10px
-
-::-webkit-scrollbar-thumb
-  $bg-color: #d6d6d6
-  background-clip: padding-box
-  background-color: $bg-color
-  border: 3px solid transparent
-  border-radius: 20px
-  &:hover
-    background-color: darken($bg-color, 10%)
-
 *:not(input)
   user-select: none
 
@@ -39,6 +27,16 @@ code, .code-font
 @media screen and (min-width: 600px)
   .ant-message
     top: 60px
+  ::-webkit-scrollbar
+    width: 10px
+  ::-webkit-scrollbar-thumb
+    $bg-color: #d6d6d6
+    background-clip: padding-box
+    background-color: $bg-color
+    border: 3px solid #0000
+    border-radius: 20px
+    &:hover
+      background-color: darken($bg-color, 10%)
 
 @media screen and (max-width: 600px)
   .ant-message
@@ -51,3 +49,6 @@ code, .code-font
   left: 0
   right: 0
   background: white
+
+.skeleton
+  padding: 30px

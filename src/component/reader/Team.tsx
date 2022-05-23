@@ -1,5 +1,5 @@
-import { getTeamNoteState, loadTeamNoteInfo } from "../../lib/network/http";
 import React, { useState, useEffect, createContext, useCallback } from "react";
+import { getTeamNoteState, loadTeamNoteInfo } from "../../lib/network/http";
 import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
 import { IoFactory, NewPageInfo } from "../../lib/network/io";
 import { useNavigate, useParams } from "react-router-dom";
@@ -8,13 +8,14 @@ import { getUserID, UserInfo } from "../../lib/user";
 import { NotePage } from "../../lib/note/note";
 import { Socket } from "socket.io-client";
 import { Setter } from "../../lib/hooks";
+import { message, Skeleton } from "antd";
 import { Set } from "immutable";
-import { message } from "antd";
 import Reader from "./Reader";
 
 export const TeamCtx = createContext({
   io: undefined as Socket | undefined,
   code: -2,
+  teamOn: false,
   connected: false,
   ignores: Set<string>(),
   userRec: {} as Record<string, UserInfo>,
@@ -58,20 +59,10 @@ export default function Team() {
 
   useEffect(() => {
     const roomInit = async () => {
-      message.loading({
-        content: "Loading team note...",
-        key: "TEAM_LOADING",
-        duration: 0,
-      });
-      if (!((await loadInfo()) && (await loadState()))) {
-        message.destroy("TEAM_LOADING");
-        return nav("/");
-      }
-      message.destroy("TEAM_LOADING");
-      setLoaded(true);
+      if ((await loadInfo()) && (await loadState())) setLoaded(true);
+      else return nav("/");
     };
     roomInit();
-    return () => message.destroy("TEAM_LOADING");
   }, [loadInfo, loadState, nav]);
 
   useEffect(() => {
@@ -129,23 +120,25 @@ export default function Team() {
 
   const resetIO = () => setIO(IoFactory(noteID));
 
-  if (!loaded) return null;
   return (
-    <TeamCtx.Provider
-      value={{
-        io,
-        code,
-        ignores,
-        userRec,
-        connected,
-        teamState,
-        resetIO,
-        loadInfo,
-        setIgnores,
-        addTeamStatePage,
-      }}
-    >
-      <Reader teamOn />
-    </TeamCtx.Provider>
+    <Skeleton className="skeleton" active loading={!loaded}>
+      <TeamCtx.Provider
+        value={{
+          io,
+          code,
+          teamOn: true,
+          ignores,
+          userRec,
+          connected,
+          teamState,
+          resetIO,
+          loadInfo,
+          setIgnores,
+          addTeamStatePage,
+        }}
+      >
+        <Reader />
+      </TeamCtx.Provider>
+    </Skeleton>
   );
 }
