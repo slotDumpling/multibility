@@ -1,26 +1,15 @@
-import { Skeleton } from "antd";
-import React, { Suspense } from "react";
-import ReactDOM from "react-dom";
+import React, { LazyExoticComponent, Suspense } from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import Test from "./component/Test";
+import ReactDOM from "react-dom";
+import { Skeleton } from "antd";
 import "./index.sass";
 const MainMenu = React.lazy(() => import("./component/menu/MainMenu"));
 const Reader = React.lazy(() => import("./component/reader/Reader"));
 const Team = React.lazy(() => import("./component/reader/Team"));
-const fbSkeleton = <Skeleton className="skeleton" active />;
-const lazyMenu = (
-  <Suspense fallback={fbSkeleton}>
-    <MainMenu />
-  </Suspense>
-);
-const lazyReader = (
-  <Suspense fallback={fbSkeleton}>
-    <Reader />
-  </Suspense>
-);
-const lazyTeam = (
-  <Suspense fallback={fbSkeleton}>
-    <Team />
+const SuspendLazy = (Component: LazyExoticComponent<() => JSX.Element>) => (
+  <Suspense fallback={<Skeleton className="skeleton" active />}>
+    <Component />
   </Suspense>
 );
 
@@ -33,12 +22,12 @@ const placeholderEl = (
 ReactDOM.render(
   <HashRouter>
     <Routes>
-      <Route path="/" element={lazyMenu} />
+      <Route path="/" element={SuspendLazy(MainMenu)} />
       <Route path="/reader">
-        <Route path=":noteID" element={lazyReader} />
+        <Route path=":noteID" element={SuspendLazy(Reader)} />
       </Route>
       <Route path="/team">
-        <Route path=":noteID" element={lazyTeam} />
+        <Route path=":noteID" element={SuspendLazy(Team)} />
       </Route>
       <Route path="/test" element={<Test />} />
       <Route path="*" element={placeholderEl} />
