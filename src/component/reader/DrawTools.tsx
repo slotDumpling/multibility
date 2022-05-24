@@ -113,8 +113,7 @@ export default function DrawTools({
           disabled={!stateSet?.isRedoable()}
         />
         <Button
-          type={finger ? "primary" : "text"}
-          ghost={finger}
+          type={finger ? "default" : "text"}
           shape="circle"
           onClick={() => updateDrawCtrl({ finger: !finger })}
           icon={<IconFont type="icon-finger" />}

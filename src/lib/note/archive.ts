@@ -3,7 +3,7 @@ import { getDefaultFlatState } from "../draw/DrawState";
 import { getRandomColor } from "../color";
 import localforage from "localforage";
 import { v4 as getUid } from "uuid";
-import { pickBy } from "lodash";
+import { pickBy } from "lodash-es";
 import moment from "moment";
 
 export interface NoteTag {

@@ -20,7 +20,7 @@
     "heap": "^0.2.7",
     "immutable": "^4.0.0",
     "localforage": "^1.10.0",
-    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.21",
     "moment": "^2.29.3",
     "paper": "^0.12.15",
     "pdfjs-dist": "^2.10.377",
@@ -68,6 +68,7 @@
   "devDependencies": {
     "@types/heap": "^0.2.30",
     "@types/lodash": "^4.14.178",
+    "@types/lodash-es": "^4.17.6",
     "@types/react-beautiful-dnd": "^13.1.2",
     "@types/react-beforeunload": "^2.1.1",
     "@types/react-pdf": "^5.0.9",

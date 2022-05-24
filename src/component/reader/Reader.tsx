@@ -31,7 +31,7 @@ import { TeamState } from "../../lib/draw/TeamState";
 import { SelectTool, TextTool } from "../draw/Tools";
 import { insertAfter } from "../../lib/array";
 import { Setter } from "../../lib/hooks";
-import { debounce, once } from "lodash";
+import { debounce, once } from "lodash-es";
 import { Map, Set } from "immutable";
 import DrawTools from "./DrawTools";
 import { TeamCtx } from "./Team";
