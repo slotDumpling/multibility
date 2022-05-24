@@ -13,7 +13,6 @@ import {
 } from "../../lib/note/archive";
 import { createEmptyNote, NoteInfo } from "../../lib/note/note";
 import { FormOutlined } from "@ant-design/icons";
-import Title from "antd/lib/typography/Title";
 import { Setter } from "../../lib/hooks";
 import RightTools from "./RightTools";
 import LeftTools from "./LeftTools";
@@ -82,7 +81,7 @@ export default function MainMenu() {
         <div className="main-menu container">
           <header>
             <LeftTools />
-            <Title level={4}>{selectedTag.name}</Title>
+            <h2>{selectedTag.name}</h2>
             <RightTools />
           </header>
           <main>

@@ -2,12 +2,17 @@ import { Skeleton } from "antd";
 import React, { Suspense } from "react";
 import ReactDOM from "react-dom";
 import { HashRouter, Route, Routes } from "react-router-dom";
-import MainMenu from "./component/menu/MainMenu";
 import Test from "./component/Test";
 import "./index.sass";
+const MainMenu = React.lazy(() => import("./component/menu/MainMenu"));
 const Reader = React.lazy(() => import("./component/reader/Reader"));
 const Team = React.lazy(() => import("./component/reader/Team"));
 const fbSkeleton = <Skeleton className="skeleton" active />;
+const lazyMenu = (
+  <Suspense fallback={fbSkeleton}>
+    <MainMenu />
+  </Suspense>
+);
 const lazyReader = (
   <Suspense fallback={fbSkeleton}>
     <Reader />
@@ -28,7 +33,7 @@ const placeholderEl = (
 ReactDOM.render(
   <HashRouter>
     <Routes>
-      <Route path="/" element={<MainMenu />} />
+      <Route path="/" element={lazyMenu} />
       <Route path="/reader">
         <Route path=":noteID" element={lazyReader} />
       </Route>
