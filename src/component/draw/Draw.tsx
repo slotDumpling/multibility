@@ -33,13 +33,13 @@ export type TextToolType = FC<{
 
 const PREVIEW_WIDTH = 200;
 const {
-  Point,
   Path,
-  Group,
-  Shape: { Rectangle },
-  Color,
   Size,
+  Point,
+  Group,
+  Color,
   Raster,
+  Shape: { Rectangle },
 } = paper;
 
 const Draw: FC<{
@@ -54,8 +54,8 @@ const Draw: FC<{
   TextTool?: TextToolType;
 }> = ({
   drawState,
-  onChange = () => {},
   otherStates,
+  onChange = () => {},
   drawCtrl = defaultDrawCtrl,
   preview = false,
   readonly = preview,
@@ -69,47 +69,17 @@ const Draw: FC<{
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const scope = useRef(new paper.PaperScope());
   const group = useRef<paper.Item[]>([]);
-  const path = useRef<paper.Path>();
   const [erased, setErased] = useState(Set<string>());
   const [currDrawCtrl, setCurrDrawCtrl] = useState(defaultDrawCtrl);
-
-  const [rect, setRect] = useState<paper.Shape.Rectangle>();
-  useEffect(() => {
-    if (!rect) return;
-    rect.onFrame = () => (rect.dashOffset += 3);
-    return () => void rect.remove();
-  }, [rect]);
-
-  const [selectedGroup, setSelectedGroup] = useState<paper.Group>();
-  useEffect(() => () => void selectedGroup?.remove(), [selectedGroup]);
-
-  const [selected, setSelected] = useState(false);
-  const paperMode = mode === "select" && selected ? "selected" : mode;
-  useEffect(() => {
-    if (mode !== "select") {
-      setSelected(false);
-      setRect(undefined);
-    }
-    if (mode !== "text") {
-      setPointText(undefined);
-    }
-  }, [mode]);
-  useEffect(() => {
-    if (selected) {
-      if (!rect?.strokeColor) return;
-      rect.strokeColor.alpha /= 2;
-    } else {
-      updateMutation();
-      setSelectedGroup(undefined);
-      setCurrDrawCtrl(defaultDrawCtrl);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected]);
+  const [path, setPath] = usePaperItem<paper.Path>();
+  const [rect, setRect] = usePaperItem<paper.Shape.Rectangle>();
+  const [selectedGroup, setSelectedGroup] = usePaperItem<paper.Group>();
 
   const ratio = useRef(1);
   const updateRatio = () => {
     const clientWidth = canvasEl.current?.clientWidth;
     if (clientWidth) ratio.current = width / clientWidth;
+    scope.current.activate();
   };
 
   const transformPoint = (projP: paper.Point) => {
@@ -137,26 +107,44 @@ const Draw: FC<{
     setupPaper();
     const cvs = canvasEl.current;
     return () => void (cvs && releaseCanvas(cvs));
-  }, [height, width, preview]);
+  }, [width, height, preview]);
 
   const setNewRect = (e: paper.MouseEvent) => {
     updateRatio();
-    scope.current.activate();
     const point = transformPoint(e.point);
     const rectangle = startSelectRect(point);
     setRect(rectangle);
   };
 
+  const [selected, setSelected] = useState(false);
+  const paperMode = mode === "select" && selected ? "selected" : mode;
+  useEffect(() => {
+    if (mode !== "select") return;
+    return () => {
+      setSelected(false);
+      setRect(undefined);
+    };
+  }, [mode, setRect]);
+  useEffect(() => {
+    if (selected) {
+      if (!rect?.strokeColor) return;
+      rect.strokeColor.alpha /= 2;
+    } else {
+      updateMutation();
+      setSelectedGroup(undefined);
+      setCurrDrawCtrl(defaultDrawCtrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected]);
+
   const handleDown = {
     draw() {
       updateRatio();
-      scope.current.activate();
-      path.current = startStroke(color, lineWidth, highlight);
+      setPath(startStroke(color, lineWidth, highlight));
     },
     erase() {
       updateRatio();
-      scope.current.activate();
-      path.current = startStroke("#0003", eraserWidth);
+      setPath(startStroke("#0003", eraserWidth));
     },
     select(e: paper.MouseEvent) {
       setNewRect(e);
@@ -177,23 +165,22 @@ const Draw: FC<{
 
   const handleDrag = {
     draw(e: paper.MouseEvent) {
-      if (!path.current) return;
+      if (!path) return;
       scope.current.activate();
       const point = transformPoint(e.point);
-      path.current.add(point);
-      path.current.smooth();
+      path.add(point);
+      path.smooth();
     },
     erase(e: paper.MouseEvent) {
-      const eraserPath = path.current;
-      if (!eraserPath) return;
+      if (!path) return;
       scope.current.activate();
       const point = transformPoint(e.point);
-      eraserPath.add(point);
-      eraserPath.smooth();
+      path.add(point);
+      path.smooth();
 
       const newErased = group.current
         .filter((p) => !erased.has(p.name))
-        .filter((p) => p instanceof paper.Path && checkErase(p, eraserPath))
+        .filter((p) => p instanceof paper.Path && checkErase(p, path))
         .map((p) => p.name);
       setErased((prev) => prev.concat(newErased));
     },
@@ -216,19 +203,19 @@ const Draw: FC<{
 
   const handleUp = {
     draw() {
-      if (!path.current || path.current.segments.length === 0) return;
+      if (!path || path.segments.length === 0) return;
       scope.current.activate();
-      path.current.simplify();
-      const pathData = path.current.exportJSON();
-      path.current.remove();
+      path.simplify();
+      const pathData = path.exportJSON();
       onChange((prev) => DrawState.addStroke(prev, pathData));
+      setPath(undefined);
     },
     erase() {
-      if (!path.current) return;
+      if (!path) return;
       scope.current.activate();
-      path.current.remove();
       onChange((prev) => DrawState.eraseStrokes(prev, erased.toArray()));
       setErased(Set());
+      setPath(undefined);
     },
     select() {
       if (!rect) return;
@@ -359,8 +346,10 @@ const Draw: FC<{
     return data;
   };
 
-  const [pointText, setPointText] = useState<paper.PointText>();
-  useEffect(() => () => void pointText?.remove(), [pointText]);
+  const [pointText, setPointText] = usePaperItem<paper.PointText>();
+  useEffect(() => {
+    if (mode === "text") return () => setPointText(undefined);
+  }, [mode, setPointText]);
 
   const submitText = (text: string, fontSize: number, color = "#000") => {
     if (!pointText) return;
@@ -375,34 +364,33 @@ const Draw: FC<{
 
   usePreventGesture();
   usePinch(
-    ({ memo, offset, last, first, origin }) => {
-      if (!canvasEl.current) return;
+    (state) => {
+      const { memo, offset, last, first, origin } = state;
+      const { view } = scope.current;
 
-      let lastScale, lastOX, lastOY, osX, osY: number;
+      let lastScale, lastOX, lastOY, elX, elY: number;
       if (first || !memo) {
         updateRatio();
-        scope.current.activate();
+        if (!canvasEl.current) return;
         const { x, y } = canvasEl.current.getBoundingClientRect();
-        [lastScale, [lastOX, lastOY], [osX, osY]] = [
-          1,
-          [origin[0] - x, origin[1] - y],
-          [x, y],
-        ];
-      } else [lastScale, [lastOX, lastOY], [osX, osY]] = memo;
+        lastScale = 1;
+        [lastOX, lastOY] = [origin[0] - x, origin[1] - y];
+        [elX, elY] = [x, y];
+      } else {
+        [lastScale, [lastOX, lastOY], [elX, elY]] = memo;
+      }
 
-      const { view } = scope.current;
-      if (Math.abs(1 - offset[0]) < 0.05) offset[0] = 1;
-
-      let scale = first ? 1 : offset[0] / lastScale;
       const r = ratio.current;
-      const [oX, oY] = [origin[0] - osX, origin[1] - osY];
+      const [oX, oY] = [origin[0] - elX, origin[1] - elY];
       const originViewP = new Point(oX, oY).multiply(r);
       const originProjP = view.viewToProject(originViewP);
 
+      if (Math.abs(1 - offset[0]) < 0.05) offset[0] = 1;
+      let dScale = first ? 1 : offset[0] / lastScale;
       let aniCount = last ? 10 : 1;
-      scale = Math.pow(scale, 1 / aniCount);
+      dScale = Math.pow(dScale, 1 / aniCount);
       const scaleView = () => {
-        view.scale(scale, originProjP);
+        view.scale(dScale, originProjP);
         if (--aniCount > 0) requestAnimationFrame(scaleView);
       };
       scaleView();
@@ -411,7 +399,7 @@ const Draw: FC<{
       const transP = new Point(dX, dY).multiply(r / offset[0]);
       view.translate(transP);
 
-      if (!last) return [offset[0], [oX, oY], [osX, osY]];
+      if (!last) return [offset[0], [oX, oY], [elX, elY]];
       putCenterBack(view);
     },
     {
@@ -453,6 +441,13 @@ const Draw: FC<{
 };
 
 export default React.memo(Draw);
+
+function usePaperItem<T extends paper.Item>(init?: T) {
+  const stateArray = useState<T | undefined>(init);
+  const [item] = stateArray;
+  useEffect(() => () => void item?.remove(), [item]);
+  return stateArray;
+}
 
 const paintStroke = (
   stroke: Stroke,
@@ -530,6 +525,7 @@ const startSelectRect = (point: paper.Point) => {
   rect.strokeWidth = 3;
   rect.dashOffset = 0;
   rect.dashArray = [30, 20];
+  rect.onFrame = () => (rect.dashOffset += 3);
   return rect;
 };
 
