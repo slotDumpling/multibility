@@ -37,8 +37,8 @@ import {
   TeamOutlined,
   CopyOutlined,
   CheckOutlined,
-  ExpandOutlined,
   ReloadOutlined,
+  GatewayOutlined,
   ShareAltOutlined,
   HighlightOutlined,
   DisconnectOutlined,
@@ -131,7 +131,7 @@ export default function DrawTools({
           type={mode === "select" ? "default" : "text"}
           shape="circle"
           onClick={() => updateDrawCtrl({ mode: "select" })}
-          icon={<ExpandOutlined />}
+          icon={<GatewayOutlined />}
         />
       </div>
       <div className="right">
@@ -453,7 +453,6 @@ const RoomInfo: FC = () => {
       trigger="click"
       placement="bottomRight"
       title={title}
-      defaultVisible
       getPopupContainer={(e) => e}
     >
       <Button
