@@ -1,12 +1,7 @@
 import { Button, Drawer } from "antd";
 import { useContext, useState } from "react";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
-import {
-  EditOutlined,
-  CheckOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-} from "@ant-design/icons";
+import { EditOutlined, CheckOutlined, MenuOutlined } from "@ant-design/icons";
 import SideMenu from "./SideMenu";
 
 export default function LeftTools() {
@@ -44,8 +39,8 @@ export default function LeftTools() {
     <div className="aside-btn">
       <Button
         type="text"
-        icon={asideOn ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
-        onClick={() => setAsideOn(prev => !prev)}
+        icon={<MenuOutlined />}
+        onClick={() => setAsideOn((prev) => !prev)}
       />
       <Drawer
         className="aside-drawer"
@@ -54,11 +49,11 @@ export default function LeftTools() {
         closable={false}
         visible={asideOn}
         onClose={() => setAsideOn(false)}
-        contentWrapperStyle={{ boxShadow: 'none' }}
+        contentWrapperStyle={{ boxShadow: "none" }}
         bodyStyle={{ padding: 0, overflow: "hidden" }}
         destroyOnClose
       >
-        <SideMenu onSelect={() => setAsideOn(false)} />
+        <SideMenu onSelect={() => editing || setAsideOn(false)} />
       </Drawer>
     </div>
   );
