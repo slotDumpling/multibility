@@ -20,12 +20,10 @@ import {
   CloseOutlined,
   DeleteOutlined,
   SearchOutlined,
-  AppstoreOutlined,
   ClockCircleOutlined,
-  UnorderedListOutlined,
   SortAscendingOutlined,
 } from "@ant-design/icons";
-import { Button, Input, Popconfirm, Tag, Dropdown, Menu, Radio } from "antd";
+import { Button, Input, Popconfirm, Tag, Dropdown, Menu } from "antd";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import { NoteInfo } from "../../lib/note/note";
 import { useNavigate } from "react-router-dom";
@@ -185,18 +183,19 @@ const HeadTools: FC<{
       title="Notes will be deleted."
       onConfirm={onDelete}
       icon={<DeleteOutlined />}
-      cancelText="Cancel"
       placement="bottom"
+      cancelText="Cancel"
+      disabled={disabled}
       okText="Delete"
       okType="danger"
       okButtonProps={{ type: "primary" }}
     >
       <Button
-        className="del-btn"
         size="small"
-        danger
-        icon={<DeleteOutlined />}
+        className="del-btn"
         disabled={disabled}
+        icon={<DeleteOutlined />}
+        danger
       >
         Delete
       </Button>
@@ -236,7 +235,12 @@ const HeadTools: FC<{
       trigger={["click"]}
       placement="bottom"
     >
-      <Button className="tag-btn" size="small" icon={<TagsOutlined />}>
+      <Button
+        size="small"
+        className="tag-btn"
+        icon={<TagsOutlined />}
+        style={{transition: 'none'}}
+      >
         Tag
       </Button>
     </Dropdown>
@@ -259,14 +263,6 @@ const HeadTools: FC<{
             prefix={<SearchOutlined />}
             allowClear
           />
-          <Radio.Group value="LIST" size="small" className="radio">
-            <Radio.Button value="LIST">
-              <UnorderedListOutlined />
-            </Radio.Button>
-            <Radio.Button value="GRID" disabled>
-              <AppstoreOutlined />
-            </Radio.Button>
-          </Radio.Group>
           {sortButton}
         </>
       )}
