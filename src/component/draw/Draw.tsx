@@ -5,6 +5,8 @@ import React, {
   useState,
   useEffect,
   TouchEvent,
+  ComponentType,
+  useCallback,
 } from "react";
 import { DrawState, Mutation, Stroke } from "../../lib/draw/DrawState";
 import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
@@ -17,7 +19,7 @@ import { Set } from "immutable";
 import paper from "paper";
 import "./draw.sass";
 
-export type SelectToolType = FC<{
+export type SelectToolType = ComponentType<{
   onDelete: () => void;
   onRotate: (angle: number, smooth?: boolean) => void;
   onDuplicate: () => void;
@@ -26,7 +28,7 @@ export type SelectToolType = FC<{
   currDrawCtrl: DrawCtrl;
 }>;
 
-export type TextToolType = FC<{
+export type TextToolType = ComponentType<{
   onSubmit: (text: string, fontSize: number, color: string) => void;
   onCancel: () => void;
 }>;
@@ -64,7 +66,8 @@ const Draw: FC<{
   TextTool,
 }) => {
   const { width, height } = drawState;
-  const { mode, color, finger, lineWidth, highlight, eraserWidth } = drawCtrl;
+  const { mode, color, finger, lineWidth, highlight, eraserWidth, lasso } =
+    drawCtrl;
 
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const scope = useRef(new paper.PaperScope());
@@ -110,7 +113,6 @@ const Draw: FC<{
   }, [width, height, preview]);
 
   const setNewRect = (e: paper.MouseEvent) => {
-    updateRatio();
     const point = transformPoint(e.point);
     const rectangle = startSelectRect(point);
     setRect(rectangle);
@@ -118,24 +120,26 @@ const Draw: FC<{
 
   const [selected, setSelected] = useState(false);
   const paperMode = mode === "select" && selected ? "selected" : mode;
+  const resetSelect = useCallback(() => {
+    setSelected(false);
+    setPath(undefined);
+    setRect(undefined);
+  }, [setPath, setRect]);
+
   useEffect(() => {
     if (mode !== "select") return;
-    return () => {
-      setSelected(false);
-      setRect(undefined);
-    };
-  }, [mode, setRect]);
+    return resetSelect;
+  }, [mode, resetSelect]);
+
   useEffect(() => {
-    if (selected) {
-      if (!rect?.strokeColor) return;
-      rect.strokeColor.alpha /= 2;
-    } else {
-      updateMutation();
-      setSelectedGroup(undefined);
-      setCurrDrawCtrl(defaultDrawCtrl);
-    }
+    if (selected) return;
+    updateMutation();
+    setSelectedGroup(undefined);
+    setCurrDrawCtrl(defaultDrawCtrl);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
+
+  useEffect(resetSelect, [lasso, resetSelect]);
 
   const handleDown = {
     draw() {
@@ -147,12 +151,21 @@ const Draw: FC<{
       setPath(startStroke("#0003", eraserWidth));
     },
     select(e: paper.MouseEvent) {
-      setNewRect(e);
+      updateRatio();
+      if (lasso) setPath(startStroke("#1890ff", 3));
+      else setNewRect(e);
     },
     selected(e: paper.MouseEvent) {
+      updateRatio();
       const point = transformPoint(e.point);
-      if (rect && point.isInside(rect.strokeBounds)) return;
-      setNewRect(e);
+      // check if point is outside of selection;
+      if (lasso) {
+        if (path?.contains(point)) return;
+        setPath(startStroke("#1890ff", 3));
+      } else {
+        if (rect?.contains(point)) return;
+        setNewRect(e);
+      }
       setSelected(false);
     },
     text(e: paper.MouseEvent) {
@@ -185,18 +198,27 @@ const Draw: FC<{
       setErased((prev) => prev.concat(newErased));
     },
     select(e: paper.MouseEvent) {
-      if (!rect) return;
-      scope.current.activate();
-      const delta = e.delta.multiply(ratio.current);
-      rect.size = rect.size.add(new Size(delta.x, delta.y));
-      rect.translate(delta.divide(2));
+      if (lasso) {
+        if (!path) return;
+        scope.current.activate();
+        const point = transformPoint(e.point);
+        path.add(point);
+        path.smooth();
+      } else {
+        if (!rect) return;
+        scope.current.activate();
+        const delta = e.delta.multiply(ratio.current);
+        rect.size = rect.size.add(new Size(delta.x, delta.y));
+        rect.translate(delta.divide(2));
+      }
     },
     selected(e: paper.MouseEvent) {
-      if (!rect || !selectedGroup) return;
+      if (!selectedGroup) return;
       scope.current.activate();
       const delta = e.delta.multiply(ratio.current);
-      rect.translate(delta);
       selectedGroup.translate(delta);
+      if (lasso) path?.translate(delta);
+      else rect?.translate(delta);
     },
     text() {},
   }[paperMode];
@@ -218,13 +240,23 @@ const Draw: FC<{
       setPath(undefined);
     },
     select() {
-      if (!rect) return;
-      const { width, height } = rect.size.abs();
-      if (width < 10 || height < 10) return setRect(undefined);
-
       scope.current.activate();
       const items = group.current;
-      const newSG = new Group(checkSelection(rect, items));
+      let newSG: paper.Group;
+      if (lasso) {
+        if (!path?.segments.length || path.length < 50) {
+          return setPath(undefined);
+        }
+        path.closePath();
+        moveDash(path);
+        newSG = new Group(checkSelection(path, items));
+      } else {
+        if (!rect) return;
+        const { width, height } = rect.size.abs();
+        if (width < 10 || height < 10) return setRect(undefined);
+        moveDash(rect);
+        newSG = new Group(checkSelection(rect, items));
+      }
       setSelectedGroup(newSG);
       const tempStyle = parseGroupStyle(newSG);
       setCurrDrawCtrl((prev) => ({ ...prev, ...tempStyle }));
@@ -300,19 +332,19 @@ const Draw: FC<{
 
     const deleted = list.map((item) => item.name);
     onChange((prev) => DrawState.eraseStrokes(prev, deleted));
-    setRect(undefined);
     setSelectedGroup(undefined);
-    setSelected(false);
+    resetSelect();
   };
 
   const rotateSelected = (angle: number, smooth = false) => {
     if (!selectedGroup) return;
-    let count = smooth ? 10 : 1;
-    const dAngle = angle / count;
+    let aniCount = smooth ? 10 : 1;
+    const dAngle = angle / aniCount;
     const rotate = () => {
-      selectedGroup.rotate(dAngle, rect?.position);
+      selectedGroup.rotate(dAngle, (rect || path)?.position);
       rect?.rotate(dAngle, rect.position);
-      if (--count > 0) requestAnimationFrame(rotate);
+      path?.rotate(dAngle, path.position);
+      if (--aniCount > 0) requestAnimationFrame(rotate);
     };
     rotate();
   };
@@ -325,16 +357,19 @@ const Draw: FC<{
   };
 
   const duplicateSelected = () => {
+    if (!selectedGroup) return;
     scope.current.activate();
-    if (!rect || !selectedGroup) return;
     const newSG = selectedGroup.clone();
     updateMutation();
     setSelectedGroup(newSG);
 
-    const { width, height } = rect.size;
+    const size = (rect || path)?.bounds.size;
+    if (!size) return;
+    const { width, height } = size;
     const transP = new Point(width, height).divide(10);
     newSG.translate(transP);
-    rect.translate(transP);
+    rect?.translate(transP);
+    path?.translate(transP);
     newSG.children.forEach((p) => (p.name = getUid()));
   };
 
@@ -364,8 +399,7 @@ const Draw: FC<{
 
   usePreventGesture();
   usePinch(
-    (state) => {
-      const { memo, offset, last, first, origin } = state;
+    ({ memo, offset: [scale], first, last, origin }) => {
       const { view } = scope.current;
 
       let lastScale, lastOX, lastOY, elX, elY: number;
@@ -385,8 +419,8 @@ const Draw: FC<{
       const originViewP = new Point(oX, oY).multiply(r);
       const originProjP = view.viewToProject(originViewP);
 
-      if (Math.abs(1 - offset[0]) < 0.05) offset[0] = 1;
-      let dScale = first ? 1 : offset[0] / lastScale;
+      if (Math.abs(1 - scale) < 0.05) scale = 1;
+      let dScale = first ? 1 : scale / lastScale;
       let aniCount = last ? 10 : 1;
       dScale = Math.pow(dScale, 1 / aniCount);
       const scaleView = () => {
@@ -396,10 +430,10 @@ const Draw: FC<{
       scaleView();
 
       const [dX, dY] = [oX - lastOX, oY - lastOY];
-      const transP = new Point(dX, dY).multiply(r / offset[0]);
+      const transP = new Point(dX, dY).multiply(r / scale);
       view.translate(transP);
 
-      if (!last) return [offset[0], [oX, oY], [elX, elY]];
+      if (!last) return [scale, [oX, oY], [elX, elY]];
       putCenterBack(view);
     },
     {
@@ -523,9 +557,6 @@ const startSelectRect = (point: paper.Point) => {
   const rect = new Rectangle(point, new Size(0, 0));
   rect.strokeColor = new Color("#1890ff");
   rect.strokeWidth = 3;
-  rect.dashOffset = 0;
-  rect.dashArray = [30, 20];
-  rect.onFrame = () => (rect.dashOffset += 3);
   return rect;
 };
 
@@ -541,6 +572,13 @@ const startStroke = (color: string, lineWidth: number, highlight = false) => {
   path.strokeJoin = "round";
   path.strokeCap = "round";
   return path;
+};
+
+const moveDash = (item: paper.Item) => {
+  if (item.strokeColor) item.strokeColor.alpha /= 2;
+  item.dashOffset = 0;
+  item.dashArray = [30, 20];
+  item.onFrame = () => (item.dashOffset += 3);
 };
 
 const getCenterTranslate = (view: paper.View) => {
@@ -565,11 +603,11 @@ const getCenterTranslate = (view: paper.View) => {
 
 const putCenterBack = (view: paper.View) => {
   const [deltaX, deltaY] = getCenterTranslate(view);
-  let count = 10;
-  const dP = new Point(deltaX, deltaY).divide(-count);
+  let aniCount = 10;
+  const dP = new Point(deltaX, deltaY).divide(-aniCount);
   const move = () => {
     view.translate(dP);
-    if (--count > 0) requestAnimationFrame(move);
+    if (--aniCount > 0) requestAnimationFrame(move);
   };
   move();
 };
@@ -583,13 +621,21 @@ const parseGroupStyle = (group: paper.Group) => {
   return tempStyle;
 };
 
-const checkSelection = (rect: paper.Shape.Rectangle, items: paper.Item[]) => {
-  const bounds = rect.strokeBounds;
-  return items.filter((item) =>
-    item instanceof paper.Path
-      ? item.isInside(bounds) || item.intersects(rect)
-      : item.bounds.intersects(rect.bounds)
-  );
+const checkSelection = (
+  selection: paper.Path | paper.Shape.Rectangle,
+  items: paper.Item[]
+) => {
+  const bounds = selection.strokeBounds;
+  return items.filter((item) => {
+    if (!item.bounds.intersects(selection.bounds)) return false;
+    if (item instanceof paper.Path) {
+      if (item.intersects(selection)) return true;
+      return selection instanceof paper.Path
+        ? item.subtract(selection, { insert: false }).isEmpty()
+        : item.isInside(bounds);
+    }
+    return true;
+  });
 };
 
 const updateGroupStyle = (

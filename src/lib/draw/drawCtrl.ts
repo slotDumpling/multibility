@@ -7,6 +7,7 @@ export interface DrawCtrl {
   eraserWidth: number;
   color: string;
   highlight: boolean;
+  lasso: boolean;
 }
 
 export const defaultDrawCtrl: Readonly<DrawCtrl> = {
@@ -16,6 +17,7 @@ export const defaultDrawCtrl: Readonly<DrawCtrl> = {
   eraserWidth: 10,
   color: "#000000",
   highlight: false,
+  lasso: true,
 };
 
 export async function getDrawCtrl() {

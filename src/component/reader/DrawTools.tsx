@@ -127,12 +127,7 @@ export default function DrawTools({
           onClick={() => updateDrawCtrl({ mode: "text" })}
           icon={<IconFont type="icon-text1" />}
         />
-        <Button
-          type={mode === "select" ? "default" : "text"}
-          shape="circle"
-          onClick={() => updateDrawCtrl({ mode: "select" })}
-          icon={<GatewayOutlined />}
-        />
+        <SelectButton updateDrawCtrl={updateDrawCtrl} />
       </div>
       <div className="right">
         {teamOn && <RoomInfo />}
@@ -271,6 +266,32 @@ const EraserButton: FC<{
       type="text"
       onClick={() => updateDrawCtrl({ mode: "erase" })}
       {...btnProps}
+    />
+  );
+};
+
+const SelectButton: FC<{
+  updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
+}> = ({ updateDrawCtrl }) => {
+  const {
+    drawCtrl: { lasso, mode },
+  } = useContext(ReaderStateCtx);
+
+  const icon = lasso ? <IconFont type="icon-lasso1" /> : <GatewayOutlined />;
+
+  return mode === "select" ? (
+    <Button
+      type="default"
+      shape="circle"
+      icon={icon}
+      onClick={() => updateDrawCtrl({ lasso: !lasso })}
+    />
+  ) : (
+    <Button
+      type="text"
+      shape="circle"
+      icon={icon}
+      onClick={() => updateDrawCtrl({ mode: "select" })}
     />
   );
 };
