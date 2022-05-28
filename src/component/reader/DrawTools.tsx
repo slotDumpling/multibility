@@ -372,11 +372,13 @@ export const UserAvatar: FC<{
 
 const RoomInfo: FC = () => {
   const { code, userRec, connected, loadInfo, resetIO } = useContext(TeamCtx);
+  const { noteInfo } = useContext(ReaderStateCtx);
   const link = window.location.href;
   const share = async () => {
     const selfName = userRec[getUserID()]?.userName;
     try {
-      await copy(`${selfName} shared a note with you at 𝐌𝐮𝐥𝐭𝐢𝐛𝐢𝐥𝐢𝐭𝐲.\n${link}`);
+      if (!noteInfo) return;
+      await copy(`${noteInfo.name} - ${selfName} - Multibility\n${link}`);
       message.destroy("copy");
       message.success({
         content: "Share link copied!",
