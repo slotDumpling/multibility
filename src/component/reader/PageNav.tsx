@@ -72,7 +72,7 @@ const PageNavContent = ({
     <div className="preview-container">
       <PreviewTabs activeKey={activeKey} setActiveKey={setActiveKey} />
       <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="droppable">
+        <Droppable droppableId="preview-list">
           {({ droppableProps, innerRef, placeholder }) => (
             <div
               className="page-list"
@@ -121,10 +121,11 @@ const PagePreview: FC<{
     () =>
       teamState
         ?.getPageValidUsers(uid)
-        .filter((userID) => !ignores.has(userID)),
+        .filter((userID) => !ignores.has(userID)) || [],
     [teamState, ignores, uid]
   );
   if (!page || !drawState) return null;
+  const { image, marked } = page;
 
   if (
     mode === "WRITTEN" &&
@@ -133,7 +134,7 @@ const PagePreview: FC<{
   ) {
     return null;
   }
-  if (mode === "MARKED" && !page.marked) return null;
+  if (mode === "MARKED" && !marked) return null;
 
   const switchMarked = (e: MouseEvent<HTMLSpanElement>) => {
     switchPageMarked(uid);
@@ -150,46 +151,43 @@ const PagePreview: FC<{
       {(
         { innerRef, draggableProps, dragHandleProps },
         { isDragging: drag }
-      ) => {
-        const { image, marked } = page;
-        return (
-          <div
-            ref={(e) => {
-              innerRef(e);
-              if (e) refRec[uid] = e;
-            }}
-            className={classNames("page", { curr, drag })}
-            onClick={() => scrollPage(uid)}
-            {...draggableProps}
-            {...dragHandleProps}
-          >
-            <PageWrapper
-              uid={uid}
-              drawState={teamStateMap?.get(chosen) || drawState}
-              teamStateMap={chosen ? undefined : teamStateMap}
-              thumbnail={image}
-              preview
-            />
-            <span
-              className={classNames("bookmark", { marked })}
-              onClickCapture={switchMarked}
-            />
-            <span className="index">{pageIndex + 1}</span>
-            <TeamAvatars
-              userIDs={userIDs}
-              chosen={chosen}
-              setChosen={setChosen}
-            />
-            <PreviewOption uid={uid} />
-          </div>
-        );
-      }}
+      ) => (
+        <div
+          ref={(e) => {
+            innerRef(e);
+            if (e) refRec[uid] = e;
+          }}
+          className={classNames("page", { curr, drag })}
+          onClick={() => scrollPage(uid)}
+          {...draggableProps}
+          {...dragHandleProps}
+        >
+          <PageWrapper
+            uid={uid}
+            drawState={teamStateMap?.get(chosen) || drawState}
+            teamStateMap={chosen ? undefined : teamStateMap}
+            thumbnail={image}
+            preview
+          />
+          <span
+            className={classNames("bookmark", { marked })}
+            onClickCapture={switchMarked}
+          />
+          <span className="index">{pageIndex + 1}</span>
+          <PreviewOption uid={uid} />
+          <TeamAvatars
+            userIDs={userIDs}
+            chosen={chosen}
+            setChosen={setChosen}
+          />
+        </div>
+      )}
     </Draggable>
   );
 };
 
 const TeamAvatars: FC<{
-  userIDs?: string[];
+  userIDs: string[];
   chosen: string;
   setChosen: Setter<string>;
 }> = ({ userIDs, chosen, setChosen }) => {
@@ -199,7 +197,7 @@ const TeamAvatars: FC<{
       size="default"
       className={classNames("team-group", { chosen })}
     >
-      {userIDs?.map((userID) => (
+      {userIDs.map((userID) => (
         <UserAvatar
           key={userID}
           size="default"
