@@ -53,7 +53,7 @@ const SwipeDelete: FC<{
     setHeight(undefined);
     setNowSwiped && setNowSwiped("");
     setSwiped(false);
-  }, [disable]);
+  }, [disable, setNowSwiped]);
 
   return (
     <div

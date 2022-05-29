@@ -250,7 +250,7 @@ const HeadTools: FC<{
   );
 
   return (
-    <div className="head-tools">
+    <div className={classNames("head-tools", { editing })}>
       {editing ? (
         <>
           {tagButton}

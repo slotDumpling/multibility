@@ -17,8 +17,6 @@ $header-height: 55px
     .left-tools
       display: flex
       align-items: center
-      .edit-btn
-        width: 70px
     h2
       @include text-overflow
       flex: 1
@@ -53,9 +51,11 @@ $header-height: 55px
     padding: 10px 15px 30px 15px
     overflow: hidden
     display: flex
-    .edit-btn
-      width: 68px
-      margin-left: 10px
+    > *
+      margin-right: 10px
+
+.edit-btn
+  width: 70px
 
 .aside-btn
   margin-right: 10px
@@ -125,9 +125,15 @@ button.team-btn
   -webkit-transform: translateZ(0)
   .head-tools
     height: 60px
+    background-color: #fff
     display: flex
     align-items: center
     justify-content: center
+    &.editing
+      position: sticky
+      top: 0
+      z-index: 100
+      border-bottom: $light-border
     .search-input
       width: 200px
       margin-right: 10px
