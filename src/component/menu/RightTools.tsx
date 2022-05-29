@@ -1,5 +1,6 @@
 import {
   Button,
+  ButtonProps,
   Input,
   Menu,
   message,
@@ -231,6 +232,10 @@ const OthersPage = () => {
 };
 
 const OthersButton = () => {
+  const btnProps: ButtonProps = {
+    shape: "circle",
+    icon: <CaretDownOutlined />,
+  };
   return (
     <Popover
       placement="bottomRight"
@@ -238,7 +243,8 @@ const OthersButton = () => {
       content={<OthersPage />}
       zIndex={900}
     >
-      <Button shape="circle" icon={<CaretDownOutlined />} />
+      <Button className="large" {...btnProps} />
+      <Button className="small" type="text" {...btnProps} />
     </Popover>
   );
 };
@@ -282,6 +288,7 @@ function JoinTeamButton() {
       </Button>
       <Button
         className="team-btn small"
+        type="text"
         shape="circle"
         icon={<TeamOutlined />}
       />

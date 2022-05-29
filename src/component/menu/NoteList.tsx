@@ -169,11 +169,12 @@ const HeadTools: FC<{
   );
 
   const sortButton = (
-    <Dropdown overlay={sortMenu} trigger={["click"]}>
+    <Dropdown overlay={sortMenu} trigger={["click"]} placement="bottom">
       <Button
         className="sort-btn"
+        type="text"
+        shape="circle"
         icon={<SwapOutlined rotate={90} />}
-        size="small"
       />
     </Dropdown>
   );
@@ -191,11 +192,12 @@ const HeadTools: FC<{
       okButtonProps={{ type: "primary" }}
     >
       <Button
-        size="small"
         className="del-btn"
+        shape="round"
+        type="text"
         disabled={disabled}
+        danger={!disabled}
         icon={<DeleteOutlined />}
-        danger
       >
         Delete
       </Button>
@@ -236,10 +238,11 @@ const HeadTools: FC<{
       placement="bottom"
     >
       <Button
-        size="small"
+        shape="round"
+        type="text"
         className="tag-btn"
         icon={<TagsOutlined />}
-        style={{transition: 'none'}}
+        style={{ transition: "none" }}
       >
         Tag
       </Button>
@@ -258,9 +261,9 @@ const HeadTools: FC<{
           <Input
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            size="small"
             className="search-input"
             prefix={<SearchOutlined />}
+            bordered={false}
             allowClear
           />
           {sortButton}

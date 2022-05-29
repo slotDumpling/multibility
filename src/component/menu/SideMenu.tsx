@@ -151,7 +151,7 @@ const AddTag = () => {
   );
 
   return (
-    <div id="add-tag">
+    <div className="add-tag">
       <Popover
         visible={popShow}
         onVisibleChange={setPopShow}
@@ -175,6 +175,7 @@ const AddTag = () => {
 export default function SideMenu({ onSelect }: { onSelect?: () => void }) {
   const { allTags, editing, tagUid, allNotes } = useContext(MenuStateCtx);
   const { setTagUid, setAllTags } = useContext(MenuMethodCtx);
+  const { setEditing } = useContext(MenuMethodCtx);
   const [nowSwiped, setNowSwiped] = useState("");
 
   async function removeOneTag(uid: string) {
@@ -188,7 +189,7 @@ export default function SideMenu({ onSelect }: { onSelect?: () => void }) {
     onSelect && onSelect();
   };
 
-  const AllNoteTag = () => (
+  const allNoteTag = (
     <div
       className={classNames("tag-item", { curr: tagUid === "DEFAULT" })}
       onClick={() => selectTag("DEFAULT")}
@@ -199,10 +200,25 @@ export default function SideMenu({ onSelect }: { onSelect?: () => void }) {
     </div>
   );
 
+  const swichEditing = () => {
+    setEditing((prev) => !prev);
+  }
+
+  const editButton = (
+    <Button
+      className="edit-btn small"
+      shape="round"
+      type={editing ? "primary" : "default"}
+      onClick={swichEditing}
+    >
+      {editing ? "Done" : "Edit"}
+    </Button>
+  );
+
   return (
     <aside className="side-menu">
       <div className="tag-list">
-        <AllNoteTag />
+        {allNoteTag}
         {Object.values(allTags).map((tag) => {
           const { uid } = tag;
           const removeTag = () => removeOneTag(uid);
@@ -228,6 +244,7 @@ export default function SideMenu({ onSelect }: { onSelect?: () => void }) {
       </div>
       <footer>
         <AddTag />
+        {editButton}
       </footer>
     </aside>
   );

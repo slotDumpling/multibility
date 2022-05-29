@@ -1,7 +1,7 @@
 import { Button, Drawer } from "antd";
 import { useContext, useState } from "react";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
-import { EditOutlined, CheckOutlined, MenuOutlined } from "@ant-design/icons";
+import { MenuOutlined } from "@ant-design/icons";
 import SideMenu from "./SideMenu";
 
 export default function LeftTools() {
@@ -13,31 +13,20 @@ export default function LeftTools() {
     setEditing((prev) => !prev);
   }
 
-  const SmallEditButton = (
-    <Button
-      className="edit-btn small"
-      onClick={swichEditing}
-      type={editing ? "primary" : "text"}
-      size="small"
-    >
-      {editing ? <CheckOutlined /> : <EditOutlined />}
-    </Button>
-  );
-
-  const largeEditButton = (
+  const editButton = (
     <Button
       className="edit-btn large"
       onClick={swichEditing}
       type={editing ? "primary" : "text"}
-      block
     >
       {editing ? "Done" : "Edit"}
     </Button>
   );
 
   const AsideButton = (
-    <div className="aside-btn">
+    <>
       <Button
+        className="aside-btn"
         type="text"
         icon={<MenuOutlined />}
         onClick={() => setAsideOn((prev) => !prev)}
@@ -55,14 +44,13 @@ export default function LeftTools() {
       >
         <SideMenu onSelect={() => editing || setAsideOn(false)} />
       </Drawer>
-    </div>
+    </>
   );
 
   return (
     <div className="left-tools">
       {AsideButton}
-      {largeEditButton}
-      {SmallEditButton}
+      {editButton}
     </div>
   );
 }

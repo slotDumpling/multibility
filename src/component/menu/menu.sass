@@ -15,9 +15,10 @@ $header-height: 55px
     align-items: center
     border-bottom: $dark-border
     .left-tools
-      width: 70px
       display: flex
       align-items: center
+      .edit-btn
+        width: 70px
     h2
       @include text-overflow
       flex: 1
@@ -51,6 +52,10 @@ $header-height: 55px
     border-top: $default-border
     padding: 10px 15px 30px 15px
     overflow: hidden
+    display: flex
+    .edit-btn
+      width: 68px
+      margin-left: 10px
 
 .aside-btn
   margin-right: 10px
@@ -119,22 +124,25 @@ button.team-btn
   position: relative
   -webkit-transform: translateZ(0)
   .head-tools
-    position: sticky
-    top: 0
-    z-index: 100
-    background-color: #fff
+    height: 60px
     display: flex
     align-items: center
     justify-content: center
-    height: 50px
-    border-bottom: $default-border
     .search-input
-      width: 150px
+      width: 200px
       margin-right: 10px
+      background-color: #eee8
+      border-radius: 50px
+      &:focus-within
+        background-color: #eee
+    button
+      background-color: #eee8
+      &:hover
+        background-color: #eee
     .tag-btn
       margin-right: 10px
   .note-item
-    border-bottom: $default-border
+    border-bottom: $light-border
     height: 5em
     padding: 0 1em
     margin: 0 20px
