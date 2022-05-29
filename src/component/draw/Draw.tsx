@@ -4,15 +4,14 @@ import React, {
   useMemo,
   useState,
   useEffect,
-  TouchEvent,
-  ComponentType,
   useCallback,
+  ComponentType,
 } from "react";
+import { usePreventTouch, usePreventGesture } from "../../lib/touch/touch";
 import { DrawState, Mutation, Stroke } from "../../lib/draw/DrawState";
 import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
-import { Setter, usePreventGesture } from "../../lib/hooks";
+import { Setter } from "../../lib/hooks";
 import { releaseCanvas } from "../../lib/draw/canvas";
-import { isStylus } from "../../lib/touch/touch";
 import { usePinch } from "@use-gesture/react";
 import { v4 as getUid } from "uuid";
 import { Set } from "immutable";
@@ -152,7 +151,7 @@ const Draw: FC<{
     },
     select(e: paper.MouseEvent) {
       updateRatio();
-      if (lasso) setPath(startStroke("#1890ff", 3));
+      if (lasso) setPath(startStroke("#1890ff", 5));
       else setNewRect(e);
     },
     selected(e: paper.MouseEvent) {
@@ -161,7 +160,7 @@ const Draw: FC<{
       // check if point is outside of selection;
       if (lasso) {
         if (path?.contains(point)) return;
-        setPath(startStroke("#1890ff", 3));
+        setPath(startStroke("#1890ff", 5));
       } else {
         if (rect?.contains(point)) return;
         setNewRect(e);
@@ -198,15 +197,14 @@ const Draw: FC<{
       setErased((prev) => prev.concat(newErased));
     },
     select(e: paper.MouseEvent) {
+      scope.current.activate();
       if (lasso) {
         if (!path) return;
-        scope.current.activate();
         const point = transformPoint(e.point);
         path.add(point);
         path.smooth();
       } else {
         if (!rect) return;
-        scope.current.activate();
         const delta = e.delta.multiply(ratio.current);
         rect.size = rect.size.add(new Size(delta.x, delta.y));
         rect.translate(delta.divide(2));
@@ -217,10 +215,10 @@ const Draw: FC<{
       scope.current.activate();
       const delta = e.delta.multiply(ratio.current);
       selectedGroup.translate(delta);
-      if (lasso) path?.translate(delta);
-      else rect?.translate(delta);
+      path?.translate(delta);
+      rect?.translate(delta);
     },
-    text() {},
+    text: null,
   }[paperMode];
 
   const handleUp = {
@@ -244,26 +242,24 @@ const Draw: FC<{
       const items = group.current;
       let newSG: paper.Group;
       if (lasso) {
-        if (!path?.segments.length || path.length < 50) {
-          return setPath(undefined);
-        }
+        if (!path || path.length < 50) return setPath(undefined);
         path.closePath();
         moveDash(path);
-        newSG = new Group(checkSelection(path, items));
+        newSG = new Group(checkPathSelection(path, items));
       } else {
         if (!rect) return;
         const { width, height } = rect.size.abs();
         if (width < 10 || height < 10) return setRect(undefined);
         moveDash(rect);
-        newSG = new Group(checkSelection(rect, items));
+        newSG = new Group(checkRectSelection(rect, items));
       }
       setSelectedGroup(newSG);
       const tempStyle = parseGroupStyle(newSG);
       setCurrDrawCtrl((prev) => ({ ...prev, ...tempStyle }));
       setSelected(true);
     },
-    selected() {},
-    text() {},
+    selected: null,
+    text: null,
   }[paperMode];
 
   const handlePaper = () => {
@@ -295,7 +291,7 @@ const Draw: FC<{
   const mergedStrokes = useMemo(
     () =>
       otherStates
-        ? DrawState.mergeStates([drawState, ...otherStates])
+        ? DrawState.mergeStates(drawState, ...otherStates)
         : drawState.getStrokeList(),
     [drawState, otherStates]
   );
@@ -443,19 +439,14 @@ const Draw: FC<{
     }
   );
 
-  const isEventValid = (e: TouchEvent) =>
-    isStylus(e) || (finger && e.touches.length === 1);
-  const preventTouch = (e: TouchEvent) =>
-    isEventValid(e) || e.stopPropagation();
-
+  const touchHandler = usePreventTouch(finger);
   return (
     <div className="draw-wrapper">
       <canvas
         ref={canvasEl}
         className="draw-canvas"
         data-paper-hidpi={false}
-        onTouchStartCapture={preventTouch}
-        onTouchMoveCapture={preventTouch}
+        {...touchHandler}
       />
       {SelectTool && paperMode === "selected" && (
         <SelectTool
@@ -556,7 +547,7 @@ const paintBackground = (
 const startSelectRect = (point: paper.Point) => {
   const rect = new Rectangle(point, new Size(0, 0));
   rect.strokeColor = new Color("#1890ff");
-  rect.strokeWidth = 3;
+  rect.strokeWidth = 5;
   return rect;
 };
 
@@ -621,21 +612,27 @@ const parseGroupStyle = (group: paper.Group) => {
   return tempStyle;
 };
 
-const checkSelection = (
-  selection: paper.Path | paper.Shape.Rectangle,
+const checkRectSelection = (
+  rect: paper.Shape.Rectangle,
   items: paper.Item[]
 ) => {
+  const bounds = rect.strokeBounds;
+  return items.filter((item) =>
+    item instanceof paper.Path
+      ? item.intersects(rect) || item.isInside(bounds)
+      : item.bounds.intersects(bounds)
+  );
+};
+
+const checkPathSelection = (selection: paper.Path, items: paper.Item[]) => {
   const bounds = selection.strokeBounds;
-  return items.filter((item) => {
-    if (!item.bounds.intersects(selection.bounds)) return false;
-    if (item instanceof paper.Path) {
-      if (item.intersects(selection)) return true;
-      return selection instanceof paper.Path
-        ? item.subtract(selection, { insert: false }).isEmpty()
-        : item.isInside(bounds);
-    }
-    return true;
-  });
+  return items.filter(
+    (item) =>
+      item.bounds.intersects(bounds) &&
+      (!(item instanceof paper.Path) ||
+        item.intersects(selection) ||
+        item.subtract(selection, { insert: false }).isEmpty())
+  );
 };
 
 const updateGroupStyle = (
