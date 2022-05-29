@@ -115,7 +115,14 @@ export default function DrawTools({
         <Button
           type={finger ? "default" : "text"}
           shape="circle"
-          onClick={() => updateDrawCtrl({ finger: !finger })}
+          onClick={() => {
+            updateDrawCtrl({ finger: !finger });
+            message.destroy('FINGER')
+            message.info({
+              content: `Draw with finger: ${finger ? "Off" : "On"}`,
+              key: "FINGER",
+            });
+          }}
           icon={<IconFont type="icon-finger" />}
         />
         <div className="br" />
