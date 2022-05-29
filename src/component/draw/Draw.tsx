@@ -24,7 +24,7 @@ export type SelectToolType = ComponentType<{
   onDuplicate: () => void;
   mutateStyle: (updated: Partial<DrawCtrl>) => void;
   rasterize: () => string;
-  currDrawCtrl: DrawCtrl;
+  currDrawCtrl: Partial<DrawCtrl>;
 }>;
 
 export type TextToolType = ComponentType<{
@@ -70,12 +70,108 @@ const Draw: FC<{
 
   const canvasEl = useRef<HTMLCanvasElement>(null);
   const scope = useRef(new paper.PaperScope());
-  const group = useRef<paper.Item[]>([]);
+  const [group, setGroup] = useState<paper.Item[]>([]);
   const [erased, setErased] = useState(Set<string>());
-  const [currDrawCtrl, setCurrDrawCtrl] = useState(defaultDrawCtrl);
+  const [currDrawCtrl, setCurrDrawCtrl] = useState<Partial<DrawCtrl>>({});
   const [path, setPath] = usePaperItem<paper.Path>();
   const [rect, setRect] = usePaperItem<paper.Shape.Rectangle>();
-  const [selectedGroup, setSelectedGroup] = usePaperItem<paper.Group>();
+
+  useEffect(() => {
+    const setupPaper = () => {
+      if (!canvasEl.current) return;
+      scope.current.setup(canvasEl.current);
+
+      const r = preview ? PREVIEW_WIDTH / width : 1;
+      scope.current.view.viewSize = new Size(width, height).multiply(r);
+      scope.current.view.scale(r, new Point(0, 0));
+      paintBackground(scope.current, width, height);
+    };
+
+    setupPaper();
+    const cvs = canvasEl.current;
+    return () => void (cvs && releaseCanvas(cvs));
+  }, [width, height, preview]);
+
+  useEffect(() => {
+    if (!imgSrc) return;
+    const img = new Image();
+    img.src = imgSrc;
+    let raster: paper.Raster;
+
+    img.onload = () => {
+      scope.current.activate();
+      raster = new Raster(img);
+      scope.current.project.layers[0].addChild(raster);
+      raster.position = scope.current.view.center;
+      let r = width / img.width;
+      raster.scale(r);
+    };
+
+    return () => void raster?.remove();
+  }, [imgSrc, width]);
+
+  const mergedStrokes = useMemo(
+    () =>
+      otherStates
+        ? DrawState.mergeStates(drawState, ...otherStates)
+        : drawState.getStrokeList(),
+    [drawState, otherStates]
+  );
+
+  useEffect(() => {
+    const tempGroup: paper.Item[] = [];
+    const othersGroup: paper.Item[] = [];
+
+    mergedStrokes.forEach((stroke) =>
+      paintStroke(
+        stroke,
+        scope.current,
+        drawState.hasStroke(stroke.uid) ? tempGroup : othersGroup,
+        erased.has(stroke.uid)
+      )
+    );
+    setGroup(tempGroup);
+
+    return () => {
+      tempGroup.forEach((item) => item.remove());
+      othersGroup.forEach((item) => item.remove());
+    };
+  }, [mergedStrokes, erased, drawState]);
+
+  const [selected, setSelected] = useState(false);
+  const paperMode = mode === "select" && selected ? "selected" : mode;
+  const [selectedIDs, setSelectedIDs] = useState<string[]>([]);
+  const selectedItems = useMemo(() => {
+    const IDSet = Set(selectedIDs);
+    return group.filter((item) => IDSet.has(item.name));
+  }, [group, selectedIDs]);
+
+  const resetSelect = useCallback(() => {
+    setSelected(false);
+    setPath(undefined);
+    setRect(undefined);
+  }, [setPath, setRect]);
+
+  useEffect(() => {
+    if (mode !== "select") return;
+    return resetSelect;
+  }, [mode, resetSelect]);
+
+  useEffect(() => {
+    if (!selected) return;
+    return () => {
+      setSelectedIDs([]);
+      setCurrDrawCtrl({});
+    };
+  }, [selected]);
+
+  useEffect(resetSelect, [lasso, resetSelect]);
+
+  const setNewRect = (e: paper.MouseEvent) => {
+    const point = transformPoint(e.point);
+    const rectangle = startSelectRect(point);
+    setRect(rectangle);
+  };
 
   const ratio = useRef(1);
   const updateRatio = () => {
@@ -94,51 +190,6 @@ const Draw: FC<{
       .subtract(center.multiply(zoom));
     return absoluteP.subtract(offsetP).divide(zoom);
   };
-
-  useEffect(() => {
-    const setupPaper = () => {
-      if (!canvasEl.current) return;
-      scope.current.setup(canvasEl.current);
-
-      const r = preview ? PREVIEW_WIDTH / width : 1;
-      scope.current.view.viewSize = new Size(width, height).multiply(r);
-      scope.current.view.scale(r, new Point(0, 0));
-      paintBackground(scope.current, width, height);
-    };
-
-    setupPaper();
-    const cvs = canvasEl.current;
-    return () => void (cvs && releaseCanvas(cvs));
-  }, [width, height, preview]);
-
-  const setNewRect = (e: paper.MouseEvent) => {
-    const point = transformPoint(e.point);
-    const rectangle = startSelectRect(point);
-    setRect(rectangle);
-  };
-
-  const [selected, setSelected] = useState(false);
-  const paperMode = mode === "select" && selected ? "selected" : mode;
-  const resetSelect = useCallback(() => {
-    setSelected(false);
-    setPath(undefined);
-    setRect(undefined);
-  }, [setPath, setRect]);
-
-  useEffect(() => {
-    if (mode !== "select") return;
-    return resetSelect;
-  }, [mode, resetSelect]);
-
-  useEffect(() => {
-    if (selected) return;
-    updateMutation();
-    setSelectedGroup(undefined);
-    setCurrDrawCtrl(defaultDrawCtrl);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected]);
-
-  useEffect(resetSelect, [lasso, resetSelect]);
 
   const handleDown = {
     draw() {
@@ -190,7 +241,7 @@ const Draw: FC<{
       path.add(point);
       path.smooth();
 
-      const newErased = group.current
+      const newErased = group
         .filter((p) => !erased.has(p.name))
         .filter((p) => p instanceof paper.Path && checkErase(p, path))
         .map((p) => p.name);
@@ -211,10 +262,9 @@ const Draw: FC<{
       }
     },
     selected(e: paper.MouseEvent) {
-      if (!selectedGroup) return;
       scope.current.activate();
       const delta = e.delta.multiply(ratio.current);
-      selectedGroup.translate(delta);
+      selectedItems.forEach((item) => item.translate(delta));
       path?.translate(delta);
       rect?.translate(delta);
     },
@@ -239,26 +289,27 @@ const Draw: FC<{
     },
     select() {
       scope.current.activate();
-      const items = group.current;
-      let newSG: paper.Group;
+      let items: paper.Item[];
       if (lasso) {
         if (!path || path.length < 50) return setPath(undefined);
         path.closePath();
         moveDash(path);
-        newSG = new Group(checkPathSelection(path, items));
+        items = checkPathSelection(path, group);
       } else {
         if (!rect) return;
         const { width, height } = rect.size.abs();
         if (width < 10 || height < 10) return setRect(undefined);
         moveDash(rect);
-        newSG = new Group(checkRectSelection(rect, items));
+        items = checkRectSelection(rect, group);
       }
-      setSelectedGroup(newSG);
-      const tempStyle = parseGroupStyle(newSG);
+      const tempStyle = parseGroupStyle(new Group(items));
       setCurrDrawCtrl((prev) => ({ ...prev, ...tempStyle }));
+      setSelectedIDs(items.map((item) => item.name));
       setSelected(true);
     },
-    selected: null,
+    selected() {
+      updateMutation();
+    },
     text: null,
   }[paperMode];
 
@@ -270,95 +321,47 @@ const Draw: FC<{
   };
   useEffect(handlePaper);
 
-  useEffect(() => {
-    if (!imgSrc) return;
-    const img = new Image();
-    img.src = imgSrc;
-    let raster: paper.Raster;
-
-    img.onload = () => {
-      scope.current.activate();
-      raster = new Raster(img);
-      scope.current.project.layers[0].addChild(raster);
-      raster.position = scope.current.view.center;
-      let r = width / img.width;
-      raster.scale(r);
-    };
-
-    return () => void raster?.remove();
-  }, [imgSrc, width]);
-
-  const mergedStrokes = useMemo(
-    () =>
-      otherStates
-        ? DrawState.mergeStates(drawState, ...otherStates)
-        : drawState.getStrokeList(),
-    [drawState, otherStates]
-  );
-
-  useEffect(() => {
-    group.current = [];
-    const othersGroup: paper.Item[] = [];
-
-    mergedStrokes.forEach((stroke) =>
-      paintStroke(
-        stroke,
-        scope.current,
-        drawState.hasStroke(stroke.uid) ? group.current : othersGroup,
-        erased.has(stroke.uid)
-      )
-    );
-
-    return () => {
-      group.current.forEach((item) => item.remove());
-      othersGroup.forEach((item) => item.remove());
-    };
-  }, [mergedStrokes, erased, drawState]);
-
   const updateMutation = () => {
-    const list = selectedGroup?.children;
-    if (!list?.length) return;
-    const mutations: Mutation[] = list.map((p) => [p.name, p.exportJSON()]);
+    if (!selectedItems?.length) return;
+    const mutations = selectedItems.map(
+      (p) => [p.name, p.exportJSON()] as Mutation
+    );
     onChange((prev) => DrawState.mutateStrokes(prev, mutations));
   };
 
   const deleteSelected = () => {
-    const list = selectedGroup?.children;
-    if (!list?.length) return;
+    if (!selectedItems?.length) return;
 
-    const deleted = list.map((item) => item.name);
+    const deleted = selectedItems.map((item) => item.name);
     onChange((prev) => DrawState.eraseStrokes(prev, deleted));
-    setSelectedGroup(undefined);
+    setSelectedIDs([]);
     resetSelect();
   };
 
-  const rotateSelected = (angle: number, smooth = false) => {
-    if (!selectedGroup) return;
-    let aniCount = smooth ? 10 : 1;
+  const rotateSelected = (angle: number, last = false) => {
+    let aniCount = last ? 10 : 1;
     const dAngle = angle / aniCount;
     const rotate = () => {
-      selectedGroup.rotate(dAngle, (rect || path)?.position);
-      rect?.rotate(dAngle, rect.position);
-      path?.rotate(dAngle, path.position);
+      const center = (rect || path)?.position;
+      selectedItems.forEach((item) => item.rotate(dAngle, center));
+      rect?.rotate(dAngle, center);
+      path?.rotate(dAngle, center);
       if (--aniCount > 0) requestAnimationFrame(rotate);
+      else last && updateMutation();
     };
     rotate();
   };
 
   const mutateStyle = (updated: Partial<DrawCtrl>) => {
-    if (!selectedGroup) return;
     scope.current.activate();
-    updateGroupStyle(selectedGroup, updated, currDrawCtrl.highlight);
+    updateGroupStyle(new Group(selectedItems), updated, currDrawCtrl.highlight);
     setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
+    updateMutation();
   };
 
   const duplicateSelected = () => {
-    if (!selectedGroup) return;
     scope.current.activate();
-    const newSG = selectedGroup.clone();
-    updateMutation();
-    setSelectedGroup(newSG);
-
+    const newSG = new Group(selectedItems).clone();
     const size = (rect || path)?.bounds.size;
     if (!size) return;
     const { width, height } = size;
@@ -366,16 +369,17 @@ const Draw: FC<{
     newSG.translate(transP);
     rect?.translate(transP);
     path?.translate(transP);
-    newSG.children.forEach((p) => (p.name = getUid()));
+
+    const mutations = newSG.children.map(
+      (item) => [getUid(), item.exportJSON()] as Mutation
+    );
+    onChange((prev) => DrawState.mutateStrokes(prev, mutations));
+    newSG.remove();
+    setSelectedIDs(mutations.map((m) => m[0]));
   };
 
-  const rasterize = () => {
-    if (!selectedGroup) return "";
-    const raster = selectedGroup.rasterize();
-    const data = raster.toDataURL();
-    raster.remove();
-    return data;
-  };
+  const rasterize = () =>
+    new Group(selectedItems).rasterize({ insert: false }).toDataURL();
 
   const [pointText, setPointText] = usePaperItem<paper.PointText>();
   useEffect(() => {
@@ -639,7 +643,7 @@ const checkPathSelection = (selection: paper.Path, items: paper.Item[]) => {
 const updateGroupStyle = (
   group: paper.Group,
   updated: Partial<DrawCtrl>,
-  prevHighLighted: boolean
+  prevHighLighted = false
 ) => {
   const { lineWidth, color, highlight } = updated;
   if (color) group.strokeColor = new Color(color);
