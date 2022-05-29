@@ -224,7 +224,7 @@ export class DrawState {
     return ds;
   }
 
-  static mergeStates(states: DrawState[]): Stroke[] {
+  static mergeStates(...states: DrawState[]): Stroke[] {
     const iterators = states.map((ds) => ds.getStrokeMap().values());
     const mergedStrokes = [];
     const heap = new Heap<[Stroke, number]>(
