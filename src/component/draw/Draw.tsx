@@ -612,27 +612,28 @@ const parseGroupStyle = (group: paper.Group) => {
   return tempStyle;
 };
 
-const checkRectSelection = (
-  rect: paper.Shape.Rectangle,
-  items: paper.Item[]
-) => {
-  const bounds = rect.strokeBounds;
-  return items.filter((item) =>
+const checkRectSelection = (rect: paper.Shape.Rectangle, items: paper.Item[]) =>
+  items.filter((item) =>
     item instanceof paper.Path
-      ? item.intersects(rect) || item.isInside(bounds)
-      : item.bounds.intersects(bounds)
+      ? item.intersects(rect) || item.isInside(rect.bounds)
+      : item.bounds.intersects(rect.bounds)
   );
-};
 
 const checkPathSelection = (selection: paper.Path, items: paper.Item[]) => {
-  const bounds = selection.strokeBounds;
-  return items.filter(
-    (item) =>
-      item.bounds.intersects(bounds) &&
-      (!(item instanceof paper.Path) ||
-        item.intersects(selection) ||
-        item.subtract(selection, { insert: false }).isEmpty())
-  );
+  const isInside = (p: paper.Path) =>
+    p.subtract(selection, { insert: false, trace: false }).isEmpty();
+
+  return items.filter((item) => {
+    if (!item.bounds.intersects(selection.bounds)) return false;
+    let checkedP: paper.Path;
+    if (item instanceof paper.Path) {
+      checkedP = item;
+    } else {
+      checkedP = new Path.Rectangle(item.bounds);
+      checkedP.remove();
+    }
+    return checkedP.intersects(selection) || isInside(checkedP);
+  });
 };
 
 const updateGroupStyle = (
