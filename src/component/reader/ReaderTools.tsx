@@ -1,6 +1,6 @@
-import { Button, Input, message } from "antd";
-import React, { useContext, useEffect, useState } from "react";
-import { ReaderMethodCtx, ReaderStateCtx } from "./Reader";
+import { Button, message } from "antd";
+import React, { useContext } from "react";
+import { ReaderMethodCtx } from "./Reader";
 import { PlusOutlined } from "@ant-design/icons";
 
 export const AddPageButton = () => {
@@ -15,23 +15,6 @@ export const AddPageButton = () => {
       >
         New page
       </Button>
-    </div>
-  );
-};
-
-export const NoteHeader = () => {
-  const { noteInfo } = useContext(ReaderStateCtx);
-  const [noteName, setNoteName] = useState("");
-  useEffect(() => {
-    if (!noteInfo) return;
-    setNoteName(noteInfo?.name);
-  }, [noteInfo]);
-
-  if (!noteInfo) return null;
-
-  return (
-    <div className="note-header">
-      <Input value={noteName} bordered={false} />
     </div>
   );
 };
