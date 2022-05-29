@@ -22,6 +22,7 @@ export const TeamCtx = createContext({
   teamState: undefined as TeamState | undefined,
   resetIO: () => {},
   loadInfo: async () => false,
+  loadState: async () => false,
   setIgnores: (() => {}) as Setter<Set<string>>,
   addTeamStatePage: (pageID: string, newPage: NotePage) => {},
 });
@@ -133,6 +134,7 @@ export default function Team() {
           teamState,
           resetIO,
           loadInfo,
+          loadState,
           setIgnores,
           addTeamStatePage,
         }}

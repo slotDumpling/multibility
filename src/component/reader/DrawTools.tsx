@@ -171,7 +171,7 @@ const PenButton: FC<{
 
 export const PenPanel: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
-  drawCtrl: DrawCtrl;
+  drawCtrl: Partial<DrawCtrl>;
 }> = ({ updateDrawCtrl, drawCtrl }) => {
   const { lineWidth, highlight, color } = drawCtrl;
   const [tempLineWidth, setTempLineWidth] = useState(lineWidth);
@@ -195,7 +195,7 @@ export const PenPanel: FC<{
         />
       </div>
       <ColorSelect
-        color={color}
+        color={color || ""}
         setColor={(c) => updateDrawCtrl({ color: c })}
       />
     </div>
@@ -392,7 +392,8 @@ export const UserAvatar: FC<{
 };
 
 const RoomInfo: FC = () => {
-  const { code, userRec, connected, loadInfo, resetIO } = useContext(TeamCtx);
+  const { code, userRec, connected, loadInfo, loadState, resetIO } =
+    useContext(TeamCtx);
   const { noteInfo } = useContext(ReaderStateCtx);
   const link = window.location.href;
   const share = async () => {
@@ -462,8 +463,9 @@ const RoomInfo: FC = () => {
         type="text"
         size="small"
         icon={<ReloadOutlined />}
-        onClick={() => {
-          loadInfo();
+        onClick={async () => {
+          await loadInfo();
+          await loadState();
           resetIO();
         }}
       />
