@@ -173,7 +173,12 @@ export const TextTool: TextToolType = ({ onSubmit, onCancel }) => {
         <span className="font-size">
           <FontSizeOutlined />
           <span>Font size: </span>
-          <InputNumber size="small" value={fontSize} onChange={setFontSize} />
+          <InputNumber
+            min={1}
+            size="small"
+            value={fontSize}
+            onChange={setFontSize}
+          />
         </span>
         <Popover
           content={<ColorSelect color={color} setColor={setColor} />}
