@@ -38,16 +38,6 @@ export default function Team() {
   const [connected, setConnected] = useState(false);
   const nav = useNavigate();
 
-  const loadState = useCallback(async () => {
-    const teamNote = await getTeamNoteState(noteID);
-    if (!teamNote) {
-      message.error("Failed loading the team note state");
-      return false;
-    }
-    setTeamState(TeamState.createFromTeamPages(teamNote));
-    return true;
-  }, [noteID]);
-
   const loadInfo = useCallback(async () => {
     const info = await loadTeamNoteInfo(noteID);
     if (!info) {
@@ -58,10 +48,22 @@ export default function Team() {
     return true;
   }, [noteID]);
 
+  const loadState = useCallback(async () => {
+    const teamNote = await getTeamNoteState(noteID);
+    if (!teamNote) {
+      message.error("Failed loading the team note state");
+      return false;
+    }
+    setTeamState(TeamState.createFromTeamPages(teamNote));
+    return true;
+  }, [noteID]);
+
   useEffect(() => {
     const roomInit = async () => {
-      if ((await loadInfo()) && (await loadState())) setLoaded(true);
-      else return nav("/");
+      const infoLoaded = await loadInfo();
+      const stateLoaded = await loadState();
+      if (infoLoaded && stateLoaded) return setLoaded(true);
+      nav("/");
     };
     roomInit();
   }, [loadInfo, loadState, nav]);
@@ -75,24 +77,14 @@ export default function Team() {
       const { userID, userName } = joined;
       setUserRec(members);
       if (userID === getUserID()) return;
-      message.destroy(userID);
-      message.success({
-        content: `${userName} joined room`,
-        icon: <LoginOutlined />,
-        key: userID,
-      });
+      showJoinMsg(userID, userName);
     });
 
     io.on("leave", ({ leaved, members }) => {
       const { userID, userName } = leaved;
       setUserRec(members);
       if (userID === getUserID()) return io.emit("join");
-      message.destroy(userID);
-      message.warning({
-        content: `${userName} leaved room`,
-        icon: <LogoutOutlined />,
-        key: userID,
-      });
+      showLeaveMsg(userID, userName);
     });
 
     io.on("newPage", (info: NewPageInfo) => {
@@ -144,3 +136,21 @@ export default function Team() {
     </Skeleton>
   );
 }
+
+const showJoinMsg = (userID: string, userName: string) => {
+  message.destroy(userID);
+  message.success({
+    content: `${userName} joined room`,
+    icon: <LoginOutlined />,
+    key: userID,
+  });
+};
+
+const showLeaveMsg = (userID: string, userName: string) => {
+  message.destroy(userID);
+  message.warning({
+    content: `${userName} leaved room`,
+    icon: <LogoutOutlined />,
+    key: userID,
+  });
+};
