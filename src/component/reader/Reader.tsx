@@ -14,10 +14,10 @@ import {
   defaultDrawCtrl,
 } from "../../lib/draw/drawCtrl";
 import {
-  createPage,
-  defaultNotePage,
   NoteInfo,
   NotePage,
+  createPage,
+  defaultNotePage,
 } from "../../lib/note/note";
 import { NewPageInfo, ReorderInfo, SyncInfo } from "../../lib/network/io";
 import { useInViewport, useMemoizedFn, useSafeState } from "ahooks";
