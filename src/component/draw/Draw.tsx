@@ -606,8 +606,11 @@ const checkRectSelection = (rect: paper.Shape.Rectangle, items: paper.Item[]) =>
   );
 
 const checkPathSelection = (selection: paper.Path, items: paper.Item[]) => {
-  const isInside = (p: paper.Path) =>
-    p.subtract(selection, { insert: false, trace: false }).isEmpty();
+  const isInside = (p: paper.Path) => {
+    const res = p.subtract(selection, { insert: false, trace: false });
+    res.remove();
+    return res.isEmpty();
+  };
 
   return items.filter((item) => {
     if (!item.bounds.intersects(selection.bounds)) return false;
