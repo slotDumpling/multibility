@@ -182,6 +182,7 @@ export class DrawState {
     return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
   }
 
+  // sync with mutation.
   static syncStrokeTime(drawState: DrawState, stroke: Stroke) {
     const { uid, timestamp } = stroke;
     const prevStroke = drawState.getStrokeMap().get(uid);
