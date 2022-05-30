@@ -117,11 +117,10 @@ export default function DrawTools({
           shape="circle"
           onClick={() => {
             updateDrawCtrl({ finger: !finger });
-            message.destroy('FINGER')
+            message.destroy("FINGER");
             message.open({
-              content: `Draw with finger: ${finger ? "off" : "on"}`,
+              content: finger ? "Pencil only" : "Draw with finger",
               key: "FINGER",
-              icon: null,
             });
           }}
           icon={<IconFont type="icon-finger" />}
