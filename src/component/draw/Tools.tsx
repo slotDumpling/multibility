@@ -150,7 +150,7 @@ export const SelectTool: SelectToolType = ({
 
 export const TextTool: TextToolType = ({ onSubmit, onCancel }) => {
   const [text, setText] = useState("");
-  const [fontSize, setFontSize] = useState(50);
+  const [fontSize, setFontSize] = useState(5);
   const [color, setColor] = useState(colors[0]);
   const [modalShow, setModalShow] = useState(true);
 
