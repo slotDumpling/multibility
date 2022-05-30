@@ -8,6 +8,7 @@ import React, {
   useCallback,
   ComponentType,
   SetStateAction,
+  useDebugValue,
 } from "react";
 import { usePreventTouch, usePreventGesture } from "../../lib/touch/touch";
 import { DrawState, Mutation, Stroke } from "../../lib/draw/DrawState";
@@ -290,6 +291,7 @@ const Draw: FC<{
       if (lasso) {
         if (!path || path.length < 50) return setPath(undefined);
         path.closePath();
+        path.simplify();
         moveDash(path);
         items = checkPathSelection(path, group);
       } else {
@@ -469,6 +471,7 @@ export default React.memo(Draw);
 function usePaperItem<T extends paper.Item>(init?: T) {
   const stateArray = useState<T | undefined>(init);
   const [item] = stateArray;
+  useDebugValue(item);
   useEffect(() => () => void item?.remove(), [item]);
   return stateArray;
 }
