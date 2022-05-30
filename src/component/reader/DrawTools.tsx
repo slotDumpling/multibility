@@ -118,9 +118,10 @@ export default function DrawTools({
           onClick={() => {
             updateDrawCtrl({ finger: !finger });
             message.destroy('FINGER')
-            message.info({
-              content: `Draw with finger: ${finger ? "Off" : "On"}`,
+            message.open({
+              content: `Draw with finger: ${finger ? "off" : "on"}`,
               key: "FINGER",
+              icon: null,
             });
           }}
           icon={<IconFont type="icon-finger" />}
