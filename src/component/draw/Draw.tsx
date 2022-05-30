@@ -3,14 +3,15 @@ import React, {
   useRef,
   useMemo,
   useState,
+  Dispatch,
   useEffect,
   useCallback,
   ComponentType,
+  SetStateAction,
 } from "react";
 import { usePreventTouch, usePreventGesture } from "../../lib/touch/touch";
 import { DrawState, Mutation, Stroke } from "../../lib/draw/DrawState";
 import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
-import { Setter } from "../../lib/hooks";
 import { releaseCanvas } from "../../lib/draw/canvas";
 import { usePinch } from "@use-gesture/react";
 import { v4 as getUid } from "uuid";
@@ -20,7 +21,7 @@ import "./draw.sass";
 
 export type SelectToolType = ComponentType<{
   onDelete: () => void;
-  onRotate: (angle: number, smooth?: boolean) => void;
+  onRotate: (angle: number, last?: boolean) => void;
   onDuplicate: () => void;
   mutateStyle: (updated: Partial<DrawCtrl>) => void;
   rasterize: () => string;
@@ -46,7 +47,7 @@ const {
 const Draw: FC<{
   drawState: DrawState;
   otherStates?: DrawState[];
-  onChange?: Setter<DrawState>;
+  onChange?: Dispatch<SetStateAction<DrawState>>;
   drawCtrl?: DrawCtrl;
   readonly?: boolean;
   preview?: boolean;
@@ -153,31 +154,30 @@ const Draw: FC<{
   }, [setPath, setRect]);
 
   useEffect(() => {
-    if (mode !== "select") return;
-    return resetSelect;
+    if (mode === "select") return resetSelect;
   }, [mode, resetSelect]);
 
   useEffect(() => {
-    if (!selected) return;
-    return () => {
-      setSelectedIDs([]);
-      setCurrDrawCtrl({});
-    };
+    if (selected)
+      return () => {
+        setSelectedIDs([]);
+        setCurrDrawCtrl({});
+      };
   }, [selected]);
 
   useEffect(resetSelect, [lasso, resetSelect]);
-
-  const setNewRect = (e: paper.MouseEvent) => {
-    const point = transformPoint(e.point);
-    const rectangle = startSelectRect(point);
-    setRect(rectangle);
-  };
 
   const ratio = useRef(1);
   const updateRatio = () => {
     const clientWidth = canvasEl.current?.clientWidth;
     if (clientWidth) ratio.current = width / clientWidth;
     scope.current.activate();
+  };
+
+  const setNewRect = (e: paper.MouseEvent) => {
+    const point = transformPoint(e.point);
+    const rectangle = startSelectRect(point);
+    setRect(rectangle);
   };
 
   const transformPoint = (projP: paper.Point) => {
@@ -208,7 +208,7 @@ const Draw: FC<{
     selected(e: paper.MouseEvent) {
       updateRatio();
       const point = transformPoint(e.point);
-      // check if point is outside of selection;
+      // check if point is outside of selection
       if (lasso) {
         if (path?.contains(point)) return;
         setPath(startStroke("#1890ff", 5));
@@ -230,20 +230,18 @@ const Draw: FC<{
     draw(e: paper.MouseEvent) {
       if (!path) return;
       scope.current.activate();
-      const point = transformPoint(e.point);
-      path.add(point);
+      path.add(transformPoint(e.point));
       path.smooth();
     },
     erase(e: paper.MouseEvent) {
       if (!path) return;
       scope.current.activate();
-      const point = transformPoint(e.point);
-      path.add(point);
+      path.add(transformPoint(e.point));
       path.smooth();
 
       const newErased = group
         .filter((p) => !erased.has(p.name))
-        .filter((p) => p instanceof paper.Path && checkErase(p, path))
+        .filter((p) => checkErase(p, path))
         .map((p) => p.name);
       setErased((prev) => prev.concat(newErased));
     },
@@ -251,8 +249,7 @@ const Draw: FC<{
       scope.current.activate();
       if (lasso) {
         if (!path) return;
-        const point = transformPoint(e.point);
-        path.add(point);
+        path.add(transformPoint(e.point));
         path.smooth();
       } else {
         if (!rect) return;
@@ -298,11 +295,11 @@ const Draw: FC<{
       } else {
         if (!rect) return;
         const { width, height } = rect.size.abs();
-        if (width < 10 || height < 10) return setRect(undefined);
+        if (width * height < 100) return setRect(undefined);
         moveDash(rect);
         items = checkRectSelection(rect, group);
       }
-      const tempStyle = parseGroupStyle(new Group(items));
+      const tempStyle = parseGroupStyle(items);
       setCurrDrawCtrl((prev) => ({ ...prev, ...tempStyle }));
       setSelectedIDs(items.map((item) => item.name));
       setSelected(true);
@@ -330,10 +327,8 @@ const Draw: FC<{
   };
 
   const deleteSelected = () => {
-    if (!selectedItems?.length) return;
-
-    const deleted = selectedItems.map((item) => item.name);
-    onChange((prev) => DrawState.eraseStrokes(prev, deleted));
+    if (!selectedIDs.length) return;
+    onChange((prev) => DrawState.eraseStrokes(prev, selectedIDs));
     setSelectedIDs([]);
     resetSelect();
   };
@@ -341,8 +336,8 @@ const Draw: FC<{
   const rotateSelected = (angle: number, last = false) => {
     let aniCount = last ? 10 : 1;
     const dAngle = angle / aniCount;
+    const center = (rect || path)?.position;
     const rotate = () => {
-      const center = (rect || path)?.position;
       selectedItems.forEach((item) => item.rotate(dAngle, center));
       rect?.rotate(dAngle, center);
       path?.rotate(dAngle, center);
@@ -354,18 +349,18 @@ const Draw: FC<{
 
   const mutateStyle = (updated: Partial<DrawCtrl>) => {
     scope.current.activate();
-    updateGroupStyle(new Group(selectedItems), updated, currDrawCtrl.highlight);
+    updateGroupStyle(selectedItems, updated);
     setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
     updateMutation();
   };
 
   const duplicateSelected = () => {
     scope.current.activate();
-    const newSG = new Group(selectedItems).clone();
     const size = (rect || path)?.bounds.size;
     if (!size) return;
     const { width, height } = size;
     const transP = new Point(width, height).divide(10);
+    const newSG = new Group(selectedItems).clone({ insert: false });
     newSG.translate(transP);
     rect?.translate(transP);
     path?.translate(transP);
@@ -374,7 +369,6 @@ const Draw: FC<{
       (item) => [getUid(), item.exportJSON()] as Mutation
     );
     onChange((prev) => DrawState.mutateStrokes(prev, mutations));
-    newSG.remove();
     setSelectedIDs(mutations.map((m) => m[0]));
   };
 
@@ -382,20 +376,21 @@ const Draw: FC<{
     new Group(selectedItems).rasterize({ insert: false }).toDataURL();
 
   const [pointText, setPointText] = usePaperItem<paper.PointText>();
+  const cancelText = useCallback(() => setPointText(undefined), [setPointText]);
+
   useEffect(() => {
-    if (mode === "text") return () => setPointText(undefined);
-  }, [mode, setPointText]);
+    if (mode === "text") return cancelText;
+  }, [mode, cancelText]);
 
   const submitText = (text: string, fontSize: number, color = "#000") => {
     if (!pointText) return;
     pointText.content = text;
-    pointText.fontSize = fontSize;
+    pointText.fontSize = fontSize * 10;
     pointText.fillColor = new Color(color);
     const pathData = pointText.exportJSON();
     onChange((prev) => DrawState.addStroke(prev, pathData));
-    setPointText(undefined);
+    cancelText();
   };
-  const cancelText = () => setPointText(undefined);
 
   usePreventGesture();
   usePinch(
@@ -490,7 +485,7 @@ const paintStroke = (
     const item = scope.project.activeLayer.importJSON(pathData);
     if (!item) return;
     item.name = uid;
-    if (erased) item.opacity /= 2;
+    if (erased) item.opacity = 0.5;
     group?.push(item);
   } catch (e) {
     console.error(e);
@@ -517,22 +512,18 @@ const getCheckPoints = (() => {
   };
 })();
 
-const checkErase = (checkedPath: paper.Path, eraserPath: paper.Path) => {
+const checkErase = (item: paper.Item, eraserPath: paper.Path) => {
   const curveBound = eraserPath.lastSegment.curve?.strokeBounds;
-  if (
-    !(checkedPath instanceof paper.Path) ||
-    !curveBound?.intersects(checkedPath.strokeBounds)
-  ) {
-    return false;
-  }
+  if (!(item instanceof paper.Path)) return false;
+  if (!curveBound?.intersects(item.strokeBounds)) return false;
 
-  if (eraserPath.intersects(checkedPath)) return true;
+  if (eraserPath.intersects(item)) return true;
 
   const { strokeWidth, lastSegment } = eraserPath;
   const checkPoints = getCheckPoints(lastSegment, strokeWidth);
   return checkPoints.some((cPoint) => {
-    const d = checkedPath.getNearestPoint(cPoint)?.getDistance(cPoint);
-    return d && d < (checkedPath.strokeWidth + strokeWidth) / 2;
+    const d = item.getNearestPoint(cPoint)?.getDistance(cPoint);
+    return d && d * 2 < item.strokeWidth + strokeWidth;
   });
 };
 
@@ -559,7 +550,7 @@ const startStroke = (color: string, lineWidth: number, highlight = false) => {
   const path = new Path();
   const strokeColor = new Color(color);
   if (highlight) {
-    strokeColor.alpha /= 2;
+    strokeColor.alpha = 0.5;
     path.blendMode = "multiply";
   }
   path.strokeColor = strokeColor;
@@ -570,7 +561,7 @@ const startStroke = (color: string, lineWidth: number, highlight = false) => {
 };
 
 const moveDash = (item: paper.Item) => {
-  if (item.strokeColor) item.strokeColor.alpha /= 2;
+  if (item.strokeColor) item.strokeColor.alpha = 0.5;
   item.dashOffset = 0;
   item.dashArray = [30, 20];
   item.onFrame = () => (item.dashOffset += 3);
@@ -607,15 +598,6 @@ const putCenterBack = (view: paper.View) => {
   move();
 };
 
-const parseGroupStyle = (group: paper.Group) => {
-  const tempStyle: Partial<DrawCtrl> = {};
-  if (group.strokeColor) tempStyle.color = group.strokeColor.toCSS(true);
-  if (group.strokeWidth) tempStyle.lineWidth = group.strokeWidth;
-  if (group.children.every((p) => p.strokeColor?.alpha === 0.5))
-    tempStyle.highlight = true;
-  return tempStyle;
-};
-
 const checkRectSelection = (rect: paper.Shape.Rectangle, items: paper.Item[]) =>
   items.filter((item) =>
     item instanceof paper.Path
@@ -640,28 +622,37 @@ const checkPathSelection = (selection: paper.Path, items: paper.Item[]) => {
   });
 };
 
-const updateGroupStyle = (
-  group: paper.Group,
-  updated: Partial<DrawCtrl>,
-  prevHighLighted = false
-) => {
+const parseGroupStyle = (items: paper.Item[]) => {
+  const style: Partial<DrawCtrl> = {};
+  const group = new Group(items);
+  if (group.strokeColor) style.color = group.strokeColor.toCSS(true);
+  if (group.strokeWidth) style.lineWidth = group.strokeWidth;
+  if (
+    group.children
+      .filter((item) => item instanceof paper.Path)
+      .every((p) => p.blendMode === "multiply")
+  ) {
+    style.highlight = true;
+  }
+  return style;
+};
+
+const updateGroupStyle = (items: paper.Item[], updated: Partial<DrawCtrl>) => {
   const { lineWidth, color, highlight } = updated;
-  if (color) group.strokeColor = new Color(color);
-  if (lineWidth) group.strokeWidth = lineWidth;
-  if (highlight === true || prevHighLighted === true) {
-    group.children.forEach((p) => {
-      const { strokeColor } = p;
-      if (!strokeColor) return;
-      if (strokeColor.alpha === 1) strokeColor.alpha /= 2;
-      p.blendMode = "multiply";
-    });
-  }
-  if (highlight === false) {
-    group.children.forEach((p) => {
-      const { strokeColor } = p;
-      if (!strokeColor) return;
+  items.forEach((item) => {
+    if (!(item instanceof paper.Path)) return;
+
+    if (color) item.strokeColor = new Color(color);
+    if (lineWidth) item.strokeWidth = lineWidth;
+
+    const { strokeColor } = item;
+    if (!strokeColor) return;
+    if (highlight === true) {
+      strokeColor.alpha = 0.5;
+      item.blendMode = "multiply";
+    } else {
       strokeColor.alpha = 1;
-      p.blendMode = "normal";
-    });
-  }
+      item.blendMode = "normal";
+    }
+  });
 };
