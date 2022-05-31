@@ -14,26 +14,26 @@ $header-height: 55px
     justify-content: space-between
     align-items: center
     border-bottom: $dark-border
-    .left-tools
-      display: flex
-      align-items: center
+  .left-tools, .right-tools
+    display: flex
+    justify-content: space-between
+  .left-tools
+    button.edit-btn
+      width: 70px
   h2
     @include text-overflow
     margin: 0 30px !important
+    flex: 1
     text-align: center
-    &:not(.logo)
-      flex: 1
     &.logo
-      padding: 10px
-      background-image: linear-gradient(90deg, #6c7983, #32363e, #6c7983)
-      background-size: 400% 200%
+      flex: none
+      padding: 0 10px
+      background-image: linear-gradient(45deg, #9CA3AF, #6B7280, #9CA3AF)
+      background-size: 200% 100%
       animation: logo-gradient 5s infinite
       background-clip: text
       font-family: sofia, sans-serif
       color: #0000
-    &.suspense
-      opacity: 0.4
-      font-size: 2.5em
   main
     flex: 1
     overflow: hidden
@@ -64,7 +64,7 @@ $header-height: 55px
     flex: 1
     overflow: hidden auto
     padding: 20px 0
-    & > div:not(:last-of-type)
+    > div:not(:last-of-type)
       margin-bottom: 10px
   footer
     border-top: $default-border
@@ -74,11 +74,6 @@ $header-height: 55px
     > *
       margin-right: 10px
 
-.edit-btn
-  width: 70px
-
-.aside-btn
-  margin-right: 10px
 .aside-drawer
   top: $header-height !important
   bottom: 0 !important
@@ -86,13 +81,17 @@ $header-height: 55px
   .side-menu
     background: #0000
 
-@media screen and (max-width: 600px)
+@media screen and (max-width: 640px)
   button.large, main > .side-menu
     display: none
+  .left-tools, .right-tools
+    width: 75px
 
-@media screen and (min-width: 600px)
+@media screen and (min-width: 640px)
   button.small, .aside-btn, .aside-drawer
     display: none
+  .left-tools, .right-tools
+    width: 130px
 
 .tag-circle
   width: 12px
@@ -120,7 +119,7 @@ $header-height: 55px
       justify-content: space-between
   &.curr
     background-color: #f1f0f5
-  & > .tag-circle
+  > .tag-circle
     margin: 0 12px 0 7px
   .all-note-icon
     margin: 0 10px 0 7px
@@ -133,9 +132,6 @@ $header-height: 55px
   .ant-select-selection-item
     display: flex
     align-items: center
-
-button.team-btn
-  margin-right: 10px
 
 .note-list
   flex: 1

@@ -38,7 +38,7 @@ code, .code-font
   overflow: hidden
   padding: 0
 
-@media screen and (min-width: 600px)
+@media screen and (min-width: 640px)
   .ant-message
     top: 60px
   ::-webkit-scrollbar
@@ -52,7 +52,7 @@ code, .code-font
     &:hover
       background-color: darken($bg-color, 10%)
 
-@media screen and (max-width: 600px)
+@media screen and (max-width: 640px)
   .ant-message
     top: 105px
 
@@ -80,3 +80,25 @@ h1.loading
     opacity: 1
   to
     opacity: 0.5
+
+.sk
+  width: 500px
+  height: 30px
+  margin: 50px
+  position: relative
+  overflow: hidden
+  &::after
+    content: ""
+    position: absolute
+    left: -50%
+    right: -50%
+    top: 0
+    bottom: 0
+    background: linear-gradient(45deg, white, black, white)
+    animation: sk-move 1s infinite
+
+@keyframes sk-move
+  from
+    transform: translateX(-50%)
+  to
+    transform: translateX(50%)
