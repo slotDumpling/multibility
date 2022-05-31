@@ -1,9 +1,11 @@
 import React, { LazyExoticComponent, Suspense } from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import Test from "./component/Test";
+import { Loading } from "./component/ui/Loading";
 import ReactDOM from "react-dom";
 import "./index.sass";
-import { Loading } from "./component/ui/Loading";
+
 const MainMenu = React.lazy(() => import("./component/menu/MainMenu"));
 const Reader = React.lazy(() => import("./component/reader/Reader"));
 const Team = React.lazy(() => import("./component/reader/Team"));
@@ -35,3 +37,5 @@ ReactDOM.render(
   </HashRouter>,
   document.getElementById("root")
 );
+
+serviceWorkerRegistration.register();
