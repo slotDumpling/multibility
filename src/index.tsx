@@ -2,13 +2,13 @@ import React, { LazyExoticComponent, Suspense } from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import Test from "./component/Test";
 import ReactDOM from "react-dom";
-import { Skeleton } from "antd";
 import "./index.sass";
+import { Loading } from "./component/ui/Loading";
 const MainMenu = React.lazy(() => import("./component/menu/MainMenu"));
 const Reader = React.lazy(() => import("./component/reader/Reader"));
 const Team = React.lazy(() => import("./component/reader/Team"));
 const SuspendLazy = (Component: LazyExoticComponent<() => JSX.Element>) => (
-  <Suspense fallback={<Skeleton className="skeleton" active />}>
+  <Suspense fallback={<Loading />}>
     <Component />
   </Suspense>
 );

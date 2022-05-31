@@ -16,6 +16,7 @@ import { FormOutlined } from "@ant-design/icons";
 import { Setter } from "../../lib/hooks";
 import RightTools from "./RightTools";
 import LeftTools from "./LeftTools";
+import classNames from "classnames";
 import SideMenu from "./SideMenu";
 import NoteList from "./NoteList";
 import { List } from "immutable";
@@ -72,6 +73,7 @@ export default function MainMenu() {
     document.title = "Multibility";
   };
   useEffect(menuInit, []);
+  const logo = tagUid === "DEFAULT";
 
   return (
     <MenuStateCtx.Provider value={{ tagUid, editing, allNotes, allTags }}>
@@ -81,7 +83,9 @@ export default function MainMenu() {
         <div className="main-menu container">
           <header>
             <LeftTools />
-            <h2>{selectedTag.name}</h2>
+            <h2 className={classNames({ logo })}>
+              {logo ? "Multibility" : selectedTag.name}
+            </h2>
             <RightTools />
           </header>
           <main>

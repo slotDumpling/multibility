@@ -8,9 +8,10 @@ import { getUserID, UserInfo } from "../../lib/user";
 import { NotePage } from "../../lib/note/note";
 import { Socket } from "socket.io-client";
 import { Setter } from "../../lib/hooks";
-import { message, Skeleton } from "antd";
+import { message } from "antd";
 import { Set } from "immutable";
 import Reader from "./Reader";
+import { Loading } from "../ui/Loading";
 
 export const TeamCtx = createContext({
   io: undefined as Socket | undefined,
@@ -114,7 +115,7 @@ export default function Team() {
   const resetIO = () => setIO(IoFactory(noteID));
 
   return (
-    <Skeleton className="skeleton" active loading={!loaded}>
+    <Loading loading={!loaded}>
       <TeamCtx.Provider
         value={{
           io,
@@ -133,7 +134,7 @@ export default function Team() {
       >
         <Reader />
       </TeamCtx.Provider>
-    </Skeleton>
+    </Loading>
   );
 }
 

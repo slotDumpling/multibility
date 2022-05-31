@@ -91,7 +91,7 @@ export async function saveNoteInfo(noteInfo: NoteInfo) {
   allNotes[uid] = noteInfo;
   await localforage.setItem("ALL_NOTES", allNotes);
   const tags = await getAllTags();
-  if (tagID !== "DEFAULT") {
+  if (tagID in tags) {
     tags[tagID].notes.push(noteInfo.uid);
     await localforage.setItem("ALL_TAGS", tags);
   }
@@ -113,13 +113,13 @@ export async function deleteNote(uid: string) {
   if (!note) return { tags, allNotes };
   await localforage.removeItem(uid);
   await localforage.removeItem(`PDF_${uid}`);
-  const { tagID } = note;
   delete allNotes[uid];
   await localforage.setItem("ALL_NOTES", allNotes);
-
-  if (tagID !== "DEFAULT") {
-    const { notes } = tags[tagID];
-    tags[tagID].notes = notes.filter((id) => id !== uid);
+  
+  const { tagID } = note;
+  if (tagID in tags) {
+    const prevTag = tags[tagID];
+    prevTag.notes = prevTag.notes.filter((id) => id !== uid);
     await localforage.setItem("ALL_TAGS", tags);
   }
   return { tags, allNotes };
@@ -138,9 +138,10 @@ export async function moveNoteTag(noteID: string, tagID: string) {
   await localforage.setItem("ALL_NOTES", allNotes);
 
   if (prevTagId in tags) {
-    tags[prevTagId].notes = tags[prevTagId].notes.filter((id) => id !== noteID);
+    const prevTag = tags[prevTagId];
+    prevTag.notes = prevTag.notes.filter((id) => id !== noteID);
   }
-  tags[tagID]?.notes?.push(noteID);
+  tags[tagID]?.notes.push(noteID);
   await localforage.setItem("ALL_TAGS", tags);
   return { tags, allNotes };
 }
