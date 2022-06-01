@@ -213,7 +213,7 @@ const HeadTools: FC<{
           label: (
             <div className="tag-select">
               <CloseOutlined className="none-tag-icon" />
-              <span>No Tag</span>
+              <span className="name">No Tag</span>
             </div>
           ),
         },
@@ -222,7 +222,7 @@ const HeadTools: FC<{
           label: (
             <div className="tag-select">
               <TagCircle color={t.color} />
-              <span>{t.name}</span>
+              <span className="name">{t.name}</span>
             </div>
           ),
         })),

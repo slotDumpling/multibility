@@ -216,7 +216,11 @@ $header-height: 55px
 .tag-select
   display: flex
   align-items: center
+  max-width: 150px
   .tag-circle
     margin-right: 10px
   .none-tag-icon
     margin-right: 8px
+  .name
+    @include text-overflow
+    flex: 1
