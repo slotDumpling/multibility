@@ -20,9 +20,9 @@ import {
 } from "antd";
 import Search from "antd/lib/input/Search";
 import { useNavigate } from "react-router-dom";
+import { PasscodeInput } from "antd-mobile";
 import { ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { TeamCtx } from "./Team";
-import DigitDisplay from "../ui/DigitDisplay";
 import { colors, getHashedColor } from "../../lib/color";
 import { getUserID, saveUserName } from "../../lib/user";
 import { DrawCtrl, saveDrawCtrl } from "../../lib/draw/drawCtrl";
@@ -444,7 +444,8 @@ const RoomInfo: FC = () => {
           banner
         />
       )}
-      <DigitDisplay value={code} />
+      {/* <DigitDisplay value={code} /> */}
+      <PasscodeInput className="code-display" value={String(code)} length={4} seperated plain />
       <Button
         icon={<ShareAltOutlined />}
         className="share-btn"

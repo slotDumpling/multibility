@@ -12,7 +12,7 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
-export async function getNoteID(roomCode: number) {
+export async function getNoteID(roomCode: string) {
   try {
     const { data } = await axios.get(`code/${roomCode}`);
     console.log({ data });

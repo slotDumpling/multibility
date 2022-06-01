@@ -25,15 +25,13 @@ import { getUserName, saveUserName } from "../../lib/user";
 import { CSSTransition } from "react-transition-group";
 import { getNoteID } from "../../lib/network/http";
 import { useNavigate } from "react-router-dom";
-import Title from "antd/lib/typography/Title";
 import Dragger from "antd/lib/upload/Dragger";
-import DigitInput from "../ui/DigitInput";
+import { PasscodeInput } from "antd-mobile";
 import { Setter } from "../../lib/hooks";
 import localforage from "localforage";
 import { useEffect } from "react";
 import { FC } from "react";
-import "./right.sass";
-import "animate.css";
+import "./rightTools.sass";
 
 const OthersStateCtx = createContext({
   setActive: (() => {}) as Setter<string>,
@@ -78,7 +76,7 @@ const SeconaryMenu: FC<{
           onClick={() => setActive("MENU")}
           icon={<ArrowLeftOutlined />}
         />
-        <Title level={5}>{title}</Title>
+        <h3>{title}</h3>
       </nav>
       {children}
     </div>
@@ -250,19 +248,15 @@ const OthersButton = () => {
 };
 
 function JoinTeamButton() {
-  const [roomCode, setRoomCode] = useState(0);
-  const [animated, setAnimated] = useState(false);
+  const [roomCode, setRoomCode] = useState("");
+  const [wrong, setWrong] = useState(false);
 
   const nav = useNavigate();
-  async function handleSubmit(code: number) {
+  async function handleSubmit(code: string) {
     const noteID = await getNoteID(code);
-    if (!noteID) {
-      setRoomCode(0);
-      setAnimated(true);
-      setTimeout(() => setAnimated(false), 1000);
-      return;
-    }
-    nav(`/team/${noteID}`);
+    if (noteID) return nav(`/team/${noteID}`);
+    setRoomCode("");
+    setWrong(true);
   }
 
   return (
@@ -271,16 +265,19 @@ function JoinTeamButton() {
       trigger="click"
       title="Join a team note"
       destroyTooltipOnHide
+      onVisibleChange={() => setWrong(false)}
       content={
-        <div
-          className={animated ? "animate__animated animate__shakeX" : undefined}
-        >
-          <DigitInput
-            value={roomCode}
-            onChange={setRoomCode}
-            onSubmit={handleSubmit}
-          />
-        </div>
+        <PasscodeInput
+          length={4}
+          seperated
+          error={wrong}
+          value={roomCode}
+          onChange={(v) => {
+            setWrong(false);
+            setRoomCode(v);
+          }}
+          onFill={handleSubmit}
+        />
       }
     >
       <Button className="team-btn large" shape="round" icon={<TeamOutlined />}>

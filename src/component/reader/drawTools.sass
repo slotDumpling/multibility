@@ -73,9 +73,11 @@
   .disconn-alert
     width: $pop-width + 2 * 16px
     transform: translateY(-12px)
+  .code-display
+    pointer-events: none
   .share-btn
-    width: $pop-width - 30px
-    margin-top: 20px
+    width: 178px
+    margin-top: 15px
   .user-list
     display: flex
     flex-direction: column
@@ -97,8 +99,8 @@
       .user-name
         @include text-overflow
         flex: 1
-  .rename-input
-    flex: 1
-    margin-left: -6px
-    input
-      padding-left: 5px
+      .rename-input
+        flex: 1
+        margin-left: -6px
+        input
+          padding-left: 5px
