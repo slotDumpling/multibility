@@ -1,11 +1,4 @@
-import {
-  FC,
-  useMemo,
-  useState,
-  useEffect,
-  useContext,
-  MouseEventHandler,
-} from "react";
+import { FC, useMemo, useState, useEffect, useContext } from "react";
 import {
   NoteTag,
   deleteNote,
@@ -42,7 +35,6 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
   const [sortType, setSortType] = useState("LAST");
   const [searchText, setSearchText] = useState("");
   const [selectedNotes, setSelectNotes] = useState(Set<string>());
-  const nav = useNavigate();
 
   const removeNotes = async (uids: string[]) => {
     let tags: Record<string, NoteTag> | undefined;
@@ -106,9 +98,8 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
         disabled={selectedNotes.size === 0}
       />
       {filterdList.map((noteInfo) => {
-        const { uid, team } = noteInfo;
+        const { uid } = noteInfo;
         const removeNote = () => removeNotes([uid]);
-        const href = `${team ? "team" : "reader"}/${uid}`;
         return (
           <SwipeDelete
             onDelete={removeNote}
@@ -120,15 +111,8 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
           >
             <NoteItem
               noteInfo={noteInfo}
-              onClick={(e) => {
-                if (e.target instanceof HTMLInputElement) return;
-                if (!editing) return nav(href);
-                setSelectNotes((prev) => {
-                  if (prev.has(uid)) return prev.delete(uid);
-                  else return prev.add(uid);
-                });
-              }}
               selected={selectedNotes.has(uid)}
+              setSelectNotes={setSelectNotes}
             />
           </SwipeDelete>
         );
@@ -275,14 +259,16 @@ const HeadTools: FC<{
 
 const NoteItem: FC<{
   noteInfo: NoteInfo;
-  onClick: MouseEventHandler<HTMLDivElement>;
   selected: boolean;
-}> = ({ noteInfo, onClick, selected }) => {
+  setSelectNotes: Setter<Set<string>>;
+}> = ({ noteInfo, selected, setSelectNotes }) => {
   const { team, uid, name, thumbnail, lastTime } = noteInfo;
+  const href = `${team ? "team" : "reader"}/${uid}`;
 
   const { editing } = useContext(MenuStateCtx);
   const { setAllNotes } = useContext(MenuMethodCtx);
   const [noteName, setNoteName] = useState(name);
+  const nav = useNavigate();
 
   const saveNoteName = () => {
     const newName = noteName.trim();
@@ -294,10 +280,21 @@ const NoteItem: FC<{
     }));
   };
 
+  const handleClick = () => {
+    if (!editing) return nav(href);
+    setSelectNotes((prev) => {
+      if (prev.has(uid)) return prev.delete(uid);
+      else return prev.add(uid);
+    });
+  };
+
   const date = useMemo(() => moment(lastTime).calendar(), [lastTime]);
 
   return (
-    <div className={classNames("note-item", { selected })} onClick={onClick}>
+    <div
+      className={classNames("note-item", { selected })}
+      onClick={handleClick}
+    >
       <div className="timg-wrapper">
         <img src={thumbnail || dafaultImg} alt={name} className="timg" />
         {team && (
@@ -313,6 +310,7 @@ const NoteItem: FC<{
             className="name-input"
             value={noteName}
             onChange={(e) => setNoteName(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
             onBlur={saveNoteName}
           />
         )}
