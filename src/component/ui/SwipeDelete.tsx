@@ -73,7 +73,7 @@ const SwipeDelete: FC<{
           className="button"
           onClickCapture={(e) => {
             setDeleted(true);
-            setTimeout(onDelete, 300);
+            setTimeout(onDelete, 500);
             e.stopPropagation();
           }}
           style={{ height }}

@@ -3,6 +3,7 @@
 .swipe-wrapper
   position: relative
   transition: transform 0.3s
+  transition-delay: 0.2s
   $button-width: 80px
   $icon-width: 40px
   &.deleting
@@ -19,7 +20,7 @@
     overflow: hidden
   .button-wrapper
     @include absolute(0, -$button-width, 0, 100%)
-    transition: left 0.3s
+    transition: left 0.3s ease-in
     overflow: hidden
     .button
       @include absolute-full

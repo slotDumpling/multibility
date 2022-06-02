@@ -133,6 +133,12 @@ $header-height: 55px
     display: flex
     align-items: center
 
+@keyframes note-item-in
+  from
+    height: 0
+  to
+    height: 5em
+
 .note-list
   flex: 1
   padding-bottom: 100px
@@ -173,6 +179,7 @@ $header-height: 55px
     align-items: center
     cursor: pointer
     position: relative
+    animation: note-item-in 0.3s
     &::before
       @include pseudo-el(0, -20px, -1px, -20px)
       transition: background 0.3s
