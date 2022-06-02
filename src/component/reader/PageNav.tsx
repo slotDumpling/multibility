@@ -5,7 +5,6 @@ import React, {
   useState,
   useEffect,
   useContext,
-  MouseEvent,
 } from "react";
 import {
   MoreOutlined,
@@ -135,11 +134,6 @@ const PagePreview: FC<{
     return null;
   }
   if (mode === "MARKED" && !marked) return null;
-
-  const switchMarked = (e: MouseEvent<HTMLSpanElement>) => {
-    switchPageMarked(uid);
-    e.stopPropagation();
-  };
   const curr = currpageID === uid;
 
   return (
@@ -169,17 +163,19 @@ const PagePreview: FC<{
             thumbnail={image}
             preview
           />
-          <span
-            className={classNames("bookmark", { marked })}
-            onClickCapture={switchMarked}
-          />
-          <span className="index">{pageIndex + 1}</span>
-          <PreviewOption uid={uid} />
-          <TeamAvatars
-            userIDs={userIDs}
-            chosen={chosen}
-            setChosen={setChosen}
-          />
+          <div className="cover" onClick={(e) => e.stopPropagation()}>
+            <span
+              className={classNames("bookmark", { marked })}
+              onClick={() => switchPageMarked(uid)}
+            />
+            <span className="index">{pageIndex + 1}</span>
+            <PreviewOption uid={uid} />
+            <TeamAvatars
+              userIDs={userIDs}
+              chosen={chosen}
+              setChosen={setChosen}
+            />
+          </div>
         </div>
       )}
     </Draggable>
@@ -212,12 +208,11 @@ const TeamAvatars: FC<{
 };
 
 const PreviewOption = ({ uid }: { uid: string }) => {
-  const [popShow, setPopShow] = useState(false);
   const { addPage, deletePage } = useContext(ReaderMethodCtx);
 
   const menu = (
     <Menu
-      onClick={({ key, domEvent }) => {
+      onClick={({ key }) => {
         if (key === "ADD") {
           addPage(uid);
         } else if (key === "COPY") {
@@ -225,8 +220,6 @@ const PreviewOption = ({ uid }: { uid: string }) => {
         } else if (key === "DELETE") {
           deletePage(uid);
         }
-        domEvent.stopPropagation();
-        setPopShow(false);
       }}
       items={[
         { key: "ADD", icon: <PlusOutlined />, label: "Add page" },
@@ -245,17 +238,9 @@ const PreviewOption = ({ uid }: { uid: string }) => {
       content={menu}
       trigger="click"
       placement="left"
-      visible={popShow}
-      onVisibleChange={setPopShow}
       destroyTooltipOnHide
     >
-      <span
-        className="option"
-        onClickCapture={(e) => {
-          setPopShow((prev) => !prev);
-          e.stopPropagation();
-        }}
-      >
+      <span className="option">
         <MoreOutlined />
       </span>
     </Popover>

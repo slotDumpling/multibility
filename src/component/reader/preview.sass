@@ -15,7 +15,6 @@
     flex: 1
     overflow: hidden auto
     padding: 0 25px
-    & > div
     .page
       margin-top: 25px
       cursor: pointer
@@ -23,9 +22,15 @@
       border: $default-border
       &.curr
         border-color: $blue-color
-        outline: 3px solid $blue-color
-      &.drag
+        outline: 2px solid $blue-color
+      &::before
+        @include absolute-full
         box-shadow: 0 0 20px 10px #0002
+        opacity: 0
+        transition: opacity 0.5s
+        content: ""
+      &.drag::before
+        opacity: 1
       .bookmark
         position: absolute
         top: -10px
