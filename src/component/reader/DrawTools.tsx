@@ -9,13 +9,13 @@ import React, {
 import {
   Badge,
   Alert,
+  Modal,
   Avatar,
   Button,
   Slider,
   Divider,
   message,
   Popover,
-  Popconfirm,
   ButtonProps,
 } from "antd";
 import Search from "antd/lib/input/Search";
@@ -385,10 +385,7 @@ export const UserAvatar: FC<{
       size={size}
       style={{ backgroundColor: color }}
     >
-      <div
-        className="avatar-wrapper"
-        onClick={onClick}
-      >
+      <div className="avatar-wrapper" onClick={onClick}>
         {userName?.slice(0, 3)}
       </div>
     </Avatar>
@@ -518,14 +515,17 @@ const JoinRoom: FC<{ instantSave: () => Promise<void> | undefined }> = ({
     nav("/team/" + noteID);
   };
   return (
-    <Popconfirm
-      placement="bottomRight"
-      title="Enable team editing?"
-      onConfirm={createRoom}
-      okText="Yes"
-      cancelText="No"
-    >
-      <Button type="text" icon={<UsergroupAddOutlined />} />
-    </Popconfirm>
+    <Button
+      type="text"
+      icon={<UsergroupAddOutlined />}
+      onClick={() => {
+        Modal.confirm({
+          title: "Enable team editing",
+          content: "This will make your note public.",
+          icon: <TeamOutlined style={{ color: "#555" }} />,
+          onOk: createRoom,
+        });
+      }}
+    />
   );
 };
