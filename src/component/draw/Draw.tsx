@@ -538,7 +538,8 @@ const paintBackground = (
   scope.activate();
   const bgRect = new Rectangle(new Point(0, 0), new Point(width, height));
   bgRect.fillColor = new Color("#fff");
-  scope.project.addLayer(new paper.Layer()).activate();
+  const bgLayer = new paper.Layer(bgRect);
+  scope.project.insertLayer(0, bgLayer);
   return bgRect;
 };
 
