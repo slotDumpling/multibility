@@ -387,10 +387,7 @@ export const UserAvatar: FC<{
     >
       <div
         className="avatar-wrapper"
-        onClickCapture={(e) => {
-          e.stopPropagation();
-          onClick();
-        }}
+        onClick={onClick}
       >
         {userName?.slice(0, 3)}
       </div>
@@ -444,8 +441,12 @@ const RoomInfo: FC = () => {
           banner
         />
       )}
-      {/* <DigitDisplay value={code} /> */}
-      <PasscodeInput className="code-display" value={String(code)} length={4} seperated plain />
+      <PasscodeInput
+        className="code-display"
+        value={String(code)}
+        length={4}
+        plain
+      />
       <Button
         icon={<ShareAltOutlined />}
         className="share-btn"
@@ -512,10 +513,7 @@ const JoinRoom: FC<{ instantSave: () => Promise<void> | undefined }> = ({
   const createRoom = async () => {
     await instantSave();
     const resCode = await putNote(noteID);
-    if (!resCode) {
-      message.error("Can't create room.");
-      return;
-    }
+    if (!resCode) return message.error("Can't create room.");
     await editNoteData(noteID, { team: true });
     nav("/team/" + noteID);
   };

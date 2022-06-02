@@ -268,8 +268,8 @@ function JoinTeamButton() {
       onVisibleChange={() => setWrong(false)}
       content={
         <PasscodeInput
+          plain
           length={4}
-          seperated
           error={wrong}
           value={roomCode}
           onChange={(v) => {
