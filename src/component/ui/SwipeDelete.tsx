@@ -26,13 +26,13 @@ const SwipeDelete: FC<{
   const [deleted, setDeleted] = useState(false);
   const [swiped, setSwiped] = useState(false);
   const [height, setHeight] = useState<number>();
-  const button = useRef<HTMLDivElement>(null);
+  const wrapper = useRef<HTMLDivElement>(null);
   const deleting = swiped && (nowSwiped === undefined || nowSwiped === uid);
 
   const showDelete = () => {
     setSwiped(true);
     setNowSwiped && setNowSwiped(uid);
-    setHeight(button.current?.clientHeight);
+    setHeight(wrapper.current?.clientHeight);
   };
 
   const hideDelete = () => {
@@ -65,17 +65,21 @@ const SwipeDelete: FC<{
       {...swipeHandler}
       style={{ height }}
     >
-      <div className="content">{children}</div>
-      <div
-        className="button"
-        onClickCapture={(e) => {
-          setDeleted(true);
-          setTimeout(onDelete, 300);
-          e.stopPropagation();
-        }}
-        ref={button}
-      >
-        {icon ? <DeleteOutlined /> : <span>Delete</span>}
+      <div className="content" ref={wrapper}>
+        {children}
+      </div>
+      <div className="button-wrapper">
+        <div
+          className="button"
+          onClickCapture={(e) => {
+            setDeleted(true);
+            setTimeout(onDelete, 300);
+            e.stopPropagation();
+          }}
+          style={{ height }}
+        >
+          {icon ? <DeleteOutlined /> : <span>Delete</span>}
+        </div>
       </div>
     </div>
   );
