@@ -350,7 +350,7 @@ export const PageWrapper = ({
   const maskShow = Boolean(preview || !drawShow);
 
   return (
-    <div ref={wrapperEl} style={{ paddingTop: `${ratio * 100}%` }}>
+    <div ref={wrapperEl} className="page-wrapper" style={{ paddingTop: `${ratio * 100}%` }}>
       {drawShow && (
         <DrawWrapper
           drawState={drawState}
