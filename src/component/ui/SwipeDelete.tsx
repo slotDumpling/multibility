@@ -1,5 +1,4 @@
 import React, { FC, useEffect, useRef, useState } from "react";
-import { DeleteOutlined } from "@ant-design/icons";
 import { useSwipeable } from "react-swipeable";
 import { Setter } from "../../lib/hooks";
 import classNames from "classnames";
@@ -11,7 +10,6 @@ const SwipeDelete: FC<{
   nowSwiped?: string;
   setNowSwiped?: Setter<string>;
   disable?: boolean;
-  icon?: boolean;
   className?: string;
 }> = ({
   children,
@@ -20,7 +18,6 @@ const SwipeDelete: FC<{
   uid,
   onDelete,
   disable = false,
-  icon = false,
   className,
 }) => {
   const [deleted, setDeleted] = useState(false);
@@ -60,7 +57,6 @@ const SwipeDelete: FC<{
       className={classNames("swipe-wrapper", className, {
         deleted,
         deleting,
-        icon,
       })}
       {...swipeHandler}
       style={{ height }}
@@ -71,14 +67,14 @@ const SwipeDelete: FC<{
       <div className="button-wrapper">
         <div
           className="button"
-          onClickCapture={(e) => {
+          onClick={(e) => {
             setDeleted(true);
-            setTimeout(onDelete, 5000);
+            setTimeout(onDelete, 500);
             e.stopPropagation();
           }}
           style={{ height }}
         >
-          {icon ? <DeleteOutlined /> : <span>Delete</span>}
+          Delete
         </div>
       </div>
     </div>

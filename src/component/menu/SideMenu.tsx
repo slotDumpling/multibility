@@ -190,19 +190,21 @@ export default function SideMenu({ onSelect }: { onSelect?: () => void }) {
   };
 
   const allNoteTag = (
-    <div
-      className={classNames("tag-item", { curr: tagUid === "DEFAULT" })}
-      onClick={() => selectTag("DEFAULT")}
-    >
-      <ProfileOutlined className="all-note-icon" />
-      <span className="tag-name">All Notes</span>
-      <span className="tag-num">{Object.keys(allNotes).length}</span>
+    <div className="tag-wrapper">
+      <div
+        className={classNames("tag-item", { curr: tagUid === "DEFAULT" })}
+        onClick={() => selectTag("DEFAULT")}
+      >
+        <ProfileOutlined className="all-note-icon" />
+        <span className="tag-name">All Notes</span>
+        <span className="tag-num">{Object.keys(allNotes).length}</span>
+      </div>
     </div>
   );
 
   const swichEditing = () => {
     setEditing((prev) => !prev);
-  }
+  };
 
   const editButton = (
     <Button
@@ -223,22 +225,21 @@ export default function SideMenu({ onSelect }: { onSelect?: () => void }) {
           const { uid } = tag;
           const removeTag = () => removeOneTag(uid);
           return (
-            <SwipeDelete
-              key={uid}
-              uid={uid}
-              className="tag-swipe"
-              onDelete={removeTag}
-              nowSwiped={nowSwiped}
-              setNowSwiped={setNowSwiped}
-              disable={editing}
-              icon
-            >
-              <TagItem
-                noteTag={tag}
-                removeTag={removeTag}
-                onClick={() => selectTag(uid)}
-              />
-            </SwipeDelete>
+            <div className="tag-wrapper" key={uid}>
+              <SwipeDelete
+                uid={uid}
+                onDelete={removeTag}
+                nowSwiped={nowSwiped}
+                setNowSwiped={setNowSwiped}
+                disable={editing}
+              >
+                <TagItem
+                  noteTag={tag}
+                  removeTag={removeTag}
+                  onClick={() => selectTag(uid)}
+                />
+              </SwipeDelete>
+            </div>
           );
         })}
       </div>

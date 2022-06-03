@@ -60,12 +60,6 @@ $header-height: 55px
   flex-direction: column
   border-right: $default-border
   background-color: #eee3
-  .tag-list
-    flex: 1
-    overflow: hidden auto
-    padding: 20px 0
-    > div:not(:last-of-type)
-      margin-bottom: 10px
   footer
     border-top: $default-border
     padding: 10px 15px 30px 15px
@@ -98,11 +92,20 @@ $header-height: 55px
   height: 12px
   border-radius: 6px
 
+.tag-list
+  flex: 1
+  overflow: hidden auto
+  padding: 20px
+  .tag-wrapper
+    overflow: hidden
+    border-radius: 1em
+    will-change: transform
+    &:not(:last-of-type)
+      margin-bottom: 10px
+
 .tag-item
   height: 3em
   padding: 0 10px
-  margin: 0 20px
-  border-radius: 1em
   display: flex
   align-items: center
   cursor: pointer
@@ -170,55 +173,56 @@ $header-height: 55px
         background-color: #eee
     .tag-btn
       margin-right: 10px
-  .note-item
-    border-bottom: $light-border
-    height: 5em
-    padding: 0 1em
-    margin: 0 20px
+
+.note-item
+  border-bottom: $light-border
+  height: 5em
+  padding: 0 1em
+  margin: 0 20px
+  display: flex
+  align-items: center
+  cursor: pointer
+  position: relative
+  animation: note-item-in 0.3s
+  &::before
+    @include pseudo-el(0, -20px, -1px, -20px)
+    transition: background 0.3s
+  &.selected::before
+    background-color: $blue-color-light
+  .timg-wrapper
+    width: 3em
+    margin-right: 1em
     display: flex
-    align-items: center
-    cursor: pointer
+    justify-content: center
     position: relative
-    animation: note-item-in 0.3s
-    &::before
-      @include pseudo-el(0, -20px, -1px, -20px)
-      transition: background 0.3s
-    &.selected::before
-      background-color: $blue-color-light
-    .timg-wrapper
-      width: 3em
-      margin-right: 1em
-      display: flex
-      justify-content: center
-      position: relative
-      .timg
-        max-width: 3em
-        max-height: 3.5em
-        border: 1px solid #eeee
-        background-color: white
-      .cloud-icon
-        position: absolute
-        bottom: 0
-        left: 0
-        zoom: 0.7
-    .content
-      flex: 1
-      padding: 5px
-      overflow: hidden
-      .name
-        @include text-overflow
-        margin: 1px 0 1px 6px
-        font-size: 1.2em
-      .name-input
-        font-size: 1.2em
-        padding: 0 0 0 5px
-        background: #0000
-        border-color: #eee
-      .date
-        @include text-overflow
-        font-size: 0.8em
-        margin: 0 0 0 6px
-        color: #0006
+    .timg
+      max-width: 3em
+      max-height: 3.5em
+      border: 1px solid #eeee
+      background-color: white
+    .cloud-icon
+      position: absolute
+      bottom: 0
+      left: 0
+      zoom: 0.7
+  .content
+    flex: 1
+    padding: 5px
+    overflow: hidden
+    .name
+      @include text-overflow
+      margin: 1px 0 1px 6px
+      font-size: 1.2em
+    .name-input
+      font-size: 1.2em
+      padding: 0 0 0 5px
+      background: #0000
+      border-color: #eee
+    .date
+      @include text-overflow
+      font-size: 0.8em
+      margin: 0 0 0 6px
+      color: #0006
 
 .tag-select
   display: flex

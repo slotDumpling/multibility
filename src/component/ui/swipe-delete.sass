@@ -4,7 +4,6 @@
   position: relative
   transition: transform 0.3s
   $button-width: 80px
-  $icon-width: 40px
   &.deleting
     transition-property: transform, height
     transform: translateX(-$button-width)
@@ -29,11 +28,3 @@
       display: flex
       align-items: center
       justify-content: center
-  &.icon
-    .button-wrapper
-      @include absolute(0, -$icon-width, 0, 100%)
-    &.deleting
-      transform: translateX(-$icon-width)
-    &.deleted
-      .button-wrapper
-        left: $icon-width
