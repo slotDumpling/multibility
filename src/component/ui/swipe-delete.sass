@@ -3,7 +3,6 @@
 .swipe-wrapper
   position: relative
   transition: transform 0.3s
-  transition-delay: 0.2s
   $button-width: 80px
   $icon-width: 40px
   &.deleting
@@ -12,6 +11,7 @@
     > .content
       pointer-events: none
   &.deleted
+    transition-delay: 0.2s
     height: 0 !important
     .button-wrapper
       left: $button-width
