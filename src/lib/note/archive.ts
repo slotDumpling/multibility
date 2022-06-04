@@ -1,6 +1,5 @@
 import { Note, NoteInfo, NotePage, TeamNoteInfo, TeamPageInfo } from "./note";
 import { getDefaultFlatState } from "../draw/DrawState";
-import { getRandomColor } from "../color";
 import localforage from "localforage";
 import { v4 as getUid } from "uuid";
 import { pickBy } from "lodash-es";
@@ -33,12 +32,12 @@ export async function getAllTags() {
   }
 }
 
-export async function addNewTag(name: string) {
+export async function addNewTag(name: string, color: string) {
   const uid = getUid();
   const newTag: NoteTag = {
     uid,
     name,
-    color: getRandomColor(),
+    color,
     notes: [],
   };
   const prevTags = await getAllTags();
@@ -115,7 +114,7 @@ export async function deleteNote(uid: string) {
   await localforage.removeItem(`PDF_${uid}`);
   delete allNotes[uid];
   await localforage.setItem("ALL_NOTES", allNotes);
-  
+
   const { tagID } = note;
   if (tagID in tags) {
     const prevTag = tags[tagID];

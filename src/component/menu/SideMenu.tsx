@@ -1,22 +1,48 @@
-import { Button, Input, Popconfirm, Popover, Select } from "antd";
+import { Button, Input, Modal, Popconfirm, Select } from "antd";
 import { FC, MouseEventHandler, useContext, useEffect, useState } from "react";
 import { deleteTag, editTag, NoteTag, addNewTag } from "../../lib/note/archive";
-import { colors } from "../../lib/color";
+import { colors, getRandomColor } from "../../lib/color";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import {
   TagOutlined,
-  PlusOutlined,
   DeleteOutlined,
   SettingOutlined,
   ProfileOutlined,
 } from "@ant-design/icons";
-import Search from "antd/lib/input/Search";
 import SwipeDelete from "../ui/SwipeDelete";
 import classNames from "classnames";
+import { Setter } from "../../lib/hooks";
 
 export const TagCircle = ({ color }: { color: string }) => {
   const style = { backgroundColor: color };
   return <div className="tag-circle" style={style} />;
+};
+
+const TagInput: FC<{
+  tagName: string;
+  setTagName: Setter<string>;
+  tagColor: string;
+  setTagColor: Setter<string>;
+}> = ({ tagName, setTagName, tagColor, setTagColor }) => {
+  const colorSelector = (
+    <Select value={tagColor} onSelect={setTagColor} listHeight={150}>
+      {colors.map((c) => (
+        <Select.Option value={c} key={c}>
+          <TagCircle color={c} />
+        </Select.Option>
+      ))}
+    </Select>
+  );
+
+  return (
+    <Input
+      placeholder="Tag name..."
+      className="tag-name-input"
+      addonBefore={colorSelector}
+      value={tagName}
+      onChange={(e) => setTagName(e.target.value)}
+    />
+  );
 };
 
 const TagItem: FC<{
@@ -27,9 +53,10 @@ const TagItem: FC<{
   const { uid, color, name, notes } = noteTag;
   const { editing, tagUid } = useContext(MenuStateCtx);
   const { setAllTags } = useContext(MenuMethodCtx);
-  const [tagEditing, setTagEditing] = useState(false);
   const [tagName, setTagName] = useState(name);
   const [tagColor, setTagColor] = useState(color);
+  const [tagEditing, setTagEditing] = useState(false);
+  useEffect(() => setTagEditing(false), [editing]);
 
   const cancelEditing = () => {
     setTagName(name);
@@ -49,38 +76,15 @@ const TagItem: FC<{
     setTagEditing(false);
   };
 
-  const colorSelector = (
-    <Select value={tagColor} onSelect={setTagColor}>
-      {colors.map((c) => (
-        <Select.Option value={c} key={c}>
-          <TagCircle color={c} />
-        </Select.Option>
-      ))}
-    </Select>
-  );
-
-  const TagNameInput = (
-    <Input
-      className="tag-name-input"
-      addonBefore={colorSelector}
-      value={tagName}
-      onChange={(e) => setTagName(e.target.value)}
-    />
-  );
-
-  useEffect(() => {
-    setTagEditing(false);
-  }, [editing]);
-
   return (
     <div
       className={classNames("tag-item", {
         curr: tagUid === uid,
-        editing: editing && tagEditing,
+        editing: tagEditing,
       })}
       onClick={onClick}
     >
-      {(editing && tagEditing) || (
+      {tagEditing || (
         <>
           <TagCircle color={tagColor} />
           <span className="tag-name">{tagName}</span>
@@ -95,9 +99,14 @@ const TagItem: FC<{
           icon={<SettingOutlined />}
         />
       )}
-      {editing && tagEditing && (
+      {tagEditing && (
         <>
-          {TagNameInput}
+          <TagInput
+            tagName={tagName}
+            setTagName={setTagName}
+            tagColor={tagColor}
+            setTagColor={setTagColor}
+          />
           <div className="buttons">
             <Popconfirm
               title="This tag will be deleted."
@@ -112,11 +121,7 @@ const TagItem: FC<{
               <Button danger>Delete</Button>
             </Popconfirm>
             <Button onClick={cancelEditing}>Cancel</Button>
-            <Button
-              disabled={tagName === ""}
-              type="primary"
-              onClick={finishEditing}
-            >
+            <Button type="primary" disabled={!tagName} onClick={finishEditing}>
               OK
             </Button>
           </div>
@@ -128,47 +133,47 @@ const TagItem: FC<{
 
 const AddTag = () => {
   const { setAllTags } = useContext(MenuMethodCtx);
-  const [popShow, setPopShow] = useState(false);
+  const [modalShow, setModalShow] = useState(false);
+  const [tagName, setTagName] = useState("");
+  const [tagColor, setTagColor] = useState(getRandomColor());
 
-  async function addTag(val: string) {
-    const name = val.trim();
-    if (!name) {
-      return;
-    } else {
-      const tags = await addNewTag(name);
-      setAllTags(tags);
-      setPopShow(false);
-    }
-  }
+  const addTag = () => {
+    const name = tagName.trim();
+    if (!name) return;
+    addNewTag(name, tagColor).then(setAllTags);
+    setModalShow(false);
+  };
 
-  const AddTagInput = () => (
-    <Search
-      placeholder="Tag name..."
-      onSearch={addTag}
-      allowClear
-      enterButton={<Button icon={<PlusOutlined />} />}
-    />
-  );
+  useEffect(() => {
+    setTagName("");
+    setTagColor(getRandomColor());
+  }, [modalShow]);
 
   return (
-    <div className="add-tag">
-      <Popover
-        visible={popShow}
-        onVisibleChange={setPopShow}
-        content={<AddTagInput />}
-        trigger="click"
-        placement="topLeft"
-        destroyTooltipOnHide
+    <>
+      <Button
+        shape="round"
+        icon={<TagOutlined />}
+        onClick={() => setModalShow(true)}
       >
-        <Button
-          shape="round"
-          icon={<TagOutlined />}
-          onClick={() => setPopShow(true)}
-        >
-          Add
-        </Button>
-      </Popover>
-    </div>
+        Add
+      </Button>
+      <Modal
+        visible={modalShow}
+        onCancel={() => setModalShow(false)}
+        title="Add a new tag"
+        width={400}
+        onOk={addTag}
+        destroyOnClose
+      >
+        <TagInput
+          tagName={tagName}
+          setTagName={setTagName}
+          tagColor={tagColor}
+          setTagColor={setTagColor}
+        />
+      </Modal>
+    </>
   );
 };
 
@@ -202,9 +207,7 @@ export default function SideMenu({ onSelect }: { onSelect?: () => void }) {
     </div>
   );
 
-  const swichEditing = () => {
-    setEditing((prev) => !prev);
-  };
+  const swichEditing = () => setEditing((prev) => !prev);
 
   const editButton = (
     <Button
