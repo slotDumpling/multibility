@@ -60,6 +60,9 @@ const SwipeDelete: FC<{
       })}
       {...swipeHandler}
       style={{ height }}
+      onTransitionEnd={({ propertyName }) => {
+        if (propertyName === "height" && deleted) onDelete();
+      }}
     >
       <div className="content" ref={wrapper}>
         {children}
@@ -67,11 +70,7 @@ const SwipeDelete: FC<{
       <div className="button-wrapper">
         <div
           className="button"
-          onClick={(e) => {
-            setDeleted(true);
-            setTimeout(onDelete, 500);
-            e.stopPropagation();
-          }}
+          onClick={() => setDeleted(true)}
           style={{ height }}
         >
           Delete
