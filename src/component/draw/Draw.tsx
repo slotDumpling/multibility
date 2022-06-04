@@ -301,8 +301,6 @@ const Draw: FC<{
         moveDash(rect);
         items = checkRectSelection(rect, group);
       }
-      const tempStyle = parseGroupStyle(items);
-      setCurrDrawCtrl((prev) => ({ ...prev, ...tempStyle }));
       setSelectedIDs(items.map((item) => item.name));
       setSelected(true);
     },
@@ -629,37 +627,21 @@ const checkPathSelection = (selection: paper.Path, items: paper.Item[]) => {
   });
 };
 
-const parseGroupStyle = (items: paper.Item[]) => {
-  const style: Partial<DrawCtrl> = {};
-  const group = new Group(items);
-  if (group.strokeColor) style.color = group.strokeColor.toCSS(true);
-  if (group.strokeWidth) style.lineWidth = group.strokeWidth;
-  if (
-    group.children
-      .filter((item) => item instanceof paper.Path)
-      .every((p) => p.blendMode === "multiply")
-  ) {
-    style.highlight = true;
-  }
-  return style;
-};
-
 const updateGroupStyle = (items: paper.Item[], updated: Partial<DrawCtrl>) => {
   const { lineWidth, color, highlight } = updated;
   items.forEach((item) => {
     if (!(item instanceof paper.Path)) return;
 
-    if (color) item.strokeColor = new Color(color);
+    if (color) {
+      const newColor = new Color(color);
+      if (item.blendMode === "multiply") newColor.alpha = 0.5;
+      item.strokeColor = newColor;
+    }
+
     if (lineWidth) item.strokeWidth = lineWidth;
 
-    const { strokeColor } = item;
-    if (!strokeColor) return;
-    if (highlight === true) {
-      strokeColor.alpha = 0.5;
-      item.blendMode = "multiply";
-    } else {
-      strokeColor.alpha = 1;
-      item.blendMode = "normal";
-    }
+    if (!item.strokeColor || highlight === undefined) return;
+    item.strokeColor.alpha = highlight ? 0.5 : 1;
+    item.blendMode = highlight ? "multiply": 'normal';
   });
 };
