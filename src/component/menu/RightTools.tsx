@@ -33,7 +33,7 @@ import { useEffect } from "react";
 import { FC } from "react";
 import "./rightTools.sass";
 
-const OthersStateCtx = createContext({
+const OthersCtx = createContext({
   setActive: (() => {}) as Setter<string>,
 });
 
@@ -47,7 +47,7 @@ export default function RightTools() {
 }
 
 const OthersMenu = () => {
-  const { setActive } = useContext(OthersStateCtx);
+  const { setActive } = useContext(OthersCtx);
   return (
     <div className="other-menu">
       <Menu
@@ -66,7 +66,7 @@ const SeconaryMenu: FC<{
   children: ReactNode;
   title: string;
 }> = ({ children, title }) => {
-  const { setActive } = useContext(OthersStateCtx);
+  const { setActive } = useContext(OthersCtx);
   return (
     <div className="secondary">
       <nav>
@@ -128,7 +128,7 @@ function UploadPdfPage() {
 const ProfilePage = () => {
   const userName = getUserName();
   const [name, setName] = useState(userName);
-  const { setActive } = useContext(OthersStateCtx);
+  const { setActive } = useContext(OthersCtx);
   const handleEnter = () => {
     if (!name) return;
     saveUserName(name);
@@ -206,7 +206,7 @@ const OthersPage = () => {
   useEffect(() => setActive("MENU"), []);
 
   return (
-    <OthersStateCtx.Provider value={{ setActive }}>
+    <OthersCtx.Provider value={{ setActive }}>
       <section className="others-menu" style={{ height }}>
         <CSSTransition
           classNames="primary"
@@ -225,7 +225,7 @@ const OthersPage = () => {
           <SettingsPage />
         </CSSTransition>
       </section>
-    </OthersStateCtx.Provider>
+    </OthersCtx.Provider>
   );
 };
 
