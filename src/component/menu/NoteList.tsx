@@ -10,7 +10,6 @@ import {
   TagsOutlined,
   EditOutlined,
   CloudOutlined,
-  CloseOutlined,
   DeleteOutlined,
   SearchOutlined,
   ClockCircleOutlined,
@@ -188,27 +187,27 @@ const HeadTools: FC<{
     </Popconfirm>
   );
 
+  const ColorLabel: FC<{
+    color: string;
+    name: string;
+  }> = ({ color, name }) => (
+    <div className="tag-select">
+      <TagCircle color={color} />
+      <span className="name">{name}</span>
+    </div>
+  );
+
   const overlay = (
     <Menu
       onClick={({ key }) => onMove(key)}
       items={[
         {
           key: "DEFAULT",
-          label: (
-            <div className="tag-select">
-              <CloseOutlined className="none-tag-icon" />
-              <span className="name">No Tag</span>
-            </div>
-          ),
+          label: <ColorLabel color="#eee" name="No tag" />,
         },
         ...Object.values(allTags).map((t) => ({
           key: t.uid,
-          label: (
-            <div className="tag-select">
-              <TagCircle color={t.color} />
-              <span className="name">{t.name}</span>
-            </div>
-          ),
+          label: <ColorLabel color={t.color} name={t.name} />,
         })),
       ]}
     />
@@ -263,11 +262,13 @@ const NoteItem: FC<{
   setSelectNotes: Setter<Set<string>>;
 }> = ({ noteInfo, selected, setSelectNotes }) => {
   const { team, uid, name, thumbnail, lastTime } = noteInfo;
+  const date = useMemo(() => moment(lastTime).calendar(), [lastTime]);
   const href = `${team ? "team" : "reader"}/${uid}`;
 
   const { editing } = useContext(MenuStateCtx);
   const { setAllNotes } = useContext(MenuMethodCtx);
   const [noteName, setNoteName] = useState(name);
+  const [loaded, setLoaded] = useState(false);
   const nav = useNavigate();
 
   const saveNoteName = () => {
@@ -284,16 +285,15 @@ const NoteItem: FC<{
     if (!editing) return nav(href);
     setSelectNotes((prev) => {
       if (prev.has(uid)) return prev.delete(uid);
-      else return prev.add(uid);
+      return prev.add(uid);
     });
   };
 
-  const date = useMemo(() => moment(lastTime).calendar(), [lastTime]);
-
   return (
     <div
-      className={classNames("note-item", { selected })}
+      className={classNames("note-item", { selected, loaded })}
       onClick={handleClick}
+      onAnimationEnd={() => setLoaded(true)}
     >
       <div className="timg-wrapper">
         <img src={thumbnail || dafaultImg} alt={name} className="timg" />
