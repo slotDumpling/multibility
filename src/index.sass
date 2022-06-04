@@ -81,25 +81,3 @@ h1.loading
     opacity: 1
   to
     opacity: 0.5
-
-.sk
-  width: 500px
-  height: 30px
-  margin: 50px
-  position: relative
-  overflow: hidden
-  &::after
-    content: ""
-    position: absolute
-    left: -50%
-    right: -50%
-    top: 0
-    bottom: 0
-    background: linear-gradient(45deg, white, black, white)
-    animation: sk-move 1s infinite
-
-@keyframes sk-move
-  from
-    transform: translateX(-50%)
-  to
-    transform: translateX(50%)
