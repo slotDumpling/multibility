@@ -1,15 +1,13 @@
 @import ../_mixins
 @import ../_var
 
-$header-height: 55px
-
 .main-menu.container
   display: flex
   flex-direction: column
   header
     position: relative
-    height: $header-height
-    padding: 10px 15px
+    height: $header-low-height
+    padding: 0 15px
     display: flex
     justify-content: space-between
     align-items: center
@@ -69,7 +67,7 @@ $header-height: 55px
       margin-right: 10px
 
 .aside-drawer
-  top: $header-height !important
+  top: $header-low-height !important
   bottom: 0 !important
   height: unset !important
   .side-menu
@@ -132,15 +130,10 @@ $header-height: 55px
     margin: 0 10px 0 0 !important
   .tag-num
     margin-right: 10px
-  .ant-select-selection-item
-    display: flex
-    align-items: center
 
-@keyframes note-item-in
-  from
-    height: 0
-  to
-    height: 5em
+.ant-select-selection-item, .ant-select-item-option-content
+  display: flex
+  align-items: center
 
 .note-list
   flex: 1
@@ -174,8 +167,15 @@ $header-height: 55px
     .tag-btn
       margin-right: 10px
 
+@keyframes note-item-in
+  from
+    height: 0
+    opacity: 0
+  to
+    height: 5em
+    opacity: 1
+
 .note-item
-  border-bottom: $light-border
   height: 5em
   padding: 0 1em
   margin: 0 20px
@@ -183,12 +183,14 @@ $header-height: 55px
   align-items: center
   cursor: pointer
   position: relative
-  animation: note-item-in 0.3s
+  border-bottom: $light-border
   &::before
     @include pseudo-el(0, -20px, -1px, -20px)
     transition: background 0.3s
   &.selected::before
     background-color: $blue-color-light
+  &:not(.loaded)
+    animation: note-item-in 0.3s
   .timg-wrapper
     width: 3em
     margin-right: 1em
