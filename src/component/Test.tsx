@@ -1,9 +1,5 @@
 import React from "react";
 
 export default function Test() {
-  return (
-    <>
-      <div className="sk"></div>
-    </>
-  );
+  return <canvas width={2} height={3} />;
 }
