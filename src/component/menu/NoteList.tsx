@@ -12,7 +12,7 @@ import {
   CloudOutlined,
   DeleteOutlined,
   SearchOutlined,
-  ClockCircleOutlined,
+  FileAddOutlined,
   SortAscendingOutlined,
 } from "@ant-design/icons";
 import { Button, Input, Popconfirm, Tag, Dropdown, Menu } from "antd";
@@ -144,8 +144,8 @@ const HeadTools: FC<{
       onClick={({ key }) => setSortType(key)}
       selectedKeys={[sortType]}
       items={[
-        { icon: <ClockCircleOutlined />, key: "CREATE", label: "Created Time" },
-        { icon: <EditOutlined />, key: "LAST", label: "Modified Time" },
+        { icon: <FileAddOutlined />, key: "CREATE", label: "Time created" },
+        { icon: <EditOutlined />, key: "LAST", label: "Time modified" },
         { icon: <SortAscendingOutlined />, key: "NAME", label: "Name" },
       ]}
     />
