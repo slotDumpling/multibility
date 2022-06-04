@@ -10,8 +10,8 @@ import {
   ProfileOutlined,
 } from "@ant-design/icons";
 import SwipeDelete from "../ui/SwipeDelete";
-import classNames from "classnames";
 import { Setter } from "../../lib/hooks";
+import classNames from "classnames";
 
 export const TagCircle = ({ color }: { color: string }) => {
   const style = { backgroundColor: color };
