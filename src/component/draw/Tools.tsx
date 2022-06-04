@@ -168,6 +168,7 @@ export const TextTool: TextToolType = ({ onSubmit, onCancel }) => {
         onSubmit(content, fontSize, color);
       }}
       bodyStyle={{ paddingTop: 0 }}
+      destroyOnClose
     >
       <div className="insert-option">
         <span className="font-size">
