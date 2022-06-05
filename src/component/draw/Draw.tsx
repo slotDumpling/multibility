@@ -635,6 +635,13 @@ const checkPathSelection = (selection: paper.Path, items: paper.Item[]) => {
 const updateGroupStyle = (items: paper.Item[], updated: Partial<DrawCtrl>) => {
   const { lineWidth, color, highlight } = updated;
   items.forEach((item) => {
+    if (item instanceof paper.PointText) {
+      if (color) {
+        const newColor = new Color(color);
+        item.fillColor = newColor;
+      }
+    }
+
     if (!(item instanceof paper.Path)) return;
 
     if (color) {
