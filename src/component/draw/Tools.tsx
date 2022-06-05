@@ -148,20 +148,16 @@ export const SelectTool: SelectToolType = ({
   );
 };
 
-export const TextTool: TextToolType = ({ onSubmit, onCancel }) => {
+export const TextTool: TextToolType = ({ visible, onSubmit, onCancel }) => {
   const [text, setText] = useState("");
   const [fontSize, setFontSize] = useState(5);
   const [color, setColor] = useState(colors[0]);
-  const [modalShow, setModalShow] = useState(true);
 
   return (
     <Modal
-      visible={modalShow}
+      visible={visible}
       title="Insert text"
-      onCancel={() => {
-        setModalShow(false);
-        setTimeout(onCancel, 300);
-      }}
+      onCancel={onCancel}
       onOk={() => {
         const content = text.trim();
         if (!content) return onCancel();

@@ -32,6 +32,7 @@ export type SelectToolType = ComponentType<{
 export type TextToolType = ComponentType<{
   onSubmit: (text: string, fontSize: number, color: string) => void;
   onCancel: () => void;
+  visible: boolean;
 }>;
 
 const PREVIEW_WIDTH = 200;
@@ -457,8 +458,12 @@ const Draw: FC<{
           currDrawCtrl={currDrawCtrl}
         />
       )}
-      {TextTool && pointText && mode === "text" && (
-        <TextTool onCancel={cancelText} onSubmit={submitText} />
+      {TextTool && mode === "text" && (
+        <TextTool
+          visible={pointText !== undefined}
+          onCancel={cancelText}
+          onSubmit={submitText}
+        />
       )}
     </div>
   );
@@ -642,6 +647,6 @@ const updateGroupStyle = (items: paper.Item[], updated: Partial<DrawCtrl>) => {
 
     if (!item.strokeColor || highlight === undefined) return;
     item.strokeColor.alpha = highlight ? 0.5 : 1;
-    item.blendMode = highlight ? "multiply": 'normal';
+    item.blendMode = highlight ? "multiply" : "normal";
   });
 };
