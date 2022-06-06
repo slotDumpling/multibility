@@ -171,9 +171,9 @@ const SettingsPage = () => {
       <div className="setting-menu">
         <Button
           icon={<SyncOutlined />}
-          onClick={() => {
-            serviceWorkerRegistration.unregister();
-            // globalThis.location.reload();
+          onClick={async () => {
+            await serviceWorkerRegistration.unregister();
+            globalThis.location.reload();
           }}
           block
         >
