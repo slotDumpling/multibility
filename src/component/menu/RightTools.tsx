@@ -173,7 +173,7 @@ const SettingsPage = () => {
           icon={<SyncOutlined />}
           onClick={() => {
             serviceWorkerRegistration.unregister();
-            globalThis.location.reload();
+            // globalThis.location.reload();
           }}
           block
         >
