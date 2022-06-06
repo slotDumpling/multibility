@@ -14,6 +14,7 @@ import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import {
   TeamOutlined,
   UserOutlined,
+  SyncOutlined,
   ClearOutlined,
   InboxOutlined,
   FilePdfOutlined,
@@ -21,6 +22,7 @@ import {
   CaretDownOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
+import * as serviceWorkerRegistration from "../.././serviceWorkerRegistration";
 import { getUserName, saveUserName } from "../../lib/user";
 import { CSSTransition } from "react-transition-group";
 import { getNoteID } from "../../lib/network/http";
@@ -166,20 +168,32 @@ const SettingsPage = () => {
 
   return (
     <SeconaryMenu title="Settings">
-      <Popconfirm
-        title="Everything will be deleted."
-        onConfirm={clearAll}
-        icon={<ClearOutlined />}
-        okText="Delete"
-        okType="danger"
-        okButtonProps={{ type: "primary" }}
-        cancelText="Cancel"
-        placement="bottom"
-      >
-        <Button icon={<ClearOutlined />} danger block>
-          Clear all
+      <div className="setting-menu">
+        <Button
+          icon={<SyncOutlined />}
+          onClick={() => {
+            serviceWorkerRegistration.unregister();
+            globalThis.location.reload();
+          }}
+          block
+        >
+          Update
         </Button>
-      </Popconfirm>
+        <Popconfirm
+          title="Everything will be deleted."
+          onConfirm={clearAll}
+          icon={<ClearOutlined />}
+          okText="Delete"
+          okType="danger"
+          okButtonProps={{ type: "primary" }}
+          cancelText="Cancel"
+          placement="bottom"
+        >
+          <Button icon={<ClearOutlined />} danger block>
+            Clear all
+          </Button>
+        </Popconfirm>
+      </div>
     </SeconaryMenu>
   );
 };
