@@ -8,11 +8,11 @@ import {
 import {
   SwapOutlined,
   TagsOutlined,
-  EditOutlined,
+  FileOutlined,
   CloudOutlined,
   DeleteOutlined,
   SearchOutlined,
-  FileAddOutlined,
+  FileTextOutlined,
   SortAscendingOutlined,
 } from "@ant-design/icons";
 import { Button, Input, Popconfirm, Tag, Dropdown, Menu } from "antd";
@@ -86,7 +86,7 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
   }, [noteList, editing]);
 
   return (
-    <div className="note-list">
+    <section className="note-list">
       <HeadTools
         sortType={sortType}
         setSortType={setSortType}
@@ -116,7 +116,7 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
           </SwipeDelete>
         );
       })}
-    </div>
+    </section>
   );
 }
 
@@ -144,8 +144,8 @@ const HeadTools: FC<{
       onClick={({ key }) => setSortType(key)}
       selectedKeys={[sortType]}
       items={[
-        { icon: <FileAddOutlined />, key: "CREATE", label: "Time created" },
-        { icon: <EditOutlined />, key: "LAST", label: "Time modified" },
+        { icon: <FileOutlined />, key: "CREATE", label: "Time created" },
+        { icon: <FileTextOutlined />, key: "LAST", label: "Time modified" },
         { icon: <SortAscendingOutlined />, key: "NAME", label: "Name" },
       ]}
     />

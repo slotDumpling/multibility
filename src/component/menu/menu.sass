@@ -40,7 +40,7 @@
     button.new-note
       position: fixed
       right: 20px
-      bottom: 40px
+      bottom: calc(20px + $safe-bottom)
 
 @keyframes logo-gradient
   from
@@ -60,11 +60,13 @@
   background-color: #eee3
   footer
     border-top: $default-border
-    padding: 10px 15px 30px 15px
+    padding: 10px
+    padding-bottom: calc(10px + $safe-bottom)
     overflow: hidden
     display: flex
-    > *
+    button
       margin-right: 10px
+      background-color: #0000
 
 .aside-drawer
   top: $header-low-height !important
@@ -137,7 +139,7 @@
 
 .note-list
   flex: 1
-  padding-bottom: 100px
+  padding-bottom: calc(80px + $safe-bottom)
   overflow: hidden auto
   position: relative
   -webkit-transform: translateZ(0)
