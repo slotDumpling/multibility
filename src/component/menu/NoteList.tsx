@@ -144,8 +144,8 @@ const HeadTools: FC<{
       onClick={({ key }) => setSortType(key)}
       selectedKeys={[sortType]}
       items={[
-        { icon: <FileOutlined />, key: "CREATE", label: "Time created" },
-        { icon: <FileTextOutlined />, key: "LAST", label: "Time modified" },
+        { icon: <FileOutlined />, key: "CREATE", label: "Date created" },
+        { icon: <FileTextOutlined />, key: "LAST", label: "Date modified" },
         { icon: <SortAscendingOutlined />, key: "NAME", label: "Name" },
       ]}
     />
