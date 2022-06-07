@@ -77,12 +77,14 @@
   .share-btn
     width: 162px
     margin-top: 15px
+    border-radius: 8px
   .user-list
     display: flex
     flex-direction: column
     max-height: 150px
-    width: $pop-width - 20px
+    width: 100%
     overflow: auto
+    padding: 0 10px
     margin-bottom: 10px
     .user-item
       display: flex
@@ -92,6 +94,7 @@
       &:not(.online)
         .room-avatar, .user-name
           opacity: 0.5
+          filter: grayscale(0.5)
       .room-avatar
         margin-right: 10px
       .user-name
