@@ -75,13 +75,13 @@ export const SelectTool: SelectToolType = ({
     const imageData = rasterize();
     try {
       const worker = await getOcrWorker();
-      const text = (await worker.recognize(imageData)).data.text;
+      const { text } = (await worker.recognize(imageData)).data;
       Modal.confirm({
         title: "OCR Result",
-        content: <p contentEditable>{text}</p>,
-        onOk: () => copy(text),
-        okText: "Copy",
+        content: <TextArea defaultValue={text} />,
         icon: <IconFont type="icon-OCR" />,
+        okText: "Copy",
+        onOk: () => copy(text),
       });
     } catch (e) {
       console.error(e);
