@@ -404,7 +404,7 @@ const RoomInfo: FC = () => {
       await copy(`${noteInfo.name} - ${selfName} - Multibility\n${link}`);
       message.destroy("copy");
       message.success({
-        content: "Share link copied!",
+        content: "Link copied!",
         icon: <CopyOutlined />,
         key: "copy",
       });
@@ -414,17 +414,21 @@ const RoomInfo: FC = () => {
   };
 
   const userList = useMemo(() => {
-    const values = Object.values(userRec);
     const selfID = getUserID();
-    const selfInfo = userRec[selfID];
+    const { [selfID]: selfInfo, ...otherUsers } = userRec;
     const list = selfInfo ? [selfInfo] : [];
+    const values = Object.values(otherUsers);
     list.push(
-      ...values.filter(({ online, userID }) => online && userID !== selfID),
-      ...values.filter(({ online, userID }) => !online && userID !== selfID)
+      ...values.filter(({ online }) => online),
+      ...values.filter(({ online }) => !online)
     );
     return list;
   }, [userRec]);
-  const onlineNum = userList.filter((u) => u.online).length;
+
+  const onlineNum = useMemo(
+    () => userList.filter(({ online }) => online).length,
+    [userList]
+  );
 
   const content = (
     <div className="team-popover">
@@ -507,13 +511,15 @@ const JoinRoom: FC<{ instantSave: () => Promise<void> | undefined }> = ({
 }) => {
   const { noteID } = useContext(ReaderStateCtx);
   const nav = useNavigate();
+
   const createRoom = async () => {
     await instantSave();
-    const resCode = await putNote(noteID);
-    if (!resCode) return message.error("Can't create room.");
+    const res = await putNote(noteID);
+    if (!res) return message.error("Can't create room.");
     await editNoteData(noteID, { team: true });
     nav("/team/" + noteID);
   };
+
   return (
     <Button
       type="text"

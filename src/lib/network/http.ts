@@ -70,7 +70,7 @@ export async function loadTeamNoteInfo(noteID: string) {
 
 export async function putNote(noteID: string) {
   const note = await loadNote(noteID);
-  if (!note) return null;
+  if (!note) return false;
   const { uid, name, withImg, pdf, pageOrder, pageRec } = note;
   removePageTimg(pageRec);
 
@@ -94,11 +94,11 @@ export async function putNote(noteID: string) {
       });
     }
 
-    if (data.statusCode !== 201) return null;
-    return data.code as number;
+    if (data.statusCode !== 201) return false;
+    return true;
   } catch (e) {
     console.error(e);
-    return null;
+    return false;
   }
 }
 
