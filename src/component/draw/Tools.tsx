@@ -5,7 +5,9 @@ import {
   LoadingOutlined,
   BgColorsOutlined,
   FontSizeOutlined,
+  CaretLeftOutlined,
   FontColorsOutlined,
+  CaretRightOutlined,
   RotateRightOutlined,
 } from "@ant-design/icons";
 import { Button, ButtonProps, InputNumber, Modal, Popover } from "antd";
@@ -20,7 +22,6 @@ import IconFont from "../ui/IconFont";
 import classNames from "classnames";
 import copy from "clipboard-copy";
 import "./tools.sass";
-import "animate.css";
 
 const getOcrWorker = (() => {
   let worker: Worker;
@@ -53,12 +54,6 @@ export const SelectTool: SelectToolType = ({
   const [transX, setTransX] = useState(0);
   const gearStyle = { transform: `translateX(${transX}px)` };
 
-  const [rotateCount, setRotateCount] = useState(0);
-  const shakeShow = rotateCount % 4 === 1;
-  const btnClass = shakeShow
-    ? "animate__animated animate__headShake"
-    : undefined;
-
   useDrag(
     ({ first, last, offset, delta }) => {
       setTransX(offset[0]);
@@ -75,16 +70,19 @@ export const SelectTool: SelectToolType = ({
   );
 
   const [recoginzing, setRecoginzing] = useState(false);
-  const [modalShow, setModalShow] = useState(false);
-  const [text, setText] = useState("");
   const recognizeText = async () => {
     setRecoginzing(true);
     const imageData = rasterize();
     try {
       const worker = await getOcrWorker();
-      const result = await worker.recognize(imageData);
-      setText(result.data.text);
-      setModalShow(true);
+      const text = (await worker.recognize(imageData)).data.text;
+      Modal.confirm({
+        title: "OCR Result",
+        content: <p contentEditable>{text}</p>,
+        onOk: () => copy(text),
+        okText: "Copy",
+        icon: <IconFont type="icon-OCR" />,
+      });
     } catch (e) {
       console.error(e);
     } finally {
@@ -107,14 +105,12 @@ export const SelectTool: SelectToolType = ({
       </Popover>
       <div className={classNames("rotate-wrapper", { dragged })} ref={rotateEl}>
         <Button
-          className={btnClass}
           icon={<RotateRightOutlined />}
-          onClick={() => {
-            setRotateCount((prev) => prev + 1);
-            onRotate(90, true);
-          }}
+          onClick={() => onRotate(90, true)}
           {...btnProps}
         />
+        <CaretLeftOutlined className="arrow left" />
+        <CaretRightOutlined className="arrow right" />
         <div className="gear" style={gearStyle} />
       </div>
       <Button icon={<CopyOutlined />} onClick={onDuplicate} {...btnProps} />
@@ -129,20 +125,6 @@ export const SelectTool: SelectToolType = ({
         onClick={onDelete}
         {...btnProps}
       />
-      <Modal
-        visible={modalShow}
-        title="OCR Result"
-        onCancel={() => setModalShow(false)}
-        onOk={() => {
-          copy(text);
-          setModalShow(false);
-          setText("");
-        }}
-        okText="Copy"
-        destroyOnClose
-      >
-        <TextArea value={text} onChange={(e) => setText(e.target.value)} />
-      </Modal>
     </div>,
     document.body
   );

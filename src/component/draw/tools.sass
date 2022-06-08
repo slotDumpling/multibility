@@ -17,6 +17,23 @@
     justify-content: center
     touch-action: none
     transition: width 0.3s
+    button
+      width: 100%
+      transition: opacity 0.3s
+    .arrow
+      position: absolute
+      top: 50%
+      transform: translateY(-50%)
+      transition: opacity 0.3s
+      opacity: 0
+      &.left
+        left: 5px
+      &.right
+        right: 5px
+    &:not(.dragged):hover
+      width: 60px
+      .arrow
+        opacity: 0.5
     &.dragged
       overflow: hidden
       width: 90px
