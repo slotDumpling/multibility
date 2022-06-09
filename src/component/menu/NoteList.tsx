@@ -60,11 +60,12 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
   };
 
   const sortedList = useMemo(() => {
+    const comparator = (t0: number, t1: number) => t1 - t0;
     switch (sortType) {
       case "CREATE":
-        return noteList.sortBy((n) => -n.createTime);
+        return noteList.sortBy((n) => n.createTime, comparator);
       case "LAST":
-        return noteList.sortBy((n) => -n.lastTime);
+        return noteList.sortBy((n) => n.lastTime, comparator);
       case "NAME":
         return noteList.sortBy((n) => n.name.toUpperCase());
       default:
@@ -75,7 +76,7 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
   const filterdList = useMemo(
     () =>
       sortedList.filter((n) =>
-        n.name.toLowerCase().includes(searchText.trim().toLowerCase())
+        n.name.toUpperCase().includes(searchText.trim().toUpperCase())
       ),
     [searchText, sortedList]
   );
@@ -143,10 +144,17 @@ const HeadTools: FC<{
     <Menu
       onClick={({ key }) => setSortType(key)}
       selectedKeys={[sortType]}
+      className="sort-drop"
       items={[
-        { icon: <FileOutlined />, key: "CREATE", label: "Date created" },
-        { icon: <FileTextOutlined />, key: "LAST", label: "Date modified" },
-        { icon: <SortAscendingOutlined />, key: "NAME", label: "Name" },
+        {
+          type: "group",
+          label: "Sort by",
+          children: [
+            { icon: <FileOutlined />, key: "CREATE", label: "Date created" },
+            { icon: <FileTextOutlined />, key: "LAST", label: "Date modified" },
+            { icon: <SortAscendingOutlined />, key: "NAME", label: "Name" },
+          ],
+        },
       ]}
     />
   );
