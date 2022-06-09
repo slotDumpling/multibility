@@ -8,14 +8,14 @@ import { getUserID, UserInfo } from "../../lib/user";
 import { NotePage } from "../../lib/note/note";
 import { Socket } from "socket.io-client";
 import { Setter } from "../../lib/hooks";
+import { Loading } from "../ui/Loading";
 import { message } from "antd";
 import { Set } from "immutable";
 import Reader from "./Reader";
-import { Loading } from "../ui/Loading";
 
 export const TeamCtx = createContext({
   io: undefined as Socket | undefined,
-  code: -2,
+  code: 0,
   teamOn: false,
   connected: false,
   ignores: Set<string>(),
