@@ -19,8 +19,8 @@ import {
   createPage,
   defaultNotePage,
 } from "../../lib/note/note";
+import { useInViewport, useMemoizedFn as useEvent, useSafeState } from "ahooks";
 import { NewPageInfo, ReorderInfo, SyncInfo } from "../../lib/network/io";
-import { useInViewport, useMemoizedFn, useSafeState } from "ahooks";
 import { SetOperation, StateSet } from "../../lib/draw/StateSet";
 import { loadNote, editNoteData } from "../../lib/note/archive";
 import { AddPageButton, showPageDelMsg } from "./ReaderTools";
@@ -102,7 +102,7 @@ export default function Reader() {
     document.title = noteInfo.name + " - Multibility";
   }, [noteInfo]);
 
-  const saver = useMemoizedFn(async () => {
+  const saver = useEvent(async () => {
     const pr = pageRec?.toObject();
     const canvas = document.querySelector("canvas");
     const thumbnail = canvas?.toDataURL();
@@ -131,7 +131,7 @@ export default function Reader() {
     io?.emit("reorder", { pageOrder });
   };
 
-  const handleReorder = useMemoizedFn(
+  const handleReorder = useEvent(
     ({ deleted, pageOrder, prevOrder }: ReorderInfo) => {
       saveReorder(pageOrder);
       if (!deleted) return;
@@ -139,7 +139,7 @@ export default function Reader() {
     }
   );
 
-  const handleNewPage = useMemoizedFn(
+  const handleNewPage = useEvent(
     ({ pageOrder, pageID, newPage }: NewPageInfo) => {
       saveReorder(pageOrder);
       savePageRec(pageID, () => newPage);
@@ -350,7 +350,11 @@ export const PageWrapper = ({
   const maskShow = Boolean(preview || !drawShow);
 
   return (
-    <div ref={wrapperEl} className="page-wrapper" style={{ paddingTop: `${ratio * 100}%` }}>
+    <div
+      ref={wrapperEl}
+      className="page-wrapper"
+      style={{ paddingTop: `${ratio * 100}%` }}
+    >
       {drawShow && (
         <DrawWrapper
           drawState={drawState}
@@ -380,7 +384,7 @@ const DrawWrapper = ({
 }) => {
   const { drawCtrl } = useContext(ReaderStateCtx);
 
-  const handleChange = useMemoizedFn(
+  const handleChange = useEvent(
     (arg: ((s: DrawState) => DrawState) | DrawState) => {
       if (!updateState) return;
       const newDS = arg instanceof DrawState ? arg : arg(drawState);
