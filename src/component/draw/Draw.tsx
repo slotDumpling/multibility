@@ -213,7 +213,7 @@ const Draw = React.forwardRef<
           if (path?.contains(point)) return;
           setPath(startStroke("#1890ff", 5));
         } else {
-          if (rect?.contains(point)) return;
+          if (rect?.bounds.contains(point)) return;
           setNewRect(e);
         }
         setSelected(false);
