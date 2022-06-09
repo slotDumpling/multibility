@@ -17,6 +17,7 @@ import {
   SyncOutlined,
   ClearOutlined,
   InboxOutlined,
+  LoadingOutlined,
   FilePdfOutlined,
   SettingOutlined,
   CaretDownOutlined,
@@ -160,6 +161,7 @@ const ProfilePage = () => {
 
 const SettingsPage = () => {
   const { menuInit } = useContext(MenuMethodCtx);
+  const [updating, setUpdating] = useState(false);
 
   const clearAll = async () => {
     await localforage.clear();
@@ -170,9 +172,11 @@ const SettingsPage = () => {
     <SeconaryMenu title="Settings">
       <div className="setting-menu">
         <Button
-          icon={<SyncOutlined />}
+          icon={updating ? <LoadingOutlined /> : <SyncOutlined />}
           onClick={async () => {
+            setUpdating(true);
             await serviceWorkerRegistration.unregister();
+            setUpdating(false);
             window.location.reload();
           }}
           block
