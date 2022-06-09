@@ -3,7 +3,6 @@ import { getDefaultFlatState } from "../draw/DrawState";
 import localforage from "localforage";
 import { v4 as getUid } from "uuid";
 import { pickBy } from "lodash-es";
-import moment from "moment";
 
 export interface NoteTag {
   uid: string;
@@ -71,7 +70,7 @@ export async function loadNote(uid: string) {
 
 export async function editNoteData(uid: string, noteData: Partial<Note>) {
   noteData = pickBy(noteData, (v) => v !== undefined);
-  if ("pageRec" in noteData) noteData.lastTime = moment.now();
+  if ("pageRec" in noteData) noteData.lastTime = Date.now();
   console.dir(noteData);
 
   const allNotes = await getAllNotes();
@@ -153,7 +152,7 @@ export async function saveTeamNote(
 ) {
   let note = await loadNote(noteID);
   if (note) return;
-  const time = moment.now();
+  const time = Date.now();
   const pageRec: Record<string, NotePage> = {};
   note = {
     ...noteInfo,

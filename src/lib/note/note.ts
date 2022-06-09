@@ -1,6 +1,6 @@
 import { getDefaultFlatState, FlatState } from "../draw/DrawState";
 import { v4 as getUid } from "uuid";
-import moment from "moment";
+import dayjs from "dayjs";
 
 export interface NotePage {
   ratio: number;
@@ -57,10 +57,10 @@ export interface TeamNoteInfo {
 
 export function createEmptyNote(): Note {
   const pageID = getUid();
-  const time = moment.now();
+  const time = Date.now();
   return {
     uid: getUid(),
-    name: `Note ${moment(time).format("LT, ddd MMM D")}`,
+    name: `Note ${dayjs(time).format("HH:mm, ddd MMM D")}`,
     tagID: "DEFAULT",
     team: false,
     withImg: false,

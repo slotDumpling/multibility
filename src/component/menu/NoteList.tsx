@@ -25,7 +25,9 @@ import { Setter } from "../../lib/hooks";
 import { TagCircle } from "./SideMenu";
 import { List, Set } from "immutable";
 import classNames from "classnames";
-import moment from "moment";
+import dayjs from "dayjs";
+import calender from "dayjs/plugin/calendar";
+dayjs.extend(calender);
 
 export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
   const [nowSwiped, setNowSwiped] = useState("");
@@ -270,7 +272,7 @@ const NoteItem: FC<{
   setSelectNotes: Setter<Set<string>>;
 }> = ({ noteInfo, selected, setSelectNotes }) => {
   const { team, uid, name, thumbnail, lastTime } = noteInfo;
-  const date = useMemo(() => moment(lastTime).calendar(), [lastTime]);
+  const date = useMemo(() => dayjs(lastTime).calendar(), [lastTime]);
   const href = `${team ? "team" : "reader"}/${uid}`;
 
   const { editing } = useContext(MenuStateCtx);
