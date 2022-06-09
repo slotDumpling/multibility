@@ -1,14 +1,13 @@
 import React, {
-  FC,
   useRef,
   useMemo,
   useState,
   Dispatch,
   useEffect,
   useCallback,
-  ComponentType,
   SetStateAction,
   useDebugValue,
+  useImperativeHandle,
 } from "react";
 import { usePreventTouch, usePreventGesture } from "../../lib/touch/touch";
 import { DrawState, Mutation, Stroke } from "../../lib/draw/DrawState";
@@ -20,20 +19,15 @@ import { Set } from "immutable";
 import paper from "paper";
 import "./draw.sass";
 
-export type SelectToolType = ComponentType<{
-  onDelete: () => void;
-  onRotate: (angle: number, last?: boolean) => void;
-  onDuplicate: () => void;
+export interface DrawRefType {
+  deleteSelected: () => void;
+  rotateSelected: (angle: number, last?: boolean) => void;
+  duplicateSelected: () => void;
   mutateStyle: (updated: Partial<DrawCtrl>) => void;
   rasterize: () => string;
-  currDrawCtrl: Partial<DrawCtrl>;
-}>;
-
-export type TextToolType = ComponentType<{
-  onSubmit: (text: string, fontSize: number, color: string) => void;
-  onCancel: () => void;
-  visible: boolean;
-}>;
+  submitText: (text: string, fontSize: number, color: string) => void;
+  cancelText: () => void;
+}
 
 const PREVIEW_WIDTH = 200;
 const {
@@ -46,428 +40,439 @@ const {
   Shape: { Rectangle },
 } = paper;
 
-const Draw: FC<{
-  drawState: DrawState;
-  otherStates?: DrawState[];
-  onChange?: Dispatch<SetStateAction<DrawState>>;
-  drawCtrl?: DrawCtrl;
-  readonly?: boolean;
-  preview?: boolean;
-  imgSrc?: string;
-  SelectTool?: SelectToolType;
-  TextTool?: TextToolType;
-}> = ({
-  drawState,
-  otherStates,
-  onChange = () => {},
-  drawCtrl = defaultDrawCtrl,
-  preview = false,
-  readonly = preview,
-  imgSrc,
-  SelectTool,
-  TextTool,
-}) => {
-  const { width, height } = drawState;
-  const { mode, color, finger, lineWidth, highlight, eraserWidth, lasso } =
-    drawCtrl;
+const Draw = React.forwardRef<
+  DrawRefType,
+  {
+    drawState: DrawState;
+    otherStates?: DrawState[];
+    onChange?: Dispatch<SetStateAction<DrawState>>;
+    drawCtrl?: DrawCtrl;
+    readonly?: boolean;
+    preview?: boolean;
+    imgSrc?: string;
+    setActiveTool?: Dispatch<SetStateAction<"" | "select" | "text">>;
+  }
+>(
+  (
+    {
+      drawState,
+      otherStates,
+      onChange = () => {},
+      drawCtrl = defaultDrawCtrl,
+      preview = false,
+      readonly = preview,
+      imgSrc,
+      setActiveTool,
+    },
+    ref
+  ) => {
+    const { width, height } = drawState;
+    const { mode, color, finger, lineWidth, highlight, eraserWidth, lasso } =
+      drawCtrl;
 
-  const canvasEl = useRef<HTMLCanvasElement>(null);
-  const scope = useRef(new paper.PaperScope());
-  const [group, setGroup] = useState<paper.Item[]>([]);
-  const [erased, setErased] = useState(Set<string>());
-  const [currDrawCtrl, setCurrDrawCtrl] = useState<Partial<DrawCtrl>>({});
-  const [path, setPath] = usePaperItem<paper.Path>();
-  const [rect, setRect] = usePaperItem<paper.Shape.Rectangle>();
+    const canvasEl = useRef<HTMLCanvasElement>(null);
+    const scope = useRef(new paper.PaperScope());
+    const [group, setGroup] = useState<paper.Item[]>([]);
+    const [erased, setErased] = useState(Set<string>());
+    const [path, setPath] = usePaperItem<paper.Path>();
+    const [rect, setRect] = usePaperItem<paper.Shape.Rectangle>();
 
-  useEffect(() => {
-    const setupPaper = () => {
-      if (!canvasEl.current) return;
-      scope.current.setup(canvasEl.current);
+    useEffect(() => {
+      const setupPaper = () => {
+        if (!canvasEl.current) return;
+        scope.current.setup(canvasEl.current);
 
-      const r = preview ? PREVIEW_WIDTH / width : 1;
-      scope.current.view.viewSize = new Size(width, height).multiply(r);
-      scope.current.view.scale(r, new Point(0, 0));
-      paintBackground(scope.current, width, height);
-    };
-
-    setupPaper();
-    const cvs = canvasEl.current;
-    return () => void (cvs && releaseCanvas(cvs));
-  }, [width, height, preview]);
-
-  useEffect(() => {
-    if (!imgSrc) return;
-    const img = new Image();
-    img.src = imgSrc;
-    let raster: paper.Raster;
-
-    img.onload = () => {
-      scope.current.activate();
-      raster = new Raster(img);
-      scope.current.project.layers[0].addChild(raster);
-      raster.position = scope.current.view.center;
-      let r = width / img.width;
-      raster.scale(r);
-    };
-
-    return () => void raster?.remove();
-  }, [imgSrc, width]);
-
-  const mergedStrokes = useMemo(
-    () =>
-      otherStates
-        ? DrawState.mergeStates(drawState, ...otherStates)
-        : drawState.getStrokeList(),
-    [drawState, otherStates]
-  );
-
-  useEffect(() => {
-    const tempGroup: paper.Item[] = [];
-    const othersGroup: paper.Item[] = [];
-
-    mergedStrokes.forEach((stroke) =>
-      paintStroke(
-        stroke,
-        scope.current,
-        drawState.hasStroke(stroke.uid) ? tempGroup : othersGroup,
-        erased.has(stroke.uid)
-      )
-    );
-    setGroup(tempGroup);
-
-    return () => {
-      tempGroup.forEach((item) => item.remove());
-      othersGroup.forEach((item) => item.remove());
-    };
-  }, [mergedStrokes, erased, drawState]);
-
-  const [selected, setSelected] = useState(false);
-  const paperMode = mode === "select" && selected ? "selected" : mode;
-  const [selectedIDs, setSelectedIDs] = useState<string[]>([]);
-  const selectedItems = useMemo(() => {
-    const IDSet = Set(selectedIDs);
-    return group.filter((item) => IDSet.has(item.name));
-  }, [group, selectedIDs]);
-
-  const resetSelect = useCallback(() => {
-    setSelected(false);
-    setPath(undefined);
-    setRect(undefined);
-  }, [setPath, setRect]);
-
-  useEffect(() => {
-    if (mode === "select") return resetSelect;
-  }, [mode, resetSelect]);
-
-  useEffect(() => {
-    if (selected)
-      return () => {
-        setSelectedIDs([]);
-        setCurrDrawCtrl({});
+        const r = preview ? PREVIEW_WIDTH / width : 1;
+        scope.current.view.viewSize = new Size(width, height).multiply(r);
+        scope.current.view.scale(r, new Point(0, 0));
+        paintBackground(scope.current, width, height);
       };
-  }, [selected]);
 
-  useEffect(resetSelect, [lasso, resetSelect]);
+      setupPaper();
+      const cvs = canvasEl.current;
+      return () => void (cvs && releaseCanvas(cvs));
+    }, [width, height, preview]);
 
-  const ratio = useRef(1);
-  const updateRatio = () => {
-    const clientWidth = canvasEl.current?.clientWidth;
-    if (clientWidth) ratio.current = width / clientWidth;
-    scope.current.activate();
-  };
+    useEffect(() => {
+      if (!imgSrc) return;
+      const img = new Image();
+      img.src = imgSrc;
+      let raster: paper.Raster;
 
-  const setNewRect = (e: paper.MouseEvent) => {
-    const point = transformPoint(e.point);
-    const rectangle = startSelectRect(point);
-    setRect(rectangle);
-  };
+      img.onload = () => {
+        scope.current.activate();
+        raster = new Raster(img);
+        scope.current.project.layers[0].addChild(raster);
+        raster.position = scope.current.view.center;
+        let r = width / img.width;
+        raster.scale(r);
+      };
 
-  const transformPoint = (projP: paper.Point) => {
-    scope.current.activate();
-    const { center, zoom } = scope.current.view;
-    const viewP = scope.current.view.projectToView(projP);
-    const absoluteP = viewP.multiply(ratio.current);
-    const offsetP = new Point(width, height)
-      .divide(2)
-      .subtract(center.multiply(zoom));
-    return absoluteP.subtract(offsetP).divide(zoom);
-  };
+      return () => void raster?.remove();
+    }, [imgSrc, width]);
 
-  const handleDown = {
-    draw() {
-      updateRatio();
-      setPath(startStroke(color, lineWidth, highlight));
-    },
-    erase() {
-      updateRatio();
-      setPath(startStroke("#0003", eraserWidth));
-    },
-    select(e: paper.MouseEvent) {
-      updateRatio();
-      if (lasso) setPath(startStroke("#1890ff", 5));
-      else setNewRect(e);
-    },
-    selected(e: paper.MouseEvent) {
-      updateRatio();
-      const point = transformPoint(e.point);
-      // check if point is outside of selection
-      if (lasso) {
-        if (path?.contains(point)) return;
-        setPath(startStroke("#1890ff", 5));
-      } else {
-        if (rect?.contains(point)) return;
-        setNewRect(e);
-      }
+    const mergedStrokes = useMemo(
+      () =>
+        otherStates
+          ? DrawState.mergeStates(drawState, ...otherStates)
+          : drawState.getStrokeList(),
+      [drawState, otherStates]
+    );
+
+    useEffect(() => {
+      const tempGroup: paper.Item[] = [];
+      const othersGroup: paper.Item[] = [];
+
+      mergedStrokes.forEach((stroke) =>
+        paintStroke(
+          stroke,
+          scope.current,
+          drawState.hasStroke(stroke.uid) ? tempGroup : othersGroup,
+          erased.has(stroke.uid)
+        )
+      );
+      setGroup(tempGroup);
+
+      return () => {
+        tempGroup.forEach((item) => item.remove());
+        othersGroup.forEach((item) => item.remove());
+      };
+    }, [mergedStrokes, erased, drawState]);
+
+    const [selected, setSelected] = useState(false);
+    const paperMode = mode === "select" && selected ? "selected" : mode;
+    const [selectedIDs, setSelectedIDs] = useState<string[]>([]);
+    const selectedItems = useMemo(() => {
+      const IDSet = Set(selectedIDs);
+      return group.filter((item) => IDSet.has(item.name));
+    }, [group, selectedIDs]);
+
+    const resetSelect = useCallback(() => {
       setSelected(false);
-    },
-    text(e: paper.MouseEvent) {
-      updateRatio();
+      setPath(undefined);
+      setRect(undefined);
+    }, [setPath, setRect]);
+
+    useEffect(() => {
+      if (mode === "select") return resetSelect;
+    }, [mode, resetSelect]);
+
+    useEffect(() => {
+      if (selected)
+        return () => {
+          setSelectedIDs([]);
+          // setCurrDrawCtrl({});
+        };
+    }, [selected]);
+
+    useEffect(resetSelect, [lasso, resetSelect]);
+
+    const ratio = useRef(1);
+    const updateRatio = () => {
+      const clientWidth = canvasEl.current?.clientWidth;
+      if (clientWidth) ratio.current = width / clientWidth;
+      scope.current.activate();
+    };
+
+    const setNewRect = (e: paper.MouseEvent) => {
       const point = transformPoint(e.point);
-      const t = new paper.PointText(point);
-      setPointText(t);
-    },
-  }[paperMode];
+      const rectangle = startSelectRect(point);
+      setRect(rectangle);
+    };
 
-  const handleDrag = {
-    draw(e: paper.MouseEvent) {
-      if (!path) return;
+    const transformPoint = (projP: paper.Point) => {
       scope.current.activate();
-      path.add(transformPoint(e.point));
-      path.smooth();
-    },
-    erase(e: paper.MouseEvent) {
-      if (!path) return;
-      scope.current.activate();
-      path.add(transformPoint(e.point));
-      path.smooth();
+      const { center, zoom } = scope.current.view;
+      const viewP = scope.current.view.projectToView(projP);
+      const absoluteP = viewP.multiply(ratio.current);
+      const offsetP = new Point(width, height)
+        .divide(2)
+        .subtract(center.multiply(zoom));
+      return absoluteP.subtract(offsetP).divide(zoom);
+    };
 
-      const newErased = group
-        .filter((p) => !erased.has(p.name))
-        .filter((p) => checkErase(p, path))
-        .map((p) => p.name);
-      setErased((prev) => prev.concat(newErased));
-    },
-    select(e: paper.MouseEvent) {
-      scope.current.activate();
-      if (lasso) {
+    const handleDown = {
+      draw() {
+        updateRatio();
+        setPath(startStroke(color, lineWidth, highlight));
+      },
+      erase() {
+        updateRatio();
+        setPath(startStroke("#0003", eraserWidth));
+      },
+      select(e: paper.MouseEvent) {
+        updateRatio();
+        if (lasso) setPath(startStroke("#1890ff", 5));
+        else setNewRect(e);
+      },
+      selected(e: paper.MouseEvent) {
+        updateRatio();
+        const point = transformPoint(e.point);
+        // check if point is outside of selection
+        if (lasso) {
+          if (path?.contains(point)) return;
+          setPath(startStroke("#1890ff", 5));
+        } else {
+          if (rect?.contains(point)) return;
+          setNewRect(e);
+        }
+        setSelected(false);
+      },
+      text(e: paper.MouseEvent) {
+        updateRatio();
+        const point = transformPoint(e.point);
+        const t = new paper.PointText(point);
+        setPointText(t);
+      },
+    }[paperMode];
+
+    const handleDrag = {
+      draw(e: paper.MouseEvent) {
         if (!path) return;
+        scope.current.activate();
         path.add(transformPoint(e.point));
         path.smooth();
-      } else {
-        if (!rect) return;
+      },
+      erase(e: paper.MouseEvent) {
+        if (!path) return;
+        scope.current.activate();
+        path.add(transformPoint(e.point));
+        path.smooth();
+
+        const newErased = group
+          .filter((p) => !erased.has(p.name))
+          .filter((p) => checkErase(p, path))
+          .map((p) => p.name);
+        setErased((prev) => prev.concat(newErased));
+      },
+      select(e: paper.MouseEvent) {
+        scope.current.activate();
+        if (lasso) {
+          if (!path) return;
+          path.add(transformPoint(e.point));
+          path.smooth();
+        } else {
+          if (!rect) return;
+          const delta = e.delta.multiply(ratio.current);
+          rect.size = rect.size.add(new Size(delta.x, delta.y));
+          rect.translate(delta.divide(2));
+        }
+      },
+      selected(e: paper.MouseEvent) {
+        scope.current.activate();
         const delta = e.delta.multiply(ratio.current);
-        rect.size = rect.size.add(new Size(delta.x, delta.y));
-        rect.translate(delta.divide(2));
-      }
-    },
-    selected(e: paper.MouseEvent) {
-      scope.current.activate();
-      const delta = e.delta.multiply(ratio.current);
-      selectedItems.forEach((item) => item.translate(delta));
-      path?.translate(delta);
-      rect?.translate(delta);
-    },
-    text: null,
-  }[paperMode];
+        selectedItems.forEach((item) => item.translate(delta));
+        path?.translate(delta);
+        rect?.translate(delta);
+      },
+      text: null,
+    }[paperMode];
 
-  const handleUp = {
-    draw() {
-      if (!path || path.segments.length === 0) return;
-      scope.current.activate();
-      path.simplify();
-      const pathData = path.exportJSON();
-      onChange((prev) => DrawState.addStroke(prev, pathData));
-      setPath(undefined);
-    },
-    erase() {
-      if (!path) return;
-      scope.current.activate();
-      onChange((prev) => DrawState.eraseStrokes(prev, erased.toArray()));
-      setErased(Set());
-      setPath(undefined);
-    },
-    select() {
-      scope.current.activate();
-      let items: paper.Item[];
-      if (lasso) {
-        if (!path || path.length < 50) return setPath(undefined);
-        path.closePath();
+    const handleUp = {
+      draw() {
+        if (!path || path.segments.length === 0) return;
+        scope.current.activate();
         path.simplify();
-        moveDash(path);
-        items = checkPathSelection(path, group);
-      } else {
-        if (!rect) return;
-        const { width, height } = rect.size.abs();
-        if (width * height < 100) return setRect(undefined);
-        moveDash(rect);
-        items = checkRectSelection(rect, group);
-      }
-      setSelectedIDs(items.map((item) => item.name));
-      setSelected(true);
-    },
-    selected() {
-      updateMutation();
-    },
-    text: null,
-  }[paperMode];
+        const pathData = path.exportJSON();
+        onChange((prev) => DrawState.addStroke(prev, pathData));
+        setPath(undefined);
+      },
+      erase() {
+        if (!path) return;
+        scope.current.activate();
+        onChange((prev) => DrawState.eraseStrokes(prev, erased.toArray()));
+        setErased(Set());
+        setPath(undefined);
+      },
+      select() {
+        scope.current.activate();
+        let items: paper.Item[];
+        if (lasso) {
+          if (!path || path.length < 50) return setPath(undefined);
+          path.closePath();
+          path.simplify();
+          moveDash(path);
+          items = checkPathSelection(path, group);
+        } else {
+          if (!rect) return;
+          const { width, height } = rect.size.abs();
+          if (width * height < 100) return setRect(undefined);
+          moveDash(rect);
+          items = checkRectSelection(rect, group);
+        }
+        setSelectedIDs(items.map((item) => item.name));
+        setSelected(true);
+      },
+      selected() {
+        updateMutation();
+      },
+      text: null,
+    }[paperMode];
 
-  const handlePaper = () => {
-    if (readonly) return;
-    scope.current.view.onMouseDown = handleDown;
-    scope.current.view.onMouseDrag = handleDrag;
-    scope.current.view.onMouseUp = handleUp;
-  };
-  useEffect(handlePaper);
-
-  const updateMutation = () => {
-    if (!selectedItems?.length) return;
-    const mutations = selectedItems.map(
-      (p) => [p.name, p.exportJSON()] as Mutation
-    );
-    onChange((prev) => DrawState.mutateStrokes(prev, mutations));
-  };
-
-  const deleteSelected = () => {
-    if (!selectedIDs.length) return;
-    onChange((prev) => DrawState.eraseStrokes(prev, selectedIDs));
-    setSelectedIDs([]);
-    resetSelect();
-  };
-
-  const rotateSelected = (angle: number, last = false) => {
-    let aniCount = last ? 10 : 1;
-    const dAngle = angle / aniCount;
-    const center = (rect || path)?.position;
-    const rotate = () => {
-      selectedItems.forEach((item) => item.rotate(dAngle, center));
-      rect?.rotate(dAngle, center);
-      path?.rotate(dAngle, center);
-      if (--aniCount > 0) requestAnimationFrame(rotate);
-      else last && updateMutation();
+    const handlePaper = () => {
+      if (readonly) return;
+      scope.current.view.onMouseDown = handleDown;
+      scope.current.view.onMouseDrag = handleDrag;
+      scope.current.view.onMouseUp = handleUp;
     };
-    rotate();
-  };
+    useEffect(handlePaper);
 
-  const mutateStyle = (updated: Partial<DrawCtrl>) => {
-    scope.current.activate();
-    updateGroupStyle(selectedItems, updated);
-    setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
-    updateMutation();
-  };
+    const updateMutation = () => {
+      if (!selectedItems?.length) return;
+      const mutations = selectedItems.map(
+        (p) => [p.name, p.exportJSON()] as Mutation
+      );
+      onChange((prev) => DrawState.mutateStrokes(prev, mutations));
+    };
 
-  const duplicateSelected = () => {
-    scope.current.activate();
-    const size = (rect || path)?.bounds.size;
-    if (!size) return;
-    const { width, height } = size;
-    const transP = new Point(width, height).divide(10);
-    const newSG = new Group(selectedItems).clone({ insert: false });
-    newSG.translate(transP);
-    rect?.translate(transP);
-    path?.translate(transP);
+    const deleteSelected = () => {
+      if (!selectedIDs.length) return;
+      onChange((prev) => DrawState.eraseStrokes(prev, selectedIDs));
+      setSelectedIDs([]);
+      resetSelect();
+    };
 
-    const mutations = newSG.children.map(
-      (item) => [getUid(), item.exportJSON()] as Mutation
-    );
-    onChange((prev) => DrawState.mutateStrokes(prev, mutations));
-    setSelectedIDs(mutations.map((m) => m[0]));
-  };
-
-  const rasterize = () =>
-    new Group(selectedItems).rasterize({ insert: false }).toDataURL();
-
-  const [pointText, setPointText] = usePaperItem<paper.PointText>();
-  const cancelText = useCallback(() => setPointText(undefined), [setPointText]);
-
-  useEffect(() => {
-    if (mode === "text") return cancelText;
-  }, [mode, cancelText]);
-
-  const submitText = (text: string, fontSize: number, color = "#000") => {
-    if (!pointText) return;
-    pointText.content = text;
-    pointText.fontSize = fontSize * 10;
-    pointText.fillColor = new Color(color);
-    const pathData = pointText.exportJSON();
-    onChange((prev) => DrawState.addStroke(prev, pathData));
-    cancelText();
-  };
-
-  usePreventGesture();
-  usePinch(
-    ({ memo, offset: [scale], first, last, origin }) => {
-      const { view } = scope.current;
-
-      let lastScale, lastOX, lastOY, elX, elY: number;
-      if (first || !memo) {
-        updateRatio();
-        if (!canvasEl.current) return;
-        const { x, y } = canvasEl.current.getBoundingClientRect();
-        lastScale = 1;
-        [lastOX, lastOY] = [origin[0] - x, origin[1] - y];
-        [elX, elY] = [x, y];
-      } else {
-        [lastScale, [lastOX, lastOY], [elX, elY]] = memo;
-      }
-
-      const r = ratio.current;
-      const [oX, oY] = [origin[0] - elX, origin[1] - elY];
-      const originViewP = new Point(oX, oY).multiply(r);
-      const originProjP = view.viewToProject(originViewP);
-
-      if (Math.abs(1 - scale) < 0.05) scale = 1;
-      let dScale = first ? 1 : scale / lastScale;
+    const rotateSelected = (angle: number, last = false) => {
       let aniCount = last ? 10 : 1;
-      dScale = Math.pow(dScale, 1 / aniCount);
-      const scaleView = () => {
-        view.scale(dScale, originProjP);
-        if (--aniCount > 0) requestAnimationFrame(scaleView);
+      const dAngle = angle / aniCount;
+      const center = (rect || path)?.position;
+      const rotate = () => {
+        selectedItems.forEach((item) => item.rotate(dAngle, center));
+        rect?.rotate(dAngle, center);
+        path?.rotate(dAngle, center);
+        if (--aniCount > 0) requestAnimationFrame(rotate);
+        else last && updateMutation();
       };
-      scaleView();
+      rotate();
+    };
 
-      const [dX, dY] = [oX - lastOX, oY - lastOY];
-      const transP = new Point(dX, dY).multiply(r / scale);
-      view.translate(transP);
+    const mutateStyle = (updated: Partial<DrawCtrl>) => {
+      scope.current.activate();
+      updateGroupStyle(selectedItems, updated);
+      // setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
+      updateMutation();
+    };
 
-      if (!last) return [scale, [oX, oY], [elX, elY]];
-      putCenterBack(view);
-    },
-    {
-      scaleBounds: { max: 5, min: 0.3 },
-      rubberband: 0.5,
-      target: canvasEl,
-    }
-  );
+    const duplicateSelected = () => {
+      scope.current.activate();
+      const size = (rect || path)?.bounds.size;
+      if (!size) return;
+      const { width, height } = size;
+      const transP = new Point(width, height).divide(10);
+      const newSG = new Group(selectedItems).clone({ insert: false });
+      newSG.translate(transP);
+      rect?.translate(transP);
+      path?.translate(transP);
 
-  const touchHandler = usePreventTouch(finger);
-  return (
-    <div className="draw-wrapper">
-      <canvas
-        ref={canvasEl}
-        className="draw-canvas"
-        data-paper-hidpi={false}
-        {...touchHandler}
-      />
-      {SelectTool && paperMode === "selected" && (
-        <SelectTool
-          onDelete={deleteSelected}
-          onRotate={rotateSelected}
-          onDuplicate={duplicateSelected}
-          mutateStyle={mutateStyle}
-          rasterize={rasterize}
-          currDrawCtrl={currDrawCtrl}
+      const mutations = newSG.children.map(
+        (item) => [getUid(), item.exportJSON()] as Mutation
+      );
+      onChange((prev) => DrawState.mutateStrokes(prev, mutations));
+      setSelectedIDs(mutations.map((m) => m[0]));
+    };
+
+    const rasterize = () =>
+      new Group(selectedItems).rasterize({ insert: false }).toDataURL();
+
+    const [pointText, setPointText] = usePaperItem<paper.PointText>();
+    const cancelText = useCallback(
+      () => setPointText(undefined),
+      [setPointText]
+    );
+
+    useEffect(() => {
+      if (mode === "text") return cancelText;
+    }, [mode, cancelText]);
+
+    const submitText = (text: string, fontSize: number, color = "#000") => {
+      if (!pointText) return;
+      pointText.content = text;
+      pointText.fontSize = fontSize * 10;
+      pointText.fillColor = new Color(color);
+      const pathData = pointText.exportJSON();
+      onChange((prev) => DrawState.addStroke(prev, pathData));
+      cancelText();
+    };
+
+    useImperativeHandle(ref, () => ({
+      deleteSelected,
+      duplicateSelected,
+      cancelText,
+      rotateSelected,
+      submitText,
+      mutateStyle,
+      rasterize,
+    }));
+    useEffect(() => {
+      if (!setActiveTool) return;
+      if (paperMode === "selected") {
+        setActiveTool("select");
+      } else if (paperMode === "text") {
+        setActiveTool(pointText ? "text" : "");
+      } else {
+        setActiveTool("");
+      }
+    }, [paperMode, pointText, setActiveTool]);
+
+    usePreventGesture();
+    usePinch(
+      ({ memo, offset: [scale], first, last, origin }) => {
+        const { view } = scope.current;
+
+        let lastScale, lastOX, lastOY, elX, elY: number;
+        if (first || !memo) {
+          updateRatio();
+          if (!canvasEl.current) return;
+          const { x, y } = canvasEl.current.getBoundingClientRect();
+          lastScale = 1;
+          [lastOX, lastOY] = [origin[0] - x, origin[1] - y];
+          [elX, elY] = [x, y];
+        } else {
+          [lastScale, [lastOX, lastOY], [elX, elY]] = memo;
+        }
+
+        const r = ratio.current;
+        const [oX, oY] = [origin[0] - elX, origin[1] - elY];
+        const originViewP = new Point(oX, oY).multiply(r);
+        const originProjP = view.viewToProject(originViewP);
+
+        if (Math.abs(1 - scale) < 0.05) scale = 1;
+        let dScale = first ? 1 : scale / lastScale;
+        let aniCount = last ? 10 : 1;
+        dScale = Math.pow(dScale, 1 / aniCount);
+        const scaleView = () => {
+          view.scale(dScale, originProjP);
+          if (--aniCount > 0) requestAnimationFrame(scaleView);
+        };
+        scaleView();
+
+        const [dX, dY] = [oX - lastOX, oY - lastOY];
+        const transP = new Point(dX, dY).multiply(r / scale);
+        view.translate(transP);
+
+        if (!last) return [scale, [oX, oY], [elX, elY]];
+        putCenterBack(view);
+      },
+      {
+        scaleBounds: { max: 5, min: 0.3 },
+        rubberband: 0.5,
+        target: canvasEl,
+      }
+    );
+
+    const touchHandler = usePreventTouch(finger);
+    return (
+      <div className="draw-wrapper">
+        <canvas
+          ref={canvasEl}
+          className="draw-canvas"
+          data-paper-hidpi={false}
+          {...touchHandler}
         />
-      )}
-      {TextTool && mode === "text" && (
-        <TextTool
-          visible={pointText !== undefined}
-          onCancel={cancelText}
-          onSubmit={submitText}
-        />
-      )}
-    </div>
-  );
-};
+      </div>
+    );
+  }
+);
 
 export default React.memo(Draw);
 

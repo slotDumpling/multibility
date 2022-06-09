@@ -1,0 +1,107 @@
+@import ../_mixins
+@import ../_var
+
+.reader.container header
+  min-height: $header-low-height
+  padding: 0 15px
+  display: flex
+  align-items: center
+  justify-content: space-between
+  border-bottom: $dark-border
+  & > div > button
+    margin: 0 5px
+
+@media screen and (max-width: 640px)
+  .reader.container header
+    height: $header-high-height
+    .middle
+      border-left: $default-border
+      border-right: $default-border
+      padding: 0 20px
+    .br
+      height: 10px
+
+@media screen and (min-width: 640px)
+  .reader.container
+    .br
+      display: none
+    button.pen
+      margin-left: 30px
+
+.pen-panel
+  width: 200px
+  .pen-status
+    display: flex
+    margin-bottom: 10px
+    .ant-slider
+      flex: 1
+      margin-right: 10px
+      
+.color-select
+  display: grid
+  grid-template-columns: repeat(4, 1fr)
+  justify-items: center
+  grid-auto-rows: 40px
+  align-items: center
+  input[type="radio"]
+    display: none
+    &:checked + .circle
+      border-width: 6px
+      background-color: white
+  .circle
+    cursor: pointer
+    width: 30px
+    height: 30px
+    border-radius: 15px
+    border: 15px solid
+    transition: all 0.2s
+    background-color: var(--circle-color)
+    border-color: var(--circle-color)
+
+.team-title
+  display: flex
+  justify-content: space-between
+  align-items: center
+
+.team-popover
+  $pop-width: 200px
+  width: $pop-width
+  display: flex
+  flex-direction: column
+  align-items: center
+  .disconn-alert
+    width: $pop-width + 2 * 16px
+    transform: translateY(-12px)
+  .code-display
+    pointer-events: none
+  .share-btn
+    width: 162px
+    margin-top: 15px
+    border-radius: 8px
+  .user-list
+    display: flex
+    flex-direction: column
+    max-height: 150px
+    width: 100%
+    overflow: auto
+    padding: 0 10px
+    margin-bottom: 10px
+    .user-item
+      display: flex
+      align-items: center
+      &:not(:last-of-type)
+        margin-bottom: 10px
+      &:not(.online)
+        .room-avatar, .user-name
+          opacity: 0.5
+          filter: grayscale(0.5)
+      .room-avatar
+        margin-right: 10px
+      .user-name
+        @include text-overflow
+        flex: 1
+      .rename-input
+        flex: 1
+        margin-left: -6px
+        input
+          padding-left: 5px

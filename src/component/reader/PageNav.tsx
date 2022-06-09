@@ -22,10 +22,10 @@ import {
 } from "react-beautiful-dnd";
 import { PageWrapper, ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { Avatar, Button, Drawer, Menu, Popover, Tabs } from "antd";
-import { AddPageButton } from "./ReaderTools";
+import { AddPageButton } from "./ReaderUtils";
 import { exchange } from "../../lib/array";
 import { Setter } from "../../lib/hooks";
-import { UserAvatar } from "./DrawTools";
+import { UserAvatar } from "./ReaderHeader";
 import IconFont from "../ui/IconFont";
 import classNames from "classnames";
 import { TeamCtx } from "./Team";

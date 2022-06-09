@@ -1,107 +1,73 @@
 @import ../_mixins
 @import ../_var
 
-.reader.container header
-  min-height: $header-low-height
-  padding: 0 15px
+.select-tool
+  position: fixed
+  left: 50%
+  padding: 5px
+  transform: translateX(-50%)
+  border-radius: 50px
+  border: $dark-border
   display: flex
-  align-items: center
-  justify-content: space-between
-  border-bottom: $dark-border
-  & > div > button
-    margin: 0 5px
+  @include back-blur
+  transition-property: opacity, transform
+  transition-duration: 0.2s
+  &:not(.visible)
+    opacity: 0
+    transform: translate(-50%, -10px)
+  .rotate-wrapper
+    position: relative
+    width: 40px
+    display: flex
+    justify-content: center
+    touch-action: none
+    transition: width 0.3s
+    button
+      width: 100%
+      transition: opacity 0.3s
+    .arrow
+      position: absolute
+      top: 50%
+      transform: translateY(-50%)
+      transition: opacity 0.3s
+      display: flex
+      opacity: 0
+      pointer-events: none
+      &.left
+        left: 5px
+      &.right
+        right: 5px
+    &:not(.dragged):hover
+      width: 60px
+      .arrow
+        opacity: 0.5
+    &.dragged
+      overflow: hidden
+      width: 90px
+      .gear
+        @include absolute(5px, -47px, 5px, -45px)
+        background: linear-gradient(to right, #aaa 20%, #0000 0)
+        background-size: 5px 100%
+      button
+        opacity: 0
+
+.insert-option
+  margin: 10px 0
+  .font-size
+    margin-right: 20px
+    > span
+      margin: 0 5px
+
+.font-color-drop
+  width: 200px
+  padding: 10px
+  background-color: white
+  border-radius: 5px
 
 @media screen and (max-width: 640px)
-  .reader.container header
-    height: $header-high-height
-    .middle
-      border-left: $default-border
-      border-right: $default-border
-      padding: 0 20px
-    .br
-      height: 10px
+  .select-tool
+    top: 120px
 
 @media screen and (min-width: 640px)
-  .reader.container
-    .br
-      display: none
-    button.pen
-      margin-left: 30px
-
-.pen-panel
-  width: 200px
-  .pen-status
-    display: flex
-    margin-bottom: 10px
-    .ant-slider
-      flex: 1
-      margin-right: 10px
-      
-.color-select
-  display: grid
-  grid-template-columns: repeat(4, 1fr)
-  justify-items: center
-  grid-auto-rows: 40px
-  align-items: center
-  input[type="radio"]
-    display: none
-    &:checked + .circle
-      border-width: 6px
-      background-color: white
-  .circle
-    cursor: pointer
-    width: 30px
-    height: 30px
-    border-radius: 15px
-    border: 15px solid
-    transition: all 0.2s
-    background-color: var(--circle-color)
-    border-color: var(--circle-color)
-
-.team-title
-  display: flex
-  justify-content: space-between
-  align-items: center
-
-.team-popover
-  $pop-width: 200px
-  width: $pop-width
-  display: flex
-  flex-direction: column
-  align-items: center
-  .disconn-alert
-    width: $pop-width + 2 * 16px
-    transform: translateY(-12px)
-  .code-display
-    pointer-events: none
-  .share-btn
-    width: 162px
-    margin-top: 15px
-    border-radius: 8px
-  .user-list
-    display: flex
-    flex-direction: column
-    max-height: 150px
-    width: 100%
-    overflow: auto
-    padding: 0 10px
-    margin-bottom: 10px
-    .user-item
-      display: flex
-      align-items: center
-      &:not(:last-of-type)
-        margin-bottom: 10px
-      &:not(.online)
-        .room-avatar, .user-name
-          opacity: 0.5
-          filter: grayscale(0.5)
-      .room-avatar
-        margin-right: 10px
-      .user-name
-        @include text-overflow
-        flex: 1
-      .rename-input
-        flex: 1
-        margin-left: -6px
-        input
-          padding-left: 5px
+  .select-tool
+    top: 70px

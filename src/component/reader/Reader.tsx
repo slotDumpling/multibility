@@ -23,19 +23,19 @@ import { useInViewport, useMemoizedFn as useEvent, useSafeState } from "ahooks";
 import { NewPageInfo, ReorderInfo, SyncInfo } from "../../lib/network/io";
 import { SetOperation, StateSet } from "../../lib/draw/StateSet";
 import { loadNote, editNoteData } from "../../lib/note/archive";
-import { AddPageButton, showPageDelMsg } from "./ReaderTools";
+import { AddPageButton, showPageDelMsg } from "./ReaderUtils";
 import { useParams, useNavigate } from "react-router-dom";
 import { DrawState } from "../../lib/draw/DrawState";
 import { updatePages } from "../../lib/network/http";
 import { TeamState } from "../../lib/draw/TeamState";
-import { SelectTool, TextTool } from "../draw/Tools";
+import { SelectTool, TextTool } from "./DrawTools";
 import { insertAfter } from "../../lib/array";
-import { debounce, once } from "lodash-es";
 import { Setter } from "../../lib/hooks";
+import { debounce, once } from "lodash-es";
 import { Map, Set } from "immutable";
-import DrawTools from "./DrawTools";
+import DrawTools from "./ReaderHeader";
 import { TeamCtx } from "./Team";
-import Draw from "../draw/Draw";
+import Draw, { DrawRefType } from "../draw/Draw";
 import { message } from "antd";
 import "./reader.sass";
 
@@ -383,6 +383,8 @@ const DrawWrapper = ({
   imgSrc?: string;
 }) => {
   const { drawCtrl } = useContext(ReaderStateCtx);
+  const [activeTool, setActiveTool] = useState<"" | "select" | "text">("");
+  const drawRef = useRef<DrawRefType>(null);
 
   const handleChange = useEvent(
     (arg: ((s: DrawState) => DrawState) | DrawState) => {
@@ -401,15 +403,19 @@ const DrawWrapper = ({
       preview
     />
   ) : (
-    <Draw
-      drawState={drawState}
-      otherStates={otherStates}
-      onChange={handleChange}
-      imgSrc={imgSrc}
-      drawCtrl={drawCtrl}
-      SelectTool={SelectTool}
-      TextTool={TextTool}
-    />
+    <>
+      <Draw
+        drawState={drawState}
+        otherStates={otherStates}
+        onChange={handleChange}
+        imgSrc={imgSrc}
+        drawCtrl={drawCtrl}
+        ref={drawRef}
+        setActiveTool={setActiveTool}
+      />
+      <SelectTool drawRef={drawRef} visible={activeTool === "select"} />
+      <TextTool drawRef={drawRef} visible={activeTool === "text"} />
+    </>
   );
 };
 DrawWrapper.displayName = "DrawWrapper";
