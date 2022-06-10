@@ -10,10 +10,12 @@
   border: $dark-border
   display: flex
   @include back-blur
-  transition-property: opacity, transform
+  transition-property: opacity, transform, visibility
   transition-duration: 0.2s
   &:not(.visible)
     opacity: 0
+    visibility: hidden
+    pointer-events: none
     transform: translate(-50%, -10px)
   .rotate-wrapper
     position: relative
