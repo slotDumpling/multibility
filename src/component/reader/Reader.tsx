@@ -35,7 +35,7 @@ import { debounce, once } from "lodash-es";
 import { Map, Set } from "immutable";
 import DrawTools from "./ReaderHeader";
 import { TeamCtx } from "./Team";
-import Draw, { DrawRefType } from "../draw/Draw";
+import Draw, { ActiveToolKey, DrawRefType } from "../draw/Draw";
 import { message } from "antd";
 import "./reader.sass";
 
@@ -383,7 +383,7 @@ const DrawWrapper = ({
   imgSrc?: string;
 }) => {
   const { drawCtrl } = useContext(ReaderStateCtx);
-  const [activeTool, setActiveTool] = useState<"" | "select" | "text">("");
+  const [activeTool, setActiveTool] = useState<ActiveToolKey>("");
   const drawRef = useRef<DrawRefType>(null);
 
   const handleChange = useEvent(
