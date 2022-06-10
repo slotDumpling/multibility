@@ -5,8 +5,8 @@ import React, {
   Dispatch,
   useEffect,
   useCallback,
-  SetStateAction,
   useDebugValue,
+  SetStateAction,
   useImperativeHandle,
 } from "react";
 import { usePreventTouch, usePreventGesture } from "../../lib/touch/touch";
@@ -28,6 +28,7 @@ export interface DrawRefType {
   submitText: (text: string, fontSize: number, color: string) => void;
   cancelText: () => void;
 }
+export type ActiveToolKey = "" | "select" | "text";
 
 const PREVIEW_WIDTH = 200;
 const {
@@ -46,11 +47,11 @@ const Draw = React.forwardRef<
     drawState: DrawState;
     otherStates?: DrawState[];
     onChange?: Dispatch<SetStateAction<DrawState>>;
+    setActiveTool?: Dispatch<SetStateAction<ActiveToolKey>>;
     drawCtrl?: DrawCtrl;
     readonly?: boolean;
     preview?: boolean;
     imgSrc?: string;
-    setActiveTool?: Dispatch<SetStateAction<"" | "select" | "text">>;
   }
 >(
   (
@@ -326,6 +327,7 @@ const Draw = React.forwardRef<
     };
 
     const deleteSelected = () => {
+      console.log(selectedIDs);
       if (!selectedIDs.length) return;
       onChange((prev) => DrawState.eraseStrokes(prev, selectedIDs));
       setSelectedIDs([]);
@@ -349,7 +351,6 @@ const Draw = React.forwardRef<
     const mutateStyle = (updated: Partial<DrawCtrl>) => {
       scope.current.activate();
       updateGroupStyle(selectedItems, updated);
-      // setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
       updateMutation();
     };
 
@@ -443,6 +444,7 @@ const Draw = React.forwardRef<
         const scaleView = () => {
           view.scale(dScale, originProjP);
           if (--aniCount > 0) requestAnimationFrame(scaleView);
+          else if (last) putCenterBack(view);
         };
         scaleView();
 
@@ -451,7 +453,6 @@ const Draw = React.forwardRef<
         view.translate(transP);
 
         if (!last) return [scale, [oX, oY], [elX, elY]];
-        putCenterBack(view);
       },
       {
         scaleBounds: { max: 5, min: 0.3 },
@@ -474,6 +475,7 @@ const Draw = React.forwardRef<
   }
 );
 
+Draw.displayName = "Draw";
 export default React.memo(Draw);
 
 function usePaperItem<T extends paper.Item>(init?: T) {
