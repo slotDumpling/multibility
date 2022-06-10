@@ -465,6 +465,7 @@ const RoomInfo: FC = () => {
     </div>
   );
 
+  const [reloading, setReloading] = useState(false);
   const title = (
     <div className="team-title">
       <span>Team info</span>
@@ -472,10 +473,13 @@ const RoomInfo: FC = () => {
         shape="circle"
         type="text"
         size="small"
+        loading={reloading}
         icon={<ReloadOutlined />}
         onClick={async () => {
+          setReloading(true);
           await loadInfo();
           await loadState();
+          setReloading(false);
           resetIO();
         }}
       />
