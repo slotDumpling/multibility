@@ -2,7 +2,6 @@ import React, { FC, RefObject, useRef, useState } from "react";
 import {
   CopyOutlined,
   DeleteOutlined,
-  LoadingOutlined,
   BgColorsOutlined,
   FontSizeOutlined,
   CaretLeftOutlined,
@@ -120,18 +119,19 @@ export const SelectTool: FC<{
       </div>
       <Button
         icon={<CopyOutlined />}
-        onClick={drawRef.current?.duplicateSelected}
+        onClick={() => drawRef.current?.duplicateSelected()}
         {...btnProps}
       />
       <Button
-        icon={recoginzing ? <LoadingOutlined /> : <IconFont type="icon-OCR" />}
+        icon={<IconFont type="icon-OCR" />}
+        loading={recoginzing}
         onClick={recognizeText}
         {...btnProps}
       />
       <Button
         danger
         icon={<DeleteOutlined />}
-        onClick={drawRef.current?.deleteSelected}
+        onClick={() => drawRef.current?.deleteSelected()}
         {...btnProps}
       />
     </div>,
@@ -151,7 +151,7 @@ export const TextTool: FC<{
     <Modal
       visible={visible}
       title="Insert text"
-      onCancel={drawRef.current?.cancelText}
+      onCancel={() => drawRef.current?.cancelText()}
       onOk={() => {
         const content = text.trim();
         if (!content) return drawRef.current?.cancelText();
@@ -179,7 +179,7 @@ export const TextTool: FC<{
           <Button
             className="tag-btn"
             size="small"
-            icon={<FontColorsOutlined />}
+            icon={<FontColorsOutlined style={{ color }} />}
           >
             Font color
           </Button>
