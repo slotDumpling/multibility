@@ -1,4 +1,4 @@
-import React, {
+import {
   FC,
   useMemo,
   useState,
@@ -17,6 +17,7 @@ import {
   message,
   Popover,
   ButtonProps,
+  Segmented,
 } from "antd";
 import Search from "antd/lib/input/Search";
 import { useNavigate } from "react-router-dom";
@@ -25,7 +26,11 @@ import { ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { TeamCtx } from "./Team";
 import { colors, getHashedColor } from "../../lib/color";
 import { getUserID, saveUserName } from "../../lib/user";
-import { DrawCtrl, saveDrawCtrl } from "../../lib/draw/drawCtrl";
+import {
+  defaultWidthList,
+  DrawCtrl,
+  saveDrawCtrl,
+} from "../../lib/draw/drawCtrl";
 import PageNav from "./PageNav";
 import {
   HomeFilled,
@@ -52,6 +57,8 @@ import IconFont from "../ui/IconFont";
 import classNames from "classnames";
 import copy from "clipboard-copy";
 import "./readerHeader.sass";
+import { TagCircle } from "../menu/SideMenu";
+import { Setter } from "../../lib/hooks";
 
 export default function DrawTools({
   handleUndo,
@@ -180,18 +187,16 @@ export const PenPanel: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
   drawCtrl: Partial<DrawCtrl>;
 }> = ({ updateDrawCtrl, drawCtrl }) => {
-  const { lineWidth, highlight, color } = drawCtrl;
-  const [tempLineWidth, setTempLineWidth] = useState(lineWidth);
+  const { highlight, color } = drawCtrl;
+  const [panelBlur, setPanelBlur] = useState(false);
 
   return (
-    <div className="pen-panel">
+    <div className={classNames("pen-panel", { blur: panelBlur })}>
       <div className="pen-status">
-        <Slider
-          min={5}
-          max={100}
-          defaultValue={tempLineWidth}
-          onChange={setTempLineWidth}
-          onAfterChange={(lineWidth) => updateDrawCtrl({ lineWidth })}
+        <WidthSelect
+          updateDrawCtrl={updateDrawCtrl}
+          drawCtrl={drawCtrl}
+          setPanelBlur={setPanelBlur}
         />
         <Button
           type={highlight ? "primary" : "text"}
@@ -206,6 +211,61 @@ export const PenPanel: FC<{
         setColor={(c) => updateDrawCtrl({ color: c })}
       />
     </div>
+  );
+};
+
+const WidthSelect: FC<{
+  updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
+  drawCtrl: Partial<DrawCtrl>;
+  setPanelBlur: Setter<boolean>;
+}> = ({ updateDrawCtrl, drawCtrl, setPanelBlur }) => {
+  const { lineWidth } = drawCtrl;
+  const widthList = drawCtrl.widthList ?? defaultWidthList;
+  const color = drawCtrl.color ?? "#000000";
+
+  const [chosen, setChosen] = useState(widthList.indexOf(lineWidth ?? 0));
+  const options = widthList.slice(0, 4).map((width, index) => ({
+    value: index,
+    label: (
+      <Popover
+        onVisibleChange={setPanelBlur}
+        trigger={chosen === index ? ["click"] : []}
+        placement="bottom"
+        content={
+          <Slider
+            min={5}
+            max={100}
+            className="ctrl-slider"
+            defaultValue={width}
+            onAfterChange={(w) => {
+              const newWL = widthList.slice();
+              newWL[index] = w;
+              updateDrawCtrl({ widthList: newWL, lineWidth: w });
+            }}
+          />
+        }
+      >
+        <div
+          className="circle-wrapper"
+          style={{ "--real-width": `calc(0.05vw * ${width})` } as CSSProperties}
+        >
+          <TagCircle color={color} />
+        </div>
+      </Popover>
+    ),
+  }));
+  return (
+    <Segmented
+      className="width-seg"
+      value={chosen}
+      defaultValue={0}
+      onChange={(i) => {
+        const index = Number(i);
+        setChosen(index);
+        updateDrawCtrl({ lineWidth: widthList[index] });
+      }}
+      options={options}
+    />
   );
 };
 
@@ -242,15 +302,14 @@ const EraserButton: FC<{
   const [tempEraserWidth, setTempEraserWidth] = useState(eraserWidth);
 
   const content = (
-    <div className="pen-panel">
-      <Slider
-        min={5}
-        max={100}
-        defaultValue={tempEraserWidth}
-        onChange={setTempEraserWidth}
-        onAfterChange={(eraserWidth) => updateDrawCtrl({ eraserWidth })}
-      />
-    </div>
+    <Slider
+      className="ctrl-slider"
+      min={5}
+      max={100}
+      defaultValue={tempEraserWidth}
+      onChange={setTempEraserWidth}
+      onAfterChange={(eraserWidth) => updateDrawCtrl({ eraserWidth })}
+    />
   );
 
   const btnProps: ButtonProps = {

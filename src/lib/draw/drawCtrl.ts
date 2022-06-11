@@ -1,5 +1,4 @@
 import localforage from "localforage";
-
 export interface DrawCtrl {
   mode: "draw" | "erase" | "select" | "text";
   finger: boolean;
@@ -8,8 +7,10 @@ export interface DrawCtrl {
   color: string;
   highlight: boolean;
   lasso: boolean;
+  widthList: number[];
 }
 
+export const defaultWidthList = [10, 20, 30, 50];
 export const defaultDrawCtrl: Readonly<DrawCtrl> = {
   mode: "draw",
   finger: true,
@@ -18,6 +19,7 @@ export const defaultDrawCtrl: Readonly<DrawCtrl> = {
   color: "#000000",
   highlight: false,
   lasso: true,
+  widthList: defaultWidthList,
 };
 
 export async function getDrawCtrl() {

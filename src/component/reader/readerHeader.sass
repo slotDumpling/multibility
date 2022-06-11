@@ -29,13 +29,48 @@
       margin-left: 30px
 
 .pen-panel
-  width: 200px
+  min-width: 200px
+  position: relative
+  .color-select
+    transition: filter 0.3s
+  &::after
+    @include pseudo-el(0, 0, 0, 0)
+    visibility: hidden
+    transition: visibility 0.3s
+  &.blur
+    .color-select
+      filter: blur(5px) opacity(0.5)
+    &::after
+      visibility: visible
   .pen-status
-    display: flex
+    padding: 5px
     margin-bottom: 10px
-    .ant-slider
-      flex: 1
-      margin-right: 10px
+    display: flex
+    justify-content: space-between
+    align-items: center
+    .width-seg
+      margin-right: 20px
+      .ant-segmented-item
+        display: flex
+      .ant-segmented-item-label
+        padding: 0
+      .circle-wrapper
+        min-width: 30px
+        padding: 10px
+        height: 100%
+        display: flex
+        align-items: center
+        justify-content: center
+        .tag-circle
+          width: var(--real-width)
+          height: var(--real-width)
+          border-radius: 50%
+      
+.ctrl-slider
+  width: 200px
+  .ant-slider-handle
+    &::after
+      @include pseudo-el(-20px, -20px, -20px, -20px)
       
 .color-select
   display: grid
