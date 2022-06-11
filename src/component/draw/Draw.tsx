@@ -275,15 +275,15 @@ const Draw = React.forwardRef<
         scope.current.activate();
         path.simplify();
         const pathData = path.exportJSON();
-        onChange((prev) => DrawState.addStroke(prev, pathData));
         setPath(undefined);
+        onChange((prev) => DrawState.addStroke(prev, pathData));
       },
       erase() {
         if (!path) return;
         scope.current.activate();
+        setPath(undefined);
         onChange((prev) => DrawState.eraseStrokes(prev, erased.toArray()));
         setErased(Set());
-        setPath(undefined);
       },
       select() {
         scope.current.activate();
@@ -327,7 +327,6 @@ const Draw = React.forwardRef<
     };
 
     const deleteSelected = () => {
-      console.log(selectedIDs);
       if (!selectedIDs.length) return;
       onChange((prev) => DrawState.eraseStrokes(prev, selectedIDs));
       setSelectedIDs([]);
@@ -455,7 +454,7 @@ const Draw = React.forwardRef<
         if (!last) return [scale, [oX, oY], [elX, elY]];
       },
       {
-        scaleBounds: { max: 5, min: 0.3 },
+        scaleBounds: { max: 10, min: 0.3 },
         rubberband: 0.5,
         target: canvasEl,
       }
