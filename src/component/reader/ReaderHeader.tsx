@@ -199,9 +199,10 @@ export const PenPanel: FC<{
           setPanelBlur={setPanelBlur}
         />
         <Button
-          type={highlight ? "primary" : "text"}
-          ghost={highlight}
+          type="primary"
+          ghost
           shape="circle"
+          className={classNames("hi-btn", { checked: highlight })}
           icon={<IconFont type="icon-Highlight" />}
           onClick={() => updateDrawCtrl({ highlight: !highlight })}
         />
@@ -223,8 +224,12 @@ const WidthSelect: FC<{
   const widthList = drawCtrl.widthList ?? defaultWidthList;
   const color = drawCtrl.color ?? "#000000";
 
-  const [chosen, setChosen] = useState(widthList.indexOf(lineWidth ?? 0));
-  const options = widthList.slice(0, 4).map((width, index) => ({
+  const chosen = useMemo(
+    () => Math.max(0, widthList.indexOf(lineWidth ?? 0)),
+    [lineWidth, widthList]
+  );
+
+  const options = widthList.map((width, index) => ({
     value: index,
     label: (
       <Popover
@@ -238,6 +243,9 @@ const WidthSelect: FC<{
             className="ctrl-slider"
             defaultValue={width}
             onAfterChange={(w) => {
+              if (widthList.includes(w)) {
+                return updateDrawCtrl({ lineWidth: w });
+              }
               const newWL = widthList.slice();
               newWL[index] = w;
               updateDrawCtrl({ widthList: newWL, lineWidth: w });
@@ -247,7 +255,7 @@ const WidthSelect: FC<{
       >
         <div
           className="circle-wrapper"
-          style={{ "--real-width": `calc(0.05vw * ${width})` } as CSSProperties}
+          style={{ "--real-size": `calc(0.05vw * ${width})` } as CSSProperties}
         >
           <TagCircle color={color} />
         </div>
@@ -258,12 +266,9 @@ const WidthSelect: FC<{
     <Segmented
       className="width-seg"
       value={chosen}
-      defaultValue={0}
-      onChange={(i) => {
-        const index = Number(i);
-        setChosen(index);
-        updateDrawCtrl({ lineWidth: widthList[index] });
-      }}
+      onChange={(i) =>
+        updateDrawCtrl({ lineWidth: widthList[i as number] ?? 5 })
+      }
       options={options}
     />
   );
