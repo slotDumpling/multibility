@@ -64,8 +64,8 @@
     padding-bottom: calc(10px + $safe-bottom)
     overflow: hidden
     display: flex
-    button
-      margin-right: 10px
+    > * + *
+      margin-left: 10px
 
 .aside-drawer
   top: $header-low-height !important
@@ -148,6 +148,8 @@
     display: flex
     align-items: center
     justify-content: center
+    > * + *
+      margin-left: 10px 
     &.editing
       position: sticky
       top: 0
@@ -156,7 +158,6 @@
     .search-input
       width: 200px
       height: 32px
-      margin-right: 10px
       background-color: #eee8
       border-radius: 50px
       &:focus-within
@@ -165,8 +166,6 @@
       background-color: #eee8
       &:hover
         background-color: #eee
-    .tag-btn
-      margin-right: 10px
 
 @keyframes note-item-in
   from
