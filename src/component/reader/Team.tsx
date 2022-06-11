@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useCallback } from "react";
+import { useState, useEffect, createContext, useCallback } from "react";
 import { getTeamNoteState, loadTeamNoteInfo } from "../../lib/network/http";
 import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
 import { IoFactory, NewPageInfo } from "../../lib/network/io";

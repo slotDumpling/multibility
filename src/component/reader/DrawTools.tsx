@@ -1,4 +1,4 @@
-import React, { FC, RefObject, useRef, useState } from "react";
+import { FC, RefObject, useEffect, useRef, useState } from "react";
 import {
   CopyOutlined,
   DeleteOutlined,
@@ -46,6 +46,7 @@ export const SelectTool: FC<{
   };
 
   const [currDrawCtrl, setCurrDrawCtrl] = useState<Partial<DrawCtrl>>({});
+  useEffect(() => setCurrDrawCtrl({}), [visible]);
   const rotateEl = useRef<HTMLDivElement>(null);
   const [dragged, setDragged] = useState(false);
   const [transX, setTransX] = useState(0);
