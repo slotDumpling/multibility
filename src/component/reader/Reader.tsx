@@ -33,7 +33,7 @@ import { insertAfter } from "../../lib/array";
 import { Setter } from "../../lib/hooks";
 import { debounce, once } from "lodash-es";
 import { Map, Set } from "immutable";
-import DrawTools from "./ReaderHeader";
+import ReaderHeader from "./ReaderHeader";
 import { TeamCtx } from "./Team";
 import Draw, { ActiveToolKey, DrawRefType } from "../draw/Draw";
 import { message } from "antd";
@@ -217,7 +217,7 @@ export default function Reader() {
 
   const renderResult = (
     <div className="reader container">
-      <DrawTools
+      <ReaderHeader
         handleUndo={() => updateStateSet((prev) => prev.undo())}
         handleRedo={() => updateStateSet((prev) => prev.redo())}
         instantSave={instantSave}
