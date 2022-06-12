@@ -52,7 +52,7 @@ import {
 } from "@ant-design/icons";
 import { AvatarSize } from "antd/lib/avatar/SizeContext";
 import { editNoteData } from "../../lib/note/archive";
-import { putNote } from "../../lib/network/http";
+import { putNote, updatePages } from "../../lib/network/http";
 import IconFont from "../ui/IconFont";
 import classNames from "classnames";
 import copy from "clipboard-copy";
@@ -60,7 +60,7 @@ import "./readerHeader.sass";
 import { TagCircle } from "../menu/SideMenu";
 import { Setter } from "../../lib/hooks";
 
-export default function DrawTools({
+export default function ReaderHeader({
   handleUndo,
   handleRedo,
   instantSave,
@@ -69,7 +69,7 @@ export default function DrawTools({
   handleRedo: () => void;
   instantSave: () => Promise<void> | undefined;
 }) {
-  const { saved, stateSet, drawCtrl } = useContext(ReaderStateCtx);
+  const { saved, stateSet, drawCtrl, noteID } = useContext(ReaderStateCtx);
   const { setDrawCtrl } = useContext(ReaderMethodCtx);
   const { teamOn } = useContext(TeamCtx);
   const { mode, finger } = drawCtrl;
@@ -91,6 +91,7 @@ export default function DrawTools({
           type="text"
           onClick={async () => {
             await instantSave();
+            if (teamOn) updatePages(noteID);
             nav("/");
           }}
           icon={<HomeFilled style={{ opacity: 0.8 }} />}
