@@ -71,12 +71,11 @@
           border-radius: 50%
     .hi-btn
       $grey: rgba(0, 0, 0, 0.04)
-      outline: 3px solid $grey
-      border-color: #0000 !important
-      box-shadow: 0 2px 8px -2px rgb(0 0 0 / 5%), 0 1px 4px -1px rgb(0 0 0 / 7%), 0 0 1px 0 rgb(0 0 0 / 8%)
+      border: none
+      box-shadow: 0 0 0 3px $grey, 0 2px 8px -2px rgb(0 0 0 / 5%), 0 1px 4px -1px rgb(0 0 0 / 7%), 0 0 1px 0 rgb(0 0 0 / 8%)
       &:not(.checked)
         background-color: $grey
-        box-shadow: none
+        box-shadow: 0 0 0 3px $grey
         color: #999 !important
       
 .ctrl-slider
@@ -102,9 +101,9 @@
     height: 30px
     border-radius: 15px
     border: 15px solid
-    transition: all 0.2s
     background-color: var(--circle-color)
     border-color: var(--circle-color)
+    transition: all 0.2s
 
 .team-title
   display: flex
