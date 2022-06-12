@@ -1,11 +1,4 @@
-import {
-  FC,
-  useRef,
-  useMemo,
-  useState,
-  useEffect,
-  useContext,
-} from "react";
+import { FC, useRef, useMemo, useState, useEffect, useContext } from "react";
 import {
   MoreOutlined,
   PlusOutlined,
@@ -59,13 +52,8 @@ const PageNavContent = ({
     [pageOrder, inviewPages]
   );
 
-  useEffect(() => {
-    refRec.current[currpageID]?.scrollIntoView();
-    const itemHeight = refRec.current[currpageID]?.clientHeight || 0;
-    const listHeight = listEl.current?.clientHeight || 0;
-    listEl.current?.scrollBy(0, -listHeight / 2 + itemHeight / 2);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => refRec.current[currpageID]?.scrollIntoView(), []);
 
   return (
     <div className="preview-container">
