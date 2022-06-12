@@ -10,7 +10,6 @@ import {
   RotateRightOutlined,
 } from "@ant-design/icons";
 import { Button, ButtonProps, InputNumber, Modal, Popover } from "antd";
-import { ColorSelect, PenPanel } from "./ReaderHeader";
 import { createWorker, Worker } from "tesseract.js";
 import { DrawCtrl } from "../../lib/draw/drawCtrl";
 import TextArea from "antd/lib/input/TextArea";
@@ -22,6 +21,7 @@ import IconFont from "../ui/IconFont";
 import classNames from "classnames";
 import copy from "clipboard-copy";
 import "./drawTools.sass";
+import { ColorSelect, PenPanel } from "./header/Middle";
 
 const getOcrWorker = (() => {
   let worker: Worker;

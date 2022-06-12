@@ -18,11 +18,11 @@ import { Avatar, Button, Drawer, Menu, Popover, Tabs } from "antd";
 import { AddPageButton } from "./ReaderUtils";
 import { exchange } from "../../lib/array";
 import { Setter } from "../../lib/hooks";
-import { UserAvatar } from "./ReaderHeader";
 import IconFont from "../ui/IconFont";
 import classNames from "classnames";
 import { TeamCtx } from "./Team";
 import "./preview.sass";
+import { UserAvatar } from "./header/Right";
 
 const PageNavContent = ({
   activeKey,

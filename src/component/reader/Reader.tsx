@@ -33,7 +33,7 @@ import { insertAfter } from "../../lib/array";
 import { Setter } from "../../lib/hooks";
 import { debounce, once } from "lodash-es";
 import { Map, Set } from "immutable";
-import ReaderHeader from "./ReaderHeader";
+import ReaderHeader from "./header/ReaderHeader";
 import { TeamCtx } from "./Team";
 import Draw, { ActiveToolKey, DrawRefType } from "../draw/Draw";
 import { message } from "antd";
@@ -61,6 +61,9 @@ export const ReaderMethodCtx = createContext({
   saveReorder: async (order: string[], push: boolean) => {},
   setInviewPages: (() => {}) as Setter<Set<string>>,
   setDrawCtrl: (() => {}) as Setter<DrawCtrl>,
+  instantSave: (() => {}) as () => Promise<void> | undefined,
+  handleUndo: () => {},
+  handleRedo: () => {},
 });
 
 export default function Reader() {
@@ -215,13 +218,11 @@ export default function Reader() {
     newOrder?.length && saveReorder(newOrder, true);
   };
 
+  const handleUndo = () => updateStateSet((prev) => prev.undo());
+  const handleRedo = () => updateStateSet((prev) => prev.redo());
   const renderResult = (
     <div className="reader container">
-      <ReaderHeader
-        handleUndo={() => updateStateSet((prev) => prev.undo())}
-        handleRedo={() => updateStateSet((prev) => prev.redo())}
-        instantSave={instantSave}
-      />
+      <ReaderHeader />
       <main>
         {pageOrder?.map((uid) => (
           <section
@@ -258,7 +259,10 @@ export default function Reader() {
           deletePage,
           setDrawCtrl,
           saveReorder,
+          instantSave,
           addFinalPage,
+          handleRedo,
+          handleUndo,
           updateStateSet,
           setInviewPages,
           switchPageMarked,
