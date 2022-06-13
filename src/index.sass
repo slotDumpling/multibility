@@ -6,6 +6,7 @@
   src: url("./fonts/sofia.woff")
 
 body
+  height: auto !important
   margin: 0
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif
   -webkit-font-smoothing: antialiased
@@ -13,9 +14,6 @@ body
 
 code, .code-font
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace
-
-#root
-  height: 100%
 
 *:not(input)
   user-select: none
@@ -44,32 +42,28 @@ code, .code-font
 .ant-message-notice-content
   border-radius: 10px
 
+.ant-drawer-mask
+  // background: black
+
 @media screen and (min-width: 640px)
   .ant-message
     top: 60px
-  ::-webkit-scrollbar
-    width: 10px
-    height: 10px
-  ::-webkit-scrollbar-thumb
-    $bg-color: #d6d6d6
-    background-clip: padding-box
-    background-color: $bg-color
-    border: 3px solid #0000
-    border-radius: 20px
-    &:hover
-      background-color: darken($bg-color, 10%)
+  @supports not (-webkit-touch-callout: none)
+    ::-webkit-scrollbar
+      width: 10px
+      height: 10px
+    ::-webkit-scrollbar-thumb
+      $bg-color: #d6d6d6
+      background-clip: padding-box
+      background-color: $bg-color
+      border: 3px solid #0000
+      border-radius: 20px
+      &:hover
+        background-color: darken($bg-color, 10%)
 
 @media screen and (max-width: 640px)
   .ant-message
     top: 105px
-
-.container
-  position: fixed
-  top: 0
-  bottom: 0
-  left: 0
-  right: 0
-  background: white
 
 h1.loading
   padding-top: 30px

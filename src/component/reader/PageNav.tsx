@@ -31,7 +31,7 @@ const PageNavContent = ({
   activeKey: string;
   setActiveKey: Setter<string>;
 }) => {
-  const { pageOrder, inviewPages } = useContext(ReaderStateCtx);
+  const { pageOrder, currPageID } = useContext(ReaderStateCtx);
   const { scrollPage, saveReorder } = useContext(ReaderMethodCtx);
   const refRec = useRef<Record<string, HTMLElement>>({});
   const listEl = useRef<HTMLDivElement>();
@@ -47,13 +47,8 @@ const PageNavContent = ({
     requestAnimationFrame(() => scrollPage(pageID));
   };
 
-  const currpageID = useMemo(
-    () => pageOrder?.find((pageID) => inviewPages.has(pageID)) || "",
-    [pageOrder, inviewPages]
-  );
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => refRec.current[currpageID]?.scrollIntoView(), []);
+  useEffect(() => refRec.current[currPageID]?.scrollIntoView(), []);
 
   return (
     <div className="preview-container">
@@ -75,7 +70,7 @@ const PageNavContent = ({
                   uid={uid}
                   mode={activeKey}
                   pageIndex={index}
-                  currpageID={currpageID}
+                  currPageID={currPageID}
                   refRec={refRec.current}
                 />
               ))}
@@ -93,9 +88,9 @@ const PagePreview: FC<{
   uid: string;
   mode: string;
   pageIndex: number;
-  currpageID: string;
+  currPageID: string;
   refRec: Record<string, HTMLElement>;
-}> = ({ uid, pageIndex, mode, currpageID, refRec }) => {
+}> = ({ uid, pageIndex, mode, currPageID, refRec }) => {
   const { stateSet, teamState, pageRec } = useContext(ReaderStateCtx);
   const { scrollPage, switchPageMarked } = useContext(ReaderMethodCtx);
   const { ignores } = useContext(TeamCtx);
@@ -122,7 +117,7 @@ const PagePreview: FC<{
     return null;
   }
   if (mode === "MARKED" && !marked) return null;
-  const curr = currpageID === uid;
+  const curr = currPageID === uid;
 
   return (
     <Draggable
@@ -282,9 +277,8 @@ export default function PageNav() {
         title={title}
         closable={false}
         className="preview-drawer"
-        contentWrapperStyle={{ boxShadow: "none" }}
         bodyStyle={{ padding: 0, overflow: "hidden" }}
-        headerStyle={{ textAlign: "center", borderTop: "1px solid #eee" }}
+        headerStyle={{ textAlign: "center" }}
         destroyOnClose
       >
         <PageNavContent activeKey={activeKey} setActiveKey={setActiveKey} />

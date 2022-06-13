@@ -19,7 +19,7 @@ import {
   createPage,
   defaultNotePage,
 } from "../../lib/note/note";
-import { useInViewport, useMemoizedFn as useEvent, useSafeState } from "ahooks";
+import { useMemoizedFn as useEvent, useSafeState } from "ahooks";
 import { NewPageInfo, ReorderInfo, SyncInfo } from "../../lib/network/io";
 import { SetOperation, StateSet } from "../../lib/draw/StateSet";
 import { loadNote, editNoteData } from "../../lib/note/archive";
@@ -29,13 +29,14 @@ import { DrawState } from "../../lib/draw/DrawState";
 import { updatePages } from "../../lib/network/http";
 import { TeamState } from "../../lib/draw/TeamState";
 import { SelectTool, TextTool } from "./DrawTools";
-import { insertAfter } from "../../lib/array";
+import { getLargestKey, insertAfter } from "../../lib/array";
 import { Setter } from "../../lib/hooks";
-import { debounce, once } from "lodash-es";
-import { Map, Set } from "immutable";
+import { debounce, once, range } from "lodash-es";
+import { Map } from "immutable";
 import ReaderHeader from "./header/ReaderHeader";
 import { TeamCtx } from "./Team";
 import Draw, { ActiveToolKey, DrawRefType } from "../draw/Draw";
+import { useInView } from "react-intersection-observer";
 import { message } from "antd";
 import "./reader.sass";
 
@@ -47,7 +48,8 @@ export const ReaderStateCtx = createContext({
   pageRec: undefined as Map<string, NotePage> | undefined,
   pageOrder: undefined as string[] | undefined,
   saved: true,
-  inviewPages: Set<string>(),
+  currPageID: "",
+  // inviewPages: Set<string>(),
   drawCtrl: defaultDrawCtrl,
 });
 
@@ -59,7 +61,7 @@ export const ReaderMethodCtx = createContext({
   addFinalPage: () => {},
   deletePage: (pageID: string) => {},
   saveReorder: async (order: string[], push: boolean) => {},
-  setInviewPages: (() => {}) as Setter<Set<string>>,
+  setInviewRatios: (() => {}) as Setter<Map<string, number>>,
   setDrawCtrl: (() => {}) as Setter<DrawCtrl>,
   instantSave: (() => {}) as () => Promise<void> | undefined,
   handleUndo: () => {},
@@ -74,7 +76,6 @@ export default function Reader() {
   const [noteInfo, setNoteInfo] = useState<NoteInfo>();
   const [stateSet, setStateSet] = useState<StateSet>();
   const [drawCtrl, setDrawCtrl] = useState(defaultDrawCtrl);
-  const [inviewPages, setInviewPages] = useState(Set<string>());
   const [pageOrder, setPageOrder] = useState<string[]>();
   const [saved, setSaved] = useSafeState(true);
 
@@ -189,13 +190,14 @@ export default function Reader() {
     pushOperation(lastOp);
   };
 
-  const switchPageMarked = (pageID: string) => {
+  const switchPageMarked = (pageID: string) =>
     savePageRec(pageID, (prev) => ({ ...prev, marked: !prev.marked }));
-  };
 
-  const scrollPage = (pageID: string) => {
+  const scrollPage = (pageID: string) =>
     refRec.current[pageID]?.scrollIntoView();
-  };
+
+  const [inviewRatios, setInviewRatios] = useState(Map<string, number>());
+  const currPageID = useMemo(() => getLargestKey(inviewRatios), [inviewRatios]);
 
   const addPage = (prevPageID: string, copy = false) => {
     if (!pageOrder) return;
@@ -249,7 +251,7 @@ export default function Reader() {
         stateSet,
         teamState,
         pageOrder,
-        inviewPages,
+        currPageID,
       }}
     >
       <ReaderMethodCtx.Provider
@@ -264,7 +266,7 @@ export default function Reader() {
           handleRedo,
           handleUndo,
           updateStateSet,
-          setInviewPages,
+          setInviewRatios,
           switchPageMarked,
         }}
       >
@@ -314,14 +316,19 @@ export const PageWrapper = ({
   updateState?: (ds: DrawState) => void;
   preview?: boolean;
 }) => {
-  const { setInviewPages } = useContext(ReaderMethodCtx);
+  const { setInviewRatios } = useContext(ReaderMethodCtx);
   const { noteID } = useContext(ReaderStateCtx);
   const [fullImg, setFullImg] = useState<string>();
-  const wrapperEl = useRef<HTMLDivElement>(null);
-  const [visible] = useInViewport(wrapperEl);
+  const [ref, visible, entry] = useInView({ threshold: range(0, 1.1, 0.1) });
 
-  const { height, width } = drawState;
-  const ratio = height / width;
+  useEffect(() => {
+    if (preview) return;
+    if (!entry || !visible) {
+      setInviewRatios((prev) => prev.delete(uid));
+    } else {
+      setInviewRatios((prev) => prev.set(uid, entry.intersectionRatio));
+    }
+  }, [entry, setInviewRatios, uid, preview, visible]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const loadImage = useCallback(
@@ -334,14 +341,8 @@ export const PageWrapper = ({
   );
 
   useEffect(() => {
-    if (preview) return;
-    if (visible) {
-      loadImage();
-      setInviewPages((prev) => prev.add(uid));
-    } else {
-      setInviewPages((prev) => prev.delete(uid));
-    }
-  }, [visible, preview, uid, loadImage, setInviewPages]);
+    if (!preview && visible) loadImage();
+  }, [visible, preview, loadImage]);
 
   const { ignores } = useContext(TeamCtx);
   const otherStates = useMemo(
@@ -353,9 +354,12 @@ export const PageWrapper = ({
   const drawShow = visible && imageLoaded;
   const maskShow = Boolean(preview || !drawShow);
 
+  const { height, width } = drawState;
+  const ratio = height / width;
+
   return (
     <div
-      ref={wrapperEl}
+      ref={ref}
       className="page-wrapper"
       style={{ paddingTop: `${ratio * 100}%` }}
     >

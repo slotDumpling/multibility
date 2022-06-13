@@ -2,7 +2,11 @@
 @import ../../_var
 
 .reader.container header
-  min-height: $header-low-height
+  position: sticky
+  top: 0
+  z-index: 2000
+  @include back-blur
+  height: $header-low-height
   padding: 0 15px
   display: flex
   align-items: center
@@ -10,6 +14,8 @@
   border-bottom: $dark-border
   & > div > button
     margin: 0 5px
+  .middle > .ant-btn-default
+    background-color: #0000
 
 @media screen and (max-width: 640px)
   .reader.container header
@@ -77,13 +83,13 @@
         background-color: $grey
         box-shadow: 0 0 0 3px $grey
         color: #999 !important
-      
+
 .ctrl-slider
   width: 200px
   .ant-slider-handle
     &::after
       @include pseudo-el(-20px, -20px, -20px, -20px)
-      
+
 .color-select
   display: grid
   grid-template-columns: repeat(4, 1fr)
