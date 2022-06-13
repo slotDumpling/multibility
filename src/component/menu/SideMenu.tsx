@@ -1,4 +1,4 @@
-import { Button, Input, Modal, Popconfirm, Select } from "antd";
+import { Button, Input, Popconfirm, Select } from "antd";
 import { FC, MouseEventHandler, useContext, useEffect, useState } from "react";
 import { deleteTag, editTag, NoteTag, addNewTag } from "../../lib/note/archive";
 import { colors, getRandomColor } from "../../lib/color";
@@ -36,6 +36,7 @@ const TagInput: FC<{
 
   return (
     <Input
+      autoFocus
       placeholder="Tag name..."
       className="tag-name-input"
       addonBefore={colorSelector}
@@ -131,49 +132,35 @@ const TagItem: FC<{
   );
 };
 
-const AddTag = () => {
-  const { setAllTags } = useContext(MenuMethodCtx);
-  const [modalShow, setModalShow] = useState(false);
+const NewTagItem: FC<{ setAdding: Setter<boolean> }> = ({ setAdding }) => {
   const [tagName, setTagName] = useState("");
   const [tagColor, setTagColor] = useState(getRandomColor());
+  const { setAllTags } = useContext(MenuMethodCtx);
 
   const addTag = () => {
     const name = tagName.trim();
     if (!name) return;
     addNewTag(name, tagColor).then(setAllTags);
-    setModalShow(false);
+    setAdding(false);
   };
 
-  useEffect(() => {
-    setTagName("");
-    setTagColor(getRandomColor());
-  }, [modalShow]);
-
   return (
-    <>
-      <Button
-        shape="round"
-        icon={<TagOutlined />}
-        onClick={() => setModalShow(true)}
-      >
-        Add
-      </Button>
-      <Modal
-        visible={modalShow}
-        onCancel={() => setModalShow(false)}
-        title="Add a new tag"
-        width={400}
-        onOk={addTag}
-        destroyOnClose
-      >
+    <div className="tag-wrapper">
+      <div className="tag-item curr editing">
         <TagInput
           tagName={tagName}
           setTagName={setTagName}
           tagColor={tagColor}
           setTagColor={setTagColor}
         />
-      </Modal>
-    </>
+        <div className="buttons">
+          <Button onClick={() => setAdding(false)}>Cancel</Button>
+          <Button type="primary" disabled={!tagName} onClick={addTag}>
+            OK
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -182,6 +169,7 @@ export default function SideMenu({ onSelect }: { onSelect?: () => void }) {
   const { setTagUid, setAllTags } = useContext(MenuMethodCtx);
   const { setEditing } = useContext(MenuMethodCtx);
   const [nowSwiped, setNowSwiped] = useState("");
+  const [adding, setAdding] = useState(false);
 
   async function removeOneTag(uid: string) {
     const tags = await deleteTag(uid);
@@ -245,9 +233,17 @@ export default function SideMenu({ onSelect }: { onSelect?: () => void }) {
             </div>
           );
         })}
+        {adding && <NewTagItem setAdding={setAdding} />}
       </div>
       <footer>
-        <AddTag />
+        <Button
+          shape="round"
+          icon={<TagOutlined />}
+          onClick={() => setAdding(true)}
+          disabled={adding}
+        >
+          Add
+        </Button>
         {editButton}
       </footer>
     </aside>

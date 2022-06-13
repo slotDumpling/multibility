@@ -100,8 +100,11 @@
     overflow: hidden
     border-radius: 1em
     will-change: transform
-    &:not(:last-of-type)
-      margin-bottom: 10px
+    transition: margin 0.3s
+    transition-delay: 0.2s
+    margin-bottom: 10px
+    &:has(> .deleted)
+      margin-bottom: 0
 
 .tag-item
   height: 3em
@@ -219,7 +222,7 @@
     .name-input
       font-size: 1.2em
       padding: 0 0 0 5px
-      background: #0000
+      background-color: #0000
       border-color: #eee
     .date
       @include text-overflow
