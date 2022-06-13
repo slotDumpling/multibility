@@ -276,6 +276,7 @@ export default function PageNav() {
         width={200}
         title={title}
         closable={false}
+        zIndex={800}
         className="preview-drawer"
         bodyStyle={{ padding: 0, overflow: "hidden" }}
         headerStyle={{ textAlign: "center" }}
