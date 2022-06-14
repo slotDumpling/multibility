@@ -1,5 +1,9 @@
 import { useState, useEffect, createContext, useCallback } from "react";
-import { getTeamNoteState, loadTeamNoteInfo } from "../../lib/network/http";
+import {
+  getTeamNoteState,
+  loadTeamNoteInfo,
+  updatePages,
+} from "../../lib/network/http";
 import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
 import { IoFactory, NewPageInfo } from "../../lib/network/io";
 import { useNavigate, useParams } from "react-router-dom";
@@ -59,15 +63,21 @@ export default function Team() {
     return true;
   }, [noteID]);
 
+  const updateSelfState = useCallback(() => {
+    updatePages(noteID);
+  }, [noteID]);
+
   useEffect(() => {
     const roomInit = async () => {
       const infoLoaded = await loadInfo();
       const stateLoaded = await loadState();
-      if (infoLoaded && stateLoaded) return setLoaded(true);
-      nav("/");
+      if (!infoLoaded || !stateLoaded) return nav("/");
+      setLoaded(true);
+      updateSelfState();
     };
     roomInit();
-  }, [loadInfo, loadState, nav]);
+    return updateSelfState;
+  }, [loadInfo, loadState, nav, updateSelfState]);
 
   useEffect(() => {
     io.on("push", ({ operation, userID }) => {

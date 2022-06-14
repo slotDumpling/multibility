@@ -26,7 +26,7 @@ import { loadNote, editNoteData } from "../../lib/note/archive";
 import { AddPageButton, showPageDelMsg } from "./ReaderUtils";
 import { useParams, useNavigate } from "react-router-dom";
 import { DrawState } from "../../lib/draw/DrawState";
-import { updatePages } from "../../lib/network/http";
+// import { updatePages } from "../../lib/network/http";
 import { TeamState } from "../../lib/draw/TeamState";
 import { SelectTool, TextTool } from "./tools/DrawTools";
 import { getLargestKey, insertAfter } from "../../lib/array";
@@ -95,7 +95,6 @@ export default function Reader() {
       setNoteInfo(noteInfo);
       setStateSet(StateSet.createFromPages(pageRec));
       setDrawCtrl(await getDrawCtrl());
-      if (teamOn) updatePages(noteID);
     };
     loadNotePages();
   }, [nav, noteID, teamOn]);
