@@ -67,11 +67,9 @@
         position: absolute
         top: 5px
         left: 5px
-        & > span
+        .ant-avatar
           box-sizing: content-box
           border-width: 3px
-          .avatar-wrapper::before
-            @include pseudo-el(-20px, -20px, -20px, -20px)
         &.chosen
           opacity: 0.5
           .preview-avatar:not(.chosen)
@@ -79,13 +77,15 @@
     .add-btn-wrapper
       margin: 25px 0
 
-.ant-popover .preview-avatar
+.preview-avatar
   box-sizing: content-box
   border-width: 3px
   border-style: solid
-
-.preview-avatar.chosen
-  border-color: $blue-color
+  cursor: pointer
+  &::before
+    @include pseudo-el(-20px, -20px, -20px, -20px)
+  &.chosen
+    border-color: $blue-color
 
 .preview-drawer
   bottom: 0 !important

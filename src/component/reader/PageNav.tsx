@@ -29,7 +29,7 @@ import IconFont from "../ui/IconFont";
 import classNames from "classnames";
 import { TeamCtx } from "./Team";
 import "./preview.sass";
-import { UserAvatar } from "./header/Right";
+import { UserAvatar } from "../widgets/UserAvatar";
 
 const PreviewCtx = React.createContext({
   activeKey: "ALL",
@@ -169,7 +169,7 @@ const PreviewTools: FC<{
   const { marked } = page;
 
   return (
-    <div onClick={(e) => e.stopPropagation()}>
+    <div className="tools" onClick={(e) => e.stopPropagation()}>
       <span
         className={classNames("bookmark", { marked })}
         onClick={() => switchPageMarked(uid)}
@@ -191,6 +191,7 @@ const TeamAvatars: FC<{
       maxCount={2}
       size="default"
       className={classNames("team-group", { chosen })}
+      maxPopoverPlacement="bottom"
     >
       {userIDs.map((userID) => (
         <UserAvatar

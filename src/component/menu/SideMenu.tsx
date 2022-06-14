@@ -12,11 +12,7 @@ import {
 import SwipeDelete from "../ui/SwipeDelete";
 import { Setter } from "../../lib/hooks";
 import classNames from "classnames";
-
-export const TagCircle = ({ color }: { color: string }) => {
-  const style = { backgroundColor: color };
-  return <div className="tag-circle" style={style} />;
-};
+import { ColorCirle } from "../widgets/ColorCircle";
 
 const TagInput: FC<{
   tagName: string;
@@ -28,7 +24,7 @@ const TagInput: FC<{
     <Select value={tagColor} onSelect={setTagColor} listHeight={150}>
       {colors.map((c) => (
         <Select.Option value={c} key={c}>
-          <TagCircle color={c} />
+          <ColorCirle className="tag-circle" color={c} />
         </Select.Option>
       ))}
     </Select>
@@ -87,7 +83,7 @@ const TagItem: FC<{
     >
       {tagEditing || (
         <>
-          <TagCircle color={tagColor} />
+          <ColorCirle className="tag-circle" color={tagColor} />
           <span className="tag-name">{tagName}</span>
         </>
       )}

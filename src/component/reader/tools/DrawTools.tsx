@@ -10,18 +10,19 @@ import {
   RotateRightOutlined,
 } from "@ant-design/icons";
 import { Button, ButtonProps, InputNumber, Modal, Popover } from "antd";
+import { DrawCtrl } from "../../../lib/draw/drawCtrl";
 import { createWorker, Worker } from "tesseract.js";
-import { DrawCtrl } from "../../lib/draw/drawCtrl";
+import { ColorSelect } from "../header/Middle";
 import TextArea from "antd/lib/input/TextArea";
 import { useDrag } from "@use-gesture/react";
-import { DrawRefType } from "../draw/Draw";
-import { colors } from "../../lib/color";
+import { DrawRefType } from "../../draw/Draw";
+import { colors } from "../../../lib/color";
 import { createPortal } from "react-dom";
-import IconFont from "../ui/IconFont";
+import IconFont from "../../ui/IconFont";
+import { PenPanel } from "./PenPanel";
 import classNames from "classnames";
 import copy from "clipboard-copy";
 import "./drawTools.sass";
-import { ColorSelect, PenPanel } from "./header/Middle";
 
 const getOcrWorker = (() => {
   let worker: Worker;

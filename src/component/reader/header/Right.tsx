@@ -9,7 +9,6 @@ import {
   Badge,
   Alert,
   Modal,
-  Avatar,
   Button,
   Divider,
   message,
@@ -20,7 +19,6 @@ import { useNavigate } from "react-router-dom";
 import { PasscodeInput } from "antd-mobile";
 import { ReaderMethodCtx, ReaderStateCtx } from "../Reader";
 import { TeamCtx } from "../Team";
-import { getHashedColor } from "../../../lib/color";
 import { getUserID, saveUserName } from "../../../lib/user";
 import PageNav from "../PageNav";
 import {
@@ -35,9 +33,9 @@ import {
   EyeInvisibleOutlined,
   UsergroupAddOutlined,
 } from "@ant-design/icons";
-import { putNote } from "../../../lib/network/http";
-import { AvatarSize } from "antd/lib/avatar/SizeContext";
 import { editNoteData } from "../../../lib/note/archive";
+import { UserAvatar } from "../../widgets/UserAvatar";
+import { putNote } from "../../../lib/network/http";
 import classNames from "classnames";
 import copy from "clipboard-copy";
 import "./header.sass";
@@ -108,38 +106,6 @@ const UserCard: FC<{ userID: string }> = ({ userID }) => {
         />
       )}
     </div>
-  );
-};
-
-export const UserAvatar: FC<{
-  userID: string;
-  size?: AvatarSize;
-  onClick?: () => void;
-  chosen?: boolean;
-  className?: string;
-}> = ({
-  userID,
-  size = "default",
-  onClick = () => {},
-  chosen = false,
-  className,
-}) => {
-  const { userRec } = useContext(TeamCtx);
-  const color = useMemo(() => getHashedColor(userID), [userID]);
-  const userInfo = userRec[userID];
-  if (!userInfo) return null;
-  const { userName } = userInfo;
-
-  return (
-    <Avatar
-      className={classNames(className, { chosen })}
-      size={size}
-      style={{ backgroundColor: color }}
-    >
-      <div className="avatar-wrapper" onClick={onClick}>
-        {userName?.slice(0, 3)}
-      </div>
-    </Avatar>
   );
 };
 

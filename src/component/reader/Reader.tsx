@@ -28,7 +28,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { DrawState } from "../../lib/draw/DrawState";
 import { updatePages } from "../../lib/network/http";
 import { TeamState } from "../../lib/draw/TeamState";
-import { SelectTool, TextTool } from "./DrawTools";
+import { SelectTool, TextTool } from "./tools/DrawTools";
 import { getLargestKey, insertAfter } from "../../lib/array";
 import { Setter } from "../../lib/hooks";
 import { debounce, once, range } from "lodash-es";

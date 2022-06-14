@@ -17,16 +17,16 @@ import {
 } from "@ant-design/icons";
 import { Button, Input, Popconfirm, Tag, Dropdown, Menu } from "antd";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
+import { ColorCirle } from "../widgets/ColorCircle";
 import { NoteInfo } from "../../lib/note/note";
 import { useNavigate } from "react-router-dom";
+import calender from "dayjs/plugin/calendar";
 import SwipeDelete from "../ui/SwipeDelete";
 import dafaultImg from "../ui/default.png";
 import { Setter } from "../../lib/hooks";
-import { TagCircle } from "./SideMenu";
 import { List, Set } from "immutable";
 import classNames from "classnames";
 import dayjs from "dayjs";
-import calender from "dayjs/plugin/calendar";
 dayjs.extend(calender);
 
 export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
@@ -202,7 +202,7 @@ const HeadTools: FC<{
     name: string;
   }> = ({ color, name }) => (
     <div className="tag-select">
-      <TagCircle color={color} />
+      <ColorCirle color={color} className="tag-circle"/>
       <span className="name">{name}</span>
     </div>
   );
