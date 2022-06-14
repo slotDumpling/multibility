@@ -1,5 +1,10 @@
 import axios from "axios";
-import { removePageTimg, TeamNoteInfo, TeamPage, TeamPageInfo } from "../note/note";
+import {
+  removePageTimg,
+  TeamNoteInfo,
+  TeamPage,
+  TeamPageInfo,
+} from "../note/note";
 import { loadNote, saveTeamNote, updateTeamNote } from "../note/archive";
 import { getUserID } from "../user";
 
@@ -51,16 +56,17 @@ export async function loadTeamNoteInfo(noteID: string) {
 
     if (await updateTeamNote(noteID, noteInfo, pageInfos)) return infoRes;
 
-    let file: Blob | undefined = undefined;
     if (noteInfo.withImg) {
       const { data } = await axios({
         method: "GET",
         url: noteID,
         responseType: "blob",
       });
-      file = new Blob([data], { type: "application/pdf" });
+      const file = new Blob([data], { type: "application/pdf" });
+      await saveTeamNote(noteID, noteInfo, pageInfos, file);
+    } else {
+      await saveTeamNote(noteID, noteInfo, pageInfos);
     }
-    await saveTeamNote(noteID, noteInfo, pageInfos, file);
     return infoRes;
   } catch (e) {
     console.error(e);
@@ -107,7 +113,7 @@ export async function updatePages(noteID: string) {
   if (!note) return null;
   const { uid, name, withImg, pageOrder, pageRec } = note;
   removePageTimg(pageRec);
-  
+
   try {
     const { data } = await axios.put(`update/${noteID}`, {
       userID: getUserID(),
