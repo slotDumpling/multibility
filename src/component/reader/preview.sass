@@ -22,14 +22,15 @@
       border: $default-border
       &.curr
         border-color: $blue-color
-        outline: 2px solid $blue-color
+        box-shadow: 0 0 0 2px $blue-color
       &::before
         @include absolute-full
+        z-index: -1
         box-shadow: 0 0 20px 10px #0002
         opacity: 0
         transition: opacity 0.5s
         content: ""
-      &.drag::before
+      &.dragged::before
         opacity: 1
       .bookmark
         position: absolute
