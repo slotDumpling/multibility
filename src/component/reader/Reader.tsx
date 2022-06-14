@@ -33,7 +33,7 @@ import { getLargestKey, insertAfter } from "../../lib/array";
 import { Setter } from "../../lib/hooks";
 import { debounce, once, range } from "lodash-es";
 import { Map } from "immutable";
-import ReaderHeader from "./header/ReaderHeader";
+import ReaderHeader from "./header/Header";
 import { TeamCtx } from "./Team";
 import Draw, { ActiveToolKey, DrawRefType } from "../draw/Draw";
 import { useInView } from "react-intersection-observer";
@@ -49,7 +49,6 @@ export const ReaderStateCtx = createContext({
   pageOrder: undefined as string[] | undefined,
   saved: true,
   currPageID: "",
-  // inviewPages: Set<string>(),
   drawCtrl: defaultDrawCtrl,
 });
 
