@@ -181,7 +181,7 @@ const RoomInfo: FC = () => {
     [userList]
   );
 
-  const content = (
+  const teamPop = (
     <div className="team-popover">
       {connected || (
         <Alert
@@ -239,7 +239,7 @@ const RoomInfo: FC = () => {
 
   return (
     <Popover
-      content={content}
+      content={teamPop}
       trigger="click"
       placement="bottomRight"
       title={title}

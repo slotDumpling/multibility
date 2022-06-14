@@ -227,7 +227,7 @@ const EraserButton: FC<{
   } = useContext(ReaderStateCtx);
   const [tempEraserWidth, setTempEraserWidth] = useState(eraserWidth);
 
-  const content = (
+  const slider = (
     <Slider
       className="ctrl-slider"
       min={5}
@@ -245,7 +245,7 @@ const EraserButton: FC<{
 
   return mode === "erase" ? (
     <Popover
-      content={content}
+      content={slider}
       trigger="click"
       placement="bottom"
       getPopupContainer={(e) => e}
