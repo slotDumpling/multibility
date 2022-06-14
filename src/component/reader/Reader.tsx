@@ -131,9 +131,8 @@ export default function Reader() {
     push && pushReorder(pageOrder);
   };
 
-  const pushReorder = (pageOrder: string[]) => {
+  const pushReorder = (pageOrder: string[]) =>
     io?.emit("reorder", { pageOrder });
-  };
 
   const handleReorder = useEvent(
     ({ deleted, pageOrder, prevOrder }: ReorderInfo) => {
