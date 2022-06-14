@@ -1,4 +1,11 @@
-import { FC, useRef, useMemo, useState, useEffect, useContext } from "react";
+import React, {
+  FC,
+  useRef,
+  useMemo,
+  useState,
+  useEffect,
+  useContext,
+} from "react";
 import {
   MoreOutlined,
   PlusOutlined,
@@ -24,17 +31,16 @@ import { TeamCtx } from "./Team";
 import "./preview.sass";
 import { UserAvatar } from "./header/Right";
 
-const PageNavContent = ({
-  activeKey,
-  setActiveKey,
-}: {
-  activeKey: string;
-  setActiveKey: Setter<string>;
-}) => {
+const PreviewCtx = React.createContext({
+  activeKey: "ALL",
+  setActiveKey: (() => {}) as Setter<string>,
+});
+
+const PageNavContent = () => {
   const { pageOrder, currPageID } = useContext(ReaderStateCtx);
   const { scrollPage, saveReorder } = useContext(ReaderMethodCtx);
+  const { activeKey } = useContext(PreviewCtx);
   const refRec = useRef<Record<string, HTMLElement>>({});
-  const listEl = useRef<HTMLDivElement>();
 
   const onDragEnd = ({ source, destination }: DropResult) => {
     if (!destination || !pageOrder) return;
@@ -52,25 +58,16 @@ const PageNavContent = ({
 
   return (
     <div className="preview-container">
-      <PreviewTabs activeKey={activeKey} setActiveKey={setActiveKey} />
+      <PreviewTabs />
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="preview-list">
           {({ droppableProps, innerRef, placeholder }) => (
-            <div
-              className="page-list"
-              ref={(e) => {
-                innerRef(e);
-                if (e) listEl.current = e;
-              }}
-              {...droppableProps}
-            >
+            <div className="page-list" ref={innerRef} {...droppableProps}>
               {pageOrder?.map((uid, index) => (
                 <PagePreview
                   key={uid}
                   uid={uid}
-                  mode={activeKey}
                   pageIndex={index}
-                  currPageID={currPageID}
                   refRec={refRec.current}
                 />
               ))}
@@ -86,55 +83,48 @@ const PageNavContent = ({
 
 const PagePreview: FC<{
   uid: string;
-  mode: string;
   pageIndex: number;
-  currPageID: string;
   refRec: Record<string, HTMLElement>;
-}> = ({ uid, pageIndex, mode, currPageID, refRec }) => {
-  const { stateSet, teamState, pageRec } = useContext(ReaderStateCtx);
-  const { scrollPage, switchPageMarked } = useContext(ReaderMethodCtx);
-  const { ignores } = useContext(TeamCtx);
+}> = ({ uid, pageIndex, refRec }) => {
+  const { stateSet, teamState, pageRec, currPageID } =
+    useContext(ReaderStateCtx);
+  const { scrollPage } = useContext(ReaderMethodCtx);
+  const { activeKey } = useContext(PreviewCtx);
   const [chosen, setChosen] = useState("");
 
   const page = pageRec?.get(uid);
   const drawState = stateSet?.getOneState(uid);
   const teamStateMap = teamState?.getOnePageStateMap(uid);
-  const userIDs = useMemo(
-    () =>
-      teamState
-        ?.getPageValidUsers(uid)
-        .filter((userID) => !ignores.has(userID)) || [],
-    [teamState, ignores, uid]
-  );
+
   if (!page || !drawState) return null;
   const { image, marked } = page;
 
   if (
-    mode === "WRITTEN" &&
+    activeKey === "WRITTEN" &&
     drawState.isEmpty() &&
     (!teamStateMap || teamStateMap.every((ds) => ds.isEmpty()))
   ) {
     return null;
   }
-  if (mode === "MARKED" && !marked) return null;
+  if (activeKey === "MARKED" && !marked) return null;
   const curr = currPageID === uid;
 
   return (
     <Draggable
       draggableId={uid}
       index={pageIndex}
-      isDragDisabled={mode !== "ALL"}
+      isDragDisabled={activeKey !== "ALL"}
     >
       {(
         { innerRef, draggableProps, dragHandleProps },
-        { isDragging: drag }
+        { isDragging: dragged }
       ) => (
         <div
           ref={(e) => {
             innerRef(e);
             if (e) refRec[uid] = e;
           }}
-          className={classNames("page", { curr, drag })}
+          className={classNames("page", { curr, dragged })}
           onClick={() => scrollPage(uid)}
           {...draggableProps}
           {...dragHandleProps}
@@ -146,22 +136,48 @@ const PagePreview: FC<{
             thumbnail={image}
             preview
           />
-          <div className="cover" onClick={(e) => e.stopPropagation()}>
-            <span
-              className={classNames("bookmark", { marked })}
-              onClick={() => switchPageMarked(uid)}
-            />
-            <span className="index">{pageIndex + 1}</span>
-            <PreviewOption uid={uid} />
-            <TeamAvatars
-              userIDs={userIDs}
-              chosen={chosen}
-              setChosen={setChosen}
-            />
-          </div>
+          <PreviewTools
+            uid={uid}
+            index={pageIndex}
+            chosen={chosen}
+            setChosen={setChosen}
+          />
         </div>
       )}
     </Draggable>
+  );
+};
+
+const PreviewTools: FC<{
+  uid: string;
+  index: number;
+  chosen: string;
+  setChosen: Setter<string>;
+}> = ({ uid, index, chosen, setChosen }) => {
+  const { switchPageMarked } = useContext(ReaderMethodCtx);
+  const { teamState, pageRec } = useContext(ReaderStateCtx);
+  const { ignores } = useContext(TeamCtx);
+  const userIDs = useMemo(
+    () =>
+      teamState
+        ?.getPageValidUsers(uid)
+        .filter((userID) => !ignores.has(userID)) || [],
+    [teamState, ignores, uid]
+  );
+  const page = pageRec?.get(uid);
+  if (!page) return null;
+  const { marked } = page;
+
+  return (
+    <div onClick={(e) => e.stopPropagation()}>
+      <span
+        className={classNames("bookmark", { marked })}
+        onClick={() => switchPageMarked(uid)}
+      />
+      <span className="index">{index + 1}</span>
+      <PreviewOption uid={uid} />
+      <TeamAvatars userIDs={userIDs} chosen={chosen} setChosen={setChosen} />
+    </div>
   );
 };
 
@@ -230,13 +246,8 @@ const PreviewOption = ({ uid }: { uid: string }) => {
   );
 };
 
-const PreviewTabs = ({
-  activeKey,
-  setActiveKey,
-}: {
-  activeKey: string;
-  setActiveKey: (key: string) => void;
-}) => {
+const PreviewTabs = () => {
+  const { activeKey, setActiveKey } = useContext(PreviewCtx);
   const { TabPane } = Tabs;
   return (
     <Tabs
@@ -264,7 +275,7 @@ export default function PageNav() {
   }[activeKey];
 
   return (
-    <>
+    <PreviewCtx.Provider value={{ activeKey, setActiveKey }}>
       <Button
         type="text"
         icon={navOn ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -282,8 +293,8 @@ export default function PageNav() {
         headerStyle={{ textAlign: "center" }}
         destroyOnClose
       >
-        <PageNavContent activeKey={activeKey} setActiveKey={setActiveKey} />
+        <PageNavContent />
       </Drawer>
-    </>
+    </PreviewCtx.Provider>
   );
 }
