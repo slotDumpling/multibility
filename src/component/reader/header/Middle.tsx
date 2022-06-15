@@ -42,6 +42,7 @@ export const HeaderMiddle = () => {
         disabled={!stateSet?.isRedoable()}
       />
       <Button
+        className="finger"
         type={finger ? "default" : "text"}
         shape="circle"
         onClick={() => {
@@ -54,7 +55,6 @@ export const HeaderMiddle = () => {
         }}
         icon={<IconFont type="icon-finger" />}
       />
-      <div className="br" />
       <PenButton updateDrawCtrl={updateDrawCtrl} />
       <EraserButton updateDrawCtrl={updateDrawCtrl} />
       <Button

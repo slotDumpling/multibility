@@ -12,10 +12,14 @@
   align-items: center
   justify-content: space-between
   border-bottom: $dark-border
-  & > div > button
-    margin: 0 5px
-  .middle > .ant-btn-default
-    background-color: #0000
+  > div
+    display: grid
+    gap: 10px
+  .middle
+    > button.finger
+      grid-column: span 2
+    > button.ant-btn-default
+      background-color: #0000
 
 @media (display-mode: standalone) 
   .reader.container header
@@ -25,18 +29,17 @@
   .reader.container header
     height: $header-high-height
     .middle
+      grid-template-columns: repeat(4, 1fr)
       border-left: $default-border
       border-right: $default-border
       padding: 0 20px
-    .br
-      height: 10px
 
 @media screen and (min-width: 640px)
-  .reader.container
-    .br
-      display: none
-    button.pen
-      margin-left: 30px
+  .reader.container header
+    .left, .right
+      grid-template-columns: repeat(2, 1fr)
+    .middle
+      grid-template-columns: repeat(8, 1fr)
 
 .team-title
   display: flex

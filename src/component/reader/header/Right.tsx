@@ -31,7 +31,6 @@ export const HeaderRight = () => {
   return (
     <div className="right">
       {teamOn ? <RoomInfo /> : <JoinRoom />}
-      <div className="br" />
       <PageNav />
     </div>
   );

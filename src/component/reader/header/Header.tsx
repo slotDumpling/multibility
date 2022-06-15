@@ -32,7 +32,6 @@ const HeaderLeft = () => {
         }}
         icon={<HomeFilled style={{ opacity: 0.8 }} />}
       />
-      <div className="br" />
       <Button
         type="text"
         className="save"
