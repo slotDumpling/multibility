@@ -94,7 +94,7 @@ export const SelectTool: FC<{
       <Popover
         trigger="click"
         placement="bottom"
-        getPopupContainer={(e) => e}
+        getPopupContainer={(e) => e.parentElement!}
         destroyTooltipOnHide
         content={
           <PenPanel

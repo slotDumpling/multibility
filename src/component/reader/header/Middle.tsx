@@ -42,7 +42,6 @@ export const HeaderMiddle = () => {
         disabled={!stateSet?.isRedoable()}
       />
       <Button
-        className="finger"
         type={finger ? "default" : "text"}
         shape="circle"
         onClick={() => {
@@ -75,7 +74,6 @@ const PenButton: FC<{
   const { mode } = drawCtrl;
 
   const btnProps: ButtonProps = {
-    className: "pen",
     shape: "circle",
     icon: <HighlightOutlined />,
   };
@@ -84,7 +82,7 @@ const PenButton: FC<{
       content={<PenPanel updateDrawCtrl={updateDrawCtrl} drawCtrl={drawCtrl} />}
       trigger="click"
       placement="bottom"
-      getPopupContainer={(e) => e}
+      getPopupContainer={(e) => e.parentElement!}
       destroyTooltipOnHide
     >
       <Button type="default" {...btnProps} />
@@ -151,7 +149,7 @@ const EraserButton: FC<{
       content={slider}
       trigger="click"
       placement="bottom"
-      getPopupContainer={(e) => e}
+      getPopupContainer={(e) => e.parentElement!}
       destroyTooltipOnHide
     >
       <Button type="default" {...btnProps} />

@@ -193,7 +193,7 @@ const RoomInfo: FC = () => {
       trigger="click"
       placement="bottomRight"
       title={title}
-      getPopupContainer={(e) => e}
+      getPopupContainer={(e) => e.parentElement!}
     >
       <Button
         type="text"
