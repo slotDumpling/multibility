@@ -1,19 +1,5 @@
-import {
-  FC,
-  useMemo,
-  useState,
-  useEffect,
-  useContext,
-} from "react";
-import {
-  Badge,
-  Alert,
-  Modal,
-  Button,
-  Divider,
-  message,
-  Popover,
-} from "antd";
+import { FC, useMemo, useState, useEffect, useContext } from "react";
+import { Badge, Alert, Modal, Button, Divider, message, Popover } from "antd";
 import Search from "antd/lib/input/Search";
 import { useNavigate } from "react-router-dom";
 import { PasscodeInput } from "antd-mobile";
@@ -44,8 +30,7 @@ export const HeaderRight = () => {
   const { teamOn } = useContext(TeamCtx);
   return (
     <div className="right">
-      {teamOn && <RoomInfo />}
-      {teamOn || <JoinRoom />}
+      {teamOn ? <RoomInfo /> : <JoinRoom />}
       <div className="br" />
       <PageNav />
     </div>
