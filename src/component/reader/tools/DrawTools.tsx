@@ -17,7 +17,6 @@ import TextArea from "antd/lib/input/TextArea";
 import { useDrag } from "@use-gesture/react";
 import { DrawRefType } from "../../draw/Draw";
 import { colors } from "../../../lib/color";
-import { createPortal } from "react-dom";
 import IconFont from "../../ui/IconFont";
 import { PenPanel } from "./PenPanel";
 import classNames from "classnames";
@@ -90,7 +89,7 @@ export const SelectTool: FC<{
     }
   };
 
-  return createPortal(
+  return (
     <div className={classNames("select-tool", { visible })}>
       <Popover
         trigger="click"
@@ -136,8 +135,7 @@ export const SelectTool: FC<{
         onClick={() => drawRef.current?.deleteSelected()}
         {...btnProps}
       />
-    </div>,
-    document.body
+    </div>
   );
 };
 
