@@ -1,12 +1,11 @@
 import {
-  Button,
-  ButtonProps,
-  Input,
   Menu,
+  Input,
+  Button,
   message,
-  Popconfirm,
   Popover,
   Progress,
+  Popconfirm,
 } from "antd";
 import {
   TeamOutlined,
@@ -235,10 +234,6 @@ const OthersPage = () => {
 };
 
 const OthersButton = () => {
-  const btnProps: ButtonProps = {
-    shape: "circle",
-    icon: <CaretDownOutlined />,
-  };
   return (
     <Popover
       placement="bottomRight"
@@ -246,8 +241,8 @@ const OthersButton = () => {
       content={<OthersPage />}
       zIndex={900}
     >
-      <Button className="large" {...btnProps} />
-      <Button className="small" type="text" {...btnProps} />
+      <Button className="large" shape="circle" icon={<CaretDownOutlined />} />
+      <Button className="small" type="text" icon={<CaretDownOutlined />} />
     </Popover>
   );
 };
@@ -288,12 +283,7 @@ function JoinTeamButton() {
       <Button className="team-btn large" shape="round" icon={<TeamOutlined />}>
         Team
       </Button>
-      <Button
-        className="team-btn small"
-        type="text"
-        shape="circle"
-        icon={<TeamOutlined />}
-      />
+      <Button className="team-btn small" type="text" icon={<TeamOutlined />} />
     </Popover>
   );
 }

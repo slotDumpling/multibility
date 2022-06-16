@@ -1,6 +1,6 @@
-import { Button, Dropdown, Input, Menu, Popconfirm } from "antd";
+import { Button, ButtonProps, Dropdown, Input, Menu, Popconfirm } from "antd";
 import { FC, useContext } from "react";
-import { MenuStateCtx } from "./MainMenu";
+import { MenuMethodCtx, MenuStateCtx } from "./MainMenu";
 import {
   SwapOutlined,
   TagsOutlined,
@@ -8,6 +8,8 @@ import {
   DeleteOutlined,
   SearchOutlined,
   FileTextOutlined,
+  RollbackOutlined,
+  CheckSquareOutlined,
   SortAscendingOutlined,
 } from "@ant-design/icons";
 import { Setter } from "../../lib/hooks";
@@ -32,6 +34,7 @@ export function HeadTools({
   disabled: boolean;
 }) {
   const { editing, allTags } = useContext(MenuStateCtx);
+  const { setEditing } = useContext(MenuMethodCtx);
 
   const sortMenu = (
     <Menu
@@ -52,13 +55,13 @@ export function HeadTools({
     />
   );
 
+  const btnProps: ButtonProps = { type: "text", shape: "circle" };
   const sortButton = (
     <Dropdown overlay={sortMenu} trigger={["click"]} placement="bottom">
       <Button
         className="sort-btn"
-        type="text"
-        shape="circle"
         icon={<SwapOutlined rotate={90} />}
+        {...btnProps}
       />
     </Dropdown>
   );
@@ -137,6 +140,12 @@ export function HeadTools({
     <div className={classNames("head-tools", { editing })}>
       {editing ? (
         <>
+          <Button
+            className="small"
+            onClick={() => setEditing(false)}
+            icon={<RollbackOutlined />}
+            {...btnProps}
+          />
           {tagButton}
           {deleteButton}
         </>
@@ -151,6 +160,12 @@ export function HeadTools({
             allowClear
           />
           {sortButton}
+          <Button
+            className="small"
+            onClick={() => setEditing(true)}
+            icon={<CheckSquareOutlined />}
+            {...btnProps}
+          />
         </>
       )}
     </div>

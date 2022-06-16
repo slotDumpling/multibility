@@ -9,14 +9,10 @@ export default function LeftTools() {
   const { editing } = useContext(MenuStateCtx);
   const { setEditing } = useContext(MenuMethodCtx);
 
-  function swichEditing() {
-    setEditing((prev) => !prev);
-  }
-
   const editButton = (
     <Button
       className="edit-btn large"
-      onClick={swichEditing}
+      onClick={() => setEditing((prev) => !prev)}
       type={editing ? "primary" : "text"}
     >
       {editing ? "Done" : "Edit"}
