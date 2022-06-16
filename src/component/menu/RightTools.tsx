@@ -8,9 +8,6 @@ import {
   Popover,
   Progress,
 } from "antd";
-import { createContext, ReactNode, useContext, useState } from "react";
-import { createNewNote } from "../../lib/note/archive";
-import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import {
   TeamOutlined,
   UserOutlined,
@@ -23,7 +20,10 @@ import {
   ArrowLeftOutlined,
 } from "@ant-design/icons";
 import * as serviceWorkerRegistration from "../.././serviceWorkerRegistration";
+import { createContext, ReactNode, useContext, useState } from "react";
 import { getUserName, saveUserName } from "../../lib/user";
+import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
+import { createNewNote } from "../../lib/note/archive";
 import { CSSTransition } from "react-transition-group";
 import { getNoteID } from "../../lib/network/http";
 import { useNavigate } from "react-router-dom";
@@ -115,11 +115,8 @@ function UploadPdfPage() {
         beforeUpload={handleFile}
       >
         <p className="ant-upload-drag-icon">
-          {loading ? (
-            <Progress width={48} type="circle" percent={percent} />
-          ) : (
-            <InboxOutlined />
-          )}
+          {loading && <Progress width={48} type="circle" percent={percent} />}
+          {loading || <InboxOutlined />}
         </p>
         <p className="ant-upload-hint">Click or drag a pdf file here.</p>
       </Dragger>
@@ -206,36 +203,30 @@ const OthersPage = () => {
     setHeight(el.clientHeight);
   };
 
-  const cssProps = {
+  const primeProps = {
+    classNames: "primary",
     timeout: 300,
     onEnter: calcHeight,
     unmountOnExit: true,
   };
 
-  const cssProps2 = {
-    ...cssProps,
-    classNames: "secondary",
-  };
+  const secdProps = { ...primeProps, classNames: "secondary" };
 
   useEffect(() => setActive("MENU"), []);
 
   return (
     <OthersCtx.Provider value={{ setActive }}>
       <section className="others-menu" style={{ height }}>
-        <CSSTransition
-          classNames="primary"
-          in={active === "MENU"}
-          {...cssProps}
-        >
+        <CSSTransition in={active === "MENU"} {...primeProps}>
           <OthersMenu />
         </CSSTransition>
-        <CSSTransition in={active === "PDF"} {...cssProps2}>
+        <CSSTransition in={active === "PDF"} {...secdProps}>
           <UploadPdfPage />
         </CSSTransition>
-        <CSSTransition in={active === "PROFILE"} {...cssProps2}>
+        <CSSTransition in={active === "PROFILE"} {...secdProps}>
           <ProfilePage />
         </CSSTransition>
-        <CSSTransition in={active === "SETTINGS"} {...cssProps2}>
+        <CSSTransition in={active === "SETTINGS"} {...secdProps}>
           <SettingsPage />
         </CSSTransition>
       </section>
