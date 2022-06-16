@@ -22,6 +22,7 @@ import { PenPanel } from "./PenPanel";
 import classNames from "classnames";
 import copy from "clipboard-copy";
 import "./drawTools.sass";
+import { CSSTransition } from "react-transition-group";
 
 const getOcrWorker = (() => {
   let worker: Worker;
@@ -90,52 +91,57 @@ export const SelectTool: FC<{
   };
 
   return (
-    <div className={classNames("select-tool", { visible })}>
-      <Popover
-        trigger="click"
-        placement="bottom"
-        getPopupContainer={(e) => e.parentElement!}
-        destroyTooltipOnHide
-        content={
-          <PenPanel
-            updateDrawCtrl={(updated) => {
-              setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
-              drawRef.current?.mutateStyle(updated);
-            }}
-            drawCtrl={currDrawCtrl}
+    <CSSTransition timeout={300} in={visible} unmountOnExit>
+      <div className="select-tool">
+        <Popover
+          trigger="click"
+          placement="bottom"
+          getPopupContainer={(e) => e.parentElement!}
+          destroyTooltipOnHide
+          content={
+            <PenPanel
+              updateDrawCtrl={(updated) => {
+                setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
+                drawRef.current?.mutateStyle(updated);
+              }}
+              drawCtrl={currDrawCtrl}
+            />
+          }
+        >
+          <Button icon={<BgColorsOutlined />} {...btnProps} />
+        </Popover>
+        <div
+          className={classNames("rotate-wrapper", { dragged })}
+          ref={rotateEl}
+        >
+          <Button
+            icon={<RotateRightOutlined />}
+            onClick={() => drawRef.current?.rotateSelected(90, true)}
+            {...btnProps}
           />
-        }
-      >
-        <Button icon={<BgColorsOutlined />} {...btnProps} />
-      </Popover>
-      <div className={classNames("rotate-wrapper", { dragged })} ref={rotateEl}>
+          <CaretLeftOutlined className="arrow left" />
+          <CaretRightOutlined className="arrow right" />
+          <div className="gear" style={gearStyle} />
+        </div>
         <Button
-          icon={<RotateRightOutlined />}
-          onClick={() => drawRef.current?.rotateSelected(90, true)}
+          icon={<CopyOutlined />}
+          onClick={() => drawRef.current?.duplicateSelected()}
           {...btnProps}
         />
-        <CaretLeftOutlined className="arrow left" />
-        <CaretRightOutlined className="arrow right" />
-        <div className="gear" style={gearStyle} />
+        <Button
+          icon={<IconFont type="icon-OCR" />}
+          loading={recoginzing}
+          onClick={recognizeText}
+          {...btnProps}
+        />
+        <Button
+          danger
+          icon={<DeleteOutlined />}
+          onClick={() => drawRef.current?.deleteSelected()}
+          {...btnProps}
+        />
       </div>
-      <Button
-        icon={<CopyOutlined />}
-        onClick={() => drawRef.current?.duplicateSelected()}
-        {...btnProps}
-      />
-      <Button
-        icon={<IconFont type="icon-OCR" />}
-        loading={recoginzing}
-        onClick={recognizeText}
-        {...btnProps}
-      />
-      <Button
-        danger
-        icon={<DeleteOutlined />}
-        onClick={() => drawRef.current?.deleteSelected()}
-        {...btnProps}
-      />
-    </div>
+    </CSSTransition>
   );
 };
 
