@@ -5,19 +5,9 @@ import {
   moveNoteTag,
   editNoteData,
 } from "../../lib/note/archive";
-import {
-  SwapOutlined,
-  TagsOutlined,
-  FileOutlined,
-  CloudOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-  FileTextOutlined,
-  SortAscendingOutlined,
-} from "@ant-design/icons";
-import { Button, Input, Popconfirm, Tag, Dropdown, Menu } from "antd";
+import { CloudOutlined } from "@ant-design/icons";
+import { Input, Tag } from "antd";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
-import { ColorCirle } from "../widgets/ColorCircle";
 import { NoteInfo } from "../../lib/note/note";
 import { useNavigate } from "react-router-dom";
 import calender from "dayjs/plugin/calendar";
@@ -27,6 +17,7 @@ import { Setter } from "../../lib/hooks";
 import { List, Set } from "immutable";
 import classNames from "classnames";
 import dayjs from "dayjs";
+import { HeadTools } from "./HeadTools";
 dayjs.extend(calender);
 
 export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
@@ -122,149 +113,6 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
     </section>
   );
 }
-
-const HeadTools: FC<{
-  sortType: string;
-  setSortType: Setter<string>;
-  searchText: string;
-  setSearchText: Setter<string>;
-  onDelete: () => void;
-  onMove: (tagID: string) => void;
-  disabled: boolean;
-}> = ({
-  sortType,
-  setSortType,
-  searchText,
-  setSearchText,
-  onDelete,
-  onMove,
-  disabled = true,
-}) => {
-  const { editing, allTags } = useContext(MenuStateCtx);
-
-  const sortMenu = (
-    <Menu
-      onClick={({ key }) => setSortType(key)}
-      selectedKeys={[sortType]}
-      className="sort-drop"
-      items={[
-        {
-          type: "group",
-          label: "Sort by",
-          children: [
-            { icon: <FileOutlined />, key: "CREATE", label: "Date created" },
-            { icon: <FileTextOutlined />, key: "LAST", label: "Date modified" },
-            { icon: <SortAscendingOutlined />, key: "NAME", label: "Name" },
-          ],
-        },
-      ]}
-    />
-  );
-
-  const sortButton = (
-    <Dropdown overlay={sortMenu} trigger={["click"]} placement="bottom">
-      <Button
-        className="sort-btn"
-        type="text"
-        shape="circle"
-        icon={<SwapOutlined rotate={90} />}
-      />
-    </Dropdown>
-  );
-
-  const deleteButton = (
-    <Popconfirm
-      title="Notes will be deleted."
-      onConfirm={onDelete}
-      icon={<DeleteOutlined />}
-      placement="bottom"
-      cancelText="Cancel"
-      disabled={disabled}
-      okText="Delete"
-      okType="danger"
-      okButtonProps={{ type: "primary" }}
-    >
-      <Button
-        className="del-btn"
-        shape="round"
-        type="text"
-        disabled={disabled}
-        danger={!disabled}
-        icon={<DeleteOutlined />}
-      >
-        Delete
-      </Button>
-    </Popconfirm>
-  );
-
-  const ColorLabel: FC<{
-    color: string;
-    name: string;
-  }> = ({ color, name }) => (
-    <div className="tag-select">
-      <ColorCirle color={color} className="tag-circle"/>
-      <span className="name">{name}</span>
-    </div>
-  );
-
-  const overlay = (
-    <Menu
-      onClick={({ key }) => onMove(key)}
-      items={[
-        {
-          key: "DEFAULT",
-          label: <ColorLabel color="#eee" name="No tag" />,
-        },
-        ...Object.values(allTags).map((t) => ({
-          key: t.uid,
-          label: <ColorLabel color={t.color} name={t.name} />,
-        })),
-      ]}
-    />
-  );
-
-  const tagButton = (
-    <Dropdown
-      disabled={disabled}
-      overlay={overlay}
-      trigger={["click"]}
-      placement="bottom"
-    >
-      <Button
-        shape="round"
-        type="text"
-        className="tag-btn"
-        icon={<TagsOutlined />}
-        style={{ transition: "none" }}
-      >
-        Tag
-      </Button>
-    </Dropdown>
-  );
-
-  return (
-    <div className={classNames("head-tools", { editing })}>
-      {editing ? (
-        <>
-          {tagButton}
-          {deleteButton}
-        </>
-      ) : (
-        <>
-          <Input
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="search-input"
-            prefix={<SearchOutlined />}
-            bordered={false}
-            allowClear
-          />
-          {sortButton}
-        </>
-      )}
-    </div>
-  );
-};
 
 const NoteItem: FC<{
   noteInfo: NoteInfo;
