@@ -18,6 +18,7 @@ import { List, Set } from "immutable";
 import classNames from "classnames";
 import dayjs from "dayjs";
 import { HeadTools } from "./HeadTools";
+import { CSSTransition, TransitionGroup } from "react-transition-group";
 dayjs.extend(calender);
 
 export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
@@ -80,7 +81,7 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
   }, [noteList, editing]);
 
   return (
-    <section className="note-list">
+    <TransitionGroup className="note-list">
       <HeadTools
         sortType={sortType}
         setSortType={setSortType}
@@ -94,23 +95,28 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
         const { uid } = noteInfo;
         const removeNote = () => removeNotes([uid]);
         return (
-          <SwipeDelete
-            onDelete={removeNote}
-            nowSwiped={nowSwiped}
-            setNowSwiped={setNowSwiped}
-            disable={editing}
-            uid={uid}
+          <CSSTransition
+            classNames="note"
             key={uid}
+            timeout={300}
           >
-            <NoteItem
-              noteInfo={noteInfo}
-              selected={selectedNotes.has(uid)}
-              setSelectNotes={setSelectNotes}
-            />
-          </SwipeDelete>
+            <SwipeDelete
+              onDelete={removeNote}
+              nowSwiped={nowSwiped}
+              setNowSwiped={setNowSwiped}
+              disable={editing}
+              uid={uid}
+            >
+              <NoteItem
+                noteInfo={noteInfo}
+                selected={selectedNotes.has(uid)}
+                setSelectNotes={setSelectNotes}
+              />
+            </SwipeDelete>
+          </CSSTransition>
         );
       })}
-    </section>
+    </TransitionGroup>
   );
 }
 
