@@ -1,32 +1,29 @@
 @import ../_mixins
 
 .swipe-wrapper
+  $button-width: 80px
   position: relative
   overflow: hidden
-  $button-width: 80px
   transition: all 0.3s 0.2s
   &.deleting
     > .content
       transform: translateX(-$button-width)
       pointer-events: none
-    > .button-wrapper
+    > .button
       transform: translateX(-$button-width)
   &.deleted
     height: 0 !important
-    .button-wrapper
+    .button
       left: $button-width
   > .content
     height: 100%
     overflow: hidden
     transition: transform 0.3s
-  .button-wrapper
+  .button
     @include absolute(0, -$button-width, 0, 100%)
     transition: left 0.3s ease-in, transform 0.3s
-    overflow: hidden
-    .button
-      @include absolute-full
-      background-color: #ff4d4f
-      color: white
-      display: flex
-      align-items: center
-      justify-content: center
+    background-color: #ff4d4f
+    color: white
+    display: flex
+    align-items: center
+    justify-content: center

@@ -76,25 +76,22 @@ export const SwipeDelete: FC<{
       })}
       {...swipeHandler}
       style={{ height }}
-      onTransitionEnd={(e) => {
-        console.log(e)
-        if (e.propertyName === "height" && deleted) resolve();
+      onTransitionEnd={({ propertyName: p }) => {
+        if (p === "height" && deleted) resolve();
       }}
     >
       <div className="content" ref={wrapper}>
         {children}
       </div>
-      <div className="button-wrapper">
-        <div
-          className="button"
-          onClick={() => {
-            setDeleted(true);
-            transEnd().then(onDelete);
-          }}
-          style={{ height }}
-        >
-          Delete
-        </div>
+      <div
+        className="button"
+        onClick={() => {
+          setDeleted(true);
+          transEnd().then(onDelete);
+        }}
+        style={{ height }}
+      >
+        Delete
       </div>
     </div>
   );
