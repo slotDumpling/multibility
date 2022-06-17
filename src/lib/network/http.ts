@@ -12,11 +12,6 @@ export let BASE_URL = "https://api.slotdumpling.top/paint";
 // BASE_URL = "http://192.168.1.14:8090/paint";
 axios.defaults.baseURL = BASE_URL;
 
-axios.interceptors.request.use((config) => {
-  console.log(config.method, config.url);
-  return config;
-});
-
 export async function getNoteID(roomCode: string) {
   try {
     const { data } = await axios.get(`code/${roomCode}`);

@@ -71,7 +71,6 @@ export async function loadNote(uid: string) {
 export async function editNoteData(uid: string, noteData: Partial<Note>) {
   noteData = pickBy(noteData, (v) => v !== undefined);
   if ("pageRec" in noteData) noteData.lastTime = Date.now();
-  console.dir(noteData);
 
   const allNotes = await getAllNotes();
   const { pageRec, pageOrder, ...noteInfo } = noteData;
