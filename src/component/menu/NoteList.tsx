@@ -11,7 +11,7 @@ import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import { NoteInfo } from "../../lib/note/note";
 import { useNavigate } from "react-router-dom";
 import calender from "dayjs/plugin/calendar";
-import SwipeDelete from "../ui/SwipeDelete";
+import { SwipeDelete, SwipeDeleteContext } from "../ui/SwipeDelete";
 import dafaultImg from "../ui/default.png";
 import { Setter } from "../../lib/hooks";
 import { List, Set } from "immutable";
@@ -22,7 +22,6 @@ import { CSSTransition, TransitionGroup } from "react-transition-group";
 dayjs.extend(calender);
 
 export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
-  const [nowSwiped, setNowSwiped] = useState("");
   const { editing } = useContext(MenuStateCtx);
   const { setAllTags, setAllNotes } = useContext(MenuMethodCtx);
   const [sortType, setSortType] = useState("LAST");
@@ -81,42 +80,39 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
   }, [noteList, editing]);
 
   return (
-    <TransitionGroup className="note-list">
-      <HeadTools
-        sortType={sortType}
-        setSortType={setSortType}
-        searchText={searchText}
-        setSearchText={setSearchText}
-        onDelete={() => removeNotes(selectedNotes.toArray())}
-        onMove={(tagID) => moveNotes(selectedNotes.toArray(), tagID)}
-        disabled={selectedNotes.size === 0}
-      />
-      {filterdList.map((noteInfo) => {
-        const { uid } = noteInfo;
-        const removeNote = () => removeNotes([uid]);
-        return (
-          <CSSTransition
-            classNames="note"
-            key={uid}
-            timeout={300}
-          >
-            <SwipeDelete
-              onDelete={removeNote}
-              nowSwiped={nowSwiped}
-              setNowSwiped={setNowSwiped}
-              disable={editing}
-              uid={uid}
-            >
-              <NoteItem
-                noteInfo={noteInfo}
-                selected={selectedNotes.has(uid)}
-                setSelectNotes={setSelectNotes}
-              />
-            </SwipeDelete>
-          </CSSTransition>
-        );
-      })}
-    </TransitionGroup>
+    <SwipeDeleteContext>
+      <TransitionGroup className="note-list">
+        <HeadTools
+          sortType={sortType}
+          setSortType={setSortType}
+          searchText={searchText}
+          setSearchText={setSearchText}
+          onDelete={() => removeNotes(selectedNotes.toArray())}
+          onMove={(tagID) => moveNotes(selectedNotes.toArray(), tagID)}
+          disabled={selectedNotes.size === 0}
+        />
+        {filterdList.map((noteInfo) => {
+          const { uid } = noteInfo;
+          const removeNote = () => removeNotes([uid]);
+          return (
+            <CSSTransition key={uid} timeout={300}>
+              <SwipeDelete
+                className="note-item-wrapper"
+                onDelete={removeNote}
+                disable={editing}
+                uid={uid}
+              >
+                <NoteItem
+                  noteInfo={noteInfo}
+                  selected={selectedNotes.has(uid)}
+                  setSelectNotes={setSelectNotes}
+                />
+              </SwipeDelete>
+            </CSSTransition>
+          );
+        })}
+      </TransitionGroup>
+    </SwipeDeleteContext>
   );
 }
 
@@ -132,7 +128,6 @@ const NoteItem: FC<{
   const { editing } = useContext(MenuStateCtx);
   const { setAllNotes } = useContext(MenuMethodCtx);
   const [noteName, setNoteName] = useState(name);
-  const [loaded, setLoaded] = useState(false);
   const nav = useNavigate();
 
   const saveNoteName = () => {
@@ -155,9 +150,8 @@ const NoteItem: FC<{
 
   return (
     <div
-      className={classNames("note-item", { selected, loaded })}
+      className={classNames("note-item", { selected })}
       onClick={handleClick}
-      onAnimationEnd={() => setLoaded(true)}
     >
       <div className="timg-wrapper">
         <img src={thumbnail || dafaultImg} alt={name} className="timg" />
@@ -178,7 +172,7 @@ const NoteItem: FC<{
             onBlur={saveNoteName}
           />
         )}
-        <p className="date">{date}</p>
+        <span className="date">{date}</span>
       </div>
     </div>
   );

@@ -1,40 +1,54 @@
-import React, { FC, useEffect, useRef, useState } from "react";
+import React, {
+  createContext,
+  Dispatch,
+  FC,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useSwipeable } from "react-swipeable";
-import { Setter } from "../../lib/hooks";
 import classNames from "classnames";
 import "./swipe-delete.sass";
+import { useEventWaiter } from "../../lib/hooks";
 
-const SwipeDelete: FC<{
+const SwipedCtx = createContext({
+  nowSwiped: "",
+  setNowSwiped: (() => {}) as Dispatch<SetStateAction<string>>,
+});
+
+export const SwipeDeleteContext: FC = ({ children }) => {
+  const [nowSwiped, setNowSwiped] = useState("");
+  return (
+    <SwipedCtx.Provider value={{ nowSwiped, setNowSwiped }}>
+      {children}
+    </SwipedCtx.Provider>
+  );
+};
+
+export const SwipeDelete: FC<{
   onDelete: () => void;
   uid: string;
-  nowSwiped?: string;
-  setNowSwiped?: Setter<string>;
   disable?: boolean;
   className?: string;
-}> = ({
-  children,
-  nowSwiped,
-  setNowSwiped,
-  uid,
-  onDelete,
-  disable = false,
-  className,
-}) => {
+}> = ({ children, uid, onDelete, disable = false, className }) => {
   const [deleted, setDeleted] = useState(false);
   const [swiped, setSwiped] = useState(false);
   const [height, setHeight] = useState<number>();
   const wrapper = useRef<HTMLDivElement>(null);
-  const deleting = swiped && (nowSwiped === undefined || nowSwiped === uid);
+  const { nowSwiped, setNowSwiped } = useContext(SwipedCtx);
+  const deleting = swiped && (!nowSwiped || nowSwiped === uid);
 
   const showDelete = () => {
     setSwiped(true);
-    setNowSwiped && setNowSwiped(uid);
+    setNowSwiped(uid);
     setHeight(wrapper.current?.clientHeight);
   };
 
   const hideDelete = () => {
     setSwiped(false);
-    setNowSwiped && setNowSwiped("");
+    setNowSwiped("");
     setHeight(undefined);
   };
 
@@ -48,9 +62,11 @@ const SwipeDelete: FC<{
   useEffect(() => {
     if (!disable) return;
     setHeight(undefined);
-    setNowSwiped && setNowSwiped("");
+    setNowSwiped("");
     setSwiped(false);
   }, [disable, setNowSwiped]);
+
+  const [transEnd, resolve] = useEventWaiter();
 
   return (
     <div
@@ -60,8 +76,9 @@ const SwipeDelete: FC<{
       })}
       {...swipeHandler}
       style={{ height }}
-      onTransitionEnd={({ propertyName }) => {
-        if (propertyName === "height" && deleted) onDelete();
+      onTransitionEnd={(e) => {
+        console.log(e)
+        if (e.propertyName === "height" && deleted) resolve();
       }}
     >
       <div className="content" ref={wrapper}>
@@ -70,7 +87,10 @@ const SwipeDelete: FC<{
       <div className="button-wrapper">
         <div
           className="button"
-          onClick={() => setDeleted(true)}
+          onClick={() => {
+            setDeleted(true);
+            transEnd().then(onDelete);
+          }}
           style={{ height }}
         >
           Delete
@@ -79,5 +99,3 @@ const SwipeDelete: FC<{
     </div>
   );
 };
-
-export default SwipeDelete;

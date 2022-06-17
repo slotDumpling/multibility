@@ -1,5 +1,5 @@
+import { FC, useContext, useEffect, useState } from "react";
 import { Button, Input, Popconfirm, Select } from "antd";
-import { FC, MouseEventHandler, useContext, useEffect, useState } from "react";
 import { deleteTag, editTag, NoteTag, addNewTag } from "../../lib/note/archive";
 import { colors, getRandomColor } from "../../lib/color";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
@@ -7,9 +7,9 @@ import {
   TagOutlined,
   DeleteOutlined,
   SettingOutlined,
-  ContainerOutlined
+  ContainerOutlined,
 } from "@ant-design/icons";
-import SwipeDelete from "../ui/SwipeDelete";
+import { SwipeDelete, SwipeDeleteContext } from "../ui/SwipeDelete";
 import { Setter } from "../../lib/hooks";
 import classNames from "classnames";
 import { ColorCirle } from "../widgets/ColorCircle";
@@ -42,18 +42,20 @@ const TagInput: FC<{
   );
 };
 
-const TagItem: FC<{
-  noteTag: NoteTag;
-  removeTag: () => void;
-  onClick: MouseEventHandler<HTMLDivElement>;
-}> = ({ noteTag, removeTag, onClick }) => {
+const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
   const { uid, color, name, notes } = noteTag;
   const { editing, tagUid } = useContext(MenuStateCtx);
-  const { setAllTags } = useContext(MenuMethodCtx);
+  const { setAllTags, setTagUid } = useContext(MenuMethodCtx);
   const [tagName, setTagName] = useState(name);
   const [tagColor, setTagColor] = useState(color);
   const [tagEditing, setTagEditing] = useState(false);
   useEffect(() => setTagEditing(false), [editing]);
+
+  async function removeTag() {
+    const tags = await deleteTag(uid);
+    setTagUid("DEFAULT");
+    setAllTags(tags);
+  }
 
   const cancelEditing = () => {
     setTagName(name);
@@ -73,22 +75,12 @@ const TagItem: FC<{
     setTagEditing(false);
   };
 
-  return (
-    <div
-      className={classNames("tag-item", {
-        curr: tagUid === uid,
-        editing: tagEditing,
-      })}
-      onClick={onClick}
-    >
-      {tagEditing || (
-        <>
-          <ColorCirle className="tag-circle" color={tagColor} />
-          <span className="tag-name">{tagName}</span>
-        </>
-      )}
+  const displayPanel = (
+    <>
+      <ColorCirle className="tag-circle" color={tagColor} />
+      <span className="tag-name">{tagName}</span>
       {editing || <span className="tag-num">{notes.length}</span>}
-      {editing && !tagEditing && (
+      {editing && (
         <Button
           size="small"
           type="text"
@@ -96,35 +88,55 @@ const TagItem: FC<{
           icon={<SettingOutlined />}
         />
       )}
-      {tagEditing && (
-        <>
-          <TagInput
-            tagName={tagName}
-            setTagName={setTagName}
-            tagColor={tagColor}
-            setTagColor={setTagColor}
-          />
-          <div className="buttons">
-            <Popconfirm
-              title="This tag will be deleted."
-              onConfirm={removeTag}
-              placement="left"
-              cancelText="Cancel"
-              icon={<DeleteOutlined />}
-              okText="Delete"
-              okType="danger"
-              okButtonProps={{ type: "primary" }}
-            >
-              <Button danger>Delete</Button>
-            </Popconfirm>
-            <Button onClick={cancelEditing}>Cancel</Button>
-            <Button type="primary" disabled={!tagName} onClick={finishEditing}>
-              OK
-            </Button>
-          </div>
-        </>
-      )}
-    </div>
+    </>
+  );
+
+  const editingPanel = (
+    <>
+      <TagInput
+        tagName={tagName}
+        setTagName={setTagName}
+        tagColor={tagColor}
+        setTagColor={setTagColor}
+      />
+      <div className="buttons">
+        <Popconfirm
+          title="This tag will be deleted."
+          onConfirm={removeTag}
+          placement="left"
+          cancelText="Cancel"
+          icon={<DeleteOutlined />}
+          okText="Delete"
+          okType="danger"
+          okButtonProps={{ type: "primary" }}
+        >
+          <Button danger>Delete</Button>
+        </Popconfirm>
+        <Button onClick={cancelEditing}>Cancel</Button>
+        <Button type="primary" disabled={!tagName} onClick={finishEditing}>
+          OK
+        </Button>
+      </div>
+    </>
+  );
+
+  return (
+    <SwipeDelete
+      uid={uid}
+      className="tag-wrapper"
+      onDelete={removeTag}
+      disable={editing}
+    >
+      <div
+        className={classNames("tag-item", {
+          curr: tagUid === uid,
+          editing: tagEditing,
+        })}
+        onClick={() => setTagUid(uid)}
+      >
+        {tagEditing ? editingPanel : displayPanel}
+      </div>
+    </SwipeDelete>
   );
 };
 
@@ -141,7 +153,7 @@ const NewTagItem: FC<{ setAdding: Setter<boolean> }> = ({ setAdding }) => {
   };
 
   return (
-    <div className="tag-wrapper">
+    <div className="tag-wrapper new">
       <div className="tag-item curr editing">
         <TagInput
           tagName={tagName}
@@ -160,29 +172,17 @@ const NewTagItem: FC<{ setAdding: Setter<boolean> }> = ({ setAdding }) => {
   );
 };
 
-export default function SideMenu({ onSelect }: { onSelect?: () => void }) {
+export default function SideMenu() {
   const { allTags, editing, tagUid, allNotes } = useContext(MenuStateCtx);
-  const { setTagUid, setAllTags } = useContext(MenuMethodCtx);
+  const { setTagUid } = useContext(MenuMethodCtx);
   const { setEditing } = useContext(MenuMethodCtx);
-  const [nowSwiped, setNowSwiped] = useState("");
   const [adding, setAdding] = useState(false);
-
-  async function removeOneTag(uid: string) {
-    const tags = await deleteTag(uid);
-    setTagUid("DEFAULT");
-    setAllTags(tags);
-  }
-
-  const selectTag = (key: string) => {
-    setTagUid(key);
-    onSelect && onSelect();
-  };
 
   const allNoteTag = (
     <div className="tag-wrapper">
       <div
         className={classNames("tag-item", { curr: tagUid === "DEFAULT" })}
-        onClick={() => selectTag("DEFAULT")}
+        onClick={() => setTagUid("DEFAULT")}
       >
         <ContainerOutlined className="all-note-icon" />
         <span className="tag-name">All Notes</span>
@@ -208,27 +208,11 @@ export default function SideMenu({ onSelect }: { onSelect?: () => void }) {
     <aside className="side-menu">
       <div className="tag-list">
         {allNoteTag}
-        {Object.values(allTags).map((tag) => {
-          const { uid } = tag;
-          const removeTag = () => removeOneTag(uid);
-          return (
-            <div className="tag-wrapper" key={uid}>
-              <SwipeDelete
-                uid={uid}
-                onDelete={removeTag}
-                nowSwiped={nowSwiped}
-                setNowSwiped={setNowSwiped}
-                disable={editing}
-              >
-                <TagItem
-                  noteTag={tag}
-                  removeTag={removeTag}
-                  onClick={() => selectTag(uid)}
-                />
-              </SwipeDelete>
-            </div>
-          );
-        })}
+        <SwipeDeleteContext>
+          {Object.values(allTags).map((tag) => (
+            <TagItem key={tag.uid} noteTag={tag} />
+          ))}
+        </SwipeDeleteContext>
         {adding && <NewTagItem setAdding={setAdding} />}
       </div>
       <footer>
