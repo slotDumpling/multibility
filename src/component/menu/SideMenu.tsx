@@ -120,19 +120,14 @@ const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
     </>
   );
 
+  const itemClass = classNames("tag-item", {
+    curr: tagUid === uid,
+    editing: tagEditing,
+  });
+
   return (
-    <SwipeDelete
-      className="tag-wrapper"
-      onDelete={removeTag}
-      disable={editing}
-    >
-      <div
-        className={classNames("tag-item", {
-          curr: tagUid === uid,
-          editing: tagEditing,
-        })}
-        onClick={() => setTagUid(uid)}
-      >
+    <SwipeDelete className="tag-wrapper" onDelete={removeTag} disable={editing}>
+      <div className={itemClass} onClick={() => setTagUid(uid)}>
         {tagEditing ? editingPanel : displayPanel}
       </div>
     </SwipeDelete>
