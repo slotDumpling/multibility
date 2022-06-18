@@ -1,16 +1,14 @@
-import { Dispatch, SetStateAction, useEffect, useRef } from "react";
+import { Dispatch, SetStateAction, useRef, useState } from "react";
 
 export type Setter<T> = Dispatch<SetStateAction<T>>;
 
-export function useEventWaiter(): [() => Promise<void>, () => void] {
-  const resolerRef = useRef(() => {});
-  const resolver = () => resolerRef.current();
+export function useEventWaiter(): [Promise<void>, () => void] {
+  const resRef = useRef(() => {});
+  const resolve = () => resRef.current();
 
-  const promise = useRef(Promise.resolve());
-  useEffect(() => {
-    promise.current = new Promise((res) => (resolerRef.current = res));
-  }, []);
-  const promiser = () => promise.current;
+  const [promise] = useState(
+    () => new Promise<void>((res) => (resRef.current = res))
+  );
 
-  return [promiser, resolver];
+  return [promise, resolve];
 }

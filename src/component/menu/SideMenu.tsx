@@ -122,7 +122,6 @@ const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
 
   return (
     <SwipeDelete
-      uid={uid}
       className="tag-wrapper"
       onDelete={removeTag}
       disable={editing}

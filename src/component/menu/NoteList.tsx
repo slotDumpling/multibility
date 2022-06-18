@@ -95,12 +95,11 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
           const { uid } = noteInfo;
           const removeNote = () => removeNotes([uid]);
           return (
-            <CSSTransition key={uid} timeout={300}>
+            <CSSTransition key={uid} timeout={500}>
               <SwipeDelete
-                className="note-item-wrapper"
+                className="note-wrapper"
                 onDelete={removeNote}
                 disable={editing}
-                uid={uid}
               >
                 <NoteItem
                   noteInfo={noteInfo}

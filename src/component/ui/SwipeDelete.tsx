@@ -3,6 +3,7 @@ import React, {
   Dispatch,
   FC,
   SetStateAction,
+  TransitionEventHandler,
   useContext,
   useEffect,
   useRef,
@@ -11,6 +12,7 @@ import React, {
 import { useSwipeable } from "react-swipeable";
 import classNames from "classnames";
 import "./swipe-delete.sass";
+import { v4 as getUid } from "uuid";
 import { useEventWaiter } from "../../lib/hooks";
 
 const SwipedCtx = createContext({
@@ -29,16 +31,22 @@ export const SwipeDeleteContext: FC = ({ children }) => {
 
 export const SwipeDelete: FC<{
   onDelete: () => void;
-  uid: string;
   disable?: boolean;
   className?: string;
-}> = ({ children, uid, onDelete, disable = false, className }) => {
-  const [deleted, setDeleted] = useState(false);
+}> = ({ children, onDelete, disable = false, className }) => {
+  const [uid] = useState(getUid);
+  
+  const { nowSwiped, setNowSwiped } = useContext(SwipedCtx);
   const [swiped, setSwiped] = useState(false);
+  const deleting = swiped && (!nowSwiped || nowSwiped === uid);
+  const [deleted, setDeleted] = useState(false);
+
   const [height, setHeight] = useState<number>();
   const wrapper = useRef<HTMLDivElement>(null);
-  const { nowSwiped, setNowSwiped } = useContext(SwipedCtx);
-  const deleting = swiped && (!nowSwiped || nowSwiped === uid);
+  
+  useEffect(() => {
+    if (nowSwiped !== uid) setSwiped(false);
+  }, [nowSwiped, uid]);
 
   const showDelete = () => {
     setSwiped(true);
@@ -66,31 +74,34 @@ export const SwipeDelete: FC<{
     setSwiped(false);
   }, [disable, setNowSwiped]);
 
-  const [transEnd, resolve] = useEventWaiter();
+  const [transDidEnd, transEnd] = useEventWaiter();
+  const handleClick = async () => {
+    setDeleted(true);
+    await transDidEnd;
+    onDelete();
+    setNowSwiped("");
+  };
+
+  const handleTransEnd: TransitionEventHandler = (e) => {
+    if (e.propertyName === "height" && deleted) transEnd();
+  };
+
+  const wrapperClass = classNames("swipe-wrapper", className, {
+    deleted,
+    deleting,
+  });
 
   return (
     <div
-      className={classNames("swipe-wrapper", className, {
-        deleted,
-        deleting,
-      })}
+      className={wrapperClass}
       {...swipeHandler}
       style={{ height }}
-      onTransitionEnd={({ propertyName: p }) => {
-        if (p === "height" && deleted) resolve();
-      }}
+      onTransitionEnd={handleTransEnd}
     >
       <div className="content" ref={wrapper}>
         {children}
       </div>
-      <div
-        className="button"
-        onClick={() => {
-          setDeleted(true);
-          transEnd().then(onDelete);
-        }}
-        style={{ height }}
-      >
+      <div className="button" onClick={handleClick} style={{ height }}>
         Delete
       </div>
     </div>
