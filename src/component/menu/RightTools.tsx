@@ -19,7 +19,7 @@ import {
   ArrowLeftOutlined,
 } from "@ant-design/icons";
 import * as serviceWorkerRegistration from "../.././serviceWorkerRegistration";
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { getUserName, saveUserName } from "../../lib/user";
 import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import { createNewNote } from "../../lib/note/archive";
@@ -33,8 +33,10 @@ import localforage from "localforage";
 import { useEffect } from "react";
 import { FC } from "react";
 import "./rightTools.sass";
+import { CSSTransitionProps } from "react-transition-group/CSSTransition";
 
-const OthersCtx = createContext({
+const activeKeyCtx = createContext({
+  active: "MENU",
   setActive: (() => {}) as Setter<string>,
 });
 
@@ -48,7 +50,7 @@ export default function RightTools() {
 }
 
 const OthersMenu = () => {
-  const { setActive } = useContext(OthersCtx);
+  const { setActive } = useContext(activeKeyCtx);
   return (
     <div className="other-menu">
       <Menu
@@ -64,23 +66,26 @@ const OthersMenu = () => {
 };
 
 const SeconaryMenu: FC<{
-  children: ReactNode;
   title: string;
-}> = ({ children, title }) => {
-  const { setActive } = useContext(OthersCtx);
+  cssTransProps: CSSTransitionProps;
+  keyName: string;
+}> = ({ children, title, cssTransProps, keyName }) => {
+  const { active, setActive } = useContext(activeKeyCtx);
   return (
-    <div className="secondary">
-      <nav>
-        <Button
-          type="text"
-          shape="circle"
-          onClick={() => setActive("MENU")}
-          icon={<ArrowLeftOutlined />}
-        />
-        <h3>{title}</h3>
-      </nav>
-      {children}
-    </div>
+    <CSSTransition in={active === keyName} {...cssTransProps}>
+      <div className="secondary">
+        <nav>
+          <Button
+            type="text"
+            shape="circle"
+            onClick={() => setActive("MENU")}
+            icon={<ArrowLeftOutlined />}
+          />
+          <h3>{title}</h3>
+        </nav>
+        {children}
+      </div>
+    </CSSTransition>
   );
 };
 
@@ -105,52 +110,48 @@ function UploadPdfPage() {
   }
 
   return (
-    <SeconaryMenu title="Import PDF">
-      <Dragger
-        disabled={loading}
-        multiple={false}
-        action="#"
-        accept="application/pdf"
-        beforeUpload={handleFile}
-      >
-        <p className="ant-upload-drag-icon">
-          {loading && <Progress width={48} type="circle" percent={percent} />}
-          {loading || <InboxOutlined />}
-        </p>
-        <p className="ant-upload-hint">Click or drag a pdf file here.</p>
-      </Dragger>
-    </SeconaryMenu>
+    <Dragger
+      disabled={loading}
+      multiple={false}
+      action="#"
+      accept="application/pdf"
+      beforeUpload={handleFile}
+    >
+      <p className="ant-upload-drag-icon">
+        {loading && <Progress width={48} type="circle" percent={percent} />}
+        {loading || <InboxOutlined />}
+      </p>
+      <p className="ant-upload-hint">Click or drag a pdf file here.</p>
+    </Dragger>
   );
 }
 
 const ProfilePage = () => {
+  const { setActive } = useContext(activeKeyCtx);
   const userName = getUserName();
   const [name, setName] = useState(userName);
-  const { setActive } = useContext(OthersCtx);
   const handleEnter = () => {
     if (!name) return;
     saveUserName(name);
     setActive("MENU");
   };
   return (
-    <SeconaryMenu title="My profile">
-      <div className="profile-page">
-        <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          prefix={<UserOutlined />}
-          allowClear
-        />
-        <Button
-          disabled={userName === name || !name}
-          onClick={handleEnter}
-          type="primary"
-          block
-        >
-          OK
-        </Button>
-      </div>
-    </SeconaryMenu>
+    <div className="profile-page">
+      <Input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        prefix={<UserOutlined />}
+        allowClear
+      />
+      <Button
+        disabled={userName === name || !name}
+        onClick={handleEnter}
+        type="primary"
+        block
+      >
+        OK
+      </Button>
+    </div>
   );
 };
 
@@ -163,34 +164,32 @@ const SettingsPage = () => {
   };
 
   return (
-    <SeconaryMenu title="Settings">
-      <div className="setting-menu">
-        <Button
-          icon={<SyncOutlined />}
-          onClick={async () => {
-            await serviceWorkerRegistration.unregister();
-            window.location.reload();
-          }}
-          block
-        >
-          Update
+    <div className="setting-menu">
+      <Button
+        icon={<SyncOutlined />}
+        onClick={async () => {
+          await serviceWorkerRegistration.unregister();
+          window.location.reload();
+        }}
+        block
+      >
+        Update
+      </Button>
+      <Popconfirm
+        title="Everything will be deleted."
+        onConfirm={clearAll}
+        icon={<ClearOutlined />}
+        okText="Delete"
+        okType="danger"
+        okButtonProps={{ type: "primary" }}
+        cancelText="Cancel"
+        placement="bottom"
+      >
+        <Button icon={<ClearOutlined />} danger block>
+          Clear all
         </Button>
-        <Popconfirm
-          title="Everything will be deleted."
-          onConfirm={clearAll}
-          icon={<ClearOutlined />}
-          okText="Delete"
-          okType="danger"
-          okButtonProps={{ type: "primary" }}
-          cancelText="Cancel"
-          placement="bottom"
-        >
-          <Button icon={<ClearOutlined />} danger block>
-            Clear all
-          </Button>
-        </Popconfirm>
-      </div>
-    </SeconaryMenu>
+      </Popconfirm>
+    </div>
   );
 };
 
@@ -213,23 +212,30 @@ const OthersPage = () => {
 
   useEffect(() => setActive("MENU"), []);
 
+  const subMenus = [
+    { key: "PDF", title: "Import PDF", component: <UploadPdfPage /> },
+    { key: "PROFILE", title: "My profile", component: <ProfilePage /> },
+    { key: "SETTINGS", title: "Settings", component: <SettingsPage /> },
+  ];
+
   return (
-    <OthersCtx.Provider value={{ setActive }}>
+    <activeKeyCtx.Provider value={{ active, setActive }}>
       <section className="others-menu" style={{ height }}>
         <CSSTransition in={active === "MENU"} {...primeProps}>
           <OthersMenu />
         </CSSTransition>
-        <CSSTransition in={active === "PDF"} {...secdProps}>
-          <UploadPdfPage />
-        </CSSTransition>
-        <CSSTransition in={active === "PROFILE"} {...secdProps}>
-          <ProfilePage />
-        </CSSTransition>
-        <CSSTransition in={active === "SETTINGS"} {...secdProps}>
-          <SettingsPage />
-        </CSSTransition>
+        {subMenus.map(({ key, title, component }) => (
+          <SeconaryMenu
+            key={key}
+            keyName={key}
+            title={title}
+            cssTransProps={secdProps}
+          >
+            {component}
+          </SeconaryMenu>
+        ))}
       </section>
-    </OthersCtx.Provider>
+    </activeKeyCtx.Provider>
   );
 };
 
