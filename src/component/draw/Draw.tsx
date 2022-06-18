@@ -19,17 +19,6 @@ import { Set } from "immutable";
 import paper from "paper";
 import "./draw.sass";
 
-export interface DrawRefType {
-  deleteSelected: () => void;
-  rotateSelected: (angle: number, last?: boolean) => void;
-  duplicateSelected: () => void;
-  mutateStyle: (updated: Partial<DrawCtrl>) => void;
-  rasterize: () => string;
-  submitText: (text: string, fontSize: number, color: string) => void;
-  cancelText: () => void;
-}
-export type ActiveToolKey = "" | "select" | "text";
-
 const PREVIEW_WIDTH = 200;
 const {
   Path,
@@ -41,19 +30,28 @@ const {
   Shape: { Rectangle },
 } = paper;
 
-const Draw = React.forwardRef<
-  DrawRefType,
-  {
-    drawState: DrawState;
-    otherStates?: DrawState[];
-    onChange?: Dispatch<SetStateAction<DrawState>>;
-    setActiveTool?: Dispatch<SetStateAction<ActiveToolKey>>;
-    drawCtrl?: DrawCtrl;
-    readonly?: boolean;
-    preview?: boolean;
-    imgSrc?: string;
-  }
->(
+export type ActiveToolKey = "" | "select" | "text";
+export interface DrawRefType {
+  deleteSelected: () => void;
+  rotateSelected: (angle: number, last?: boolean) => void;
+  duplicateSelected: () => void;
+  mutateStyle: (updated: Partial<DrawCtrl>) => void;
+  rasterize: () => string;
+  submitText: (text: string, fontSize: number, color: string) => void;
+  cancelText: () => void;
+}
+interface DrawPropType {
+  drawState: DrawState;
+  otherStates?: DrawState[];
+  onChange?: Dispatch<SetStateAction<DrawState>>;
+  setActiveTool?: Dispatch<SetStateAction<ActiveToolKey>>;
+  drawCtrl?: DrawCtrl;
+  readonly?: boolean;
+  preview?: boolean;
+  imgSrc?: string;
+}
+
+const Draw = React.forwardRef<DrawRefType, DrawPropType>(
   (
     {
       drawState,
@@ -79,19 +77,20 @@ const Draw = React.forwardRef<
     const [rect, setRect] = usePaperItem<paper.Shape.Rectangle>();
 
     useEffect(() => {
-      const setupPaper = () => {
-        if (!canvasEl.current) return;
-        scope.current.setup(canvasEl.current);
-
-        const r = preview ? PREVIEW_WIDTH / width : 1;
-        scope.current.view.viewSize = new Size(width, height).multiply(r);
-        scope.current.view.scale(r, new Point(0, 0));
-        paintBackground(scope.current, width, height);
-      };
-
-      setupPaper();
       const cvs = canvasEl.current;
-      return () => void (cvs && releaseCanvas(cvs));
+      const scp = scope.current;
+      if (!cvs) return;
+
+      scp.setup(cvs);
+      const r = preview ? PREVIEW_WIDTH / width : 1;
+      scp.view.viewSize = new Size(width, height).multiply(r);
+      scp.view.scale(r, new Point(0, 0));
+      paintBackground(scp, width, height);
+
+      return () => {
+        scp.remove();
+        releaseCanvas(cvs);
+      };
     }, [width, height, preview]);
 
     useEffect(() => {
@@ -403,6 +402,7 @@ const Draw = React.forwardRef<
       mutateStyle,
       rasterize,
     }));
+
     useEffect(() => {
       if (!setActiveTool) return;
       if (paperMode === "selected") {
