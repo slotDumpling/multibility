@@ -47,7 +47,7 @@ const WidthSelect: FC<{
 }> = ({ updateDrawCtrl, drawCtrl, setPanelBlur }) => {
   const { lineWidth } = drawCtrl;
   const widthList = drawCtrl.widthList ?? defaultWidthList;
-  const color = drawCtrl.color ?? "#000000";
+  const color = drawCtrl.color ?? "#0000";
 
   const chosen = useMemo(
     () => Math.max(0, widthList.indexOf(lineWidth ?? 0)),
@@ -82,7 +82,12 @@ const WidthSelect: FC<{
           className="circle-wrapper"
           style={{ "--real-size": `calc(0.05vw * ${width})` } as CSSProperties}
         >
-          <ColorCirle className="width-circle" color={color} />
+          <ColorCirle
+            className={classNames("width-circle", {
+              bordered: !drawCtrl.color,
+            })}
+            color={color}
+          />
         </div>
       </Popover>
     ),
