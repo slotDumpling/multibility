@@ -1,18 +1,18 @@
 import { FC, useContext, useEffect, useState } from "react";
-import { Button, Input, Popconfirm, Select } from "antd";
-import { deleteTag, editTag, NoteTag, addNewTag } from "../../lib/note/archive";
-import { colors, getRandomColor } from "../../lib/color";
-import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import {
   TagOutlined,
   DeleteOutlined,
   SettingOutlined,
   ContainerOutlined,
 } from "@ant-design/icons";
+import { deleteTag, editTag, NoteTag, addNewTag } from "../../lib/note/archive";
 import { SwipeDelete, SwipeDeleteContext } from "../ui/SwipeDelete";
+import { Button, Input, Popconfirm, Select } from "antd";
+import { colors, getRandomColor } from "../../lib/color";
+import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
+import { ColorCirle } from "../widgets/ColorCircle";
 import { Setter } from "../../lib/hooks";
 import classNames from "classnames";
-import { ColorCirle } from "../widgets/ColorCircle";
 
 const TagInput: FC<{
   tagName: string;
