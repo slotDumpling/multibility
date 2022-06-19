@@ -1,6 +1,6 @@
 import React, { LazyExoticComponent, Suspense } from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
-import * as serviceWorkerRegistration from './serviceWorkerRegistration';
+import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import Test from "./component/Test";
 import { Loading } from "./component/ui/Loading";
 import ReactDOM from "react-dom";
