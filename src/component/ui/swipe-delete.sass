@@ -1,17 +1,18 @@
 @import ../_mixins
+@import ../_var
 
 .swipe-wrapper
   $button-width: 80px
   position: relative
   overflow: hidden
-  transition: all 0.3s 0.2s
+  transition: all $speed 0.2s
   > .content
     height: 100%
     overflow: hidden
-    transition: transform 0.3s
+    transition: transform $speed
   > .button
     @include absolute(0, -$button-width, 0, 100%)
-    transition: left 0.3s ease-in, transform 0.3s
+    transition: left $speed ease-in, transform $speed
     background-color: #ff4d4f
     color: #fff
     display: flex

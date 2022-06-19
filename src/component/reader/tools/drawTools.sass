@@ -18,15 +18,15 @@
     display: flex
     justify-content: center
     touch-action: none
-    transition: width 0.3s
+    transition: width $speed
     button
       width: 100%
-      transition: opacity 0.3s
+      transition: opacity $speed
     .arrow
       position: absolute
       top: 50%
       transform: translateY(-50%)
-      transition: opacity 0.3s
+      transition: opacity $speed
       display: flex
       opacity: 0
       pointer-events: none
@@ -54,14 +54,14 @@
 .select-tool.enter-active
   transform: translateX(-50%)
   opacity: 1
-  transition: opacity 0.3s, transform 0.3s
+  transition: opacity $speed, transform $speed
 .select-tool.exit
   transform: translateX(-50%)
   opacity: 1
 .select-tool.exit-active
   transform: translate(-50%, -10px)
   opacity: 0
-  transition: opacity 0.3s, transform 0.3s
+  transition: opacity $speed, transform $speed
 
 .insert-option
   margin: 10px 0

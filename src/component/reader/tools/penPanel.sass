@@ -6,11 +6,11 @@
   margin: 4px 0
   position: relative
   .color-select
-    transition: filter 0.3s
+    transition: filter $speed
   &::after
     @include pseudo-el(0, 0, 0, 0)
     visibility: hidden
-    transition: visibility 0.3s
+    transition: visibility $speed
   &.blur
     .color-select
       filter: blur(5px) opacity(0.5)
