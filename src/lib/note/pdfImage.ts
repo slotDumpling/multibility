@@ -20,7 +20,6 @@ const getPageImage = async (
 ): Promise<[string, number]> => {
   const page = await doc.getPage(pageNum);
   const viewport = page.getViewport({ scale });
-  console.log({ viewport });
 
   const { height, width } = viewport;
   const ratio = height / width;
@@ -72,10 +71,9 @@ export async function getOneImage(file: Blob, index: number, scale = 2) {
   return data;
 }
 
-const IMAGE_CACHE_NUMBER = 10;
+const IMAGE_CACHE_MAX = 10;
 const getImageCache = async (noteID: string, index: number) => {
-  let cacheList = ((await localforage.getItem("IMAGE_CACHE")) ||
-    []) as string[];
+  let cacheList: string[] = (await localforage.getItem("IMAGE_CACHE")) ?? [];
   const key = `IMAGE_${noteID}_${index}`;
   if (!cacheList.includes(key)) return;
   cacheList = [key, ...cacheList.filter((id) => id !== key)];
@@ -84,13 +82,12 @@ const getImageCache = async (noteID: string, index: number) => {
 };
 
 const setImageCache = async (noteID: string, index: number, data: string) => {
-  let cacheList = ((await localforage.getItem("IMAGE_CACHE")) ||
-    []) as string[];
+  let cacheList: string[] = (await localforage.getItem("IMAGE_CACHE")) ?? [];
   const key = `IMAGE_${noteID}_${index}`;
   cacheList = [key, ...cacheList.filter((id) => id !== key)];
-  if (cacheList.length > IMAGE_CACHE_NUMBER) {
-    const deleteList = cacheList.slice(IMAGE_CACHE_NUMBER);
-    cacheList = cacheList.slice(0, IMAGE_CACHE_NUMBER);
+  if (cacheList.length > IMAGE_CACHE_MAX) {
+    const deleteList = cacheList.slice(IMAGE_CACHE_MAX);
+    cacheList = cacheList.slice(0, IMAGE_CACHE_MAX);
     for (let id of deleteList) {
       await localforage.removeItem(id);
     }
@@ -103,8 +100,9 @@ export async function getOnePageImage(noteID: string, index: number) {
   const cached = await getImageCache(noteID, index);
   if (cached) return cached;
   const file = (await localforage.getItem(`PDF_${noteID}`)) as Blob | undefined;
-  const data = file && (await getOneImage(file, index, 2));
-  if (data) setImageCache(noteID, index, data);
+  if (!file) return;
+  const data = await getOneImage(file, index, 2);
+  setImageCache(noteID, index, data);
   return data;
 }
 
