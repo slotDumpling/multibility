@@ -5,20 +5,21 @@ import {
   moveNoteTag,
   editNoteData,
 } from "../../lib/note/archive";
-import { CloudOutlined } from "@ant-design/icons";
-import { Input, Tag } from "antd";
-import { MenuCtx } from "./MainMenu";
+import { CSSTransition, TransitionGroup } from "react-transition-group";
+import { CloudOutlined, CheckCircleTwoTone } from "@ant-design/icons";
+import { SwipeDelete, SwipeDeleteContext } from "../ui/SwipeDelete";
 import { NoteInfo } from "../../lib/note/note";
 import { useNavigate } from "react-router-dom";
 import calender from "dayjs/plugin/calendar";
-import { SwipeDelete, SwipeDeleteContext } from "../ui/SwipeDelete";
 import dafaultImg from "../ui/default.png";
 import { Setter } from "../../lib/hooks";
-import { List, Set } from "immutable";
-import classNames from "classnames";
-import dayjs from "dayjs";
 import { HeadTools } from "./HeadTools";
-import { CSSTransition, TransitionGroup } from "react-transition-group";
+import { List, Set } from "immutable";
+import { MenuCtx } from "./MainMenu";
+import classNames from "classnames";
+import { Input, Tag } from "antd";
+import dayjs from "dayjs";
+
 dayjs.extend(calender);
 
 export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
@@ -157,6 +158,7 @@ const NoteItem: FC<{
             <CloudOutlined />
           </Tag>
         )}
+        <CheckCircleTwoTone className="checked-icon" />
       </div>
       <div className="content">
         {editing || <p className="name">{name}</p>}

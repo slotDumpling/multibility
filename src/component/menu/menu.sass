@@ -94,14 +94,14 @@
   &.enter-active
     height: $height
     opacity: 1
-    transition: all 0.3s
+    transition: all $speed
   &.exit
     height: $height
     opacity: 1
   &.exit-active
     height: 0
     opacity: 0
-    transition: all 0.3s
+    transition: all $speed
 
 .tag-list
   flex: 1
@@ -121,7 +121,7 @@
   display: flex
   align-items: center
   cursor: pointer
-  transition: height 0.3s, background 0.3s
+  transition: height $speed, background $speed
   &.editing
     height: 8em
     flex-direction: column
@@ -186,11 +186,12 @@
       &:hover
         background-color: #eee
 
+$note-item-height: 5em
 .note-wrapper:not(.deleting)
-  @include item-transition(5em)
+  @include item-transition($note-item-height)
 
 .note-item
-  height: 5em
+  height: $note-item-height
   padding: 0 1em
   margin: 0 20px
   display: flex
@@ -198,11 +199,6 @@
   cursor: pointer
   position: relative
   border-bottom: $light-border
-  &::before
-    @include pseudo-el(0, -20px, -1px, -20px)
-    transition: background 0.3s
-  &.selected::before
-    background-color: $blue-color-light
   .timg-wrapper
     width: 3em
     margin-right: 1em
@@ -219,6 +215,11 @@
       bottom: 0
       left: 0
       zoom: 0.7
+    .checked-icon
+      @include absolute-center
+      font-size: 20px
+      opacity: 0
+      transition: opacity $fast-speed
   .content
     flex: 1
     padding: 5px
@@ -236,6 +237,19 @@
       @include text-overflow
       margin-left: 6px
       color: #0005
+  &::before
+    @include pseudo-el(0, -20px, -1px, -20px)
+    transition: background $fast-speed
+  &.selected
+    &::before
+      background-color: $blue-color-light
+    .timg, .cloud-icon
+      filter: blur(1px)
+      opacity: 0.7
+    .checked-icon
+      opacity: 1
+    .name-input
+      border-color: #0000
 
 .tag-select
   display: flex
