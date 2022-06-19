@@ -106,7 +106,7 @@ export default function Reader() {
   const saver = useEvent(async () => {
     const pr = pageRec?.toObject();
     const canvas = document.querySelector("canvas");
-    const thumbnail = canvas?.toDataURL();
+    const thumbnail = canvas?.toDataURL("image/jpeg", 0.1);
     await editNoteData(noteID, { pageRec: pr, thumbnail });
     setSaved(true);
   });
