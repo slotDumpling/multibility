@@ -1,6 +1,6 @@
 import { Button, ButtonProps, Dropdown, Input, Menu, Popconfirm } from "antd";
 import { FC, useContext } from "react";
-import { MenuMethodCtx, MenuStateCtx } from "./MainMenu";
+import { MenuCtx } from "./MainMenu";
 import {
   SwapOutlined,
   TagsOutlined,
@@ -33,8 +33,7 @@ export function HeadTools({
   onMove: (tagID: string) => void;
   disabled: boolean;
 }) {
-  const { editing, allTags } = useContext(MenuStateCtx);
-  const { setEditing } = useContext(MenuMethodCtx);
+  const { editing, allTags, setEditing } = useContext(MenuCtx);
 
   const sortMenu = (
     <Menu

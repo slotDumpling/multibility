@@ -9,7 +9,7 @@ import { deleteTag, editTag, NoteTag, addNewTag } from "../../lib/note/archive";
 import { SwipeDelete, SwipeDeleteContext } from "../ui/SwipeDelete";
 import { Button, Input, Popconfirm, Select } from "antd";
 import { colors, getRandomColor } from "../../lib/color";
-import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
+import { MenuCtx } from "./MainMenu";
 import { ColorCirle } from "../widgets/ColorCircle";
 import { Setter } from "../../lib/hooks";
 import classNames from "classnames";
@@ -44,8 +44,7 @@ const TagInput: FC<{
 
 const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
   const { uid, color, name, notes } = noteTag;
-  const { editing, tagUid } = useContext(MenuStateCtx);
-  const { setAllTags, setTagUid } = useContext(MenuMethodCtx);
+  const { editing, tagUid, setAllTags, setTagUid } = useContext(MenuCtx);
   const [tagName, setTagName] = useState(name);
   const [tagColor, setTagColor] = useState(color);
   const [tagEditing, setTagEditing] = useState(false);
@@ -137,7 +136,7 @@ const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
 const NewTagItem: FC<{ setAdding: Setter<boolean> }> = ({ setAdding }) => {
   const [tagName, setTagName] = useState("");
   const [tagColor, setTagColor] = useState(getRandomColor());
-  const { setAllTags } = useContext(MenuMethodCtx);
+  const { setAllTags } = useContext(MenuCtx);
 
   const addTag = () => {
     const name = tagName.trim();
@@ -167,9 +166,8 @@ const NewTagItem: FC<{ setAdding: Setter<boolean> }> = ({ setAdding }) => {
 };
 
 export default function SideMenu() {
-  const { allTags, editing, tagUid, allNotes } = useContext(MenuStateCtx);
-  const { setTagUid } = useContext(MenuMethodCtx);
-  const { setEditing } = useContext(MenuMethodCtx);
+  const { allTags, editing, tagUid, allNotes, setTagUid, setEditing } =
+    useContext(MenuCtx);
   const [adding, setAdding] = useState(false);
 
   const allNoteTag = (

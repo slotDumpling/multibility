@@ -1,18 +1,17 @@
 import { Button, Drawer } from "antd";
 import { useContext, useEffect, useState } from "react";
-import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import { MenuOutlined } from "@ant-design/icons";
 import SideMenu from "./SideMenu";
+import { MenuCtx } from "./MainMenu";
 
 export default function LeftTools() {
   const [asideOn, setAsideOn] = useState(false);
-  const { editing, tagUid } = useContext(MenuStateCtx);
-  const { setEditing } = useContext(MenuMethodCtx);
+  const { editing, tagUid, setEditing } = useContext(MenuCtx);
 
   useEffect(() => {
     if (!editing) setAsideOn(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tagUid])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tagUid]);
 
   const editButton = (
     <Button

@@ -19,9 +19,9 @@ import {
   ArrowLeftOutlined,
 } from "@ant-design/icons";
 import * as serviceWorkerRegistration from "../.././serviceWorkerRegistration";
+import { CSSTransitionProps } from "react-transition-group/CSSTransition";
 import { createContext, useContext, useState } from "react";
 import { getUserName, saveUserName } from "../../lib/user";
-import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
 import { createNewNote } from "../../lib/note/archive";
 import { CSSTransition } from "react-transition-group";
 import { getNoteID } from "../../lib/network/http";
@@ -30,10 +30,10 @@ import Dragger from "antd/lib/upload/Dragger";
 import { PasscodeInput } from "antd-mobile";
 import { Setter } from "../../lib/hooks";
 import localforage from "localforage";
+import { MenuCtx } from "./MainMenu";
 import { useEffect } from "react";
 import { FC } from "react";
 import "./rightTools.sass";
-import { CSSTransitionProps } from "react-transition-group/CSSTransition";
 
 const activeKeyCtx = createContext({
   active: "MENU",
@@ -48,22 +48,6 @@ export default function RightTools() {
     </div>
   );
 }
-
-const OthersMenu = () => {
-  const { setActive } = useContext(activeKeyCtx);
-  return (
-    <div className="other-menu">
-      <Menu
-        onClick={({ key }) => setActive(key)}
-        items={[
-          { key: "PDF", icon: <FilePdfOutlined />, label: "Import PDF" },
-          { key: "PROFILE", icon: <UserOutlined />, label: "My profile" },
-          { key: "SETTINGS", icon: <SettingOutlined />, label: "Settings" },
-        ]}
-      />
-    </div>
-  );
-};
 
 const SeconaryMenu: FC<{
   title: string;
@@ -89,10 +73,9 @@ const SeconaryMenu: FC<{
   );
 };
 
-function UploadPdfPage() {
+const UploadPdfPage = () => {
   const [loading, setLoading] = useState(false);
-  const { tagUid } = useContext(MenuStateCtx);
-  const { setAllTags, setAllNotes } = useContext(MenuMethodCtx);
+  const { tagUid, setAllTags, setAllNotes } = useContext(MenuCtx);
   const [percent, setPercent] = useState(0);
 
   async function handleFile(file: File) {
@@ -124,7 +107,7 @@ function UploadPdfPage() {
       <p className="ant-upload-hint">Click or drag a pdf file here.</p>
     </Dragger>
   );
-}
+};
 
 const ProfilePage = () => {
   const { setActive } = useContext(activeKeyCtx);
@@ -156,7 +139,7 @@ const ProfilePage = () => {
 };
 
 const SettingsPage = () => {
-  const { menuInit } = useContext(MenuMethodCtx);
+  const { menuInit } = useContext(MenuCtx);
 
   const clearAll = async () => {
     await localforage.clear();
@@ -193,6 +176,36 @@ const SettingsPage = () => {
   );
 };
 
+const menuItems = [
+  {
+    key: "PDF",
+    label: "Import PDF",
+    component: <UploadPdfPage />,
+    icon: <FilePdfOutlined />,
+  },
+  {
+    key: "PROFILE",
+    label: "My profile",
+    component: <ProfilePage />,
+    icon: <UserOutlined />,
+  },
+  {
+    key: "SETTINGS",
+    label: "Settings",
+    component: <SettingsPage />,
+    icon: <SettingOutlined />,
+  },
+];
+
+const OthersMenu = () => {
+  const { setActive } = useContext(activeKeyCtx);
+  return (
+    <div className="other-menu">
+      <Menu onClick={({ key }) => setActive(key)} items={menuItems} />
+    </div>
+  );
+};
+
 const OthersPage = () => {
   const [height, setHeight] = useState(0);
   const [active, setActive] = useState("");
@@ -212,23 +225,17 @@ const OthersPage = () => {
 
   useEffect(() => setActive("MENU"), []);
 
-  const subMenus = [
-    { key: "PDF", title: "Import PDF", component: <UploadPdfPage /> },
-    { key: "PROFILE", title: "My profile", component: <ProfilePage /> },
-    { key: "SETTINGS", title: "Settings", component: <SettingsPage /> },
-  ];
-
   return (
     <activeKeyCtx.Provider value={{ active, setActive }}>
       <section className="others-menu" style={{ height }}>
         <CSSTransition in={active === "MENU"} {...primeProps}>
           <OthersMenu />
         </CSSTransition>
-        {subMenus.map(({ key, title, component }) => (
+        {menuItems.map(({ key, label, component }) => (
           <SeconaryMenu
             key={key}
             keyName={key}
-            title={title}
+            title={label}
             cssTransProps={secdProps}
           >
             {component}
@@ -253,7 +260,7 @@ const OthersButton = () => {
   );
 };
 
-function JoinTeamButton() {
+const JoinTeamButton = () => {
   const [roomCode, setRoomCode] = useState("");
   const [wrong, setWrong] = useState(false);
 

@@ -7,7 +7,7 @@ import {
 } from "../../lib/note/archive";
 import { CloudOutlined } from "@ant-design/icons";
 import { Input, Tag } from "antd";
-import { MenuStateCtx, MenuMethodCtx } from "./MainMenu";
+import { MenuCtx } from "./MainMenu";
 import { NoteInfo } from "../../lib/note/note";
 import { useNavigate } from "react-router-dom";
 import calender from "dayjs/plugin/calendar";
@@ -22,8 +22,7 @@ import { CSSTransition, TransitionGroup } from "react-transition-group";
 dayjs.extend(calender);
 
 export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
-  const { editing } = useContext(MenuStateCtx);
-  const { setAllTags, setAllNotes } = useContext(MenuMethodCtx);
+  const { editing, setAllTags, setAllNotes } = useContext(MenuCtx);
   const [sortType, setSortType] = useState("LAST");
   const [searchText, setSearchText] = useState("");
   const [selectedNotes, setSelectNotes] = useState(Set<string>());
@@ -124,8 +123,7 @@ const NoteItem: FC<{
   const date = useMemo(() => dayjs(lastTime).calendar(), [lastTime]);
   const href = `${team ? "team" : "reader"}/${uid}`;
 
-  const { editing } = useContext(MenuStateCtx);
-  const { setAllNotes } = useContext(MenuMethodCtx);
+  const { editing, setAllNotes } = useContext(MenuCtx);
   const [noteName, setNoteName] = useState(name);
   const nav = useNavigate();
 
