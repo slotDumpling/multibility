@@ -95,6 +95,7 @@ const UploadPdfPage = () => {
 
   return (
     <Dragger
+      className="pdf-upload"
       disabled={loading}
       multiple={false}
       action="#"
