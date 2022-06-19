@@ -37,14 +37,12 @@ export default function MainMenu() {
 
   const selectedTag = useMemo(
     () =>
-      tagUid === "DEFAULT"
-        ? {
-            uid: "",
-            name: "All Notes",
-            color: "#000000",
-            notes: Object.keys(allNotes),
-          }
-        : allTags[tagUid],
+      allTags[tagUid] ?? {
+        uid: "",
+        name: "All Notes",
+        color: "#000000",
+        notes: Object.keys(allNotes),
+      },
     [allNotes, allTags, tagUid]
   );
 
