@@ -1,53 +1,43 @@
-$speed: 0.3s
+$speed: 300ms
+@mixin page-trans($move: 0)
+  &.enter
+    position: absolute
+    transform: translateX($move)
+    opacity: 0
+  &.enter-active
+    transform: translateX(0)
+    opacity: 1
+    transition: transform $speed, opacity $speed
+  &.exit
+    position: absolute
+    opacity: 1
+    transform: translateX(0)
+  &.exit-active
+    transform: translateX($move)
+    opacity: 0
+    transition: transform $speed, opacity $speed
 
 .others-menu
   position: relative
-  transition: all $speed ease
+  transition: height $speed
   width: 200px
   margin: 4px 0
-  .setting-menu
-    button:not(:last-of-type)
-      margin-bottom: 10px
 
-.primary-enter
-  position: absolute
-  transform: translateX(-110%)
-  opacity: 0
-.primary-enter-active
-  transform: translateX(0)
-  opacity: 1
-  transition: all $speed ease
-.primary-exit
-  position: absolute
-  transform: translateX(0)
-.primary-exit-active
-  transform: translateX(-110%)
-  opacity: 0
-  transition: all $speed ease
+.primary-menu
+  width: 100%
+  @include page-trans(-100%)
 
 .secondary
   width: 100%
+  @include page-trans(100%)
   nav
     display: flex
     align-items: center
     margin-bottom: 20px
     h3
       margin: 0 10px
-.secondary-enter
-  position: absolute
-  transform: translateX(110%)
-  opacity: 0
-.secondary-enter-active
-  transform: translateX(0)
-  opacity: 1
-  transition: all $speed ease
-.secondary-exit
-  position: absolute
-  transform: translateX(0)
-.secondary-exit-active
-  transform: translateX(110%)
-  opacity: 0
-  transition: all $speed ease
+  button:not(:last-of-type)
+    margin-bottom: 10px
 
 .ant-upload-drag-icon
   .anticon-check

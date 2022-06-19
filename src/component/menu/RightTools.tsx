@@ -49,11 +49,12 @@ export default function RightTools() {
   );
 }
 
-const SeconaryMenu: FC<{
-  title: string;
-  cssTransProps: CSSTransitionProps;
-  keyName: string;
-}> = ({ children, title, cssTransProps, keyName }) => {
+const SeconaryMenu: FC<
+  {
+    title: string;
+    keyName: string;
+  } & CSSTransitionProps
+> = ({ children, title, keyName, ...cssTransProps }) => {
   const { active, setActive } = useContext(activeKeyCtx);
   return (
     <CSSTransition in={active === keyName} {...cssTransProps}>
@@ -197,10 +198,10 @@ const menuItems = [
   },
 ];
 
-const OthersMenu = () => {
+const PrimaryMenu = () => {
   const { setActive } = useContext(activeKeyCtx);
   return (
-    <div className="other-menu">
+    <div className="primary-menu">
       <Menu onClick={({ key }) => setActive(key)} items={menuItems} />
     </div>
   );
@@ -214,29 +215,26 @@ const OthersPage = () => {
     setHeight(el.clientHeight);
   };
 
-  const primeProps = {
-    classNames: "primary",
+  const cssTransProps = {
     timeout: 300,
     onEnter: calcHeight,
     unmountOnExit: true,
   };
-
-  const secdProps = { ...primeProps, classNames: "secondary" };
 
   useEffect(() => setActive("MENU"), []);
 
   return (
     <activeKeyCtx.Provider value={{ active, setActive }}>
       <section className="others-menu" style={{ height }}>
-        <CSSTransition in={active === "MENU"} {...primeProps}>
-          <OthersMenu />
+        <CSSTransition in={active === "MENU"} {...cssTransProps}>
+          <PrimaryMenu />
         </CSSTransition>
         {menuItems.map(({ key, label, component }) => (
           <SeconaryMenu
             key={key}
             keyName={key}
             title={label}
-            cssTransProps={secdProps}
+            {...cssTransProps}
           >
             {component}
           </SeconaryMenu>
@@ -299,4 +297,4 @@ const JoinTeamButton = () => {
       <Button className="team-btn small" type="text" icon={<TeamOutlined />} />
     </Popover>
   );
-}
+};
