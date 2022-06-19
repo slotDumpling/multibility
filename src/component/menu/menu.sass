@@ -214,11 +214,13 @@ $note-item-height: 5em
       position: absolute
       bottom: 0
       left: 0
-      zoom: 0.7
+      font-size: 20px
     .checked-icon
       @include absolute-center
       font-size: 20px
       opacity: 0
+      color: $blue-color
+      background: radial-gradient(#fff 50%, #0000 0)
       transition: opacity $fast-speed
   .content
     flex: 1
@@ -244,8 +246,8 @@ $note-item-height: 5em
     &::before
       background-color: $blue-color-light
     .timg, .cloud-icon
-      filter: blur(1px)
-      opacity: 0.7
+      filter: blur(2px)
+      opacity: 0.5
     .checked-icon
       opacity: 1
     .name-input

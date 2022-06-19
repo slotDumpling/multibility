@@ -6,7 +6,7 @@ import {
   editNoteData,
 } from "../../lib/note/archive";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
-import { CloudOutlined, CheckCircleTwoTone } from "@ant-design/icons";
+import { CloudTwoTone, CheckCircleFilled } from "@ant-design/icons";
 import { SwipeDelete, SwipeDeleteContext } from "../ui/SwipeDelete";
 import { NoteInfo } from "../../lib/note/note";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +17,7 @@ import { HeadTools } from "./HeadTools";
 import { List, Set } from "immutable";
 import { MenuCtx } from "./MainMenu";
 import classNames from "classnames";
-import { Input, Tag } from "antd";
+import { Input } from "antd";
 import dayjs from "dayjs";
 
 dayjs.extend(calender);
@@ -153,12 +153,8 @@ const NoteItem: FC<{
     >
       <div className="timg-wrapper">
         <img src={thumbnail || dafaultImg} alt={name} className="timg" />
-        {team && (
-          <Tag color="blue" className="cloud-icon">
-            <CloudOutlined />
-          </Tag>
-        )}
-        <CheckCircleTwoTone className="checked-icon" />
+        {team && <CloudTwoTone className="cloud-icon" />}
+        <CheckCircleFilled className="checked-icon" />
       </div>
       <div className="content">
         {editing || <p className="name">{name}</p>}
