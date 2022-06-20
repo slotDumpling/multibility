@@ -35,3 +35,5 @@
 @mixin back-blur
   background-color: #fffd
   backdrop-filter: blur(20px) saturate(180%)
+  @supports not (backdrop-filter: none)
+    background-color: #fff
