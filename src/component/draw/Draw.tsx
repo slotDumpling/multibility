@@ -158,14 +158,10 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     }, [mode, resetSelect]);
 
     useEffect(() => {
-      if (selected)
-        return () => {
-          setSelectedIDs([]);
-          // setCurrDrawCtrl({});
-        };
+      if (selected) return () => setSelectedIDs([]);
     }, [selected]);
 
-    useEffect(resetSelect, [lasso, resetSelect]);
+    useEffect(() => resetSelect, [lasso, resetSelect]);
 
     const ratio = useRef(1);
     const updateRatio = () => {

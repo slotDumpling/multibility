@@ -324,7 +324,7 @@ export const PageWrapper = ({
     } else {
       setInviewRatios((prev) => prev.set(uid, entry.intersectionRatio));
     }
-  }, [entry, setInviewRatios, uid, preview, visible]);
+  }, [visible, entry, uid, preview, setInviewRatios]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const loadImage = useCallback(
