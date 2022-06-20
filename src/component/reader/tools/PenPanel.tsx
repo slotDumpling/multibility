@@ -1,4 +1,4 @@
-import { CSSProperties, FC, useMemo, useState } from "react";
+import { CSSProperties, FC, useEffect, useMemo, useState } from "react";
 import { defaultWidthList, DrawCtrl } from "../../../lib/draw/drawCtrl";
 import { Button, Popover, Segmented, Slider } from "antd";
 import { ColorCirle } from "../../widgets/ColorCircle";
@@ -7,6 +7,7 @@ import { Setter } from "../../../lib/hooks";
 import IconFont from "../../ui/IconFont";
 import classNames from "classnames";
 import "./penPanel.sass";
+import { List } from "immutable";
 
 export const PenPanel: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
@@ -54,13 +55,21 @@ const WidthSelect: FC<{
     [lineWidth, widthList]
   );
 
+  const [popShow, setPopShow] = useState(List([false, false, false, false]));
+  useEffect(() => {
+    if (popShow.includes(true)) setPanelBlur(true);
+    else setPanelBlur(false);
+  }, [popShow, setPanelBlur]);
+
   const options = widthList.map((width, index) => ({
     value: index,
     label: (
       <Popover
-        onVisibleChange={setPanelBlur}
+        visible={popShow.get(index)}
+        onVisibleChange={(v) => setPopShow((prev) => prev.set(index, v))}
         trigger={chosen === index ? ["click"] : []}
         placement="bottom"
+        destroyTooltipOnHide
         content={
           <Slider
             min={5}
@@ -69,6 +78,7 @@ const WidthSelect: FC<{
             defaultValue={width}
             onAfterChange={(w) => {
               if (widthList.includes(w)) {
+                setPopShow((prev) => prev.set(index, false));
                 return updateDrawCtrl({ lineWidth: w });
               }
               const newWL = widthList.slice();
