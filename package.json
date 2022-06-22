@@ -17,6 +17,7 @@
     "axios": "^0.25.0",
     "classnames": "^2.3.1",
     "clipboard-copy": "^4.0.1",
+    "darkreader": "^4.9.51",
     "dayjs": "^1.11.3",
     "heap": "^0.2.7",
     "immutable": "^4.0.0",
