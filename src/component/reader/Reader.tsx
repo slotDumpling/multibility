@@ -30,7 +30,7 @@ import { TeamState } from "../../lib/draw/TeamState";
 import { SelectTool, TextTool } from "./tools/DrawTools";
 import { getLargestKey, insertAfter } from "../../lib/array";
 import { Setter } from "../../lib/hooks";
-import { debounce, once, range } from "lodash-es";
+import { debounce, last, once, range } from "lodash-es";
 import { Map } from "immutable";
 import ReaderHeader from "./header/Header";
 import { TeamCtx } from "./Team";
@@ -207,7 +207,7 @@ export default function Reader() {
   };
 
   const addFinalPage = () => {
-    const lastPageID = pageOrder?.at(-1);
+    const lastPageID = last(pageOrder);
     lastPageID && addPage(lastPageID);
   };
 
