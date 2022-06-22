@@ -24,25 +24,6 @@
     align-items: center
     .width-seg
       margin-right: 20px
-      border-radius: 5px
-      > *
-        border-radius: 5px
-      .ant-segmented-item
-        display: flex
-      .ant-segmented-item-label
-        padding: 0
-      .circle-wrapper
-        min-width: 30px
-        padding: 10px
-        height: 100%
-        display: flex
-        align-items: center
-        justify-content: center
-        .width-circle
-          width: var(--real-size)
-          height: var(--real-size)
-          &.bordered
-            border: 2px solid #888
     .hi-btn
       $grey: rgba(0, 0, 0, 0.04)
       border: none
@@ -51,6 +32,25 @@
         background-color: $grey
         box-shadow: 0 0 0 3px $grey
         color: #999 !important
+
+.width-seg
+  border-radius: 5px
+  > *
+    border-radius: 5px
+  .ant-segmented-item
+    display: flex
+  .ant-segmented-item-label
+    padding: 0
+  .circle-wrapper
+    min-width: 30px
+    padding: 10px
+    height: 100%
+    display: flex
+    align-items: center
+    justify-content: center
+    .width-circle
+      width: var(--real-size)
+      height: var(--real-size)
 
 .ctrl-slider
   width: 200px

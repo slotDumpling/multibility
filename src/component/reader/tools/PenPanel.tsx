@@ -41,18 +41,24 @@ export const PenPanel: FC<{
   );
 };
 
-const WidthSelect: FC<{
+export const WidthSelect: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
   drawCtrl: Partial<DrawCtrl>;
-  setPanelBlur: Setter<boolean>;
-}> = ({ updateDrawCtrl, drawCtrl, setPanelBlur }) => {
-  const { lineWidth } = drawCtrl;
+  setPanelBlur?: Setter<boolean>;
+  field?: "lineWidth" | "eraserWidth";
+}> = ({
+  updateDrawCtrl,
+  drawCtrl,
+  setPanelBlur = () => {},
+  field = "lineWidth",
+}) => {
+  const currWidth = drawCtrl[field];
   const widthList = drawCtrl.widthList ?? defaultWidthList;
-  const color = drawCtrl.color ?? "#0000";
+  const color = field === "lineWidth" ? drawCtrl.color ?? "#0003" : "#0003";
 
   const chosen = useMemo(
-    () => Math.max(0, widthList.indexOf(lineWidth ?? 0)),
-    [lineWidth, widthList]
+    () => Math.max(0, widthList.indexOf(currWidth ?? 0)),
+    [currWidth, widthList]
   );
 
   const [popShow, setPopShow] = useState(List([false, false, false, false]));
@@ -79,11 +85,11 @@ const WidthSelect: FC<{
             onAfterChange={(w) => {
               if (widthList.includes(w)) {
                 setPopShow((prev) => prev.set(index, false));
-                return updateDrawCtrl({ lineWidth: w });
+                return updateDrawCtrl({ [field]: w });
               }
               const newWL = widthList.slice();
               newWL[index] = w;
-              updateDrawCtrl({ widthList: newWL, lineWidth: w });
+              updateDrawCtrl({ widthList: newWL, [field]: w });
             }}
           />
         }
@@ -92,12 +98,7 @@ const WidthSelect: FC<{
           className="circle-wrapper"
           style={{ "--real-size": `calc(0.05vw * ${width})` } as CSSProperties}
         >
-          <ColorCirle
-            className={classNames("width-circle", {
-              bordered: !drawCtrl.color,
-            })}
-            color={color}
-          />
+          <ColorCirle className="width-circle" color={color} />
         </div>
       </Popover>
     ),
@@ -107,11 +108,11 @@ const WidthSelect: FC<{
     <Segmented
       className="width-seg"
       value={chosen}
+      options={options}
       onChange={(i) => {
         if (typeof i !== "number") return;
-        updateDrawCtrl({ lineWidth: widthList[i] ?? 5 });
+        updateDrawCtrl({ [field]: widthList[i] ?? 5 });
       }}
-      options={options}
     />
   );
 };

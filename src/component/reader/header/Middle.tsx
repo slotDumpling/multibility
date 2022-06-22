@@ -1,5 +1,5 @@
-import { FC, useState, useContext, CSSProperties } from "react";
-import { Button, Slider, message, Popover, ButtonProps } from "antd";
+import { FC, useContext, CSSProperties } from "react";
+import { Button, message, Popover, ButtonProps } from "antd";
 import { ReaderMethodCtx, ReaderStateCtx } from "../Reader";
 import { DrawCtrl, saveDrawCtrl } from "../../../lib/draw/drawCtrl";
 import {
@@ -10,7 +10,7 @@ import {
 } from "@ant-design/icons";
 import { colors } from "../../../lib/color";
 import IconFont from "../../ui/IconFont";
-import { PenPanel } from "../tools/PenPanel";
+import { PenPanel, WidthSelect } from "../tools/PenPanel";
 
 export const HeaderMiddle = () => {
   const { stateSet, drawCtrl } = useContext(ReaderStateCtx);
@@ -18,6 +18,7 @@ export const HeaderMiddle = () => {
   const { mode, finger } = drawCtrl;
 
   const updateDrawCtrl = (updated: Partial<DrawCtrl>) => {
+    console.log(updated)
     setDrawCtrl((prev) => {
       const newCtrl = { ...prev, ...updated };
       saveDrawCtrl(newCtrl);
@@ -123,30 +124,22 @@ export const ColorSelect: FC<{
 const EraserButton: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
 }> = ({ updateDrawCtrl }) => {
-  const {
-    drawCtrl: { eraserWidth, mode },
-  } = useContext(ReaderStateCtx);
-  const [tempEraserWidth, setTempEraserWidth] = useState(eraserWidth);
-
-  const slider = (
-    <Slider
-      className="ctrl-slider"
-      min={5}
-      max={100}
-      defaultValue={tempEraserWidth}
-      onChange={setTempEraserWidth}
-      onAfterChange={(eraserWidth) => updateDrawCtrl({ eraserWidth })}
-    />
-  );
+  const { drawCtrl } = useContext(ReaderStateCtx);
 
   const btnProps: ButtonProps = {
     shape: "circle",
     icon: <IconFont type="icon-eraser" />,
   };
 
-  return mode === "erase" ? (
+  return drawCtrl.mode === "erase" ? (
     <Popover
-      content={slider}
+      content={
+        <WidthSelect
+          drawCtrl={drawCtrl}
+          updateDrawCtrl={updateDrawCtrl}
+          field="eraserWidth"
+        />
+      }
       trigger="click"
       placement="bottom"
       getPopupContainer={(e) => e.parentElement!}
