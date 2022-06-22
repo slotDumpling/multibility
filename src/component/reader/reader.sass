@@ -2,7 +2,6 @@
 @import ../_mixins
 
 .reader.container
-  border-right: $default-border
   main
     background-color: #fafafa
     padding-bottom: $safe-bottom
@@ -14,6 +13,11 @@
       padding: 15px
       &:first-child
         display: none
+
+@media screen and (min-width: 640px)
+  @supports not (-webkit-touch-callout: none)
+    .reader.container
+      border-right: $default-border
 
 .note-page
   position: relative
