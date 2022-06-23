@@ -145,8 +145,8 @@ const NewTagItem: FC<{ setAdding: Setter<boolean> }> = ({ setAdding }) => {
   };
 
   return (
-    <div className="tag-wrapper new">
-      <div className="tag-item curr editing">
+    <div className="tag-wrapper">
+      <div className="tag-item" data-curr data-editing>
         <TagInput
           tagName={tagName}
           setTagName={setTagName}
