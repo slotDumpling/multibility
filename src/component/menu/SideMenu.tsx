@@ -9,8 +9,8 @@ import { deleteTag, editTag, NoteTag, addNewTag } from "../../lib/note/archive";
 import { SwipeDelete, SwipeDeleteContext } from "../ui/SwipeDelete";
 import { Button, Input, Popconfirm, Select } from "antd";
 import { colors, getRandomColor } from "../../lib/color";
-import { MenuCtx } from "./MainMenu";
 import { ColorCirle } from "../widgets/ColorCircle";
+import { MenuCtx } from "./MainMenu";
 import { Setter } from "../../lib/hooks";
 
 const TagInput: FC<{

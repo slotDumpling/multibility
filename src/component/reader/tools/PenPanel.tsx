@@ -109,10 +109,7 @@ export const WidthSelect: FC<{
       className="width-seg"
       value={chosen}
       options={options}
-      onChange={(i) => {
-        if (typeof i !== "number") return;
-        updateDrawCtrl({ [field]: widthList[i] ?? 5 });
-      }}
+      onChange={(i) => updateDrawCtrl({ [field]: widthList[+i] ?? 5 })}
     />
   );
 };
