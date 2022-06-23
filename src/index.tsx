@@ -4,7 +4,7 @@ import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import Test from "./component/Test";
 import { Loading } from "./component/ui/Loading";
 import ReactDOM from "react-dom";
-import { auto as setAutoDarkMode } from "darkreader";
+// import { auto as setAutoDarkMode } from "darkreader";
 import "./index.sass";
 
 const MainMenu = React.lazy(() => import("./component/menu/MainMenu"));
@@ -39,6 +39,10 @@ ReactDOM.render(
   document.getElementById("root")
 );
 
-setAutoDarkMode({ brightness: 100, contrast: 100 });
+const loadDarkMode = async () => {
+  const { auto: setAutoDarkMode } = await import("darkreader");
+  setAutoDarkMode({ brightness: 100, contrast: 100 });
+};
+loadDarkMode();
 
 serviceWorkerRegistration.register();
