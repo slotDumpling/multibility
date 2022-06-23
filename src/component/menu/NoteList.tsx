@@ -16,7 +16,6 @@ import { Setter } from "../../lib/hooks";
 import { HeadTools } from "./HeadTools";
 import { List, Set } from "immutable";
 import { MenuCtx } from "./MainMenu";
-import classNames from "classnames";
 import { Input } from "antd";
 import dayjs from "dayjs";
 
@@ -147,10 +146,7 @@ const NoteItem: FC<{
   };
 
   return (
-    <div
-      className={classNames("note-item", { selected })}
-      onClick={handleClick}
-    >
+    <div className="note-item" data-selected={selected} onClick={handleClick}>
       <div className="timg-wrapper">
         <img src={thumbnail || dafaultImg} alt={name} className="timg" />
         {team && <CloudTwoTone className="cloud-icon" />}

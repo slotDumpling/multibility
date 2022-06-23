@@ -35,7 +35,7 @@ export const SwipeDelete: FC<{
   className?: string;
 }> = ({ children, onDelete, disable = false, className }) => {
   const [uid] = useState(getUid);
-  
+
   const { nowSwiped, setNowSwiped } = useContext(SwipedCtx);
   const [swiped, setSwiped] = useState(false);
   const deleting = swiped && (!nowSwiped || nowSwiped === uid);
@@ -43,7 +43,7 @@ export const SwipeDelete: FC<{
 
   const [height, setHeight] = useState<number>();
   const wrapper = useRef<HTMLDivElement>(null);
-  
+
   useEffect(() => {
     if (nowSwiped !== uid) setSwiped(false);
   }, [nowSwiped, uid]);
@@ -86,14 +86,11 @@ export const SwipeDelete: FC<{
     if (e.propertyName === "height" && deleted) transEnd();
   };
 
-  const wrapperClass = classNames("swipe-wrapper", className, {
-    deleted,
-    deleting,
-  });
-
   return (
     <div
-      className={wrapperClass}
+      className={classNames("swipe-wrapper", className)}
+      data-deleted={deleted}
+      data-deleting={deleting}
       {...swipeHandler}
       style={{ height }}
       onTransitionEnd={handleTransEnd}

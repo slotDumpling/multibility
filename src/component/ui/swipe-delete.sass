@@ -18,13 +18,13 @@
     display: flex
     align-items: center
     justify-content: center
-  &.deleting
+  &[data-deleting="true"]
     > .content
       transform: translateX(-$button-width)
       pointer-events: none
     > .button
       transform: translateX(-$button-width)
-  &.deleted
+  &[data-deleted="true"]
     height: 0 !important
     > .button
       left: $button-width

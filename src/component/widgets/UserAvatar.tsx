@@ -1,6 +1,5 @@
 import { Avatar } from "antd";
 import { AvatarSize } from "antd/lib/avatar/SizeContext";
-import classNames from "classnames";
 import { FC, useContext, useMemo } from "react";
 import { getHashedColor } from "../../lib/color";
 import { TeamCtx } from "../reader/Team";
@@ -26,7 +25,8 @@ export const UserAvatar: FC<{
 
   return (
     <Avatar
-      className={classNames(className, { chosen })}
+      className={className}
+      data-chosen={chosen}
       size={size}
       style={{ backgroundColor: color }}
     >

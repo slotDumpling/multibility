@@ -34,11 +34,11 @@
         left: 5px
       &.right
         right: 5px
-    &:not(.dragged):hover
+    &:not([data-dragged="true"]):hover
       width: 60px
       .arrow
         opacity: 0.5
-    &.dragged
+    &[data-dragged="true"]
       overflow: hidden
       width: 90px
       .gear

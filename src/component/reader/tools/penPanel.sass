@@ -11,7 +11,7 @@
     @include pseudo-el(0, 0, 0, 0)
     visibility: hidden
     transition: visibility $speed
-  &.blur
+  &[data-blur="true"]
     .color-select
       filter: blur(5px) opacity(0.5)
     &::after
@@ -28,7 +28,7 @@
       $grey: rgba(0, 0, 0, 0.04)
       border: none
       box-shadow: 0 0 0 3px $grey, 0 2px 8px -2px rgb(0 0 0 / 5%), 0 1px 4px -1px rgb(0 0 0 / 7%), 0 0 1px 0 rgb(0 0 0 / 8%)
-      &:not(.checked)
+      &:not([data-checked="true"])
         background-color: $grey
         box-shadow: 0 0 0 3px $grey
         color: #999 !important

@@ -26,10 +26,10 @@ import { AddPageButton } from "./ReaderUtils";
 import { exchange } from "../../lib/array";
 import { Setter } from "../../lib/hooks";
 import IconFont from "../ui/IconFont";
-import classNames from "classnames";
 import { TeamCtx } from "./Team";
 import "./preview.sass";
 import { UserAvatar } from "../widgets/UserAvatar";
+import classNames from "classnames";
 
 const PreviewCtx = React.createContext({
   activeKey: "ALL",
@@ -124,7 +124,9 @@ const PagePreview: FC<{
             innerRef(e);
             if (e) refRec[uid] = e;
           }}
-          className={classNames("page", { curr, dragged })}
+          className="page"
+          data-curr={curr}
+          data-dragged={dragged}
           onClick={() => scrollPage(uid)}
           {...draggableProps}
           {...dragHandleProps}
@@ -171,7 +173,7 @@ const PreviewTools: FC<{
   return (
     <div className="tools" onClick={(e) => e.stopPropagation()}>
       <span
-        className={classNames("bookmark", { marked })}
+        className="bookmark" data-marked={marked}
         onClick={() => switchPageMarked(uid)}
       />
       <span className="index">{index + 1}</span>

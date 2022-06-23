@@ -12,7 +12,6 @@ import { colors, getRandomColor } from "../../lib/color";
 import { MenuCtx } from "./MainMenu";
 import { ColorCirle } from "../widgets/ColorCircle";
 import { Setter } from "../../lib/hooks";
-import classNames from "classnames";
 
 const TagInput: FC<{
   tagName: string;
@@ -119,14 +118,14 @@ const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
     </>
   );
 
-  const itemClass = classNames("tag-item", {
-    curr: tagUid === uid,
-    editing: tagEditing,
-  });
-
   return (
     <SwipeDelete className="tag-wrapper" onDelete={removeTag} disable={editing}>
-      <div className={itemClass} onClick={() => setTagUid(uid)}>
+      <div
+        className="tag-item"
+        data-curr={tagUid === uid}
+        data-editing={tagEditing}
+        onClick={() => setTagUid(uid)}
+      >
         {tagEditing ? editingPanel : displayPanel}
       </div>
     </SwipeDelete>
@@ -173,7 +172,8 @@ export default function SideMenu() {
   const allNoteTag = (
     <div className="tag-wrapper">
       <div
-        className={classNames("tag-item", { curr: tagUid === "DEFAULT" })}
+        className="tag-item"
+        data-curr={tagUid === "DEFAULT"}
         onClick={() => setTagUid("DEFAULT")}
       >
         <ContainerOutlined className="all-note-icon" />

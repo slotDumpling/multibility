@@ -22,9 +22,7 @@ import {
 import { editNoteData } from "../../../lib/note/archive";
 import { UserAvatar } from "../../widgets/UserAvatar";
 import { putNote } from "../../../lib/network/http";
-import classNames from "classnames";
 import copy from "clipboard-copy";
-import "./header.sass";
 
 export const HeaderRight = () => {
   const { teamOn } = useContext(TeamCtx);
@@ -62,7 +60,7 @@ const UserCard: FC<{ userID: string }> = ({ userID }) => {
   };
 
   return (
-    <div className={classNames("user-item", { online })}>
+    <div className="user-item" data-online={online}>
       <UserAvatar userID={userID} size="small" className="room-avatar" />
       {renaming || <span className="user-name">{userName}</span>}
       {renaming && (

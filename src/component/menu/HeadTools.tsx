@@ -14,7 +14,6 @@ import {
 } from "@ant-design/icons";
 import { Setter } from "../../lib/hooks";
 import { ColorCirle } from "../widgets/ColorCircle";
-import classNames from "classnames";
 
 export function HeadTools({
   sortType,
@@ -136,7 +135,7 @@ export function HeadTools({
   );
 
   return (
-    <div className={classNames("head-tools", { editing })}>
+    <div className="head-tools" data-editing={editing}>
       {editing ? (
         <>
           <Button

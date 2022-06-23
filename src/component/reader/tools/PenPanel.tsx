@@ -5,9 +5,8 @@ import { ColorCirle } from "../../widgets/ColorCircle";
 import { ColorSelect } from "../header/Middle";
 import { Setter } from "../../../lib/hooks";
 import IconFont from "../../ui/IconFont";
-import classNames from "classnames";
-import "./penPanel.sass";
 import { List } from "immutable";
+import "./penPanel.sass";
 
 export const PenPanel: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
@@ -17,7 +16,7 @@ export const PenPanel: FC<{
   const [panelBlur, setPanelBlur] = useState(false);
 
   return (
-    <div className={classNames("pen-panel", { blur: panelBlur })}>
+    <div className="pen-panel" data-blur={panelBlur}>
       <div className="pen-status">
         <WidthSelect
           updateDrawCtrl={updateDrawCtrl}
@@ -28,7 +27,8 @@ export const PenPanel: FC<{
           type="primary"
           ghost
           shape="circle"
-          className={classNames("hi-btn", { checked: highlight })}
+          className="hi-btn"
+          data-checked={highlight}
           icon={<IconFont type="icon-Highlight" />}
           onClick={() => updateDrawCtrl({ highlight: !highlight })}
         />

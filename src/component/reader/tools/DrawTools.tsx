@@ -10,6 +10,7 @@ import {
   RotateRightOutlined,
 } from "@ant-design/icons";
 import { Button, ButtonProps, InputNumber, Modal, Popover } from "antd";
+import { CSSTransition } from "react-transition-group";
 import { DrawCtrl } from "../../../lib/draw/drawCtrl";
 import { createWorker, Worker } from "tesseract.js";
 import { ColorSelect } from "../header/Middle";
@@ -19,10 +20,8 @@ import { DrawRefType } from "../../draw/Draw";
 import { colors } from "../../../lib/color";
 import IconFont from "../../ui/IconFont";
 import { PenPanel } from "./PenPanel";
-import classNames from "classnames";
 import copy from "clipboard-copy";
 import "./drawTools.sass";
-import { CSSTransition } from "react-transition-group";
 
 const getOcrWorker = (() => {
   let worker: Worker;
@@ -110,10 +109,7 @@ export const SelectTool: FC<{
         >
           <Button icon={<BgColorsOutlined />} {...btnProps} />
         </Popover>
-        <div
-          className={classNames("rotate-wrapper", { dragged })}
-          ref={rotateEl}
-        >
+        <div className="rotate-wrapper" data-dragged={dragged} ref={rotateEl}>
           <Button
             icon={<RotateRightOutlined />}
             onClick={() => drawRef.current?.rotateSelected(90, true)}
