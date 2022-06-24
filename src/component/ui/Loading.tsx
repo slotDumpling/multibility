@@ -1,16 +1,22 @@
 import { Skeleton } from "antd";
-import React, { FC } from "react";
+import { FC } from "react";
 
 export const Loading: FC<{ loading?: boolean }> = ({
   children,
   loading = true,
 }) => {
-  return (
+  return loading ? (
     <div className="load-wrapper">
-      {loading && <h1 className="loading">Multibility</h1>}
-      <Skeleton className="skeleton" loading={loading} active>
-        {children}
-      </Skeleton>
+      <h1 className="loading">Multibility</h1>
+      <Skeleton className="skeleton" active />
     </div>
+  ) : (
+    <>{children}</>
   );
 };
+
+export const Page404 = () => (
+  <h1 style={{ paddingTop: 40, textAlign: "center" }}>
+    There's nothing here! <a href="/">Go Back.</a>
+  </h1>
+);
