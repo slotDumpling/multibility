@@ -6,11 +6,11 @@ export const Loading: FC<{ loading?: boolean }> = ({
   loading = true,
 }) => {
   return (
-    <>
+    <div className="load-wrapper">
       {loading && <h1 className="loading">Multibility</h1>}
       <Skeleton className="skeleton" loading={loading} active>
         {children}
       </Skeleton>
-    </>
+    </div>
   );
 };

@@ -65,14 +65,22 @@ code, .code-font
   .ant-message
     top: calc( $header-high-height + 5px )
 
-h1.loading
-  padding-top: 30px
-  font-family: sofia, sans-serif
-  text-align: center
-  color: #0003
-  animation: opacity-flash 2s infinite
-.skeleton
-  padding: 0 30px 30px 30px
+.load-wrapper
+  height: 100vh
+  h1.loading
+    padding-top: 30px
+    font-family: sofia, sans-serif
+    text-align: center
+    color: #0003
+    animation: opacity-flash 2s infinite
+  .skeleton
+    padding: 0 30px 30px 30px
+
+@media screen and (prefers-color-scheme: dark)
+  .load-wrapper
+    background-color: #181a1b
+    h1.loading
+      color: rgba(232, 230, 227, 0.2)
 
 @keyframes opacity-flash
   from
