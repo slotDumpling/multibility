@@ -13,13 +13,12 @@ import { Button, ButtonProps, InputNumber, Modal, Popover } from "antd";
 import { CSSTransition } from "react-transition-group";
 import { DrawCtrl } from "../../../lib/draw/drawCtrl";
 import { createWorker, Worker } from "tesseract.js";
-import { ColorSelect } from "../header/Middle";
 import TextArea from "antd/lib/input/TextArea";
 import { useDrag } from "@use-gesture/react";
 import { DrawRefType } from "../../draw/Draw";
 import { colors } from "../../../lib/color";
 import IconFont from "../../ui/IconFont";
-import { PenPanel } from "./PenPanel";
+import { ColorSelect, PenPanel } from "./PenPanel";
 import copy from "clipboard-copy";
 import "./drawTools.sass";
 

@@ -2,8 +2,8 @@ import { CSSProperties, FC, useEffect, useMemo, useState } from "react";
 import { defaultWidthList, DrawCtrl } from "../../../lib/draw/drawCtrl";
 import { Button, Popover, Segmented, Slider } from "antd";
 import { ColorCirle } from "../../widgets/ColorCircle";
-import { ColorSelect } from "../header/Middle";
 import { Setter } from "../../../lib/hooks";
+import { colors } from "../../../lib/color";
 import IconFont from "../../ui/IconFont";
 import { List } from "immutable";
 import "./penPanel.sass";
@@ -111,5 +111,29 @@ export const WidthSelect: FC<{
       options={options}
       onChange={(i) => updateDrawCtrl({ [field]: widthList[+i] ?? 5 })}
     />
+  );
+};
+
+export const ColorSelect: FC<{
+  color: string;
+  setColor: (color: string) => void;
+}> = ({ setColor, color }) => {
+  return (
+    <div className="color-select">
+      {colors.map((c) => (
+        <label key={c}>
+          <input
+            checked={color === c}
+            type="radio"
+            name="color"
+            onChange={() => setColor(c)}
+          />
+          <div
+            className="circle"
+            style={{ backgroundColor: c, borderColor: c }}
+          ></div>
+        </label>
+      ))}
+    </div>
   );
 };

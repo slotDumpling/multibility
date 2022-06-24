@@ -1,4 +1,4 @@
-import { FC, useContext, CSSProperties } from "react";
+import { FC, useContext } from "react";
 import { Button, message, Popover, ButtonProps } from "antd";
 import { ReaderMethodCtx, ReaderStateCtx } from "../Reader";
 import { DrawCtrl, saveDrawCtrl } from "../../../lib/draw/drawCtrl";
@@ -8,7 +8,6 @@ import {
   GatewayOutlined,
   HighlightOutlined,
 } from "@ant-design/icons";
-import { colors } from "../../../lib/color";
 import IconFont from "../../ui/IconFont";
 import { PenPanel, WidthSelect } from "../tools/PenPanel";
 
@@ -94,30 +93,6 @@ const PenButton: FC<{
       onClick={() => updateDrawCtrl({ mode: "draw" })}
       {...btnProps}
     />
-  );
-};
-
-export const ColorSelect: FC<{
-  color: string;
-  setColor: (color: string) => void;
-}> = ({ setColor, color }) => {
-  return (
-    <div className="color-select">
-      {colors.map((c) => (
-        <label key={c}>
-          <input
-            checked={color === c}
-            type="radio"
-            name="color"
-            onChange={() => setColor(c)}
-          />
-          <div
-            className="circle"
-            style={{ "--circle-color": c } as CSSProperties}
-          ></div>
-        </label>
-      ))}
-    </div>
   );
 };
 
