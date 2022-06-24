@@ -6,6 +6,7 @@ import { Loading } from "./component/ui/Loading";
 import ReactDOM from "react-dom";
 // import { auto as setAutoDarkMode } from "darkreader";
 import "./index.sass";
+import { loadDarkMode } from "./lib/drak";
 
 const MainMenu = React.lazy(() => import("./component/menu/MainMenu"));
 const Reader = React.lazy(() => import("./component/reader/Reader"));
@@ -39,10 +40,6 @@ ReactDOM.render(
   document.getElementById("root")
 );
 
-const loadDarkMode = async () => {
-  const { auto: setAutoDarkMode } = await import("darkreader");
-  setAutoDarkMode({ brightness: 100, contrast: 100 });
-};
 loadDarkMode();
 
 serviceWorkerRegistration.register();
