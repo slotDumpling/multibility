@@ -194,7 +194,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       },
       erase() {
         updateRatio();
-        setPath(startStroke("#0003", eraserWidth));
+        setPath(startStroke("#ccc", eraserWidth, true));
       },
       select(e: paper.MouseEvent) {
         updateRatio();
