@@ -17,7 +17,6 @@ export const HeaderMiddle = () => {
   const { mode, finger } = drawCtrl;
 
   const updateDrawCtrl = (updated: Partial<DrawCtrl>) => {
-    console.log(updated)
     setDrawCtrl((prev) => {
       const newCtrl = { ...prev, ...updated };
       saveDrawCtrl(newCtrl);
