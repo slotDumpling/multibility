@@ -24,12 +24,11 @@
         border-color: $blue-color
         box-shadow: 0 0 0 2px $blue-color
       &::before
-        @include absolute-full
+        @include pseudo-el
         z-index: -1
-        box-shadow: 0 0 20px 10px #0002
+        box-shadow: $shadow-2-down
         opacity: 0
         transition: opacity 0.5s
-        content: ""
       &[data-dragged="true"]::before
         opacity: 1
       .bookmark
