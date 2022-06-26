@@ -12,12 +12,10 @@
     transition: transform $speed
   > .button
     @include absolute(0, -$button-width, 0, 100%)
+    @include flex-center
     transition: left $speed ease-in, transform $speed
     background-color: #ff4d4f
     color: #fff
-    display: flex
-    align-items: center
-    justify-content: center
   &[data-deleting="true"]
     > .content
       transform: translateX(-$button-width)

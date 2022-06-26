@@ -16,6 +16,11 @@
   left: 50%
   transform: translate(-50%, -50%)
 
+@mixin flex-center
+  display: flex
+  justify-content: center
+  align-items: center
+
 @mixin pseudo-el($top: 0, $right: 0, $bottom: 0, $left: 0)
   position: absolute
   content: ""
@@ -25,7 +30,7 @@
   left: $left
 
 @mixin back-blur
-  background-color: #fffe
+  background-color: #fffc
   backdrop-filter: blur(20px) saturate(180%)
   @supports not (backdrop-filter: none)
     background-color: #fff

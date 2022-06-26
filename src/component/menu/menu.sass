@@ -162,11 +162,9 @@
   position: relative
   -webkit-transform: translateZ(0)
   .head-tools
+    @include flex-center
     height: 60px
     background-color: #fff
-    display: flex
-    align-items: center
-    justify-content: center
     > * + *
       margin-left: 10px
     &[data-editing="true"]
@@ -211,6 +209,8 @@ $note-item-height: 5em
       max-height: 3.5em
       border: $light-border
       background-color: white
+      @media (prefers-color-scheme: dark)
+        border: none
     .cloud-icon
       position: absolute
       bottom: 0
