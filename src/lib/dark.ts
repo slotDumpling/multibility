@@ -8,6 +8,7 @@ export const loadDarkMode = async () => {
         "[data-dark=true] .draw-canvas",
         "[data-dark=true] .color-select .circle",
         "[data-dark=true] .width-circle.lineWidth",
+        ".note-item .timg",
       ],
       css: "",
       ignoreImageAnalysis: [],
