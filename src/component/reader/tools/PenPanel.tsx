@@ -1,6 +1,6 @@
 import { CSSProperties, FC, useEffect, useMemo, useState } from "react";
 import { defaultWidthList, DrawCtrl } from "../../../lib/draw/drawCtrl";
-import { Button, Popover, Segmented, Slider } from "antd";
+import { Popover, Segmented, Slider } from "antd";
 import { ColorCirle } from "../../widgets/ColorCircle";
 import { allColors } from "../../../lib/color";
 import { Setter } from "../../../lib/hooks";
@@ -23,15 +23,7 @@ export const PenPanel: FC<{
           drawCtrl={drawCtrl}
           setPanelBlur={setPanelBlur}
         />
-        <Button
-          type="primary"
-          ghost
-          shape="circle"
-          className="hi-btn"
-          data-checked={highlight}
-          icon={<IconFont type="icon-Highlight" />}
-          onClick={() => updateDrawCtrl({ highlight: !highlight })}
-        />
+        <HighlightSwitch checked={highlight} updateDrawCtrl={updateDrawCtrl} />
       </div>
       <ColorSelect
         color={color || ""}
@@ -114,6 +106,25 @@ export const WidthSelect: FC<{
   );
 };
 
+const HighlightSwitch: FC<{
+  checked?: boolean;
+  updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
+}> = ({ checked = false, updateDrawCtrl }) => {
+  return (
+    <label className="hi-wrapper">
+      <input
+        type="checkbox"
+        name="highlight"
+        checked={checked}
+        onChange={(e) => updateDrawCtrl({ highlight: e.target.checked })}
+      />
+      <div className="hi-switch">
+        <IconFont type="icon-Highlight" />
+      </div>
+    </label>
+  );
+};
+
 export const ColorSelect: FC<{
   color: string;
   setColor: (color: string) => void;
@@ -121,7 +132,7 @@ export const ColorSelect: FC<{
   return (
     <div className="color-select">
       {allColors.map((c) => (
-        <label key={c} data-color={c}>
+        <label key={c}>
           <input
             checked={color === c}
             type="radio"
@@ -129,6 +140,7 @@ export const ColorSelect: FC<{
             onChange={() => setColor(c)}
           />
           <div
+            data-color={c}
             className="circle"
             style={{ backgroundColor: c, borderColor: c }}
           />

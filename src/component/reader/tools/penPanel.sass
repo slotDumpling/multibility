@@ -21,17 +21,29 @@
     margin-bottom: 10px
     display: flex
     justify-content: space-between
-    align-items: center
     .width-seg
       margin-right: 20px
-    .hi-btn
-      $grey: rgba(0, 0, 0, 0.04)
-      border: none
-      box-shadow: 0 0 0 3px $grey, 0 2px 8px -2px rgb(0 0 0 / 5%), 0 1px 4px -1px rgb(0 0 0 / 7%), 0 0 1px 0 rgb(0 0 0 / 8%)
-      &:not([data-checked="true"])
-        background-color: $grey
-        box-shadow: 0 0 0 3px $grey
-        color: #999 !important
+
+.hi-wrapper
+  display: block
+  $border-shadow: 0 0 0 2px rgba(0, 0, 0, 0.04)
+  input[type="checkbox"]
+    display: none
+    &:checked + .hi-switch
+      background-color: #fff
+      box-shadow: $border-shadow, $shadow-1
+      @media (prefers-color-scheme: dark)
+        background-color: #ddd
+  .hi-switch
+    @include flex-center
+    height: 100%
+    width: 40px
+    border-radius: 5px
+    font-size: 1.2em
+    background-color: rgba(0, 0, 0, 0.04)
+    transition: background $speed, box-shadow $speed
+    box-shadow: $border-shadow
+    cursor: pointer
 
 .width-seg
   border-radius: 5px
@@ -42,21 +54,18 @@
   .ant-segmented-item-label
     padding: 0
   .circle-wrapper
+    @include flex-center
     min-width: 30px
     padding: 10px
     height: 100%
-    display: flex
-    align-items: center
-    justify-content: center
     .width-circle
       width: var(--real-size)
       height: var(--real-size)
 
 .ctrl-slider
   width: 200px
-  .ant-slider-handle
-    &::after
-      @include pseudo-el(-20px, -20px, -20px, -20px)
+  .ant-slider-handle::after
+    @include pseudo-el(-20px, -20px, -20px, -20px)
 
 .color-select
   display: grid
@@ -75,12 +84,10 @@
     border-radius: 15px
     border: 15px solid
     transition: all 0.2s
-
-@media screen and (prefers-color-scheme: dark)
-  [data-dark=false] .color-select
-    label[data-color="#000000"] .circle
+    &[data-color="#000000"]
       box-shadow: 0 0 0 1px #ddd
+
+
+@media (prefers-color-scheme: dark)
   .ant-segmented-item-selected, .ant-segmented-thumb
     background-color: #ddd
-  .pen-panel .pen-status .hi-btn[data-checked=true]
-      border: 1px solid $blue-color
