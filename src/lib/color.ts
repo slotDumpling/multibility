@@ -1,8 +1,4 @@
 export const colors = [
-  "#000000",
-  "#9ca3af",
-  "#64748b",
-  "#78716c",
   "#f97316",
   "#eab308",
   "#84cc16",
@@ -20,6 +16,9 @@ export const colors = [
   "#f43f5e",
   "#ef4444",
 ];
+
+export const grayColors = ["#000000", "#9ca3af", "#64748b", "#78716c"];
+export const allColors = [...grayColors, ...colors];
 
 export const getRandomColor = () => {
   const index = Math.floor(Math.random() * colors.length);
