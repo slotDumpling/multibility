@@ -67,7 +67,7 @@
     display: none
     &:checked + .circle
       border-width: 6px
-      background-color: white !important
+      background-color: #0000 !important
   .circle
     cursor: pointer
     width: 30px
@@ -75,3 +75,8 @@
     border-radius: 15px
     border: 15px solid
     transition: all 0.2s
+
+@media screen and (prefers-color-scheme: dark)
+  [data-dark=false] .color-select
+    label[data-color="#000000"] .circle
+      box-shadow: 0 0 0 1px #ddd

@@ -3,6 +3,8 @@ import { Button, message, Popover, ButtonProps } from "antd";
 import { ReaderMethodCtx, ReaderStateCtx } from "../Reader";
 import { DrawCtrl, saveDrawCtrl } from "../../../lib/draw/drawCtrl";
 import {
+  BulbFilled,
+  BulbOutlined,
   UndoOutlined,
   RedoOutlined,
   GatewayOutlined,
@@ -14,7 +16,7 @@ import { PenPanel, WidthSelect } from "../tools/PenPanel";
 export const HeaderMiddle = () => {
   const { stateSet, drawCtrl } = useContext(ReaderStateCtx);
   const { setDrawCtrl, handleUndo, handleRedo } = useContext(ReaderMethodCtx);
-  const { mode, finger } = drawCtrl;
+  const { mode, finger, dark } = drawCtrl;
 
   const updateDrawCtrl = (updated: Partial<DrawCtrl>) => {
     setDrawCtrl((prev) => {
@@ -52,6 +54,12 @@ export const HeaderMiddle = () => {
           });
         }}
         icon={<IconFont type="icon-finger" />}
+      />
+      <Button
+        type="text"
+        shape="circle"
+        icon={dark ? <BulbOutlined /> : <BulbFilled />}
+        onClick={() => updateDrawCtrl({ dark: !dark })}
       />
       <PenButton updateDrawCtrl={updateDrawCtrl} />
       <EraserButton updateDrawCtrl={updateDrawCtrl} />

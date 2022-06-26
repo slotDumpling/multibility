@@ -4,7 +4,11 @@ export const loadDarkMode = async () => {
     { brightness: 100, contrast: 100 },
     {
       ignoreInlineStyle: [".color-select .circle", ".color-circle"],
-      invert: [],
+      invert: [
+        "[data-dark=true] canvas",
+        "[data-dark=true] .color-select .circle",
+        "[data-dark=true] .width-circle",
+      ],
       css: "",
       ignoreImageAnalysis: [],
       disableStyleSheetsProxy: false,

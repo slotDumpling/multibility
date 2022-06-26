@@ -16,8 +16,6 @@
     display: grid
     gap: 10px
   .middle
-    > button:nth-child(3)
-      grid-column: span 2
     > button.ant-btn-default
       background-color: #0000
 
@@ -39,7 +37,9 @@
     .left, .right
       grid-template-columns: repeat(2, 1fr)
     .middle
-      grid-template-columns: repeat(8, 1fr)
+      grid-template-columns: repeat(9, 1fr)
+      > button:nth-child(4)
+        grid-column: span 2
 
 .team-title
   display: flex

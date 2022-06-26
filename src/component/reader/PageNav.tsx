@@ -37,7 +37,7 @@ const PreviewCtx = React.createContext({
 });
 
 const PageNavContent = () => {
-  const { pageOrder, currPageID } = useContext(ReaderStateCtx);
+  const { pageOrder, currPageID, drawCtrl } = useContext(ReaderStateCtx);
   const { scrollPage, saveReorder } = useContext(ReaderMethodCtx);
   const { activeKey } = useContext(PreviewCtx);
   const refRec = useRef<Record<string, HTMLElement>>({});
@@ -57,7 +57,7 @@ const PageNavContent = () => {
   useEffect(() => refRec.current[currPageID]?.scrollIntoView(), []);
 
   return (
-    <div className="preview-container">
+    <div className="preview-container" data-dark={drawCtrl.dark}>
       <PreviewTabs />
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="preview-list">
@@ -173,7 +173,8 @@ const PreviewTools: FC<{
   return (
     <div className="tools" onClick={(e) => e.stopPropagation()}>
       <span
-        className="bookmark" data-marked={marked}
+        className="bookmark"
+        data-marked={marked}
         onClick={() => switchPageMarked(uid)}
       />
       <span className="index">{index + 1}</span>

@@ -219,7 +219,7 @@ export default function Reader() {
   const handleUndo = () => updateStateSet((prev) => prev.undo());
   const handleRedo = () => updateStateSet((prev) => prev.redo());
   const renderResult = (
-    <div className="reader container">
+    <div className="reader container" data-dark={drawCtrl.dark}>
       <ReaderHeader />
       <main>
         {pageOrder?.map((uid) => (
