@@ -54,7 +54,7 @@ export const WidthSelect: FC<{
 }) => {
   const currWidth = drawCtrl[field];
   const widthList = drawCtrl.widthList ?? defaultWidthList;
-  const color = field === "lineWidth" ? drawCtrl.color ?? "#0005" : "#0005";
+  const color = field === "lineWidth" ? drawCtrl.color ?? "#aaa" : "#aaa";
 
   const chosen = useMemo(
     () => Math.max(0, widthList.indexOf(currWidth ?? 0)),
@@ -98,7 +98,7 @@ export const WidthSelect: FC<{
           className="circle-wrapper"
           style={{ "--real-size": `calc(0.05vw * ${width})` } as CSSProperties}
         >
-          <ColorCirle className="width-circle" color={color} />
+          <ColorCirle className={"width-circle " + field} color={color} />
         </div>
       </Popover>
     ),
