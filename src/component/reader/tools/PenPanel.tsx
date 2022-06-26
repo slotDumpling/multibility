@@ -54,7 +54,7 @@ export const WidthSelect: FC<{
 }) => {
   const currWidth = drawCtrl[field];
   const widthList = drawCtrl.widthList ?? defaultWidthList;
-  const color = field === "lineWidth" ? drawCtrl.color ?? "#0003" : "#0003";
+  const color = field === "lineWidth" ? drawCtrl.color ?? "#0005" : "#0005";
 
   const chosen = useMemo(
     () => Math.max(0, widthList.indexOf(currWidth ?? 0)),

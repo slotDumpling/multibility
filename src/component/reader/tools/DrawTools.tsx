@@ -1,4 +1,4 @@
-import { FC, RefObject, useEffect, useRef, useState } from "react";
+import { FC, RefObject, useContext, useEffect, useRef, useState } from "react";
 import {
   CopyOutlined,
   DeleteOutlined,
@@ -13,12 +13,13 @@ import { Button, ButtonProps, InputNumber, Modal, Popover } from "antd";
 import { CSSTransition } from "react-transition-group";
 import { DrawCtrl } from "../../../lib/draw/drawCtrl";
 import { createWorker, Worker } from "tesseract.js";
-import TextArea from "antd/lib/input/TextArea";
-import { useDrag } from "@use-gesture/react";
-import { DrawRefType } from "../../draw/Draw";
-import { colors } from "../../../lib/color";
-import IconFont from "../../ui/IconFont";
 import { ColorSelect, PenPanel } from "./PenPanel";
+import TextArea from "antd/lib/input/TextArea";
+import { DrawRefType } from "../../draw/Draw";
+import { useDrag } from "@use-gesture/react";
+import { colors } from "../../../lib/color";
+import { ReaderStateCtx } from "../Reader";
+import IconFont from "../../ui/IconFont";
 import copy from "clipboard-copy";
 import "./drawTools.sass";
 
@@ -147,6 +148,7 @@ export const TextTool: FC<{
   const [text, setText] = useState("");
   const [fontSize, setFontSize] = useState(5);
   const [color, setColor] = useState(colors[0]);
+  const { drawCtrl } = useContext(ReaderStateCtx);
 
   return (
     <Modal
@@ -161,7 +163,7 @@ export const TextTool: FC<{
       bodyStyle={{ paddingTop: 0 }}
       destroyOnClose
     >
-      <div className="insert-option">
+      <div className="insert-option" data-dark={drawCtrl.dark}>
         <span className="font-size">
           <FontSizeOutlined />
           <span>Font size: </span>
@@ -176,6 +178,7 @@ export const TextTool: FC<{
           content={<ColorSelect color={color} setColor={setColor} />}
           overlayStyle={{ width: 200 }}
           placement="bottom"
+          getPopupContainer={(e) => e.parentElement!}
         >
           <Button
             className="tag-btn"
