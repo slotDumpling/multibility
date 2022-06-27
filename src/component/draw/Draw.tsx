@@ -19,7 +19,7 @@ import { Set } from "immutable";
 import paper from "paper";
 import "./draw.sass";
 
-const PREVIEW_WIDTH = 200;
+const PREVIEW_WIDTH = 300;
 const {
   Path,
   Size,

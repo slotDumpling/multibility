@@ -2,7 +2,7 @@ import { List, Record, OrderedMap } from "immutable";
 import { v4 as getUid } from "uuid";
 import Heap from "heap";
 
-export const WIDTH = 2000;
+export const WIDTH = 3000;
 
 export interface Stroke {
   uid: string;

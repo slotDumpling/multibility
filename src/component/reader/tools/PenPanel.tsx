@@ -7,6 +7,7 @@ import { Setter } from "../../../lib/hooks";
 import IconFont from "../../ui/IconFont";
 import { List } from "immutable";
 import "./penPanel.sass";
+import { WIDTH } from "../../../lib/draw/DrawState";
 
 export const PenPanel: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
@@ -88,7 +89,11 @@ export const WidthSelect: FC<{
       >
         <div
           className="circle-wrapper"
-          style={{ "--real-size": `calc(0.05vw * ${width})` } as CSSProperties}
+          style={
+            {
+              "--real-size": `calc(${100 / WIDTH}vw * ${width})`,
+            } as CSSProperties
+          }
         >
           <ColorCirle className={"width-circle " + field} color={color} />
         </div>
