@@ -60,6 +60,11 @@ export const WidthSelect: FC<{
     else setPanelBlur(false);
   }, [popShow, setPanelBlur]);
 
+  const getRealSizeStyle = (width: number) =>
+    ({
+      "--real-size": `calc(${100 / WIDTH}vw * ${width})`,
+    } as CSSProperties);
+
   const options = widthList.map((width, index) => ({
     value: index,
     label: (
@@ -87,14 +92,7 @@ export const WidthSelect: FC<{
           />
         }
       >
-        <div
-          className="circle-wrapper"
-          style={
-            {
-              "--real-size": `calc(${100 / WIDTH}vw * ${width})`,
-            } as CSSProperties
-          }
-        >
+        <div className="circle-wrapper" style={getRealSizeStyle(width)}>
           <ColorCirle className={"width-circle " + field} color={color} />
         </div>
       </Popover>
