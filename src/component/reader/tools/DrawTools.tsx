@@ -150,6 +150,35 @@ export const TextTool: FC<{
   const [color, setColor] = useState(colors[0]);
   const { forceLight } = useContext(ReaderStateCtx);
 
+  const fontSizeInput = (
+    <span className="font-size">
+      <FontSizeOutlined />
+      <span>Font size: </span>
+      <InputNumber
+        min={1}
+        size="small"
+        value={fontSize}
+        onChange={setFontSize}
+      />
+    </span>
+  );
+
+  const fontColorBtn = (
+    <Popover
+      content={<ColorSelect color={color} setColor={setColor} />}
+      overlayStyle={{ width: 200 }}
+      placement="bottom"
+      getPopupContainer={(e) => e.parentElement!}
+    >
+      <Button
+        size="small"
+        icon={<FontColorsOutlined className="font-icon" style={{ color }} />}
+      >
+        Font color
+      </Button>
+    </Popover>
+  );
+
   return (
     <Modal
       visible={visible}
@@ -164,30 +193,8 @@ export const TextTool: FC<{
       destroyOnClose
     >
       <div className="insert-option" data-force-light={forceLight}>
-        <span className="font-size">
-          <FontSizeOutlined />
-          <span>Font size: </span>
-          <InputNumber
-            min={1}
-            size="small"
-            value={fontSize}
-            onChange={setFontSize}
-          />
-        </span>
-        <Popover
-          content={<ColorSelect color={color} setColor={setColor} />}
-          overlayStyle={{ width: 200 }}
-          placement="bottom"
-          getPopupContainer={(e) => e.parentElement!}
-        >
-          <Button
-            className="tag-btn"
-            size="small"
-            icon={<FontColorsOutlined style={{ color }} />}
-          >
-            Font color
-          </Button>
-        </Popover>
+        {fontSizeInput}
+        {fontColorBtn}
       </div>
       <TextArea
         autoFocus
