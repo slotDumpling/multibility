@@ -85,6 +85,9 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       const r = preview ? PREVIEW_WIDTH / width : 1;
       scp.view.viewSize = new Size(width, height).multiply(r);
       scp.view.scale(r, new Point(0, 0));
+      scp.project.addLayer(new paper.Layer());
+      scp.project.addLayer(new paper.Layer());
+      scp.project.layers[1].activate();
       paintBackground(scp, width, height);
 
       return () => {
@@ -123,14 +126,15 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       const tempGroup: paper.Item[] = [];
       const othersGroup: paper.Item[] = [];
 
-      mergedStrokes.forEach((stroke) =>
-        paintStroke(
-          stroke,
-          scope.current,
-          drawState.hasStroke(stroke.uid) ? tempGroup : othersGroup,
-          erased.has(stroke.uid)
-        )
-      );
+      mergedStrokes.forEach((stroke) => {
+        const item = paintStroke(stroke, scope.current, erased.has(stroke.uid));
+        if (!item) return;
+        if (drawState.hasStroke(stroke.uid)) {
+          tempGroup.push(item);
+        } else {
+          othersGroup.push(item);
+        }
+      });
       setGroup(tempGroup);
 
       return () => {
@@ -484,7 +488,6 @@ function usePaperItem<T extends paper.Item>(init?: T) {
 const paintStroke = (
   stroke: Stroke,
   scope: paper.PaperScope,
-  group?: paper.Item[],
   erased = false
 ) => {
   let { pathData, uid } = stroke;
@@ -494,7 +497,7 @@ const paintStroke = (
     if (!item) return;
     item.name = uid;
     if (erased) item.opacity = 0.5;
-    group?.push(item);
+    return item;
   } catch (e) {
     console.error(e);
   }
@@ -543,9 +546,7 @@ const paintBackground = (
   scope.activate();
   const bgRect = new Rectangle(new Point(0, 0), new Point(width, height));
   bgRect.fillColor = new Color("#fff");
-  const bgLayer = new paper.Layer(bgRect);
-  scope.project.insertLayer(0, bgLayer);
-  return bgRect;
+  scope.project.layers[0].addChild(bgRect);
 };
 
 const startSelectRect = (point: paper.Point) => {
