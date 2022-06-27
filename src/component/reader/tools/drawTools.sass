@@ -76,10 +76,8 @@
   background-color: white
   border-radius: 5px
 
-@media screen and (min-width: 640px)
-  .select-tool
+.select-tool
+  @media (min-width: 640px)
     top: calc( $header-low-height + 10px )
-
-@media screen and (max-width: 640px)
-  .select-tool
+  @media (max-width: 640px)
     top: calc( $header-high-height + 10px )

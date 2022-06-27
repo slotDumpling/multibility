@@ -6,7 +6,6 @@
   position: sticky
   top: 0
   z-index: 900
-  height: $header-low-height
   padding: 0 20px
   display: flex
   align-items: center
@@ -23,18 +22,15 @@
     .force-light-btn
       @media (prefers-color-scheme: light)
         visibility: hidden
-
-@media screen and (max-width: 640px)
-  .reader.container header
+  @media (max-width: 640px)
     height: $header-high-height
     .middle
       grid-template-columns: repeat(4, 1fr)
       border-left: $default-border
       border-right: $default-border
       padding: 0 20px
-
-@media screen and (min-width: 640px)
-  .reader.container header
+  @media (min-width: 640px)
+    height: $header-low-height
     .left, .right
       grid-template-columns: repeat(2, 1fr)
     .middle

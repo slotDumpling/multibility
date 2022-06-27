@@ -45,13 +45,14 @@ code, .code-font
 .ant-message-notice-content
   border-radius: 10px
 
-@media screen and (min-width: 640px)
+@media (min-width: 640px)
   .ant-message
     top: calc( $header-low-height + 5px )
   @supports not (-webkit-touch-callout: none)
     ::-webkit-scrollbar
       width: 10px
       height: 10px
+      border-left: $default-border
     ::-webkit-scrollbar-thumb
       $bg-color: #d6d6d6
       background-clip: padding-box
@@ -61,7 +62,7 @@ code, .code-font
       &:hover
         background-color: darken($bg-color, 10%)
 
-@media screen and (max-width: 640px)
+@media (max-width: 640px)
   .ant-message
     top: calc( $header-high-height + 5px )
 
