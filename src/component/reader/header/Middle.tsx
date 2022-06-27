@@ -57,6 +57,7 @@ export const HeaderMiddle = () => {
         icon={<IconFont type="icon-finger" />}
       />
       <Button
+        className="force-light-btn"
         type="text"
         shape="circle"
         icon={forceLight ? <BulbFilled /> : <BulbOutlined />}

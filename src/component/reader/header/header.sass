@@ -12,16 +12,17 @@
   align-items: center
   justify-content: space-between
   border-bottom: $dark-border
+  @media (display-mode: standalone)
+    background-color: #fff
   > div
     display: grid
     gap: 10px
   .middle
     > button.ant-btn-default
       background-color: #0000
-
-@media (display-mode: standalone) 
-  .reader.container header
-    background-color: #fff
+    .force-light-btn
+      @media (prefers-color-scheme: light)
+        visibility: hidden
 
 @media screen and (max-width: 640px)
   .reader.container header
@@ -38,7 +39,7 @@
       grid-template-columns: repeat(2, 1fr)
     .middle
       grid-template-columns: repeat(9, 1fr)
-      > button:nth-child(4)
+      .force-light-btn
         grid-column: span 2
 
 .team-title
