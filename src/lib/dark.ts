@@ -5,9 +5,9 @@ export const loadDarkMode = async () => {
     {
       ignoreInlineStyle: [".color-select .circle", ".color-circle"],
       invert: [
-        "[data-dark=true] .draw-canvas",
-        "[data-dark=true] .color-select .circle",
-        "[data-dark=true] .width-circle.lineWidth",
+        "[data-force-light=false] .draw-canvas",
+        "[data-force-light=false] .color-select .circle",
+        "[data-force-light=false] .width-circle.lineWidth",
         ".note-item .timg",
       ],
       css: "",

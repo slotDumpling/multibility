@@ -14,9 +14,10 @@ import IconFont from "../../ui/IconFont";
 import { PenPanel, WidthSelect } from "../tools/PenPanel";
 
 export const HeaderMiddle = () => {
-  const { stateSet, drawCtrl } = useContext(ReaderStateCtx);
-  const { setDrawCtrl, handleUndo, handleRedo } = useContext(ReaderMethodCtx);
-  const { mode, finger, dark } = drawCtrl;
+  const { stateSet, drawCtrl, forceLight } = useContext(ReaderStateCtx);
+  const { setDrawCtrl, handleUndo, handleRedo, setForceLight } =
+    useContext(ReaderMethodCtx);
+  const { mode, finger } = drawCtrl;
 
   const updateDrawCtrl = (updated: Partial<DrawCtrl>) => {
     setDrawCtrl((prev) => {
@@ -58,8 +59,8 @@ export const HeaderMiddle = () => {
       <Button
         type="text"
         shape="circle"
-        icon={dark ? <BulbOutlined /> : <BulbFilled />}
-        onClick={() => updateDrawCtrl({ dark: !dark })}
+        icon={forceLight ? <BulbFilled /> : <BulbOutlined />}
+        onClick={() => setForceLight((prev) => !prev)}
       />
       <PenButton updateDrawCtrl={updateDrawCtrl} />
       <EraserButton updateDrawCtrl={updateDrawCtrl} />

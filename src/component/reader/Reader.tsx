@@ -49,6 +49,7 @@ export const ReaderStateCtx = createContext({
   saved: true,
   currPageID: "",
   drawCtrl: defaultDrawCtrl,
+  forceLight: false,
 });
 
 export const ReaderMethodCtx = createContext({
@@ -64,6 +65,7 @@ export const ReaderMethodCtx = createContext({
   instantSave: (() => {}) as () => Promise<void> | undefined,
   handleUndo: () => {},
   handleRedo: () => {},
+  setForceLight: (() => {}) as Setter<boolean>,
 });
 
 export default function Reader() {
@@ -76,6 +78,7 @@ export default function Reader() {
   const [drawCtrl, setDrawCtrl] = useState(defaultDrawCtrl);
   const [pageOrder, setPageOrder] = useState<string[]>();
   const [saved, setSaved] = useSafeState(true);
+  const [forceLight, setForceLight] = useState(false);
 
   const refRec = useRef<Record<string, HTMLElement>>({});
 
@@ -219,7 +222,7 @@ export default function Reader() {
   const handleUndo = () => updateStateSet((prev) => prev.undo());
   const handleRedo = () => updateStateSet((prev) => prev.redo());
   const renderResult = (
-    <div className="reader container" data-dark={drawCtrl.dark}>
+    <div className="reader container" data-force-light={forceLight}>
       <ReaderHeader />
       <main>
         {pageOrder?.map((uid) => (
@@ -248,6 +251,7 @@ export default function Reader() {
         teamState,
         pageOrder,
         currPageID,
+        forceLight,
       }}
     >
       <ReaderMethodCtx.Provider
@@ -264,6 +268,7 @@ export default function Reader() {
           updateStateSet,
           setInviewRatios,
           switchPageMarked,
+          setForceLight,
         }}
       >
         {renderResult}

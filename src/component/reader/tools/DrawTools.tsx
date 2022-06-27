@@ -148,7 +148,7 @@ export const TextTool: FC<{
   const [text, setText] = useState("");
   const [fontSize, setFontSize] = useState(5);
   const [color, setColor] = useState(colors[0]);
-  const { drawCtrl } = useContext(ReaderStateCtx);
+  const { forceLight } = useContext(ReaderStateCtx);
 
   return (
     <Modal
@@ -163,7 +163,7 @@ export const TextTool: FC<{
       bodyStyle={{ paddingTop: 0 }}
       destroyOnClose
     >
-      <div className="insert-option" data-dark={drawCtrl.dark}>
+      <div className="insert-option" data-force-light={forceLight}>
         <span className="font-size">
           <FontSizeOutlined />
           <span>Font size: </span>

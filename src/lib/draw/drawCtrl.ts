@@ -8,7 +8,6 @@ export interface DrawCtrl {
   highlight: boolean;
   lasso: boolean;
   widthList: number[];
-  dark: boolean;
 }
 
 export const defaultWidthList = [10, 20, 30, 50];
@@ -21,7 +20,6 @@ export const defaultDrawCtrl: Readonly<DrawCtrl> = {
   highlight: false,
   lasso: true,
   widthList: defaultWidthList,
-  dark: true,
 };
 
 export async function getDrawCtrl() {
