@@ -1,13 +1,13 @@
 import { CSSProperties, FC, useEffect, useMemo, useState } from "react";
 import { defaultWidthList, DrawCtrl } from "../../../lib/draw/drawCtrl";
-import { Popover, Segmented, Slider } from "antd";
 import { ColorCirle } from "../../widgets/ColorCircle";
+import { WIDTH } from "../../../lib/draw/DrawState";
+import { Popover, Segmented, Slider } from "antd";
 import { allColors } from "../../../lib/color";
 import { Setter } from "../../../lib/hooks";
 import IconFont from "../../ui/IconFont";
 import { List } from "immutable";
 import "./penPanel.sass";
-import { WIDTH } from "../../../lib/draw/DrawState";
 
 export const PenPanel: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
@@ -17,7 +17,7 @@ export const PenPanel: FC<{
   const [panelBlur, setPanelBlur] = useState(false);
 
   return (
-    <div className="pen-panel" data-blur={panelBlur}>
+    <div className="pen-panel" data-blur={panelBlur} data-hi={highlight}>
       <div className="pen-status">
         <WidthSelect
           updateDrawCtrl={updateDrawCtrl}
@@ -140,7 +140,7 @@ export const ColorSelect: FC<{
             checked={color === c}
             type="radio"
             name="color"
-            onChange={() => setColor(c)}
+            onChange={(e) => e.target.checked && setColor(c)}
           />
           <div
             data-color={c}
