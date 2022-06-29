@@ -34,6 +34,7 @@ import { MenuCtx } from "./MainMenu";
 import { useEffect } from "react";
 import { FC } from "react";
 import "./rightTools.sass";
+import { clearImageCache } from "../../lib/note/pdfImage";
 
 const activeKeyCtx = createContext({
   active: "MENU",
@@ -145,6 +146,7 @@ const SettingsPage = () => {
 
   const clearAll = async () => {
     await localforage.clear();
+    await clearImageCache();
     menuInit();
   };
 

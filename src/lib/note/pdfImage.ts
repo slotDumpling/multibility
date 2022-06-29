@@ -72,29 +72,39 @@ export async function getOneImage(file: Blob, index: number, scale = 2) {
 }
 
 const IMAGE_CACHE_MAX = 10;
+const imageForage = localforage.createInstance({ name: "imageForage" });
 const getImageCache = async (noteID: string, index: number) => {
-  let cacheList: string[] = (await localforage.getItem("IMAGE_CACHE")) ?? [];
-  const key = `IMAGE_${noteID}_${index}`;
+  let cacheList: string[] = (await imageForage.getItem("LIST")) ?? [];
+  const key = `${noteID}_${index}`;
   if (!cacheList.includes(key)) return;
   cacheList = [key, ...cacheList.filter((id) => id !== key)];
-  await localforage.setItem("IMAGE_CACHE", cacheList);
-  return (await localforage.getItem(key)) as string;
+  await imageForage.setItem("LIST", cacheList);
+  return (await imageForage.getItem(key)) as string;
 };
 
 const setImageCache = async (noteID: string, index: number, data: string) => {
-  let cacheList: string[] = (await localforage.getItem("IMAGE_CACHE")) ?? [];
-  const key = `IMAGE_${noteID}_${index}`;
+  let cacheList: string[] = (await imageForage.getItem("LIST")) ?? [];
+  const key = `${noteID}_${index}`;
   cacheList = [key, ...cacheList.filter((id) => id !== key)];
   if (cacheList.length > IMAGE_CACHE_MAX) {
-    const deleteList = cacheList.slice(IMAGE_CACHE_MAX);
     cacheList = cacheList.slice(0, IMAGE_CACHE_MAX);
-    for (let id of deleteList) {
-      await localforage.removeItem(id);
-    }
   }
-  await localforage.setItem("IMAGE_CACHE", cacheList);
-  await localforage.setItem(key, data);
+  await imageForage.setItem("LIST", cacheList);
+  await imageForage.setItem(key, data);
+  removeUnusedCache();
 };
+
+const removeUnusedCache = async () => {
+  const cacheList: string[] = (await imageForage.getItem("LIST")) ?? [];
+  const set = new Set(cacheList);
+  const allKeys = await imageForage.keys();
+  for (let key of allKeys) {
+    if (key === "LIST") continue;
+    if (!set.has(key)) await imageForage.removeItem(key);
+  }
+};
+
+export const clearImageCache = () => imageForage.clear();
 
 export async function getOnePageImage(noteID: string, index: number) {
   const cached = await getImageCache(noteID, index);
