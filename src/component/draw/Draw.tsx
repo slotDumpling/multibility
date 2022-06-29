@@ -75,7 +75,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     const [group, setGroup] = useState<paper.Item[]>([]);
     const [erased, setErased] = useState(Set<string>());
     const [path, setPath] = usePaperItem<paper.Path>();
-    const [rect, setRect] = usePaperItem<paper.Shape.Rectangle>();
+    const [rect, setRect] = usePaperItem<paper.Path.Rectangle>();
 
     useEffect(() => {
       const cvs = canvasEl.current;
@@ -83,6 +83,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       if (!cvs) return;
 
       scp.setup(cvs);
+      scp.settings.handleSize = 10;
       scp.project.addLayer(new paper.Layer());
       scp.project.addLayer(new paper.Layer());
       scp.project.layers[1].activate();
@@ -158,6 +159,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     }, [mergedStrokes, erased, drawState]);
 
     const [selected, setSelected] = useState(false);
+    const hitRef = useRef<paper.HitResult>();
+    // const [hit, setHit] = useState<paper.HitResult>();
     const paperMode = mode === "select" && selected ? "selected" : mode;
     const [selectedIDs, setSelectedIDs] = useState<string[]>([]);
     const selectedItems = useMemo(() => {
@@ -193,12 +196,19 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         else setRect(startSelectRect(e.point));
       },
       selected(e: paper.MouseEvent) {
-        // check if point is outside of selection
+        // check if the point hit the segment point.
+        const hitRes = rect?.hitTest(e.point, {
+          segments: true,
+          tolerance: 40,
+        });
+        hitRef.current = hitRes;
+        if (hitRes) return;
+        // if the point is outside of selection, reset selection
         if (lasso) {
           if (path?.contains(e.point)) return;
           setPath(startStroke("#1890ff", 5));
         } else {
-          if (rect?.bounds.contains(e.point)) return;
+          if (rect?.contains(e.point)) return;
           setRect(startSelectRect(e.point));
         }
         setSelected(false);
@@ -233,16 +243,35 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           path.smooth();
         } else {
           if (!rect) return;
-          const { delta } = e;
-          rect.size = rect.size.add(new Size(delta.x, delta.y));
-          rect.translate(delta.divide(2));
+          const { x, y } = e.delta;
+          const [, s1, s2, s3] = rect.segments;
+          s1.point = s1.point.add(new Point(x, 0));
+          s2.point = s2.point.add(e.delta);
+          s3.point = s3.point.add(new Point(0, y));
         }
       },
       selected(e: paper.MouseEvent) {
-        const delta = e.delta;
-        selectedItems.forEach((item) => item.translate(delta));
-        path?.translate(delta);
-        rect?.translate(delta);
+        if (hitRef.current) {
+          const { x, y } = e.delta;
+          const moveP = hitRef.current.segment.point;
+          const baseP = hitRef.current.segment.next.next.point;
+          const dis = moveP.subtract(baseP);
+
+          const scale =
+            Math.abs(x) > Math.abs(y)
+              ? (dis.x + x) / dis.x
+              : (dis.y + y) / dis.y;
+
+          rect?.scale(scale, baseP);
+          selectedItems.forEach((item) => {
+            item.scale(scale, baseP);
+            item.strokeWidth *= scale;
+          });
+        } else {
+          selectedItems.forEach((item) => item.translate(e.delta));
+          path?.translate(e.delta);
+          rect?.translate(e.delta);
+        }
       },
       text: null,
     }[paperMode];
@@ -270,9 +299,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           moveDash(path);
           items = checkPathSelection(path, group);
         } else {
-          if (!rect) return;
-          const { width: w, height: h } = rect.size.abs();
-          if (w * h < 100) return setRect(undefined);
+          if (!rect || rect.length < 50) return setRect(undefined);
+          rect.selected = true;
           moveDash(rect);
           items = checkRectSelection(rect, group);
         }
@@ -529,7 +557,7 @@ const paintBackground = (
 };
 
 const startSelectRect = (point: paper.Point) => {
-  const rect = new Rectangle(point, new Size(0, 0));
+  const rect = new Path.Rectangle(point, new Size(0, 0));
   rect.strokeColor = new Color("#1890ff");
   rect.strokeWidth = 5;
   return rect;
@@ -581,7 +609,7 @@ const putCenterBack = (view: paper.View, projSize: paper.Size) => {
   move();
 };
 
-const checkRectSelection = (rect: paper.Shape.Rectangle, items: paper.Item[]) =>
+const checkRectSelection = (rect: paper.Path.Rectangle, items: paper.Item[]) =>
   items.filter((item) =>
     item instanceof paper.Path
       ? item.intersects(rect) || item.isInside(rect.bounds)
