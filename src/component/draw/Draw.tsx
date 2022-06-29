@@ -14,12 +14,12 @@ import { DrawState, Mutation, Stroke } from "../../lib/draw/DrawState";
 import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
 import { releaseCanvas } from "../../lib/draw/canvas";
 import { usePinch } from "@use-gesture/react";
+import useSize from "@react-hook/size";
 import { v4 as getUid } from "uuid";
 import { Set } from "immutable";
 import paper from "paper";
 import "./draw.sass";
 
-const PREVIEW_WIDTH = 300;
 const {
   Path,
   Size,
@@ -50,6 +50,7 @@ interface DrawPropType {
   preview?: boolean;
   imgSrc?: string;
 }
+type PaperHandler = ((e: paper.MouseEvent) => boolean | void) | null;
 
 const Draw = React.forwardRef<DrawRefType, DrawPropType>(
   (
@@ -82,19 +83,32 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       if (!cvs) return;
 
       scp.setup(cvs);
-      const r = preview ? PREVIEW_WIDTH / width : 1;
-      scp.view.viewSize = new Size(width, height).multiply(r);
-      scp.view.scale(r, new Point(0, 0));
       scp.project.addLayer(new paper.Layer());
       scp.project.addLayer(new paper.Layer());
       scp.project.layers[1].activate();
+      scp.project.layers.forEach((l) => (l.visible = false));
       paintBackground(scp, width, height);
 
       return () => {
         scp.remove();
         releaseCanvas(cvs);
       };
-    }, [width, height, preview]);
+    }, [width, height]);
+
+    const [canvasWidth] = useSize(canvasEl);
+    useEffect(() => {
+      if (!canvasWidth) return;
+      const scp = scope.current;
+      const ratio = canvasWidth / width;
+      scp.view.viewSize = new Size(width, height).multiply(ratio);
+      scp.view.scale(ratio, new Point(0, 0));
+      scp.project.layers.forEach((l) => (l.visible = true));
+
+      return () => {
+        scp.project?.layers.forEach((l) => (l.visible = false));
+        scp.view?.scale(1 / ratio, new Point(0, 0));
+      };
+    }, [width, height, canvasWidth]);
 
     useEffect(() => {
       if (!imgSrc) return;
@@ -106,13 +120,13 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         scope.current.activate();
         raster = new Raster(img);
         scope.current.project.layers[0].addChild(raster);
-        raster.position = scope.current.view.center;
-        let r = width / img.width;
+        raster.position = new Point(width, height).divide(2);
+        const r = width / img.width;
         raster.scale(r);
       };
 
       return () => void raster?.remove();
-    }, [imgSrc, width]);
+    }, [imgSrc, width, height]);
 
     const mergedStrokes = useMemo(
       () =>
@@ -167,61 +181,30 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 
     useEffect(() => resetSelect, [lasso, resetSelect]);
 
-    const ratio = useRef(1);
-    const updateRatio = () => {
-      const clientWidth = canvasEl.current?.clientWidth;
-      if (clientWidth) ratio.current = width / clientWidth;
-      scope.current.activate();
-    };
-
-    const setNewRect = (e: paper.MouseEvent) => {
-      const point = transformPoint(e.point);
-      const rectangle = startSelectRect(point);
-      setRect(rectangle);
-    };
-
-    const transformPoint = (projP: paper.Point) => {
-      scope.current.activate();
-      const { center, zoom } = scope.current.view;
-      const viewP = scope.current.view.projectToView(projP);
-      const absoluteP = viewP.multiply(ratio.current);
-      const offsetP = new Point(width, height)
-        .divide(2)
-        .subtract(center.multiply(zoom));
-      return absoluteP.subtract(offsetP).divide(zoom);
-    };
-
     const handleDown = {
       draw() {
-        updateRatio();
         setPath(startStroke(color, lineWidth, highlight));
       },
       erase() {
-        updateRatio();
         setPath(startStroke("#ccc", eraserWidth, true));
       },
       select(e: paper.MouseEvent) {
-        updateRatio();
         if (lasso) setPath(startStroke("#1890ff", 5));
-        else setNewRect(e);
+        else setRect(startSelectRect(e.point));
       },
       selected(e: paper.MouseEvent) {
-        updateRatio();
-        const point = transformPoint(e.point);
         // check if point is outside of selection
         if (lasso) {
-          if (path?.contains(point)) return;
+          if (path?.contains(e.point)) return;
           setPath(startStroke("#1890ff", 5));
         } else {
-          if (rect?.bounds.contains(point)) return;
-          setNewRect(e);
+          if (rect?.bounds.contains(e.point)) return;
+          setRect(startSelectRect(e.point));
         }
         setSelected(false);
       },
       text(e: paper.MouseEvent) {
-        updateRatio();
-        const point = transformPoint(e.point);
-        const t = new paper.PointText(point);
+        const t = new paper.PointText(e.point);
         setPointText(t);
       },
     }[paperMode];
@@ -229,14 +212,12 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     const handleDrag = {
       draw(e: paper.MouseEvent) {
         if (!path) return;
-        scope.current.activate();
-        path.add(transformPoint(e.point));
+        path.add(e.point);
         path.smooth();
       },
       erase(e: paper.MouseEvent) {
         if (!path) return;
-        scope.current.activate();
-        path.add(transformPoint(e.point));
+        path.add(e.point);
         path.smooth();
 
         const newErased = group
@@ -246,21 +227,19 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         setErased((prev) => prev.concat(newErased));
       },
       select(e: paper.MouseEvent) {
-        scope.current.activate();
         if (lasso) {
           if (!path) return;
-          path.add(transformPoint(e.point));
+          path.add(e.point);
           path.smooth();
         } else {
           if (!rect) return;
-          const delta = e.delta.multiply(ratio.current);
+          const { delta } = e;
           rect.size = rect.size.add(new Size(delta.x, delta.y));
           rect.translate(delta.divide(2));
         }
       },
       selected(e: paper.MouseEvent) {
-        scope.current.activate();
-        const delta = e.delta.multiply(ratio.current);
+        const delta = e.delta;
         selectedItems.forEach((item) => item.translate(delta));
         path?.translate(delta);
         rect?.translate(delta);
@@ -271,7 +250,6 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     const handleUp = {
       draw() {
         if (!path || path.segments.length === 0) return;
-        scope.current.activate();
         path.simplify();
         const pathData = path.exportJSON();
         setPath(undefined);
@@ -279,13 +257,11 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       },
       erase() {
         if (!path) return;
-        scope.current.activate();
         setPath(undefined);
         onChange((prev) => DrawState.eraseStrokes(prev, erased.toArray()));
         setErased(Set());
       },
       select() {
-        scope.current.activate();
         let items: paper.Item[];
         if (lasso) {
           if (!path || path.length < 50) return setPath(undefined);
@@ -295,8 +271,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           items = checkPathSelection(path, group);
         } else {
           if (!rect) return;
-          const { width, height } = rect.size.abs();
-          if (width * height < 100) return setRect(undefined);
+          const { width: w, height: h } = rect.size.abs();
+          if (w * h < 100) return setRect(undefined);
           moveDash(rect);
           items = checkRectSelection(rect, group);
         }
@@ -311,9 +287,17 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const handlePaper = () => {
       if (readonly) return;
-      scope.current.view.onMouseDown = handleDown;
-      scope.current.view.onMouseDrag = handleDrag;
-      scope.current.view.onMouseUp = handleUp;
+
+      const activate =
+        (handler: PaperHandler): PaperHandler =>
+        (e) => {
+          scope.current.activate();
+          if (handler) return handler(e);
+        };
+
+      scope.current.view.onMouseDown = activate(handleDown);
+      scope.current.view.onMouseDrag = activate(handleDrag);
+      scope.current.view.onMouseUp = activate(handleUp);
     };
     useEffect(handlePaper);
 
@@ -418,10 +402,10 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     usePinch(
       ({ memo, offset: [scale], first, last, origin }) => {
         const { view } = scope.current;
+        scope.current.activate();
 
         let lastScale, lastOX, lastOY, elX, elY: number;
         if (first || !memo) {
-          updateRatio();
           if (!canvasEl.current) return;
           const { x, y } = canvasEl.current.getBoundingClientRect();
           lastScale = 1;
@@ -431,9 +415,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           [lastScale, [lastOX, lastOY], [elX, elY]] = memo;
         }
 
-        const r = ratio.current;
         const [oX, oY] = [origin[0] - elX, origin[1] - elY];
-        const originViewP = new Point(oX, oY).multiply(r);
+        const originViewP = new Point(oX, oY);
         const originProjP = view.viewToProject(originViewP);
 
         if (Math.abs(1 - scale) < 0.05) scale = 1;
@@ -443,12 +426,13 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         const scaleView = () => {
           view.scale(dScale, originProjP);
           if (--aniCount > 0) requestAnimationFrame(scaleView);
-          else if (last) putCenterBack(view);
+          else if (last) putCenterBack(view, new Size(width, height));
         };
         scaleView();
 
         const [dX, dY] = [oX - lastOX, oY - lastOY];
-        const transP = new Point(dX, dY).multiply(r / scale);
+        const pr = window.devicePixelRatio;
+        const transP = new Point(dX, dY).multiply(pr / scale);
         view.translate(transP);
 
         if (!last) return [scale, [oX, oY], [elX, elY]];
@@ -463,12 +447,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     const touchHandler = usePreventTouch(finger);
     return (
       <div className="draw-wrapper">
-        <canvas
-          ref={canvasEl}
-          className="draw-canvas"
-          data-paper-hidpi={false}
-          {...touchHandler}
-        />
+        <canvas ref={canvasEl} className="draw-canvas" {...touchHandler} />
       </div>
     );
   }
@@ -477,8 +456,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 Draw.displayName = "Draw";
 export default React.memo(Draw);
 
-function usePaperItem<T extends paper.Item>(init?: T) {
-  const stateArray = useState<T | undefined>(init);
+function usePaperItem<T extends paper.Item>() {
+  const stateArray = useState<T | undefined>();
   const [item] = stateArray;
   useDebugValue(item);
   useEffect(() => () => void item?.remove(), [item]);
@@ -505,7 +484,7 @@ const paintStroke = (
 
 const getCheckPoints = (() => {
   const cache = new WeakMap<paper.Segment, paper.Point[]>();
-  return (segment: paper.Segment, width: number) => {
+  return (segment: paper.Segment, strokeWidth: number) => {
     const cached = cache.get(segment);
     if (cached) return cached;
 
@@ -513,7 +492,7 @@ const getCheckPoints = (() => {
     const prevPoint = segment.previous?.point;
     if (!prevPoint) return [];
     const delta = point.subtract(prevPoint);
-    const times = (delta.length / width) * 2;
+    const times = (delta.length / strokeWidth) * 2;
     const checkPoints: paper.Point[] = [];
     for (let i = 0; i < times; i += 1) {
       checkPoints.push(point.subtract(delta.multiply(i / times)));
@@ -577,28 +556,22 @@ const moveDash = (item: paper.Item) => {
   item.onFrame = () => (item.dashOffset += 3);
 };
 
-const getCenterTranslate = (view: paper.View) => {
-  const { center, zoom } = view;
-  const { height, width } = view.viewSize;
-  const { x, y } = center;
-  if (zoom <= 1) return [width / 2 - x, height / 2 - y];
+const getCenterTranslate = (view: paper.View, projSize: paper.Size) => {
+  const { x, y } = view.center;
+  const { width: viewW, height: viewH } = view.size;
+  const { width: projW, height: projH } = projSize;
 
-  const dX = (width * (zoom - 1)) / zoom / 2;
-  const dY = (height * (zoom - 1)) / zoom / 2;
-  const [minX, maxX, minY, maxY] = [
-    width / 2 - dX,
-    width / 2 + dX,
-    height / 2 - dY,
-    height / 2 + dY,
-  ];
+  const [minX, minY] = [Math.min(viewW, projW) / 2, Math.min(viewH, projH) / 2];
+  const [maxX, maxY] = [projW - minX, projH - minY];
 
   const deltaX = x < minX ? minX - x : x > maxX ? maxX - x : 0;
   const deltaY = y < minY ? minY - y : y > maxY ? maxY - y : 0;
+
   return [deltaX, deltaY];
 };
 
-const putCenterBack = (view: paper.View) => {
-  const [deltaX, deltaY] = getCenterTranslate(view);
+const putCenterBack = (view: paper.View, projSize: paper.Size) => {
+  const [deltaX, deltaY] = getCenterTranslate(view, projSize);
   let aniCount = 10;
   const dP = new Point(deltaX, deltaY).divide(-aniCount);
   const move = () => {
