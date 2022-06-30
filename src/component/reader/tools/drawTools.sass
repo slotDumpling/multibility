@@ -10,6 +10,10 @@
   border-radius: 50px
   border: $dark-border
   display: flex
+  @media (min-width: 640px)
+    top: calc( $header-low-height + 10px )
+  @media (max-width: 640px)
+    top: calc( $header-high-height + 10px )
   > * + *
     margin-left: 5px
   .rotate-wrapper
@@ -76,8 +80,9 @@
   background-color: white
   border-radius: 5px
 
-.select-tool
-  @media (min-width: 640px)
-    top: calc( $header-low-height + 10px )
-  @media (max-width: 640px)
-    top: calc( $header-high-height + 10px )
+.raster-modal
+  .ant-modal-confirm-content
+    margin: 20px 10px 0 10px !important
+  .raster
+    width: 100%
+    border: $default-border
