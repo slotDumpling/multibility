@@ -15,15 +15,7 @@ import {
 import { Setter } from "../../lib/hooks";
 import { ColorCirle } from "../widgets/ColorCircle";
 
-export function HeadTools({
-  sortType,
-  setSortType,
-  searchText,
-  setSearchText,
-  onDelete,
-  onMove,
-  disabled = true,
-}: {
+export const NoteHeader: FC<{
   sortType: string;
   setSortType: Setter<string>;
   searchText: string;
@@ -31,7 +23,15 @@ export function HeadTools({
   onDelete: () => void;
   onMove: (tagID: string) => void;
   disabled: boolean;
-}) {
+}> = ({
+  sortType,
+  setSortType,
+  searchText,
+  setSearchText,
+  onDelete,
+  onMove,
+  disabled = true,
+}) => {
   const { editing, allTags, setEditing } = useContext(MenuCtx);
 
   const sortMenu = (
@@ -168,4 +168,4 @@ export function HeadTools({
       )}
     </div>
   );
-}
+};

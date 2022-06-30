@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import calender from "dayjs/plugin/calendar";
 import dafaultImg from "../ui/default.png";
 import { Setter } from "../../lib/hooks";
-import { HeadTools } from "./HeadTools";
+import { NoteHeader } from './NoteHeader';
 import { List, Set } from "immutable";
 import { MenuCtx } from "./MainMenu";
 import { Input } from "antd";
@@ -81,7 +81,7 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
   return (
     <SwipeDeleteContext>
       <TransitionGroup className="note-list">
-        <HeadTools
+        <NoteHeader
           sortType={sortType}
           setSortType={setSortType}
           searchText={searchText}
