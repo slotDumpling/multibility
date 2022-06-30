@@ -565,7 +565,6 @@ const startStroke = (color: string, lineWidth: number, highlight = false) => {
 };
 
 const moveDash = (item: paper.Item) => {
-  if (item.strokeColor) item.strokeColor.alpha = 0.5;
   item.dashOffset = 0;
   item.dashArray = [30, 20];
   item.onFrame = () => (item.dashOffset += 3);
