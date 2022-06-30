@@ -118,11 +118,13 @@ const EraserButton: FC<{
   return drawCtrl.mode === "erase" ? (
     <Popover
       content={
-        <WidthSelect
-          drawCtrl={drawCtrl}
-          updateDrawCtrl={updateDrawCtrl}
-          field="eraserWidth"
-        />
+        <div className="width-seg-wrapper">
+          <WidthSelect
+            drawCtrl={drawCtrl}
+            updateDrawCtrl={updateDrawCtrl}
+            field="eraserWidth"
+          />
+        </div>
       }
       trigger="click"
       placement="bottom"
