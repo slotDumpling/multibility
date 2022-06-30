@@ -1,4 +1,4 @@
-import { FC, RefObject, useContext, useEffect, useRef, useState } from "react";
+import { FC, RefObject, useContext, useRef, useState } from "react";
 import {
   CopyOutlined,
   DeleteOutlined,
@@ -25,7 +25,15 @@ import "./drawTools.sass";
 export const SelectTool: FC<{
   drawRef: RefObject<DrawRefType>;
   visible: boolean;
-}> = ({ drawRef, visible }) => {
+}> = ({ drawRef, visible }) => (
+  <CSSTransition timeout={300} in={visible} unmountOnExit>
+    <SelectToolContent drawRef={drawRef} />
+  </CSSTransition>
+);
+
+export const SelectToolContent: FC<{
+  drawRef: RefObject<DrawRefType>;
+}> = ({ drawRef }) => {
   const btnProps: ButtonProps = {
     type: "text",
     shape: "round",
@@ -33,7 +41,6 @@ export const SelectTool: FC<{
   };
 
   const [currDrawCtrl, setCurrDrawCtrl] = useState<Partial<DrawCtrl>>({});
-  useEffect(() => setCurrDrawCtrl({}), [visible]);
   const rotateEl = useRef<HTMLDivElement>(null);
   const [dragged, setDragged] = useState(false);
   const [transX, setTransX] = useState(0);
@@ -68,49 +75,47 @@ export const SelectTool: FC<{
   };
 
   return (
-    <CSSTransition timeout={300} in={visible} unmountOnExit>
-      <div className="select-tool">
-        <Popover
-          trigger="click"
-          placement="bottom"
-          getPopupContainer={(e) => e.parentElement!}
-          destroyTooltipOnHide
-          content={
-            <PenPanel
-              updateDrawCtrl={(updated) => {
-                setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
-                drawRef.current?.mutateStyle(updated);
-              }}
-              drawCtrl={currDrawCtrl}
-            />
-          }
-        >
-          <Button icon={<BgColorsOutlined />} {...btnProps} />
-        </Popover>
-        <div className="rotate-wrapper" data-dragged={dragged} ref={rotateEl}>
-          <Button
-            icon={<RotateRightOutlined />}
-            onClick={() => drawRef.current?.rotateSelected(90, true)}
-            {...btnProps}
+    <div className="select-tool">
+      <Popover
+        trigger="click"
+        placement="bottom"
+        getPopupContainer={(e) => e.parentElement!}
+        destroyTooltipOnHide
+        content={
+          <PenPanel
+            updateDrawCtrl={(updated) => {
+              setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
+              drawRef.current?.mutateStyle(updated);
+            }}
+            drawCtrl={currDrawCtrl}
           />
-          <CaretLeftOutlined className="arrow left" />
-          <CaretRightOutlined className="arrow right" />
-          <div className="gear" style={gearStyle} />
-        </div>
+        }
+      >
+        <Button icon={<BgColorsOutlined />} {...btnProps} />
+      </Popover>
+      <div className="rotate-wrapper" data-dragged={dragged} ref={rotateEl}>
         <Button
-          icon={<CopyOutlined />}
-          onClick={() => drawRef.current?.duplicateSelected()}
+          icon={<RotateRightOutlined />}
+          onClick={() => drawRef.current?.rotateSelected(90, true)}
           {...btnProps}
         />
-        <Button icon={<PictureOutlined />} onClick={getRaster} {...btnProps} />
-        <Button
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => drawRef.current?.deleteSelected()}
-          {...btnProps}
-        />
+        <CaretLeftOutlined className="arrow left" />
+        <CaretRightOutlined className="arrow right" />
+        <div className="gear" style={gearStyle} />
       </div>
-    </CSSTransition>
+      <Button
+        icon={<CopyOutlined />}
+        onClick={() => drawRef.current?.duplicateSelected()}
+        {...btnProps}
+      />
+      <Button icon={<PictureOutlined />} onClick={getRaster} {...btnProps} />
+      <Button
+        danger
+        icon={<DeleteOutlined />}
+        onClick={() => drawRef.current?.deleteSelected()}
+        {...btnProps}
+      />
+    </div>
   );
 };
 
