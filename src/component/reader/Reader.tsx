@@ -19,23 +19,23 @@ import {
   createPage,
   defaultNotePage,
 } from "../../lib/note/note";
-import { useMemoizedFn as useEvent, useSafeState } from "ahooks";
 import { NewPageInfo, ReorderInfo, SyncInfo } from "../../lib/network/io";
+import { useMemoizedFn as useEvent, useSafeState } from "ahooks";
 import { SetOperation, StateSet } from "../../lib/draw/StateSet";
+import Draw, { ActiveToolKey, DrawRefType } from "../draw/Draw";
 import { loadNote, editNoteData } from "../../lib/note/archive";
 import { AddPageButton, showPageDelMsg } from "./ReaderUtils";
+import { getLargestKey, insertAfter } from "../../lib/array";
 import { useParams, useNavigate } from "react-router-dom";
+import { SelectTool, TextTool } from "./tools/DrawTools";
+import { debounce, last, once, range } from "lodash-es";
+import { useInView } from "react-intersection-observer";
 import { DrawState } from "../../lib/draw/DrawState";
 import { TeamState } from "../../lib/draw/TeamState";
-import { SelectTool, TextTool } from "./tools/DrawTools";
-import { getLargestKey, insertAfter } from "../../lib/array";
 import { Setter } from "../../lib/hooks";
-import { debounce, last, once, range } from "lodash-es";
-import { Map } from "immutable";
 import ReaderHeader from "./header/Header";
 import { TeamCtx } from "./Team";
-import Draw, { ActiveToolKey, DrawRefType } from "../draw/Draw";
-import { useInView } from "react-intersection-observer";
+import { Map } from "immutable";
 import { message } from "antd";
 import "./reader.sass";
 
@@ -409,7 +409,6 @@ const DrawWrapper = ({
       otherStates={otherStates}
       imgSrc={imgSrc}
       readonly
-      preview
     />
   ) : (
     <>

@@ -20,15 +20,7 @@ import { Set } from "immutable";
 import paper from "paper";
 import "./draw.sass";
 
-const {
-  Path,
-  Size,
-  Point,
-  Group,
-  Color,
-  Raster,
-  Shape: { Rectangle },
-} = paper;
+const { Path, Size, Point, Group, Color, Raster, Layer } = paper;
 
 export type ActiveToolKey = "" | "select" | "text";
 export interface DrawRefType {
@@ -47,7 +39,6 @@ interface DrawPropType {
   setActiveTool?: Dispatch<SetStateAction<ActiveToolKey>>;
   drawCtrl?: DrawCtrl;
   readonly?: boolean;
-  preview?: boolean;
   imgSrc?: string;
 }
 type PaperHandler = ((e: paper.MouseEvent) => boolean | void) | null;
@@ -59,8 +50,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       otherStates,
       onChange = () => {},
       drawCtrl = defaultDrawCtrl,
-      preview = false,
-      readonly = preview,
+      readonly = false,
       imgSrc,
       setActiveTool = () => {},
     },
@@ -85,8 +75,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       scp.setup(cvs);
       scp.settings.handleSize = 10;
       scp.settings.hitTolerance = 40;
-      scp.project.addLayer(new paper.Layer());
-      scp.project.addLayer(new paper.Layer());
+      scp.project.addLayer(new Layer());
+      scp.project.addLayer(new Layer());
       scp.project.layers[1].activate();
       scp.project.layers.forEach((l) => (l.visible = false));
 
@@ -539,7 +529,7 @@ const paintBackground = (
   height: number
 ) => {
   scope.activate();
-  const bgRect = new Rectangle(new Point(0, 0), new Point(width, height));
+  const bgRect = new Path.Rectangle(new Point(0, 0), new Point(width, height));
   bgRect.fillColor = new Color("#fff");
   scope.project.layers[0].addChild(bgRect);
   return bgRect;
