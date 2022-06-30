@@ -62,7 +62,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       preview = false,
       readonly = preview,
       imgSrc,
-      setActiveTool,
+      setActiveTool = () => {},
     },
     ref
   ) => {
@@ -144,19 +144,17 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           : drawState.getStrokeList(),
       [drawState, otherStates]
     );
-
     useEffect(() => {
       const tempGroup: paper.Item[] = [];
       const othersGroup: paper.Item[] = [];
 
       mergedStrokes.forEach((stroke) => {
-        const item = paintStroke(stroke, scope.current, erased.has(stroke.uid));
+        const { uid } = stroke;
+        const item = paintStroke(stroke, scope.current, erased.has(uid));
         if (!item) return;
-        if (drawState.hasStroke(stroke.uid)) {
-          tempGroup.push(item);
-        } else {
-          othersGroup.push(item);
-        }
+
+        if (drawState.hasStroke(uid)) tempGroup.push(item);
+        else othersGroup.push(item);
       });
       setGroup(tempGroup);
 
@@ -184,12 +182,15 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     useEffect(() => {
       if (mode === "select") return resetSelect;
     }, [mode, resetSelect]);
+    useEffect(() => resetSelect, [lasso, resetSelect]);
 
     useEffect(() => {
-      if (selected) return () => setSelectedIDs([]);
-    }, [selected]);
-
-    useEffect(() => resetSelect, [lasso, resetSelect]);
+      if (selected)
+        return () => {
+          setSelectedIDs([]);
+          setActiveTool("");
+        };
+    }, [selected, setActiveTool]);
 
     const handleDown = {
       draw() {
@@ -223,6 +224,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       text(e: paper.MouseEvent) {
         const t = new paper.PointText(e.point);
         setPointText(t);
+        setActiveTool("text");
       },
     }[paperMode];
 
@@ -307,6 +309,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         }
         setSelectedIDs(items.map((item) => item.name));
         setSelected(true);
+        setActiveTool("select");
       },
       selected() {
         updateMutation();
@@ -387,10 +390,10 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       new Group(selectedItems).rasterize({ insert: false }).toDataURL();
 
     const [pointText, setPointText] = usePaperItem<paper.PointText>();
-    const cancelText = useCallback(
-      () => setPointText(undefined),
-      [setPointText]
-    );
+    const cancelText = useCallback(() => {
+      setPointText(undefined);
+      setActiveTool("");
+    }, [setPointText, setActiveTool]);
 
     useEffect(() => {
       if (mode === "text") return cancelText;
@@ -416,55 +419,43 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       rasterize,
     }));
 
-    useEffect(() => {
-      if (!setActiveTool) return;
-      if (paperMode === "selected") {
-        setActiveTool("select");
-      } else if (paperMode === "text") {
-        setActiveTool(pointText ? "text" : "");
-      } else {
-        setActiveTool("");
-      }
-    }, [paperMode, pointText, setActiveTool]);
-
     usePreventGesture();
     usePinch(
       ({ memo, offset: [scale], first, last, origin }) => {
-        const { view } = scope.current;
         scope.current.activate();
+        const { view } = scope.current;
+        const originRawP = new Point(origin);
 
-        let lastScale, lastOX, lastOY, elX, elY: number;
+        let lastScale: number;
+        let lastOrigin, elPos: paper.Point;
         if (first || !memo) {
-          if (!canvasEl.current) return;
-          const { x, y } = canvasEl.current.getBoundingClientRect();
+          const { x, y } = canvasEl.current!.getBoundingClientRect();
           lastScale = 1;
-          [lastOX, lastOY] = [origin[0] - x, origin[1] - y];
-          [elX, elY] = [x, y];
+          elPos = new Point(x, y);
+          lastOrigin = originRawP.subtract(elPos);
         } else {
-          [lastScale, [lastOX, lastOY], [elX, elY]] = memo;
+          [lastScale, lastOrigin, elPos] = memo;
         }
 
-        const [oX, oY] = [origin[0] - elX, origin[1] - elY];
-        const originViewP = new Point(oX, oY);
-        const originProjP = view.viewToProject(originViewP);
+        const originViewP = originRawP.subtract(elPos);
+        const originPorjP = view.viewToProject(originViewP);
 
         if (Math.abs(1 - scale) < 0.05) scale = 1;
         let dScale = first ? 1 : scale / lastScale;
         let aniCount = last ? 10 : 1;
         dScale = Math.pow(dScale, 1 / aniCount);
         const scaleView = () => {
-          view.scale(dScale, originProjP);
+          view.scale(dScale, originPorjP);
           if (--aniCount > 0) requestAnimationFrame(scaleView);
           else if (last) putCenterBack(view, new Size(width, height));
         };
         scaleView();
 
-        const [dX, dY] = [oX - lastOX, oY - lastOY];
-        const pr = window.devicePixelRatio;
-        const transP = new Point(dX, dY).multiply(pr / scale);
+        const deltaP = originViewP.subtract(lastOrigin);
+        const transP = deltaP.divide(view.zoom);
         view.translate(transP);
 
-        if (!last) return [scale, [oX, oY], [elX, elY]];
+        if (!last) return [scale, originViewP, elPos];
       },
       {
         scaleBounds: { max: 10, min: 0.3 },
