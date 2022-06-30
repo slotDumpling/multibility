@@ -88,12 +88,16 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       scp.project.addLayer(new paper.Layer());
       scp.project.layers[1].activate();
       scp.project.layers.forEach((l) => (l.visible = false));
-      paintBackground(scp, width, height);
 
       return () => {
         scp.remove();
         releaseCanvas(cvs);
       };
+    }, []);
+
+    useEffect(() => {
+      const bgRect = paintBackground(scope.current, width, height);
+      return () => void bgRect.remove();
     }, [width, height]);
 
     const [canvasWidth] = useSize(canvasEl);
@@ -117,7 +121,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       img.src = imgSrc;
       let raster: paper.Raster;
 
-      img.onload = () => {
+      const handleLoad = () => {
         scope.current.activate();
         raster = new Raster(img);
         scope.current.project.layers[0].addChild(raster);
@@ -125,8 +129,12 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         const r = width / img.width;
         raster.scale(r);
       };
+      img.addEventListener("load", handleLoad);
 
-      return () => void raster?.remove();
+      return () => {
+        raster?.remove();
+        img.removeEventListener("load", handleLoad);
+      };
     }, [imgSrc, width, height]);
 
     const mergedStrokes = useMemo(
@@ -158,9 +166,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       };
     }, [mergedStrokes, erased, drawState]);
 
-    const [selected, setSelected] = useState(false);
     const hitRef = useRef<paper.HitResult>();
-    // const [hit, setHit] = useState<paper.HitResult>();
+    const [selected, setSelected] = useState(false);
     const paperMode = mode === "select" && selected ? "selected" : mode;
     const [selectedIDs, setSelectedIDs] = useState<string[]>([]);
     const selectedItems = useMemo(() => {
@@ -238,16 +245,10 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       },
       select(e: paper.MouseEvent) {
         if (lasso) {
-          if (!path) return;
-          path.add(e.point);
-          path.smooth();
+          path?.add(e.point);
+          path?.smooth();
         } else {
-          if (!rect) return;
-          const { x, y } = e.delta;
-          const [, s1, s2, s3] = rect.segments;
-          s1.point = s1.point.add(new Point(x, 0));
-          s2.point = s2.point.add(e.delta);
-          s3.point = s3.point.add(new Point(0, y));
+          rect && resizeRect(rect, e.delta);
         }
       },
       selected(e: paper.MouseEvent) {
@@ -554,6 +555,7 @@ const paintBackground = (
   const bgRect = new Rectangle(new Point(0, 0), new Point(width, height));
   bgRect.fillColor = new Color("#fff");
   scope.project.layers[0].addChild(bgRect);
+  return bgRect;
 };
 
 const startSelectRect = (point: paper.Point) => {
@@ -561,6 +563,14 @@ const startSelectRect = (point: paper.Point) => {
   rect.strokeColor = new Color("#1890ff");
   rect.strokeWidth = 5;
   return rect;
+};
+
+const resizeRect = (rect: paper.Path.Rectangle, delta: paper.Point) => {
+  const { x, y } = delta;
+  const [, s1, s2, s3] = rect.segments;
+  s1.point = s1.point.add(new Point(x, 0));
+  s2.point = s2.point.add(delta);
+  s3.point = s3.point.add(new Point(0, y));
 };
 
 const startStroke = (color: string, lineWidth: number, highlight = false) => {
