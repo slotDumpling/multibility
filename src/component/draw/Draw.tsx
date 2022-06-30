@@ -84,6 +84,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 
       scp.setup(cvs);
       scp.settings.handleSize = 10;
+      scp.settings.hitTolerance = 40;
       scp.project.addLayer(new paper.Layer());
       scp.project.addLayer(new paper.Layer());
       scp.project.layers[1].activate();
@@ -204,18 +205,16 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         else setRect(startSelectRect(e.point));
       },
       selected(e: paper.MouseEvent) {
-        // check if the point hit the segment point.
-        const hitRes = rect?.hitTest(e.point, {
-          segments: true,
-          tolerance: 40,
-        });
-        hitRef.current = hitRes;
-        if (hitRes) return;
-        // if the point is outside of selection, reset selection
         if (lasso) {
+          // if the point is outside of selection, reset selection
           if (path?.contains(e.point)) return;
           setPath(startStroke("#1890ff", 5));
         } else {
+          // check if the point hit the segment point.
+          const hitRes = rect?.hitTest(e.point, { segments: true });
+          hitRef.current = hitRes;
+          if (hitRes) return;
+          // if the point is outside of selection, reset selection
           if (rect?.contains(e.point)) return;
           setRect(startSelectRect(e.point));
         }
@@ -230,9 +229,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const handleDrag = {
       draw(e: paper.MouseEvent) {
-        if (!path) return;
-        path.add(e.point);
-        path.smooth();
+        path?.add(e.point);
+        path?.smooth();
       },
       erase(e: paper.MouseEvent) {
         if (!path) return;
@@ -249,21 +247,19 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         if (lasso) {
           path?.add(e.point);
           path?.smooth();
-        } else {
-          rect && resizeRect(rect, e.delta);
+        } else if (rect) {
+          resizeRect(rect, e.delta);
         }
       },
       selected(e: paper.MouseEvent) {
-        if (hitRef.current) {
-          const { x, y } = e.delta;
-          const moveP = hitRef.current.segment.point;
-          const baseP = hitRef.current.segment.next.next.point;
-          const dis = moveP.subtract(baseP);
-
-          const scale =
-            Math.abs(x) > Math.abs(y)
-              ? (dis.x + x) / dis.x
-              : (dis.y + y) / dis.y;
+        const hitRes = hitRef.current;
+        if (hitRes) {
+          // resize selected items
+          const moveP = hitRes.segment.point;
+          const baseP = hitRes.segment.next.next.point;
+          const diagonal = moveP.subtract(baseP);
+          const projection = e.delta.project(diagonal);
+          const scale = projection.x / diagonal.x + 1;
 
           rect?.scale(scale, baseP);
           selectedItems.forEach((item) => {
@@ -271,6 +267,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
             item.strokeWidth *= scale;
           });
         } else {
+          // move selected items
           selectedItems.forEach((item) => item.translate(e.delta));
           path?.translate(e.delta);
           rect?.translate(e.delta);
@@ -281,14 +278,13 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const handleUp = {
       draw() {
-        if (!path || path.segments.length === 0) return;
+        if (!path || path.isEmpty()) return;
         path.simplify();
         const pathData = path.exportJSON();
         setPath(undefined);
         onChange((prev) => DrawState.addStroke(prev, pathData));
       },
       erase() {
-        if (!path) return;
         setPath(undefined);
         onChange((prev) => DrawState.eraseStrokes(prev, erased.toArray()));
         setErased(Set());
@@ -342,10 +338,10 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     };
 
     const deleteSelected = () => {
-      if (!selectedIDs.length) return;
-      onChange((prev) => DrawState.eraseStrokes(prev, selectedIDs));
       setSelectedIDs([]);
       resetSelect();
+      if (!selectedIDs.length) return;
+      onChange((prev) => DrawState.eraseStrokes(prev, selectedIDs));
     };
 
     const rotateSelected = (angle: number, last = false) => {
@@ -640,11 +636,9 @@ const checkPathSelection = (selection: paper.Path, items: paper.Item[]) => {
 const updateGroupStyle = (items: paper.Item[], updated: Partial<DrawCtrl>) => {
   const { lineWidth, color, highlight } = updated;
   items.forEach((item) => {
-    if (item instanceof paper.PointText) {
-      if (color) {
-        const newColor = new Color(color);
-        item.fillColor = newColor;
-      }
+    if (item instanceof paper.PointText && color) {
+      const newColor = new Color(color);
+      item.fillColor = newColor;
     }
 
     if (!(item instanceof paper.Path)) return;
