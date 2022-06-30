@@ -1,4 +1,4 @@
-import { FC, RefObject, useContext, useRef, useState } from "react";
+import { FC, RefObject, useContext, useEffect, useRef, useState } from "react";
 import {
   CopyOutlined,
   DeleteOutlined,
@@ -127,6 +127,12 @@ export const TextTool: FC<{
   const [fontSize, setFontSize] = useState(5);
   const [color, setColor] = useState(colors[0]);
   const { forceLight } = useContext(ReaderStateCtx);
+
+  useEffect(() => {
+    setText("");
+    setFontSize(5);
+    setColor(colors[0]);
+  }, [visible]);
 
   const fontSizeInput = (
     <span className="font-size">
