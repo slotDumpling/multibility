@@ -2,6 +2,7 @@ import { FC, RefObject, useContext, useEffect, useRef, useState } from "react";
 import {
   CopyOutlined,
   DeleteOutlined,
+  PictureOutlined,
   BgColorsOutlined,
   FontSizeOutlined,
   CaretLeftOutlined,
@@ -12,28 +13,14 @@ import {
 import { Button, ButtonProps, InputNumber, Modal, Popover } from "antd";
 import { CSSTransition } from "react-transition-group";
 import { DrawCtrl } from "../../../lib/draw/drawCtrl";
-import { createWorker, Worker } from "tesseract.js";
 import { ColorSelect, PenPanel } from "./PenPanel";
 import TextArea from "antd/lib/input/TextArea";
 import { DrawRefType } from "../../draw/Draw";
 import { useDrag } from "@use-gesture/react";
 import { colors } from "../../../lib/color";
 import { ReaderStateCtx } from "../Reader";
-import IconFont from "../../ui/IconFont";
-import copy from "clipboard-copy";
+import { saveAs } from "file-saver";
 import "./drawTools.sass";
-
-const getOcrWorker = (() => {
-  let worker: Worker;
-  return async () => {
-    if (worker) return worker;
-    worker = createWorker({ logger: console.log });
-    await worker.load();
-    await worker.loadLanguage("eng+chi_sim");
-    await worker.initialize("eng+chi_sim");
-    return worker;
-  };
-})();
 
 export const SelectTool: FC<{
   drawRef: RefObject<DrawRefType>;
@@ -67,26 +54,17 @@ export const SelectTool: FC<{
     }
   );
 
-  const [recoginzing, setRecoginzing] = useState(false);
-  const recognizeText = async () => {
-    setRecoginzing(true);
+  const getRaster = () => {
     if (!drawRef.current) return;
     const imageData = drawRef.current.rasterize();
-    try {
-      const worker = await getOcrWorker();
-      const { text } = (await worker.recognize(imageData)).data;
-      Modal.confirm({
-        title: "OCR Result",
-        content: <TextArea defaultValue={text} />,
-        icon: <IconFont type="icon-OCR" />,
-        okText: "Copy",
-        onOk: () => copy(text),
-      });
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setRecoginzing(false);
-    }
+    Modal.confirm({
+      title: "Screenshot",
+      content: <img className="raster" src={imageData} alt="raster" />,
+      className: "raster-modal",
+      icon: <PictureOutlined />,
+      okText: "Save",
+      onOk: () => saveAs(imageData, "screenshot"),
+    });
   };
 
   return (
@@ -124,12 +102,7 @@ export const SelectTool: FC<{
           onClick={() => drawRef.current?.duplicateSelected()}
           {...btnProps}
         />
-        <Button
-          icon={<IconFont type="icon-OCR" />}
-          loading={recoginzing}
-          onClick={recognizeText}
-          {...btnProps}
-        />
+        <Button icon={<PictureOutlined />} onClick={getRaster} {...btnProps} />
         <Button
           danger
           icon={<DeleteOutlined />}
