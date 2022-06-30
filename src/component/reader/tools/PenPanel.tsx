@@ -50,7 +50,7 @@ export const WidthSelect: FC<{
   const color = field === "lineWidth" ? drawCtrl.color ?? "#aaa" : "#aaa";
 
   const chosen = useMemo(
-    () => Math.max(0, widthList.indexOf(currWidth ?? 0)),
+    () => widthList.indexOf(currWidth ?? -1),
     [currWidth, widthList]
   );
 
@@ -60,51 +60,54 @@ export const WidthSelect: FC<{
     else setPanelBlur(false);
   }, [popShow, setPanelBlur]);
 
-  const getRealSizeStyle = (width: number) =>
+  const realSizeStyle = (width: number) =>
     ({
       "--real-size": `calc(${100 / WIDTH}vw * ${width})`,
     } as CSSProperties);
 
-  const options = widthList.map((width, index) => ({
-    value: index,
-    label: (
-      <Popover
-        visible={popShow.get(index)}
-        onVisibleChange={(v) => setPopShow((prev) => prev.set(index, v))}
-        trigger={chosen === index ? ["click"] : []}
-        placement="bottom"
-        destroyTooltipOnHide
-        content={
-          <Slider
-            min={5}
-            max={100}
-            className="ctrl-slider"
-            defaultValue={width}
-            onAfterChange={(w) => {
-              if (widthList.includes(w)) {
-                setPopShow((prev) => prev.set(index, false));
-                return updateDrawCtrl({ [field]: w });
-              }
-              const newWL = widthList.slice();
-              newWL[index] = w;
-              updateDrawCtrl({ widthList: newWL, [field]: w });
-            }}
-          />
-        }
-      >
-        <div className="circle-wrapper" style={getRealSizeStyle(width)}>
-          <ColorCirle className={"width-circle " + field} color={color} />
-        </div>
-      </Popover>
-    ),
-  }));
+  const options = [
+    { value: -1, label: null },
+    ...widthList.map((width, index) => ({
+      value: index,
+      label: (
+        <Popover
+          visible={popShow.get(index)}
+          onVisibleChange={(v) => setPopShow((prev) => prev.set(index, v))}
+          trigger={chosen === index ? ["click"] : []}
+          placement="bottom"
+          destroyTooltipOnHide
+          content={
+            <Slider
+              min={5}
+              max={100}
+              className="ctrl-slider"
+              defaultValue={width}
+              onAfterChange={(w) => {
+                if (widthList.includes(w)) {
+                  setPopShow((prev) => prev.set(index, false));
+                  return updateDrawCtrl({ [field]: w });
+                }
+                const newWL = widthList.slice();
+                newWL[index] = w;
+                updateDrawCtrl({ widthList: newWL, [field]: w });
+              }}
+            />
+          }
+        >
+          <div className="circle-wrapper" style={realSizeStyle(width)}>
+            <ColorCirle className={"width-circle " + field} color={color} />
+          </div>
+        </Popover>
+      ),
+    })),
+  ];
 
   return (
     <Segmented
       className="width-seg"
       value={chosen}
       options={options}
-      onChange={(i) => updateDrawCtrl({ [field]: widthList[+i] ?? 5 })}
+      onChange={(i) => updateDrawCtrl({ [field]: widthList[+i] ?? 10 })}
     />
   );
 };
