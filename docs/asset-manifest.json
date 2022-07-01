@@ -1,11 +1,11 @@
 {
   "files": {
     "main.css": "./static/css/main.9da4568e.css",
-    "main.js": "./static/js/main.5d885c2d.js",
+    "main.js": "./static/js/main.96b40ea8.js",
     "static/css/591.c7df3960.chunk.css": "./static/css/591.c7df3960.chunk.css",
     "static/js/591.9284cc95.chunk.js": "./static/js/591.9284cc95.chunk.js",
-    "static/css/516.2009eccb.chunk.css": "./static/css/516.2009eccb.chunk.css",
-    "static/js/516.75762d77.chunk.js": "./static/js/516.75762d77.chunk.js",
+    "static/css/604.39ff43c0.chunk.css": "./static/css/604.39ff43c0.chunk.css",
+    "static/js/604.d2b7bcb6.chunk.js": "./static/js/604.d2b7bcb6.chunk.js",
     "static/js/336.c731405a.chunk.js": "./static/js/336.c731405a.chunk.js",
     "static/js/138.6e695d06.chunk.js": "./static/js/138.6e695d06.chunk.js",
     "static/js/643.b2063dd1.chunk.js": "./static/js/643.b2063dd1.chunk.js",
@@ -18,11 +18,11 @@
     "static/media/sofia.woff": "./static/media/sofia.1d8cd6317297d215f958.woff",
     "index.html": "./index.html",
     "main.9da4568e.css.map": "./static/css/main.9da4568e.css.map",
-    "main.5d885c2d.js.map": "./static/js/main.5d885c2d.js.map",
+    "main.96b40ea8.js.map": "./static/js/main.96b40ea8.js.map",
     "591.c7df3960.chunk.css.map": "./static/css/591.c7df3960.chunk.css.map",
     "591.9284cc95.chunk.js.map": "./static/js/591.9284cc95.chunk.js.map",
-    "516.2009eccb.chunk.css.map": "./static/css/516.2009eccb.chunk.css.map",
-    "516.75762d77.chunk.js.map": "./static/js/516.75762d77.chunk.js.map",
+    "604.39ff43c0.chunk.css.map": "./static/css/604.39ff43c0.chunk.css.map",
+    "604.d2b7bcb6.chunk.js.map": "./static/js/604.d2b7bcb6.chunk.js.map",
     "336.c731405a.chunk.js.map": "./static/js/336.c731405a.chunk.js.map",
     "138.6e695d06.chunk.js.map": "./static/js/138.6e695d06.chunk.js.map",
     "643.b2063dd1.chunk.js.map": "./static/js/643.b2063dd1.chunk.js.map",
@@ -33,6 +33,6 @@
   },
   "entrypoints": [
     "static/css/main.9da4568e.css",
-    "static/js/main.5d885c2d.js"
+    "static/js/main.96b40ea8.js"
   ]
 }
