@@ -82,8 +82,10 @@ export default function Reader() {
   const [forceLight, setForceLight] = useState(false);
 
   const { io, teamOn, teamState, addTeamStatePage } = useContext(TeamCtx);
-  const { setInviewRatios, scrollPage, setRef, currPageID } =
-    useScrollPage(noteID);
+  const { setInviewRatios, scrollPage, setRef, currPageID } = useScrollPage(
+    noteID,
+    pageOrder
+  );
 
   useEffect(() => {
     const loadNotePages = async () => {
