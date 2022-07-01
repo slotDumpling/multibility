@@ -21,6 +21,7 @@ import { colors } from "../../../lib/color";
 import { ReaderStateCtx } from "../Reader";
 import { saveAs } from "file-saver";
 import "./drawTools.sass";
+import { createPortal } from "react-dom";
 
 export const SelectTool: FC<{
   drawRef: RefObject<DrawRefType>;
@@ -74,7 +75,7 @@ export const SelectToolContent: FC<{
     });
   };
 
-  return (
+  return createPortal(
     <div className="select-tool">
       <Popover
         trigger="click"
@@ -115,7 +116,8 @@ export const SelectToolContent: FC<{
         onClick={() => drawRef.current?.deleteSelected()}
         {...btnProps}
       />
-    </div>
+    </div>,
+    document.body
   );
 };
 
