@@ -11,7 +11,9 @@
   align-items: center
   justify-content: space-between
   border-bottom: $dark-border
-  box-shadow: 0 -1px 0 0 #fff
+  &::after
+    @include pseudo-el(-1px, 0, 100%, 0)
+    @include back-blur
   @media (display-mode: standalone)
     background-color: #fff
   > div
