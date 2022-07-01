@@ -108,24 +108,18 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 
     useEffect(() => {
       if (!imgSrc) return;
-      const img = new Image();
-      img.src = imgSrc;
-      let raster: paper.Raster;
-
-      const handleLoad = () => {
-        scope.current.activate();
-        raster = new Raster(img);
-        scope.current.project.layers[0].addChild(raster);
-        raster.position = new Point(width, height).divide(2);
-        const r = width / img.width;
-        raster.scale(r);
+      scope.current.activate();
+      const raster = new Raster(imgSrc);
+      raster.project.layers[0].addChild(raster);
+      raster.sendToBack();
+      raster.onLoad = () => {
+        requestAnimationFrame(() => {
+          raster.fitBounds(new paper.Rectangle(0, 0, width, height));
+          raster.bringToFront();
+        });
       };
-      img.addEventListener("load", handleLoad);
 
-      return () => {
-        raster?.remove();
-        img.removeEventListener("load", handleLoad);
-      };
+      return () => void raster?.remove();
     }, [imgSrc, width, height]);
 
     const mergedStrokes = useMemo(
