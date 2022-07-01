@@ -25,15 +25,16 @@ import { SetOperation, StateSet } from "../../lib/draw/StateSet";
 import Draw, { ActiveToolKey, DrawRefType } from "../draw/Draw";
 import { loadNote, editNoteData } from "../../lib/note/archive";
 import { AddPageButton, showPageDelMsg } from "./ReaderUtils";
-import { getLargestKey, insertAfter } from "../../lib/array";
+import { insertAfter } from "../../lib/array";
 import { useParams, useNavigate } from "react-router-dom";
 import { SelectTool, TextTool } from "./tools/DrawTools";
 import { debounce, last, once, range } from "lodash-es";
 import { useInView } from "react-intersection-observer";
 import { DrawState } from "../../lib/draw/DrawState";
 import { TeamState } from "../../lib/draw/TeamState";
-import { Setter } from "../../lib/hooks";
+import { useScrollPage } from "../../lib/scroll";
 import ReaderHeader from "./header/Header";
+import { Setter } from "../../lib/hooks";
 import { TeamCtx } from "./Team";
 import { Map } from "immutable";
 import { message } from "antd";
@@ -80,9 +81,9 @@ export default function Reader() {
   const [saved, setSaved] = useSafeState(true);
   const [forceLight, setForceLight] = useState(false);
 
-  const refRec = useRef<Record<string, HTMLElement>>({});
-
   const { io, teamOn, teamState, addTeamStatePage } = useContext(TeamCtx);
+  const { setInviewRatios, scrollPage, setRef, currPageID } =
+    useScrollPage(noteID);
 
   useEffect(() => {
     const loadNotePages = async () => {
@@ -192,12 +193,6 @@ export default function Reader() {
   const switchPageMarked = (pageID: string) =>
     savePageRec(pageID, (prev) => ({ ...prev, marked: !prev.marked }));
 
-  const scrollPage = (pageID: string) =>
-    refRec.current[pageID]?.scrollIntoView();
-
-  const [inviewRatios, setInviewRatios] = useState(Map<string, number>());
-  const currPageID = useMemo(() => getLargestKey(inviewRatios), [inviewRatios]);
-
   const addPage = (prevPageID: string, copy = false) => {
     if (!pageOrder) return;
     const prevPage = copy ? pageRec?.get(prevPageID) : undefined;
@@ -226,11 +221,7 @@ export default function Reader() {
       <ReaderHeader />
       <main>
         {pageOrder?.map((uid) => (
-          <section
-            key={uid}
-            className="note-page"
-            ref={(e) => e && (refRec.current[uid] = e)}
-          >
+          <section key={uid} className="note-page" ref={(e) => setRef(uid, e)}>
             <PageContainer uid={uid} />
           </section>
         ))}
