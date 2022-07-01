@@ -232,7 +232,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           path?.add(e.point);
           path?.smooth();
         } else if (rect) {
-          resizeRect(rect, e.delta);
+          resizeRect(rect, e.point);
         }
       },
       selected(e: paper.MouseEvent) {
@@ -537,12 +537,12 @@ const startSelectRect = (point: paper.Point) => {
   return rect;
 };
 
-const resizeRect = (rect: paper.Path.Rectangle, delta: paper.Point) => {
-  const { x, y } = delta;
+const resizeRect = (rect: paper.Path.Rectangle, point: paper.Point) => {
+  const { x, y } = point;
   const [, s1, s2, s3] = rect.segments;
-  s1.point = s1.point.add(new Point(x, 0));
-  s2.point = s2.point.add(delta);
-  s3.point = s3.point.add(new Point(0, y));
+  s1.point.x = x;
+  s2.point = point;
+  s3.point.y = y;
 };
 
 const startStroke = (color: string, lineWidth: number, highlight = false) => {
