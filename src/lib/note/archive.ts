@@ -12,23 +12,19 @@ export interface NoteTag {
 }
 
 export async function getAllNotes() {
-  const allNotes = await localforage.getItem("ALL_NOTES");
-  if (allNotes) {
-    return allNotes as Record<string, NoteInfo>;
-  } else {
-    localforage.setItem("ALL_NOTES", {});
-    return {};
-  }
+  const allNotes = await localforage.getItem<Record<string, NoteInfo>>(
+    "ALL_NOTES"
+  );
+  if (allNotes) return allNotes;
+  localforage.setItem("ALL_NOTES", {});
+  return {};
 }
 
 export async function getAllTags() {
-  const tags = await localforage.getItem("ALL_TAGS");
-  if (tags) {
-    return tags as Record<string, NoteTag>;
-  } else {
-    localforage.setItem("ALL_TAGS", {});
-    return {};
-  }
+  const tags = await localforage.getItem<Record<string, NoteTag>>("ALL_TAGS");
+  if (tags) return tags;
+  localforage.setItem("ALL_TAGS", {});
+  return {};
 }
 
 export async function addNewTag(name: string, color: string) {
@@ -62,10 +58,11 @@ export async function editTag(tag: NoteTag) {
 }
 
 export async function loadNote(uid: string) {
-  const note = (await localforage.getItem(uid)) as Note | undefined;
+  const note = await localforage.getItem<Note>(uid);
   if (!note) return;
-  const pdf = (await localforage.getItem(`PDF_${uid}`)) as Blob | undefined;
-  return { ...note, pdf };
+  const pdf = await localforage.getItem<Blob>(`PDF_${uid}`);
+  if (pdf) return { ...note, pdf };
+  else return note;
 }
 
 export async function editNoteData(uid: string, noteData: Partial<Note>) {

@@ -74,16 +74,16 @@ export async function getOneImage(file: Blob, index: number, scale = 2) {
 const IMAGE_CACHE_MAX = 10;
 const imageForage = localforage.createInstance({ name: "imageForage" });
 const getImageCache = async (noteID: string, index: number) => {
-  let cacheList: string[] = (await imageForage.getItem("LIST")) ?? [];
+  let cacheList = (await imageForage.getItem<string[]>("LIST")) ?? [];
   const key = `${noteID}_${index}`;
   if (!cacheList.includes(key)) return;
   cacheList = [key, ...cacheList.filter((id) => id !== key)];
   await imageForage.setItem("LIST", cacheList);
-  return (await imageForage.getItem(key)) as string;
+  return await imageForage.getItem<string>(key);
 };
 
 const setImageCache = async (noteID: string, index: number, data: string) => {
-  let cacheList: string[] = (await imageForage.getItem("LIST")) ?? [];
+  let cacheList = (await imageForage.getItem<string[]>("LIST")) ?? [];
   const key = `${noteID}_${index}`;
   cacheList = [key, ...cacheList.filter((id) => id !== key)];
   if (cacheList.length > IMAGE_CACHE_MAX) {
@@ -95,7 +95,7 @@ const setImageCache = async (noteID: string, index: number, data: string) => {
 };
 
 const removeUnusedCache = async () => {
-  const cacheList: string[] = (await imageForage.getItem("LIST")) ?? [];
+  const cacheList = (await imageForage.getItem<string[]>("LIST")) ?? [];
   const set = new Set(cacheList);
   const allKeys = await imageForage.keys();
   for (let key of allKeys) {
@@ -109,7 +109,7 @@ export const clearImageCache = () => imageForage.clear();
 export async function getOnePageImage(noteID: string, index: number) {
   const cached = await getImageCache(noteID, index);
   if (cached) return cached;
-  const file = (await localforage.getItem(`PDF_${noteID}`)) as Blob | undefined;
+  const file = await localforage.getItem<Blob>(`PDF_${noteID}`);
   if (!file) return;
   const data = await getOneImage(file, index, 2);
   setImageCache(noteID, index, data);

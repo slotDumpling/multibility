@@ -23,7 +23,7 @@ export const defaultDrawCtrl: Readonly<DrawCtrl> = {
 };
 
 export async function getDrawCtrl() {
-  let drawCtrl = (await localforage.getItem("DRAW_CTRL")) as DrawCtrl | null;
+  let drawCtrl = await localforage.getItem<DrawCtrl>("DRAW_CTRL");
   if (!drawCtrl) {
     drawCtrl = defaultDrawCtrl;
     await localforage.setItem("DRAW_CTRL", drawCtrl);
