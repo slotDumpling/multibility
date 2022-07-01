@@ -244,6 +244,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           const diagonal = moveP.subtract(baseP);
           const projection = e.point.subtract(baseP).project(diagonal);
           const scale = projection.x / diagonal.x;
+          if (scale < 0) return;
 
           rect?.scale(scale, baseP);
           selectedItems.forEach((item) => {
@@ -455,11 +456,11 @@ Draw.displayName = "Draw";
 export default React.memo(Draw);
 
 function usePaperItem<T extends paper.Item>() {
-  const stateArray = useState<T | undefined>();
-  const [item] = stateArray;
+  const tuple = useState<T | undefined>();
+  const [item] = tuple;
   useDebugValue(item);
   useEffect(() => () => void item?.remove(), [item]);
-  return stateArray;
+  return tuple;
 }
 
 const paintStroke = (
