@@ -11,9 +11,12 @@ export function useScrollPage(noteID: string) {
   useDebugValue(currPageID);
 
   useEffect(() => {
-    localforage
-      .getItem<string>(`SCROLL_${noteID}`)
-      .then((value) => setPrevPageID(value ?? ""));
+    const loadPrevPageID = async () => {
+      const stored = await localforage.getItem<string>(`SCROLL_${noteID}`);
+      if (!stored) return (scrolled.current = true);
+      setPrevPageID(stored);
+    };
+    loadPrevPageID();
   }, [noteID]);
 
   useEffect(() => {
