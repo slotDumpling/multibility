@@ -4,7 +4,7 @@
 .reader.container header
   @include back-blur
   position: sticky
-  top: -1px
+  top: 0
   z-index: 900
   padding: 0 20px
   display: flex
@@ -24,14 +24,14 @@
       @media (prefers-color-scheme: light)
         visibility: hidden
   @media (max-width: 640px)
-    height: $header-high-height + 1px
+    height: $header-high-height
     .middle
       grid-template-columns: repeat(4, 1fr)
       border-left: $default-border
       border-right: $default-border
       padding: 0 20px
   @media (min-width: 640px)
-    height: $header-low-height + 1px
+    height: $header-low-height
     .left, .right
       grid-template-columns: repeat(2, 1fr)
     .middle
