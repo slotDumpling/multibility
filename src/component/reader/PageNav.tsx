@@ -23,7 +23,7 @@ import {
 import { PageWrapper, ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { Avatar, Button, Drawer, Menu, Popover, Tabs } from "antd";
 import { AddPageButton } from "./ReaderUtils";
-import { exchange } from "../../lib/array";
+import { exchange } from "./lib/array";
 import { Setter } from "../../lib/hooks";
 import IconFont from "../ui/IconFont";
 import { TeamCtx } from "./Team";

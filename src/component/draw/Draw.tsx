@@ -9,9 +9,9 @@ import React, {
   SetStateAction,
   useImperativeHandle,
 } from "react";
-import { usePreventTouch, usePreventGesture } from "../../lib/touch/touch";
 import { DrawState, Mutation, Stroke } from "../../lib/draw/DrawState";
 import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
+import { usePreventTouch, usePreventGesture } from "./touch";
 import { releaseCanvas } from "../../lib/draw/canvas";
 import { usePinch } from "@use-gesture/react";
 import useSize from "@react-hook/size";
