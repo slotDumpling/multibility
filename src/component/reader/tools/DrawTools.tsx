@@ -117,7 +117,7 @@ export const SelectToolContent: FC<{
         {...btnProps}
       />
     </div>,
-    document.body
+    document.querySelector('.reader.container > header')!
   );
 };
 

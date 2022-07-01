@@ -2,7 +2,6 @@
 @import ../../_var
 
 .reader.container header
-  @include back-blur
   position: sticky
   top: 0
   z-index: 900
@@ -11,12 +10,12 @@
   align-items: center
   justify-content: space-between
   border-bottom: $dark-border
-  &::after
-    @include pseudo-el(-1px, 0, 100%, 0)
+  &::before
+    @include pseudo-el(-1px, 0, 0, 0)
     @include back-blur
   @media (display-mode: standalone)
     background-color: #fff
-  > div
+  .left, .middle, .right
     display: grid
     gap: 10px
   .middle
