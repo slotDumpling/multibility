@@ -248,8 +248,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           const moveP = hitRes.segment.point;
           const baseP = hitRes.segment.next.next.point;
           const diagonal = moveP.subtract(baseP);
-          const projection = e.delta.project(diagonal);
-          const scale = projection.x / diagonal.x + 1;
+          const projection = e.point.subtract(baseP).project(diagonal);
+          const scale = projection.x / diagonal.x;
 
           rect?.scale(scale, baseP);
           selectedItems.forEach((item) => {
@@ -280,20 +280,18 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         setErased(Set());
       },
       select() {
-        let items: paper.Item[];
+        let selection: string[];
         if (lasso) {
-          if (!path || path.length < 50) return setPath(undefined);
+          if (!path || Math.abs(path.area) < 1_000) return setPath(undefined);
           path.closePath();
           path.simplify();
           moveDash(path);
-          items = checkPathSelection(path, group);
+          selection = checkPathSelection(path, group);
         } else {
-          if (!rect || rect.length < 50) return setRect(undefined);
-          rect.selected = true;
-          moveDash(rect);
-          items = checkRectSelection(rect, group);
+          if (!rect || Math.abs(rect.area) < 1_000) return setRect(undefined);
+          selection = checkRectSelection(rect, group);
         }
-        setSelectedIDs(items.map((item) => item.name));
+        setSelectedIDs(selection);
         setSelected(true);
         setActiveTool("select");
       },
@@ -539,6 +537,8 @@ const startSelectRect = (point: paper.Point) => {
   const rect = new Path.Rectangle(point, new Size(0, 0));
   rect.strokeColor = new Color("#1890ff");
   rect.strokeWidth = 5;
+  rect.onFrame = () => {}; // the handle size bug
+  rect.selected = true;
   return rect;
 };
 
@@ -596,11 +596,13 @@ const putCenterBack = (view: paper.View, projSize: paper.Size) => {
 };
 
 const checkRectSelection = (rect: paper.Path.Rectangle, items: paper.Item[]) =>
-  items.filter((item) =>
-    item instanceof paper.Path
-      ? item.intersects(rect) || item.isInside(rect.bounds)
-      : item.bounds.intersects(rect.bounds)
-  );
+  items
+    .filter((item) =>
+      item instanceof paper.Path
+        ? item.intersects(rect) || item.isInside(rect.bounds)
+        : item.bounds.intersects(rect.bounds)
+    )
+    .map((item) => item.name);
 
 const checkPathSelection = (selection: paper.Path, items: paper.Item[]) => {
   const isInside = (p: paper.Path) => {
@@ -609,17 +611,19 @@ const checkPathSelection = (selection: paper.Path, items: paper.Item[]) => {
     return res.isEmpty();
   };
 
-  return items.filter((item) => {
-    if (!item.bounds.intersects(selection.bounds)) return false;
-    let checkedP: paper.Path;
-    if (item instanceof paper.Path) {
-      checkedP = item;
-    } else {
-      checkedP = new Path.Rectangle(item.bounds);
-      checkedP.remove();
-    }
-    return checkedP.intersects(selection) || isInside(checkedP);
-  });
+  return items
+    .filter((item) => {
+      if (!item.bounds.intersects(selection.bounds)) return false;
+      let checkedP: paper.Path;
+      if (item instanceof paper.Path) {
+        checkedP = item;
+      } else {
+        checkedP = new Path.Rectangle(item.bounds);
+        checkedP.remove();
+      }
+      return checkedP.intersects(selection) || isInside(checkedP);
+    })
+    .map((item) => item.name);
 };
 
 const updateGroupStyle = (items: paper.Item[], updated: Partial<DrawCtrl>) => {
