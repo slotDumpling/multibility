@@ -22,6 +22,7 @@ import * as serviceWorkerRegistration from "../.././serviceWorkerRegistration";
 import { CSSTransitionProps } from "react-transition-group/CSSTransition";
 import { createContext, useContext, useState } from "react";
 import { getUserName, saveUserName } from "../../lib/user";
+import { clearImageCache } from "../../lib/note/imgCache";
 import { createNewNote } from "../../lib/note/archive";
 import { CSSTransition } from "react-transition-group";
 import { getNoteID } from "../../lib/network/http";
@@ -34,7 +35,6 @@ import { MenuCtx } from "./MainMenu";
 import { useEffect } from "react";
 import { FC } from "react";
 import "./rightTools.sass";
-import { clearImageCache } from "../../lib/note/pdfImage";
 
 const activeKeyCtx = createContext({
   active: "MENU",

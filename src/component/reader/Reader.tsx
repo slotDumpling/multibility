@@ -328,8 +328,8 @@ export const PageWrapper = ({
   const loadImage = useCallback(
     once(async () => {
       if (!pdfIndex) return;
-      const { getOnePageImage } = await import("../../lib/note/pdfImage");
-      setFullImg(await getOnePageImage(noteID, pdfIndex));
+      const { getNotePageImage } = await import("../../lib/note/pdfImage");
+      setFullImg(await getNotePageImage(noteID, pdfIndex));
     }),
     [pdfIndex, noteID]
   );

@@ -2,10 +2,11 @@ import { createVirtualCanvas, releaseCanvas } from "../draw/canvas";
 import { createEmptyNote, Note, NotePage } from "./note";
 import localforage from "localforage";
 import { v4 as getUid } from "uuid";
-import * as pdfjs from "pdfjs-dist/legacy/build/pdf";
+import * as pdfjs from "pdfjs-dist";
 // @ts-ignore
-import pdfjsWorker from "pdfjs-dist/legacy/build/pdf.worker.entry";
+import pdfjsWorker from "pdfjs-dist/build/pdf.worker.entry";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
+import { getImageCache, setImageCache } from "./imgCache";
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 const getPDFDocument = async (file: Blob) => {
@@ -13,7 +14,7 @@ const getPDFDocument = async (file: Blob) => {
   return pdfjs.getDocument(data).promise;
 };
 
-const getPageImage = async (
+const parseDocPage = async (
   doc: PDFDocumentProxy,
   pageNum: number,
   scale: number
@@ -52,7 +53,7 @@ export async function getPDFImages(
   const ratios: number[] = [];
 
   for (let i = 1; i <= numPages; i += 1) {
-    const [data, ratio] = await getPageImage(doc, i, scale);
+    const [data, ratio] = await parseDocPage(doc, i, scale);
     images.push(data);
     ratios.push(ratio);
     if (progressCb) progressCb(Math.floor((i / numPages) * 100));
@@ -67,46 +68,11 @@ export async function getOneImage(file: Blob, index: number, scale = 2) {
   if (index > numPages) {
     throw new Error("index out of range");
   }
-  const [data] = await getPageImage(doc, index, scale);
+  const [data] = await parseDocPage(doc, index, scale);
   return data;
 }
 
-const IMAGE_CACHE_MAX = 10;
-const imageForage = localforage.createInstance({ name: "imageForage" });
-const getImageCache = async (noteID: string, index: number) => {
-  let cacheList = (await imageForage.getItem<string[]>("LIST")) ?? [];
-  const key = `${noteID}_${index}`;
-  if (!cacheList.includes(key)) return;
-  cacheList = [key, ...cacheList.filter((id) => id !== key)];
-  await imageForage.setItem("LIST", cacheList);
-  return await imageForage.getItem<string>(key);
-};
-
-const setImageCache = async (noteID: string, index: number, data: string) => {
-  let cacheList = (await imageForage.getItem<string[]>("LIST")) ?? [];
-  const key = `${noteID}_${index}`;
-  cacheList = [key, ...cacheList.filter((id) => id !== key)];
-  if (cacheList.length > IMAGE_CACHE_MAX) {
-    cacheList = cacheList.slice(0, IMAGE_CACHE_MAX);
-  }
-  await imageForage.setItem("LIST", cacheList);
-  await imageForage.setItem(key, data);
-  removeUnusedCache();
-};
-
-const removeUnusedCache = async () => {
-  const cacheList = (await imageForage.getItem<string[]>("LIST")) ?? [];
-  const set = new Set(cacheList);
-  const allKeys = await imageForage.keys();
-  for (let key of allKeys) {
-    if (key === "LIST") continue;
-    if (!set.has(key)) await imageForage.removeItem(key);
-  }
-};
-
-export const clearImageCache = () => imageForage.clear();
-
-export async function getOnePageImage(noteID: string, index: number) {
+export async function getNotePageImage(noteID: string, index: number) {
   const cached = await getImageCache(noteID, index);
   if (cached) return cached;
   const file = await localforage.getItem<Blob>(`PDF_${noteID}`);
