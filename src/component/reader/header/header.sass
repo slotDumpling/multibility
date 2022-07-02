@@ -15,10 +15,10 @@
     @include back-blur
   @media (display-mode: standalone)
     background-color: #fff
-  .left, .middle, .right
+  > .left, > .middle, > .right
     display: grid
     gap: 10px
-  .middle
+  > .middle
     > button.ant-btn-default
       background-color: #fff5
     .force-light-btn
@@ -26,16 +26,16 @@
         visibility: hidden
   @media (max-width: 640px)
     height: $header-high-height
-    .middle
+    > .middle
       grid-template-columns: repeat(4, 1fr)
       border-left: $default-border
       border-right: $default-border
       padding: 0 20px
   @media (min-width: 640px)
     height: $header-low-height
-    .left, .right
+    > .left, > .right
       grid-template-columns: repeat(2, 1fr)
-    .middle
+    > .middle
       grid-template-columns: repeat(9, 1fr)
       .force-light-btn
         grid-column: span 2
