@@ -4,24 +4,26 @@ import {
   DeleteOutlined,
   PictureOutlined,
   BgColorsOutlined,
-  FontSizeOutlined,
   CaretLeftOutlined,
+  AlignLeftOutlined,
   FontColorsOutlined,
   CaretRightOutlined,
+  AlignRightOutlined,
   RotateRightOutlined,
+  AlignCenterOutlined,
 } from "@ant-design/icons";
-import { Button, ButtonProps, InputNumber, Modal, Popover } from "antd";
+import { Button, ButtonProps, Modal, Popover, Radio } from "antd";
 import { CSSTransition } from "react-transition-group";
 import { DrawCtrl } from "../../../lib/draw/drawCtrl";
 import { ColorSelect, PenPanel } from "./PenPanel";
 import TextArea from "antd/lib/input/TextArea";
 import { DrawRefType } from "../../draw/Draw";
+import { allColors } from "../../../lib/color";
 import { useDrag } from "@use-gesture/react";
-import { colors } from "../../../lib/color";
 import { ReaderStateCtx } from "../Reader";
+import { createPortal } from "react-dom";
 import { saveAs } from "file-saver";
 import "./drawTools.sass";
-import { createPortal } from "react-dom";
 
 export const SelectTool: FC<{
   drawRef: RefObject<DrawRefType>;
@@ -117,7 +119,7 @@ export const SelectToolContent: FC<{
         {...btnProps}
       />
     </div>,
-    document.querySelector('.reader.container > header')!
+    document.querySelector(".reader.container > header")!
   );
 };
 
@@ -126,28 +128,23 @@ export const TextTool: FC<{
   visible: boolean;
 }> = ({ visible, drawRef }) => {
   const [text, setText] = useState("");
-  const [fontSize, setFontSize] = useState(5);
-  const [color, setColor] = useState(colors[0]);
+  const [color, setColor] = useState(allColors[0]);
+  const [align, setAlign] = useState("center");
   const { forceLight } = useContext(ReaderStateCtx);
 
   useEffect(() => {
-    setText("");
-    setFontSize(5);
-    setColor(colors[0]);
-  }, [visible]);
-
-  const fontSizeInput = (
-    <span className="font-size">
-      <FontSizeOutlined />
-      <span>Font size: </span>
-      <InputNumber
-        min={1}
-        size="small"
-        value={fontSize}
-        onChange={setFontSize}
-      />
-    </span>
-  );
+    const pointText = drawRef.current?.pointText;
+    if (!pointText || !visible) return;
+    const { name, content, justification, fillColor } = pointText;
+    setAlign(justification);
+    if (name) {
+      setText(content);
+      setColor(fillColor?.toCSS(true) ?? allColors[0]);
+    } else {
+      setText("");
+      setColor(allColors[0]);
+    }
+  }, [visible, drawRef]);
 
   const fontColorBtn = (
     <Popover
@@ -159,10 +156,23 @@ export const TextTool: FC<{
       <Button
         size="small"
         icon={<FontColorsOutlined className="font-icon" style={{ color }} />}
-      >
-        Font color
-      </Button>
+      />
     </Popover>
+  );
+
+  const alignRadio = (
+    <Radio.Group
+      size="small"
+      optionType="button"
+      value={align}
+      buttonStyle="solid"
+      onChange={(e) => setAlign(e.target.value)}
+      options={[
+        { label: <AlignLeftOutlined />, value: "left" },
+        { label: <AlignCenterOutlined />, value: "center" },
+        { label: <AlignRightOutlined />, value: "right" },
+      ]}
+    />
   );
 
   return (
@@ -173,16 +183,18 @@ export const TextTool: FC<{
       onOk={() => {
         const content = text.trim();
         if (!content) return drawRef.current?.cancelText();
-        drawRef.current?.submitText(content, fontSize, color);
+        drawRef.current?.submitText(content, color, align);
       }}
       bodyStyle={{ paddingTop: 0 }}
       destroyOnClose
     >
       <div className="insert-option" data-force-light={forceLight}>
-        {fontSizeInput}
         {fontColorBtn}
+        {alignRadio}
       </div>
       <TextArea
+        size="large"
+        rows={3}
         autoFocus
         value={text}
         onChange={(e) => setText(e.target.value)}

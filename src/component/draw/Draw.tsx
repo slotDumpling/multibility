@@ -29,8 +29,9 @@ export interface DrawRefType {
   duplicateSelected: () => void;
   mutateStyle: (updated: Partial<DrawCtrl>) => void;
   rasterize: () => string;
-  submitText: (text: string, fontSize: number, color: string) => void;
+  submitText: (text: string, color?: string, justification?: string) => void;
   cancelText: () => void;
+  pointText?: paper.PointText;
 }
 interface DrawPropType {
   drawState: DrawState;
@@ -73,7 +74,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 
       scp.setup(cvs);
       scp.settings.handleSize = 10;
-      scp.settings.hitTolerance = 40;
+      scp.settings.hitTolerance = 20;
       scp.project.addLayer(new Layer());
       scp.project.addLayer(new Layer());
       scp.project.layers[1].activate();
@@ -112,6 +113,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       raster.project.layers[0].addChild(raster);
       raster.sendToBack();
       raster.onLoad = () => {
+        // render the image in full size first to prevent blurring.
         requestAnimationFrame(() => {
           raster.fitBounds(new paper.Rectangle(0, 0, width, height));
           raster.bringToFront();
@@ -205,9 +207,16 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         }
       },
       text(e: paper.MouseEvent) {
-        const t = new paper.PointText(e.point);
-        setPointText(t);
-        setActiveTool("text");
+        const t =
+          getClickedText(scope.current, e.point) ??
+          new paper.PointText({
+            point: e.point.add(new Point(0, 50)),
+            content: "Insert text...",
+            fontSize: 50,
+            justification: "center",
+            fillColor: "#1890ff55",
+          });
+        setPointText(t as paper.PointText);
       },
     }[paperMode];
 
@@ -258,7 +267,15 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           rect?.translate(e.delta);
         }
       },
-      text: null,
+      text(e: paper.MouseEvent) {
+        if (!pointText || pointText.name) return;
+        const { topCenter, bottomRight } = pointText.bounds;
+        const diagonal = bottomRight.subtract(topCenter);
+        const projection = e.point.subtract(topCenter).project(diagonal);
+        const scale = projection.x / diagonal.x;
+        if (scale < 0) return;
+        pointText.scale(scale, topCenter);
+      },
     }[paperMode];
 
     const handleUp = {
@@ -293,7 +310,9 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       selected() {
         updateMutation();
       },
-      text: null,
+      text() {
+        setActiveTool("text");
+      },
     }[paperMode];
 
     const [cursor, setCursor] = useState("auto");
@@ -307,23 +326,29 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       }
     }, [paperMode, lasso, drawCtrl, ratio]);
 
-    const handleMove =
-      paperMode === "selected"
-        ? (e: paper.MouseEvent) => {
-            const hitRes = rect?.hitTest(e.point, { segments: true });
-            if (hitRes?.segment) {
-              const moveP = hitRes.segment.point;
-              const baseP = hitRes.segment.next.next.point;
-              const diagonal = moveP.subtract(baseP);
-              const { x, y } = diagonal;
-              setCursor(x * y < 0 ? "nesw-resize" : "nwse-resize");
-            } else if (rect?.contains(e.point) || path?.contains(e.point)) {
-              setCursor("move");
-            } else {
-              setCursor("crosshair");
-            }
-          }
-        : null;
+    const handleMove = {
+      selected(e: paper.MouseEvent) {
+        const hitRes = rect?.hitTest(e.point, { segments: true });
+        if (hitRes?.segment) {
+          const moveP = hitRes.segment.point;
+          const baseP = hitRes.segment.next.next.point;
+          const diagonal = moveP.subtract(baseP);
+          const { x, y } = diagonal;
+          setCursor(x * y < 0 ? "nesw-resize" : "nwse-resize");
+        } else if (rect?.contains(e.point) || path?.contains(e.point)) {
+          setCursor("move");
+        } else {
+          setCursor("crosshair");
+        }
+      },
+      text(e: paper.MouseEvent) {
+        if (getClickedText(scope.current, e.point)) setCursor("text");
+        else setCursor("crosshair");
+      },
+      select: null,
+      draw: null,
+      erase: null,
+    }[paperMode];
 
     const handleViewEvent = () => {
       if (readonly) return;
@@ -408,14 +433,20 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       if (mode === "text") return cancelText;
     }, [mode, cancelText]);
 
-    const submitText = (text: string, fontSize: number, color = "#000") => {
+    const submitText = (
+      text: string,
+      color = "#000",
+      justification = "center"
+    ) => {
       if (!pointText) return;
       pointText.content = text;
-      pointText.fontSize = fontSize * 10;
       pointText.fillColor = new Color(color);
+      pointText.justification = justification;
       const pathData = pointText.exportJSON();
-      onChange((prev) => DrawState.addStroke(prev, pathData));
+      const { name } = pointText;
       cancelText();
+      if (!name) return onChange((prev) => DrawState.addStroke(prev, pathData));
+      onChange((prev) => DrawState.mutateStrokes(prev, [[name, pathData]]));
     };
 
     useImperativeHandle(ref, () => ({
@@ -426,6 +457,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       submitText,
       mutateStyle,
       rasterize,
+      pointText,
     }));
 
     usePreventGesture();
@@ -489,7 +521,12 @@ function usePaperItem<T extends paper.Item>() {
   const tuple = useState<T | undefined>();
   const [item] = tuple;
   useDebugValue(item);
-  useEffect(() => () => void item?.remove(), [item]);
+  useEffect(
+    () => () => {
+      if (!item?.name) item?.remove();
+    },
+    [item]
+  );
   return tuple;
 }
 
@@ -687,4 +724,12 @@ const updateGroupStyle = (items: paper.Item[], updated: Partial<DrawCtrl>) => {
     item.strokeColor.alpha = highlight ? 0.5 : 1;
     item.blendMode = highlight ? "multiply" : "normal";
   });
+};
+
+const getClickedText = (scope: paper.PaperScope, point: paper.Point) => {
+  const hitRes = scope.project.hitTest(point, {
+    class: paper.PointText,
+    fill: true,
+  });
+  return hitRes?.item;
 };
