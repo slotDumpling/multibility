@@ -57,8 +57,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     ref
   ) => {
     const { width, height } = drawState;
-    const { mode, color, finger, lineWidth, highlight, eraserWidth, lasso } =
-      drawCtrl;
+    const { mode, finger, lasso } = drawCtrl;
 
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const scope = useRef(new paper.PaperScope());
@@ -179,20 +178,21 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const handleDown = {
       draw() {
-        setPath(startStroke(color, lineWidth, highlight));
+        setPath(startStroke(drawCtrl));
       },
       erase() {
-        setPath(startStroke("#ccc", eraserWidth, true));
+        setPath(startStroke(drawCtrl));
       },
       select(e: paper.MouseEvent) {
-        if (lasso) setPath(startStroke("#1890ff", 5));
+        if (lasso) setPath(startStroke(drawCtrl));
         else setRect(startSelectRect(e.point));
       },
       selected(e: paper.MouseEvent) {
         if (lasso) {
           // if the point is outside of selection, reset selection
           if (path?.contains(e.point)) return;
-          setPath(startStroke("#1890ff", 5));
+          setPath(startStroke(drawCtrl));
+          setSelected(false);
         } else {
           // check if the point hit the segment point.
           const hitRes = rect?.hitTest(e.point, { segments: true });
@@ -201,8 +201,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           // if the point is outside of selection, reset selection
           if (rect?.contains(e.point)) return;
           setRect(startSelectRect(e.point));
+          setSelected(false);
         }
-        setSelected(false);
       },
       text(e: paper.MouseEvent) {
         const t = new paper.PointText(e.point);
@@ -560,8 +560,6 @@ const paintBackground = (
 
 const startSelectRect = (point: paper.Point) => {
   const rect = new Path.Rectangle(point, new Size(0, 0));
-  rect.strokeColor = new Color("#1890ff");
-  rect.strokeWidth = 5;
   rect.onFrame = () => {}; // the handle size bug
   rect.selected = true;
   return rect;
@@ -575,10 +573,19 @@ const resizeRect = (rect: paper.Path.Rectangle, point: paper.Point) => {
   s3.point.y = y;
 };
 
-const startStroke = (color: string, lineWidth: number, highlight = false) => {
+const startStroke = (drawCtrl: DrawCtrl) => {
+  let { mode, lineWidth, eraserWidth, color, highlight } = drawCtrl;
   const path = new Path();
+  if (mode === "erase") {
+    color = "#ccc";
+    lineWidth = eraserWidth;
+  }
+  if (mode === "select") {
+    color = "#1890ff";
+    lineWidth = 5;
+  }
   const strokeColor = new Color(color);
-  if (highlight) {
+  if (highlight || mode === "erase") {
     strokeColor.alpha = 0.5;
     path.blendMode = "multiply";
   }
