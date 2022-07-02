@@ -92,10 +92,10 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     }, [width, height]);
 
     const [canvasWidth] = useSize(canvasEl);
+    const ratio = canvasWidth / width;
     useEffect(() => {
-      if (!canvasWidth) return;
+      if (!ratio) return;
       const scp = scope.current;
-      const ratio = canvasWidth / width;
       scp.view.viewSize = new Size(width, height).multiply(ratio);
       scp.view.scale(ratio, new Point(0, 0));
       scp.project.layers.forEach((l) => (l.visible = true));
@@ -104,7 +104,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         scp.project?.layers.forEach((l) => (l.visible = false));
         scp.view?.scale(1 / ratio, new Point(0, 0));
       };
-    }, [width, height, canvasWidth]);
+    }, [width, height, ratio]);
 
     useEffect(() => {
       if (!imgSrc) return;
@@ -237,7 +237,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       },
       selected(e: paper.MouseEvent) {
         const hitRes = hitRef.current;
-        if (hitRes) {
+        if (hitRes?.segment) {
           // resize selected items
           const moveP = hitRes.segment.point;
           const baseP = hitRes.segment.next.next.point;
@@ -296,7 +296,36 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       text: null,
     }[paperMode];
 
-    const handlePaper = () => {
+    const [cursor, setCursor] = useState("auto");
+    useEffect(() => {
+      if (paperMode === "text" || paperMode === "select") {
+        setCursor("crosshair");
+      } else if (paperMode === "selected") {
+        setCursor(lasso ? "crosshair" : "nwse-resize");
+      } else if (paperMode === "draw" || paperMode === "erase") {
+        setCursor(cursorStyle(drawCtrl, ratio));
+      }
+    }, [paperMode, lasso, drawCtrl, ratio]);
+
+    const handleMove =
+      paperMode === "selected"
+        ? (e: paper.MouseEvent) => {
+            const hitRes = rect?.hitTest(e.point, { segments: true });
+            if (hitRes?.segment) {
+              const moveP = hitRes.segment.point;
+              const baseP = hitRes.segment.next.next.point;
+              const diagonal = moveP.subtract(baseP);
+              const { x, y } = diagonal;
+              setCursor(x * y < 0 ? "nesw-resize" : "nwse-resize");
+            } else if (rect?.contains(e.point) || path?.contains(e.point)) {
+              setCursor("move");
+            } else {
+              setCursor("crosshair");
+            }
+          }
+        : null;
+
+    const handleViewEvent = () => {
       if (readonly) return;
 
       const activate =
@@ -309,8 +338,9 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       scope.current.view.onMouseDown = activate(handleDown);
       scope.current.view.onMouseDrag = activate(handleDrag);
       scope.current.view.onMouseUp = activate(handleUp);
+      scope.current.view.onMouseMove = activate(handleMove);
     };
-    useEffect(handlePaper);
+    useEffect(handleViewEvent);
 
     const updateMutation = () => {
       if (!selectedItems?.length) return;
@@ -445,7 +475,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const touchHandler = usePreventTouch(finger);
     return (
-      <div className="draw-wrapper">
+      <div className="draw-wrapper" style={{ cursor }}>
         <canvas ref={canvasEl} className="draw-canvas" {...touchHandler} />
       </div>
     );
@@ -557,6 +587,13 @@ const startStroke = (color: string, lineWidth: number, highlight = false) => {
   path.strokeJoin = "round";
   path.strokeCap = "round";
   return path;
+};
+
+const cursorStyle = (drawCtrl: DrawCtrl, ratio: number) => {
+  const { lineWidth, eraserWidth, mode } = drawCtrl;
+  const size = ratio * (mode === "erase" ? eraserWidth : lineWidth);
+  const half = size / 2;
+  return `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="%23CCC2" width="${size}" height="${size}" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5"/></svg>') ${half} ${half}, auto`;
 };
 
 const moveDash = (item: paper.Item) => {
