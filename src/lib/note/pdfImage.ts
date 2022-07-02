@@ -2,9 +2,9 @@ import { createVirtualCanvas, releaseCanvas } from "../draw/canvas";
 import { createEmptyNote, Note, NotePage } from "./note";
 import localforage from "localforage";
 import { v4 as getUid } from "uuid";
-import * as pdfjs from "pdfjs-dist";
+import * as pdfjs from "pdfjs-dist/legacy/build/pdf";
 // @ts-ignore
-import pdfjsWorker from "pdfjs-dist/build/pdf.worker.entry";
+import pdfjsWorker from "pdfjs-dist/legacy/build/pdf.worker.entry";
 import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import { getImageCache, setImageCache } from "./imgCache";
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
