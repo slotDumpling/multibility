@@ -16,7 +16,6 @@ import { releaseCanvas } from "../../lib/draw/canvas";
 import { usePinch } from "@use-gesture/react";
 import useSize from "@react-hook/size";
 import { v4 as getUid } from "uuid";
-import { Set } from "immutable";
 import paper from "paper";
 import "./draw.sass";
 
@@ -73,6 +72,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       scp.setup(cvs);
       scp.settings.handleSize = 10;
       scp.settings.hitTolerance = 20;
+      scp.project.addLayer(new Layer());
       scp.project.addLayer(new Layer());
       scp.project.addLayer(new Layer());
       scp.project.layers[1].activate();
@@ -154,7 +154,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     const paperMode = mode === "select" && selected ? "selected" : mode;
     const [selectedIDs, setSelectedIDs] = useState<string[]>([]);
     const selectedItems = useMemo(() => {
-      const IDSet = Set(selectedIDs);
+      const IDSet = new Set(selectedIDs);
       return group.filter((item) => IDSet.has(item.name));
     }, [group, selectedIDs]);
 
@@ -170,29 +170,33 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     useEffect(() => resetSelect, [lasso, resetSelect]);
 
     useEffect(() => {
-      if (selected)
-        return () => {
-          setSelectedIDs([]);
-          setActiveTool("");
-        };
+      if (!selected) return;
+      return () => {
+        setSelectedIDs([]);
+        setActiveTool("");
+      };
     }, [selected, setActiveTool]);
 
+    const pathDown = () => {
+      const p = startStroke(drawCtrl);
+      scope.current.project.layers[2].addChild(p);
+      setPath(p);
+    };
+    const rectDown = (e: paper.MouseEvent) => {
+      const r = startSelectRect(e.point);
+      scope.current.project.layers[2].addChild(r);
+      setRect(r);
+    };
+
     const handleDown = {
-      draw() {
-        setPath(startStroke(drawCtrl));
-      },
-      erase() {
-        setPath(startStroke(drawCtrl));
-      },
-      select(e: paper.MouseEvent) {
-        if (lasso) setPath(startStroke(drawCtrl));
-        else setRect(startSelectRect(e.point));
-      },
+      draw: pathDown,
+      erase: pathDown,
+      select: lasso ? pathDown : rectDown,
       selected(e: paper.MouseEvent) {
         if (lasso) {
           // if the point is outside of selection, reset selection
           if (path?.contains(e.point)) return;
-          setPath(startStroke(drawCtrl));
+          pathDown();
           setSelected(false);
         } else {
           // check if the point hit the segment point.
@@ -201,34 +205,36 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           if (hitRes) return;
           // if the point is outside of selection, reset selection
           if (rect?.contains(e.point)) return;
-          setRect(startSelectRect(e.point));
+          rectDown(e);
           setSelected(false);
         }
       },
       text(e: paper.MouseEvent) {
-        const t =
-          getClickedText(scope.current, e.point) ??
-          new paper.PointText({
+        let t = getClickedText(scope.current, e.point);
+        if (!t) {
+          t = new paper.PointText({
             point: e.point.add(new Point(0, 50)),
             content: "Insert text...",
             fontSize: 50,
             justification: "center",
             fillColor: "#1890ff55",
           });
+          scope.current.project.layers[2].addChild(t);
+        }
         setPointText(t as paper.PointText);
       },
     }[paperMode];
 
-    const dragPath = (e: paper.MouseEvent) => {
+    const pathDrag = (e: paper.MouseEvent) => {
       path?.add(e.point);
       path?.smooth();
     };
 
     const handleDrag = {
-      draw: dragPath,
-      erase: dragPath,
+      draw: pathDrag,
+      erase: pathDrag,
       select(e: paper.MouseEvent) {
-        if (lasso) return dragPath(e);
+        if (lasso) return pathDrag(e);
         rect && resizeRect(rect, e.point);
       },
       selected(e: paper.MouseEvent) {
@@ -268,25 +274,23 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     useEffect(() => {
       scope.current.tool.maxDistance = eraserWidth;
     }, [eraserWidth]);
-    const erased = useRef(Set<string>());
+    const erased = useRef(new Set<string>());
 
     const handleEarserDrag =
       paperMode === "erase"
         ? (e: paper.ToolEvent) => {
-            const hitRes = scope.current.project.hitTestAll(e.point, {
+            const layer = scope.current.project.layers[1];
+            const hitRes = layer.hitTestAll(e.point, {
               class: paper.Path,
               stroke: true,
               tolerance: eraserWidth / 2,
             });
 
-            const newErased = hitRes
-              .map(({ item }) => {
-                item.opacity = 0.5;
-                item.guide = true;
-                return item.name;
-              })
-              .filter((n) => n);
-            erased.current = erased.current.concat(newErased);
+            hitRes.forEach(({ item }) => {
+              item.opacity = 0.5;
+              item.guide = true;
+              if (item.name) erased.current.add(item.name);
+            });
           }
         : null;
 
@@ -299,23 +303,30 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         setPath(undefined);
       },
       erase() {
-        const erasedList = erased.current.toArray();
+        const erasedList = Array.from(erased.current);
         onChange((prev) => DrawState.eraseStrokes(prev, erasedList));
         setPath(undefined);
-        erased.current = Set();
+        erased.current.clear();
       },
       select() {
-        let selection: string[];
+        let items: paper.Item[];
+        const layer = scope.current.project.layers[1];
         if (lasso) {
           if (!path || Math.abs(path.area) < 1_000) return setPath(undefined);
           path.closePath();
           path.simplify();
           moveDash(path);
-          selection = checkPathSelection(path, group);
+          items = layer.getItems({
+            overlapping: path.bounds,
+            match: (item: paper.Item) => checkLasso(path, item),
+          });
         } else {
           if (!rect || Math.abs(rect.area) < 1_000) return setRect(undefined);
-          selection = checkRectSelection(rect, group);
+          items = layer.getItems({
+            overlapping: rect.bounds,
+          });
         }
+        const selection = items.map(({ name }) => name).filter((n) => n);
         setSelectedIDs(selection);
         setSelected(true);
         setActiveTool("select");
@@ -549,7 +560,7 @@ const paintStroke = (stroke: Stroke, scope: paper.PaperScope) => {
   let { pathData, uid } = stroke;
   try {
     scope.activate();
-    const item = scope.project.activeLayer.importJSON(pathData);
+    const item = scope.project.layers[1].importJSON(pathData);
     if (!item) return;
     item.name = uid;
     item.guide = false;
@@ -614,7 +625,7 @@ const cursorStyle = (drawCtrl: DrawCtrl, ratio: number) => {
   const { lineWidth, eraserWidth, mode } = drawCtrl;
   const size = ratio * (mode === "erase" ? eraserWidth : lineWidth);
   const half = size / 2;
-  return `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="%23CCC2" width="${size}" height="${size}" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5"/></svg>') ${half} ${half}, auto`;
+  return `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="%23EEE6" width="${size}" height="${size}" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5"/></svg>') ${half} ${half}, auto`;
 };
 
 const moveDash = (item: paper.Item) => {
@@ -648,35 +659,21 @@ const putCenterBack = (view: paper.View, projSize: paper.Size) => {
   move();
 };
 
-const checkRectSelection = (rect: paper.Path.Rectangle, items: paper.Item[]) =>
-  items
-    .filter((item) =>
-      item instanceof paper.Path
-        ? item.intersects(rect) || item.isInside(rect.bounds)
-        : item.bounds.intersects(rect.bounds)
-    )
-    .map((item) => item.name);
-
-const checkPathSelection = (selection: paper.Path, items: paper.Item[]) => {
+const checkLasso = (selection: paper.Path, item: paper.Item) => {
   const isInside = (p: paper.Path) => {
     const res = p.subtract(selection, { insert: false, trace: false });
     res.remove();
-    return res.isEmpty();
+    return !res.compare(p);
   };
 
-  return items
-    .filter((item) => {
-      if (!item.bounds.intersects(selection.bounds)) return false;
-      let checkedP: paper.Path;
-      if (item instanceof paper.Path) {
-        checkedP = item;
-      } else {
-        checkedP = new Path.Rectangle(item.bounds);
-        checkedP.remove();
-      }
-      return checkedP.intersects(selection) || isInside(checkedP);
-    })
-    .map((item) => item.name);
+  let checkedP: paper.Path;
+  if (item instanceof paper.Path) {
+    checkedP = item;
+  } else {
+    checkedP = new Path.Rectangle(item.bounds);
+    checkedP.remove();
+  }
+  return isInside(checkedP);
 };
 
 const updateGroupStyle = (items: paper.Item[], updated: Partial<DrawCtrl>) => {
