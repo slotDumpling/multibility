@@ -136,10 +136,11 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       const layer = scope.current.project.layers[1];
       mergedStrokes.forEach((stroke) => {
         const { uid } = stroke;
-        const item = paintStroke(stroke, layer);
+        const self = drawState.hasStroke(uid);
+        const item = paintStroke(stroke, layer, !self);
         if (!item) return;
 
-        if (drawState.hasStroke(uid)) tempGroup.push(item);
+        if (self) tempGroup.push(item);
         else othersGroup.push(item);
       });
       setGroup(tempGroup);
@@ -555,13 +556,13 @@ function usePaperItem<T extends paper.Item>() {
   return tuple;
 }
 
-const paintStroke = (stroke: Stroke, layer: paper.Layer) => {
+const paintStroke = (stroke: Stroke, layer: paper.Layer, readonly = false) => {
   let { pathData, uid } = stroke;
   try {
     const item = layer.importJSON(pathData);
     if (!item) return;
     item.name = uid;
-    item.guide = false;
+    item.guide = readonly;
     return item;
   } catch (e) {
     console.error(e);
