@@ -132,9 +132,11 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       const tempGroup: paper.Item[] = [];
       const othersGroup: paper.Item[] = [];
 
+      scope.current.activate();
+      const layer = scope.current.project.layers[1];
       mergedStrokes.forEach((stroke) => {
         const { uid } = stroke;
-        const item = paintStroke(stroke, scope.current);
+        const item = paintStroke(stroke, layer);
         if (!item) return;
 
         if (drawState.hasStroke(uid)) tempGroup.push(item);
@@ -314,16 +316,15 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       },
       select() {
         let selection: string[];
-        const layer = scope.current.project.layers[1];
         if (lasso) {
           if (!path || Math.abs(path.area) < 1_000) return setPath(undefined);
           path.closePath();
           path.simplify();
           moveDash(path);
-          selection = checkLasso(layer, path);
+          selection = checkLasso(group, path);
         } else {
           if (!rect || Math.abs(rect.area) < 1_000) return setRect(undefined);
-          selection = checkRect(layer, rect);
+          selection = checkLasso(group, rect);
         }
         setSelectedIDs(selection);
         setSelected(true);
@@ -342,7 +343,6 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       if (paperMode === "text" || paperMode === "select") {
         setCursor("crosshair");
       } else if (paperMode === "selected") {
-        console.log(1);
         setCursor(lasso ? "crosshair" : "nwse-resize");
       } else if (paperMode === "draw" || paperMode === "erase") {
         setCursor(cursorStyle(drawCtrl, ratio));
@@ -555,11 +555,10 @@ function usePaperItem<T extends paper.Item>() {
   return tuple;
 }
 
-const paintStroke = (stroke: Stroke, scope: paper.PaperScope) => {
+const paintStroke = (stroke: Stroke, layer: paper.Layer) => {
   let { pathData, uid } = stroke;
   try {
-    scope.activate();
-    const item = scope.project.layers[1].importJSON(pathData);
+    const item = layer.importJSON(pathData);
     if (!item) return;
     item.name = uid;
     item.guide = false;
@@ -650,41 +649,25 @@ const putCenterBack = (view: paper.View, projSize: paper.Size) => {
   move();
 };
 
-const checkLasso = (layer: paper.Layer, selection: paper.Path) => {
+const checkLasso = (items: paper.Item[], selection: paper.Path) => {
   const isInside = (p: paper.Path) => {
     const res = p.subtract(selection, { insert: false, trace: false });
     res.remove();
     return !res.compare(p);
   };
-  const items = [
-    ...layer.getItems({
-      class: paper.Path,
-      overlapping: selection.bounds,
-      match: isInside,
-    }),
-    // can't get partially overlapped text items
-    ...layer.getItems({
-      class: paper.PointText,
-      match: (t: paper.PointText) => {
-        const checkedP = new Path.Rectangle(t.bounds);
+  return items
+    .filter((item) => {
+      if (!item.name) return false;
+      if (!item.bounds.intersects(selection.bounds)) return false;
+      if (item instanceof paper.Path) {
+        return isInside(item);
+      } else {
+        const checkedP = new Path.Rectangle(item.bounds);
         checkedP.remove();
         return isInside(checkedP);
-      },
-    }),
-  ];
-  return items.map(({ name }) => name).filter((n) => n);
-};
-
-const checkRect = (layer: paper.Layer, { bounds }: paper.Path.Rectangle) => {
-  const items = [
-    ...layer.getItems({ class: paper.Path, overlapping: bounds }),
-    // can't get partially overlapped text items
-    ...layer.getItems({
-      class: paper.PointText,
-      match: (t: paper.PointText) => t.bounds.intersects(bounds),
-    }),
-  ];
-  return items.map(({ name }) => name).filter((n) => n);
+      }
+    })
+    .map(({ name }) => name);
 };
 
 const updateGroupStyle = (items: paper.Item[], updated: Partial<DrawCtrl>) => {
