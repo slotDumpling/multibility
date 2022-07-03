@@ -1,5 +1,5 @@
 import { List, Record, OrderedMap } from "immutable";
-import { v4 as getUid } from "uuid";
+import { v4 } from "uuid";
 import Heap from "heap";
 
 export const WIDTH = 2000;
@@ -128,7 +128,7 @@ export class DrawState {
   }
 
   static addStroke(drawState: DrawState, pathData: string) {
-    const uid = getUid();
+    const uid = DrawState.getUid();
     const timestamp = Date.now();
     const stroke = { pathData, uid, timestamp };
     return DrawState.pushStroke(drawState, stroke);
@@ -247,5 +247,9 @@ export class DrawState {
       done || heap.push([value, index]);
     }
     return mergedStrokes;
+  }
+
+  static getUid() {
+    return v4();
   }
 }

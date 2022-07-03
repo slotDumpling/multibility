@@ -15,7 +15,6 @@ import { usePreventTouch, usePreventGesture } from "./touch";
 import { releaseCanvas } from "../../lib/draw/canvas";
 import { usePinch } from "@use-gesture/react";
 import useSize from "@react-hook/size";
-import { v4 as getUid } from "uuid";
 import paper from "paper";
 import "./draw.sass";
 
@@ -440,7 +439,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       path?.translate(transP);
 
       const mutations = newSG.children.map(
-        (item) => [getUid(), item.exportJSON()] as Mutation
+        (item) => [DrawState.getUid(), item.exportJSON()] as Mutation
       );
       onChange((prev) => DrawState.mutateStrokes(prev, mutations));
       setSelectedIDs(mutations.map((m) => m[0]));
