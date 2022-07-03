@@ -57,12 +57,11 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     ref
   ) => {
     const { width, height } = drawState;
-    const { mode, finger, lasso } = drawCtrl;
+    const { mode, finger, lasso, eraserWidth } = drawCtrl;
 
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const scope = useRef(new paper.PaperScope());
     const [group, setGroup] = useState<paper.Item[]>([]);
-    const [erased, setErased] = useState(Set<string>());
     const [path, setPath] = usePaperItem<paper.Path>();
     const [rect, setRect] = usePaperItem<paper.Path.Rectangle>();
 
@@ -150,13 +149,6 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       };
     }, [mergedStrokes, drawState]);
 
-    useEffect(() => {
-      group.forEach((item) => {
-        if (!erased.has(item.name) || item.opacity === 0.5) return;
-        item.opacity = 0.5;
-      });
-    }, [erased, group]);
-
     const hitRef = useRef<paper.HitResult>();
     const [selected, setSelected] = useState(false);
     const paperMode = mode === "select" && selected ? "selected" : mode;
@@ -227,29 +219,17 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       },
     }[paperMode];
 
-    const handleDrag = {
-      draw(e: paper.MouseEvent) {
-        path?.add(e.point);
-        path?.smooth();
-      },
-      erase(e: paper.MouseEvent) {
-        if (!path) return;
-        path.add(e.point);
-        path.smooth();
+    const dragPath = (e: paper.MouseEvent) => {
+      path?.add(e.point);
+      path?.smooth();
+    };
 
-        const newErased = group
-          .filter((p) => eraserChecker.checkPath(p, path))
-          .map((p) => p.name);
-        if (!newErased.length) return;
-        setErased((prev) => prev.concat(newErased));
-      },
+    const handleDrag = {
+      draw: dragPath,
+      erase: dragPath,
       select(e: paper.MouseEvent) {
-        if (lasso) {
-          path?.add(e.point);
-          path?.smooth();
-        } else if (rect) {
-          resizeRect(rect, e.point);
-        }
+        if (lasso) return dragPath(e);
+        rect && resizeRect(rect, e.point);
       },
       selected(e: paper.MouseEvent) {
         const hitRes = hitRef.current;
@@ -286,18 +266,27 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     }[paperMode];
 
     useEffect(() => {
-      scope.current.tool.maxDistance = drawCtrl.eraserWidth / 2;
-    }, [drawCtrl]);
+      scope.current.tool.maxDistance = eraserWidth;
+    }, [eraserWidth]);
+    const erased = useRef(Set<string>());
 
     const handleEarserDrag =
       paperMode === "erase"
         ? (e: paper.ToolEvent) => {
-            const { eraserWidth } = drawCtrl;
-            const newErased = group
-              .filter((p) => eraserChecker.checkPoint(p, e.point, eraserWidth))
-              .map((p) => p.name);
-            if (!newErased.length) return;
-            setErased((prev) => prev.concat(newErased));
+            const hitRes = scope.current.project.hitTestAll(e.point, {
+              class: paper.Path,
+              stroke: true,
+              tolerance: eraserWidth / 2,
+            });
+
+            const newErased = hitRes
+              .map(({ item }) => {
+                item.opacity = 0.5;
+                item.guide = true;
+                return item.name;
+              })
+              .filter((n) => n);
+            erased.current = erased.current.concat(newErased);
           }
         : null;
 
@@ -306,13 +295,14 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         if (!path || path.isEmpty()) return;
         path.simplify();
         const pathData = path.exportJSON();
-        setPath(undefined);
         onChange((prev) => DrawState.addStroke(prev, pathData));
+        setPath(undefined);
       },
       erase() {
+        const erasedList = erased.current.toArray();
+        onChange((prev) => DrawState.eraseStrokes(prev, erasedList));
         setPath(undefined);
-        onChange((prev) => DrawState.eraseStrokes(prev, erased.toArray()));
-        setErased(Set());
+        erased.current = Set();
       },
       select() {
         let selection: string[];
@@ -562,44 +552,12 @@ const paintStroke = (stroke: Stroke, scope: paper.PaperScope) => {
     const item = scope.project.activeLayer.importJSON(pathData);
     if (!item) return;
     item.name = uid;
+    item.guide = false;
     return item;
   } catch (e) {
     console.error(e);
   }
 };
-
-const eraserChecker = (() => {
-  const erasedCache = new WeakSet<paper.Item>();
-  return {
-    checkPoint(item: paper.Item, point: paper.Point, width: number) {
-      if (!(item instanceof paper.Path)) return false;
-      if (erasedCache.has(item)) return true;
-
-      const half = width / 2;
-      const bounds = new paper.Rectangle(point.subtract(half), point.add(half));
-      if (!bounds?.intersects(item.strokeBounds)) return false;
-      const d = item.getNearestPoint(point)?.getDistance(point);
-      if (d && d * 2 < item.strokeWidth + width) {
-        erasedCache.add(item);
-        return true;
-      }
-      return false;
-    },
-    checkPath(item: paper.Item, eraserPath: paper.Path) {
-      if (!(item instanceof paper.Path)) return false;
-      if (erasedCache.has(item)) return true;
-
-      const bounds = eraserPath.strokeBounds;
-      if (!bounds.intersects(item.strokeBounds)) return false;
-
-      if (eraserPath.intersects(item)) {
-        erasedCache.add(item);
-        return true;
-      }
-      return false;
-    },
-  };
-})();
 
 const paintBackground = (
   scope: paper.PaperScope,
@@ -648,6 +606,7 @@ const startStroke = (drawCtrl: DrawCtrl) => {
   path.strokeWidth = lineWidth;
   path.strokeJoin = "round";
   path.strokeCap = "round";
+  path.guide = true;
   return path;
 };
 
