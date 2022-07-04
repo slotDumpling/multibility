@@ -88,7 +88,7 @@ export default function Reader() {
   );
 
   useEffect(() => {
-    const loadNotePages = async () => {
+    (async () => {
       const storedNote = await loadNote(noteID);
       if (!storedNote) {
         message.error("Note not found");
@@ -100,8 +100,7 @@ export default function Reader() {
       setNoteInfo(noteInfo);
       setStateSet(StateSet.createFromPages(pageRec));
       setDrawCtrl(await getDrawCtrl());
-    };
-    loadNotePages();
+    })();
   }, [nav, noteID, teamOn]);
 
   useEffect(() => {

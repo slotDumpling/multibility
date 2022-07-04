@@ -97,7 +97,7 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
           const { uid } = noteInfo;
           const removeNote = () => removeNotes([uid]);
           return (
-            <CSSTransition key={uid} timeout={500}>
+            <CSSTransition key={uid} timeout={300}>
               <SwipeDelete
                 className="note-wrapper"
                 onDelete={removeNote}
@@ -156,13 +156,13 @@ const NoteItem: FC<{
     [firstPage]
   );
   useEffect(() => {
-    const loader = async () => {
+    (async () => {
       const stored = await loadNote(uid);
       if (!stored) return;
       const { pageRec, pageOrder } = stored;
-      setFirstPage(pageRec[pageOrder[0]]);
-    };
-    loader();
+      const firstID = pageOrder[0];
+      firstID && setFirstPage(pageRec[firstID]);
+    })();
   }, [uid]);
 
   if (!firstPage || !drawState) return null;
