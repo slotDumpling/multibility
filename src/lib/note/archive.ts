@@ -168,7 +168,7 @@ export async function saveTeamNote(
   // parse timg for each page
   if (file) {
     const { getPDFImages } = await import("../note/pdfImage");
-    const { images } = await getPDFImages(file);
+    const { images } = await getPDFImages(file, 0.5);
     Object.values(pageRec).forEach((page) => {
       const { pdfIndex } = page;
       if (!pdfIndex) return;
