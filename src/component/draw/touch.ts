@@ -12,7 +12,7 @@ export function isApplePencil(e: TouchEvent) {
 
 export function usePreventTouch(
   allowFinger: boolean
-): React.CanvasHTMLAttributes<HTMLCanvasElement> {
+): React.HTMLAttributes<HTMLDivElement> {
   const isTouch = useRef(false);
   const checkPoniter = (e: PointerEvent) =>
     e.isPrimary && (isTouch.current = e.pointerType === "touch");
