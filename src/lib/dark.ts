@@ -10,6 +10,7 @@ export const loadDarkMode = async () => {
       ],
       invert: [
         "[data-force-light=false] .draw-canvas",
+        ".note-item .draw-canvas",
         "[data-force-light=false] .color-select .circle",
         "[data-force-light=false] .width-circle.lineWidth",
         "[data-force-light=false] .font-icon",
