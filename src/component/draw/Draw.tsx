@@ -289,14 +289,14 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         if (!path || path.isEmpty()) return;
         path.simplify();
         const pathData = path.exportJSON();
-        onChange((prev) => DrawState.addStroke(prev, pathData));
         setPath(undefined);
+        onChange((prev) => DrawState.addStroke(prev, pathData));
       },
       erase() {
         const erasedList = Array.from(erased.current);
         erased.current.clear();
-        onChange((prev) => DrawState.eraseStrokes(prev, erasedList));
         setPath(undefined);
+        onChange((prev) => DrawState.eraseStrokes(prev, erasedList));
       },
       select() {
         let selection: string[];
