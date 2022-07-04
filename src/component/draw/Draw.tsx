@@ -74,7 +74,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       scp.project.addLayer(new Layer());
       scp.project.addLayer(new Layer());
       scp.project.addLayer(new Layer());
-      scp.project.layers[1].activate();
+      scp.project.layers[2].activate();
       scp.project.layers.forEach((l) => (l.visible = false));
       new scp.Tool();
 
@@ -111,7 +111,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       raster.project.layers[0].addChild(raster);
       raster.sendToBack();
       raster.onLoad = () => {
-        // render the image in full size first to prevent blurring.
+        // render the image in full size to prevent blurring.
         requestAnimationFrame(() => {
           raster.fitBounds(new paper.Rectangle(0, 0, width, height));
           raster.bringToFront();
@@ -130,25 +130,18 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     );
     useEffect(() => {
       const tempGroup: paper.Item[] = [];
-      const othersGroup: paper.Item[] = [];
+      const layer = scope.current.project.layers[1];
 
       scope.current.activate();
-      const layer = scope.current.project.layers[1];
       mergedStrokes.forEach((stroke) => {
-        const { uid } = stroke;
-        const self = drawState.hasStroke(uid);
+        const self = drawState.hasStroke(stroke.uid);
         const item = paintStroke(stroke, layer, !self);
         if (!item) return;
-
         if (self) tempGroup.push(item);
-        else othersGroup.push(item);
       });
       setGroup(tempGroup);
 
-      return () => {
-        tempGroup.forEach((item) => item.remove());
-        othersGroup.forEach((item) => item.remove());
-      };
+      return () => void layer.removeChildren();
     }, [mergedStrokes, drawState]);
 
     const hitRef = useRef<paper.HitResult>();
@@ -179,16 +172,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       };
     }, [selected, setActiveTool]);
 
-    const downPath = () => {
-      const p = startStroke(drawCtrl);
-      scope.current.project.layers[2].addChild(p);
-      setPath(p);
-    };
-    const downRect = (e: paper.MouseEvent) => {
-      const r = startSelectRect(e.point);
-      scope.current.project.layers[2].addChild(r);
-      setRect(r);
-    };
+    const downPath = () => setPath(startStroke(drawCtrl));
+    const downRect = (e: paper.MouseEvent) => setRect(startRect(e.point));
 
     const handleDown = {
       draw: downPath,
@@ -212,17 +197,15 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         }
       },
       text(e: paper.MouseEvent) {
-        let t = getClickedText(scope.current, e.point);
-        if (!t) {
-          t = new paper.PointText({
+        const t =
+          getClickedText(scope.current, e.point) ??
+          new paper.PointText({
             point: e.point.add(new Point(0, 50)),
             content: "Insert text...",
             fontSize: 50,
             justification: "center",
             fillColor: "#1890ff55",
           });
-          scope.current.project.layers[2].addChild(t);
-        }
         setPointText(t as paper.PointText);
       },
     }[paperMode];
@@ -581,7 +564,7 @@ const paintBackground = (
   return bgRect;
 };
 
-const startSelectRect = (point: paper.Point) => {
+const startRect = (point: paper.Point) => {
   const rect = new Path.Rectangle(point, new Size(0, 0));
   rect.onFrame = () => {}; // the handle size bug
   rect.selected = true;
