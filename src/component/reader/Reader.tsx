@@ -25,7 +25,6 @@ import { SetOperation, StateSet } from "../../lib/draw/StateSet";
 import Draw, { ActiveToolKey, DrawRefType } from "../draw/Draw";
 import { loadNote, editNoteData } from "../../lib/note/archive";
 import { AddPageButton, showPageDelMsg } from "./ReaderUtils";
-import { insertAfter } from "./lib/array";
 import { useParams, useNavigate } from "react-router-dom";
 import { SelectTool, TextTool } from "./tools/DrawTools";
 import { debounce, last, once, range } from "lodash-es";
@@ -34,6 +33,7 @@ import { DrawState } from "../../lib/draw/DrawState";
 import { TeamState } from "../../lib/draw/TeamState";
 import { useScrollPage } from "./lib/scroll";
 import ReaderHeader from "./header/Header";
+import { insertAfter } from "./lib/array";
 import { Setter } from "../../lib/hooks";
 import { TeamCtx } from "./Team";
 import { Map } from "immutable";
@@ -111,9 +111,7 @@ export default function Reader() {
 
   const saver = useEvent(async () => {
     const pr = pageRec?.toObject();
-    const canvas = document.querySelector("canvas");
-    const thumbnail = canvas?.toDataURL("image/jpeg", 0.1);
-    await editNoteData(noteID, { pageRec: pr, thumbnail });
+    await editNoteData(noteID, { pageRec: pr });
     setSaved(true);
   });
 
@@ -300,10 +298,10 @@ export const PageWrapper = ({
   updateState,
   pdfIndex,
   preview = false,
-  uid,
+  uid = "",
 }: {
-  uid: string;
   drawState: DrawState;
+  uid?: string;
   teamStateMap?: Map<string, DrawState>;
   thumbnail?: string;
   pdfIndex?: number;
@@ -344,19 +342,15 @@ export const PageWrapper = ({
     [teamStateMap, ignores]
   );
 
-  const imageLoaded = fullImg || !pdfIndex;
+  const imageLoaded = Boolean(fullImg || !pdfIndex);
   const drawShow = visible && imageLoaded;
-  const maskShow = Boolean(preview || !drawShow);
 
   const { height, width } = drawState;
   const ratio = height / width;
 
   return (
-    <div
-      ref={ref}
-      className="page-wrapper"
-      style={{ paddingTop: `${ratio * 100}%` }}
-    >
+    <div ref={ref} className="page-wrapper">
+      <svg viewBox={`0 0 100 ${ratio * 100}`} />
       {drawShow && (
         <DrawWrapper
           drawState={drawState}
@@ -366,7 +360,6 @@ export const PageWrapper = ({
           preview={preview}
         />
       )}
-      {maskShow && <div className="mask" />}
     </div>
   );
 };

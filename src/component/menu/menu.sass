@@ -199,18 +199,22 @@ $note-item-height: 5em
   position: relative
   border-bottom: $light-border
   .timg-wrapper
-    width: 3em
+    @include flex-center
+    width: 4em
+    height: 4em
     margin-right: 1em
-    display: flex
-    justify-content: center
     position: relative
-    .timg
-      max-width: 3em
-      max-height: 3.5em
+    .page-wrapper
       border: $light-border
       background-color: white
       @media (prefers-color-scheme: dark)
         border: none
+    &[data-landscape=true]
+      .page-wrapper svg
+        width: 4em
+    &[data-landscape=false]
+      .page-wrapper svg
+        height: 4em
     .cloud-icon
       position: absolute
       bottom: 0
@@ -246,7 +250,7 @@ $note-item-height: 5em
   &[data-selected="true"]
     &::before
       background-color: $blue-color-light
-    .timg, .cloud-icon
+    .page-wrapper, .cloud-icon
       filter: blur(2px)
       opacity: 0.5
     .checked-icon

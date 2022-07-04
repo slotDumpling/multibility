@@ -516,7 +516,12 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const touchHandler = usePreventTouch(finger);
     return (
-      <div className="draw-wrapper" style={{ cursor }} {...touchHandler}>
+      <div
+        className="draw-wrapper"
+        style={{ cursor }}
+        data-readonly={readonly}
+        {...touchHandler}
+      >
         <canvas ref={canvasEl} className="draw-canvas" />
       </div>
     );

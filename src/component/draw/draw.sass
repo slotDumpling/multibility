@@ -2,7 +2,9 @@
 
 .draw-wrapper
   @include absolute
-  
+  &[data-readonly=true]
+    pointer-events: none
+
   canvas.draw-canvas
     touch-action: pan-y
     position: absolute

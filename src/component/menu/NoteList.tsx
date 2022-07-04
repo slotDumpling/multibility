@@ -4,20 +4,23 @@ import {
   deleteNote,
   moveNoteTag,
   editNoteData,
+  loadNote,
 } from "../../lib/note/archive";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { CloudTwoTone, CheckCircleFilled } from "@ant-design/icons";
 import { SwipeDelete, SwipeDeleteContext } from "../ui/SwipeDelete";
-import { NoteInfo } from "../../lib/note/note";
+import { NoteInfo, NotePage } from "../../lib/note/note";
 import { useNavigate } from "react-router-dom";
 import calender from "dayjs/plugin/calendar";
 import dafaultImg from "../ui/default.png";
 import { Setter } from "../../lib/hooks";
-import { NoteHeader } from './NoteHeader';
+import { NoteHeader } from "./NoteHeader";
 import { List, Set } from "immutable";
 import { MenuCtx } from "./MainMenu";
 import { Input } from "antd";
 import dayjs from "dayjs";
+import { DrawState, WIDTH } from "../../lib/draw/DrawState";
+import { PageWrapper } from "../reader/Reader";
 
 dayjs.extend(calender);
 
@@ -119,7 +122,7 @@ const NoteItem: FC<{
   selected: boolean;
   setSelectNotes: Setter<Set<string>>;
 }> = ({ noteInfo, selected, setSelectNotes }) => {
-  const { team, uid, name, thumbnail, lastTime } = noteInfo;
+  const { team, uid, name, lastTime } = noteInfo;
   const date = useMemo(() => dayjs(lastTime).calendar(), [lastTime]);
   const href = `${team ? "team" : "reader"}/${uid}`;
 
@@ -145,10 +148,32 @@ const NoteItem: FC<{
     });
   };
 
+  const [firstPage, setFirstPage] = useState<NotePage>();
+  const drawState = useMemo(
+    () =>
+      firstPage &&
+      DrawState.loadFromFlat(firstPage.state, WIDTH, WIDTH * firstPage.ratio),
+    [firstPage]
+  );
+  useEffect(() => {
+    const loader = async () => {
+      const stored = await loadNote(uid);
+      if (!stored) return;
+      const { pageRec, pageOrder } = stored;
+      setFirstPage(pageRec[pageOrder[0]]);
+    };
+    loader();
+  }, [uid]);
+
+  if (!firstPage || !drawState) return null;
   return (
     <div className="note-item" data-selected={selected} onClick={handleClick}>
-      <div className="timg-wrapper">
-        <img src={thumbnail || dafaultImg} alt={name} className="timg" />
+      <div className="timg-wrapper" data-landscape={firstPage.ratio < 1}>
+        <PageWrapper
+          drawState={drawState}
+          thumbnail={firstPage.image || dafaultImg}
+          preview
+        />
         {team && <CloudTwoTone className="cloud-icon" />}
         <CheckCircleFilled className="checked-icon" />
       </div>
