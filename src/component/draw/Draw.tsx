@@ -147,11 +147,11 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     const hitRef = useRef<paper.HitResult>();
     const [selected, setSelected] = useState(false);
     const paperMode = mode === "select" && selected ? "selected" : mode;
-    const [selectedIDs, setSelectedIDs] = useState<string[]>([]);
-    const selectedItems = useMemo(() => {
-      const IDSet = new Set(selectedIDs);
+    const [chosenIDs, setChosenIDs] = useState<string[]>([]);
+    const chosenItems = useMemo(() => {
+      const IDSet = new Set(chosenIDs);
       return group.filter((item) => IDSet.has(item.name));
-    }, [group, selectedIDs]);
+    }, [group, chosenIDs]);
 
     const resetSelect = useCallback(() => {
       setSelected(false);
@@ -167,7 +167,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     useEffect(() => {
       if (!selected) return;
       return () => {
-        setSelectedIDs([]);
+        setChosenIDs([]);
         setActiveTool("");
       };
     }, [selected, setActiveTool]);
@@ -239,13 +239,13 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           if (scale < 0) return;
 
           rect?.scale(scale, baseP);
-          selectedItems.forEach((item) => {
+          chosenItems.forEach((item) => {
             item.scale(scale, baseP);
             item.strokeWidth *= scale;
           });
         } else {
           // move selected items
-          selectedItems.forEach((item) => item.translate(e.delta));
+          chosenItems.forEach((item) => item.translate(e.delta));
           path?.translate(e.delta);
           rect?.translate(e.delta);
         }
@@ -310,7 +310,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           if (!rect || Math.abs(rect.area) < 1_000) return setRect(undefined);
           selection = checkLasso(group, rect);
         }
-        setSelectedIDs(selection);
+        setChosenIDs(selection);
         setSelected(true);
         setActiveTool("select");
       },
@@ -377,18 +377,18 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     useEffect(handleViewEvent);
 
     const updateMutation = () => {
-      if (!selectedItems?.length) return;
-      const mutations = selectedItems.map(
+      if (!chosenItems?.length) return;
+      const mutations = chosenItems.map(
         (p) => [p.name, p.exportJSON()] as Mutation
       );
       onChange((prev) => DrawState.mutateStrokes(prev, mutations));
     };
 
     const deleteSelected = () => {
-      setSelectedIDs([]);
+      setChosenIDs([]);
       resetSelect();
-      if (!selectedIDs.length) return;
-      onChange((prev) => DrawState.eraseStrokes(prev, selectedIDs));
+      if (!chosenIDs.length) return;
+      onChange((prev) => DrawState.eraseStrokes(prev, chosenIDs));
     };
 
     const rotateSelected = (angle: number, last = false) => {
@@ -396,7 +396,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       const dAngle = angle / aniCount;
       const center = (rect || path)?.position;
       const rotate = () => {
-        selectedItems.forEach((item) => item.rotate(dAngle, center));
+        chosenItems.forEach((item) => item.rotate(dAngle, center));
         rect?.rotate(dAngle, center);
         path?.rotate(dAngle, center);
         if (--aniCount > 0) requestAnimationFrame(rotate);
@@ -407,30 +407,33 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const mutateStyle = (updated: Partial<DrawCtrl>) => {
       scope.current.activate();
-      updateGroupStyle(selectedItems, updated);
+      updateGroupStyle(chosenItems, updated);
       updateMutation();
     };
 
     const duplicateSelected = () => {
       scope.current.activate();
       const size = (rect || path)?.bounds.size;
-      if (!size) return;
+      if (!size || !chosenItems.length) return;
       const { width, height } = size;
       const transP = new Point(width, height).divide(10);
-      const newSG = new Group(selectedItems).clone({ insert: false });
-      newSG.translate(transP);
+      const copies = chosenItems.map((item) => item.clone());
+      copies.forEach((item) => item.translate(transP));
       rect?.translate(transP);
       path?.translate(transP);
 
-      const mutations = newSG.children.map(
+      const mutations = copies.map(
         (item) => [DrawState.getUid(), item.exportJSON()] as Mutation
       );
       onChange((prev) => DrawState.mutateStrokes(prev, mutations));
-      setSelectedIDs(mutations.map((m) => m[0]));
+      setChosenIDs(mutations.map(([uid]) => uid));
     };
 
-    const rasterize = () =>
-      new Group(selectedItems).rasterize({ insert: false }).toDataURL();
+    const rasterize = () => {
+      const g = new Group(chosenItems);
+      g.addTo(scope.current.project.layers[1]);
+      return g.rasterize({ insert: false }).toDataURL();
+    };
 
     const [pointText, setPointText] = usePaperItem<paper.PointText>();
     const cancelText = useCallback(() => {
