@@ -327,7 +327,6 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
             const paths = flattenCP(item);
             return [uid, paths.map((i) => i.exportJSON())] as Splitter;
           });
-          console.log(splitters);
           if (!splitters.length) return;
           onChange((prev) => DrawState.splitStrokes(prev, splitters));
         } else {
