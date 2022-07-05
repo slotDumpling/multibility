@@ -9,7 +9,12 @@ import React, {
   SetStateAction,
   useImperativeHandle,
 } from "react";
-import { DrawState, Mutation, Stroke } from "../../lib/draw/DrawState";
+import {
+  DrawState,
+  Mutation,
+  Splitter,
+  Stroke,
+} from "../../lib/draw/DrawState";
 import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
 import { usePreventTouch, usePreventGesture } from "./touch";
 import { releaseCanvas } from "../../lib/draw/canvas";
@@ -197,8 +202,9 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         }
       },
       text(e: paper.MouseEvent) {
+        const layer = scope.current.project.layers[1];
         const t =
-          getClickedText(scope.current, e.point) ??
+          getClickedText(layer, e.point) ??
           new paper.PointText({
             point: e.point.add(new Point(0, 50)),
             content: "Insert text...",
@@ -279,7 +285,6 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 
             hitRes.forEach(({ item }) => {
               if (!(item instanceof paper.Path)) return;
-
               let topItem: paper.PathItem = item;
               while (topItem.parent !== layer) {
                 if (!(topItem.parent instanceof paper.PathItem)) break;
@@ -295,12 +300,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
                 const sub = item.subtract(circle, { trace: false });
                 item.replaceWith(sub);
                 if (topItem === item) topItem = sub;
-
                 replaced.current.set(name, topItem);
-                if (!(topItem as paper.Path | paper.CompoundPath).length) {
-                  replaced.current.delete(name);
-                  erased.current.add(name);
-                }
               } else {
                 topItem.opacity = 0.5;
                 topItem.guide = true;
@@ -319,20 +319,23 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         onChange((prev) => DrawState.addStroke(prev, pathData));
       },
       erase() {
-        const items = Array.from(replaced.current);
-        const mutations = items.map(
-          ([uid, item]) => [uid, item.exportJSON()] as Mutation
-        );
-        if (mutations.length) {
-          onChange((prev) => DrawState.mutateStrokes(prev, mutations));
-        }
-        const erasedList = Array.from(erased.current);
-        if (erasedList.length) {
+        setPath(undefined);
+        if (drawCtrl.pixelEraser) {
+          const items = Array.from(replaced.current);
+          replaced.current.clear();
+          const splitters = items.map(([uid, item]) => {
+            const paths = flattenCP(item);
+            return [uid, paths.map((i) => i.exportJSON())] as Splitter;
+          });
+          console.log(splitters);
+          if (!splitters.length) return;
+          onChange((prev) => DrawState.splitStrokes(prev, splitters));
+        } else {
+          const erasedList = Array.from(erased.current);
+          erased.current.clear();
+          if (!erasedList.length) return;
           onChange((prev) => DrawState.eraseStrokes(prev, erasedList));
         }
-        replaced.current.clear();
-        erased.current.clear();
-        setPath(undefined);
       },
       select() {
         let selection: string[];
@@ -385,7 +388,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         }
       },
       text(e: paper.MouseEvent) {
-        if (getClickedText(scope.current, e.point)) setCursor("text");
+        const layer = scope.current.project.layers[1];
+        if (getClickedText(layer, e.point)) setCursor("text");
         else setCursor("crosshair");
       },
       select: null,
@@ -723,10 +727,20 @@ const updateGroupStyle = (items: paper.Item[], updated: Partial<DrawCtrl>) => {
   });
 };
 
-const getClickedText = (scope: paper.PaperScope, point: paper.Point) => {
-  const hitRes = scope.project.hitTest(point, {
+const getClickedText = (layer: paper.Layer, point: paper.Point) => {
+  const hitRes = layer.hitTest(point, {
     class: paper.PointText,
     fill: true,
   });
   return hitRes?.item;
+};
+
+const flattenCP = (cp: paper.Item): paper.Path[] => {
+  if (cp instanceof paper.Path) {
+    return cp.isEmpty() ? [] : [cp];
+  }
+  if (cp instanceof paper.CompoundPath) {
+    return cp.children.map(flattenCP).flat();
+  }
+  return [];
 };

@@ -1,4 +1,4 @@
-import { List, Record, OrderedMap } from "immutable";
+import { List, Record, OrderedMap, Map } from "immutable";
 import { v4 } from "uuid";
 import Heap from "heap";
 
@@ -12,6 +12,7 @@ export interface Stroke {
 
 export type StrokeRecord = globalThis.Record<string, Stroke>;
 export type Mutation = [string, string];
+export type Splitter = [string, string[]];
 
 export type Operation =
   | {
@@ -25,6 +26,10 @@ export type Operation =
   | {
       type: "mutate";
       mutations: Mutation[];
+    }
+  | {
+      type: "split";
+      splitters: Splitter[];
     }
   | {
       type: "undo";
@@ -182,6 +187,32 @@ export class DrawState {
     return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
   }
 
+  static splitStrokes(drawState: DrawState, splitters: Splitter[]) {
+    if (splitters.length === 0) return drawState;
+    const splitMap = Map(splitters);
+    let strokes = OrderedMap<string, Stroke>();
+    const prevStrokes = drawState.getStrokeMap();
+    prevStrokes.forEach((stroke, prevUid) => {
+      const splitStrokes = splitMap.get(prevUid);
+      if (splitStrokes) {
+        splitStrokes.forEach((pathData, index) => {
+          const uid = prevUid + "-" + index;
+          const { timestamp } = stroke;
+          strokes = strokes.set(uid, { pathData, timestamp, uid });
+        });
+      } else {
+        strokes = strokes.set(prevUid, stroke);
+      }
+    });
+    const lastOp: Operation = { type: "split", splitters };
+    return new DrawState(
+      drawState.getImmutable().set("strokes", strokes),
+      drawState.width,
+      drawState.height,
+      lastOp
+    );
+  }
+
   // sync with mutation.
   static syncStrokeTime(drawState: DrawState, stroke: Stroke) {
     const { uid, timestamp } = stroke;
@@ -202,6 +233,8 @@ export class DrawState {
         return DrawState.undo(drawState);
       case "redo":
         return DrawState.redo(drawState);
+      case "split":
+        return DrawState.splitStrokes(drawState, op.splitters);
     }
   }
 
