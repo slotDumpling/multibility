@@ -1,5 +1,5 @@
 import { FC, useContext } from "react";
-import { Button, message, Popover, ButtonProps } from "antd";
+import { Button, message, Popover, ButtonProps, Segmented } from "antd";
 import { ReaderMethodCtx, ReaderStateCtx } from "../Reader";
 import { DrawCtrl, saveDrawCtrl } from "../../../lib/draw/drawCtrl";
 import {
@@ -109,16 +109,28 @@ const EraserButton: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
 }> = ({ updateDrawCtrl }) => {
   const { drawCtrl } = useContext(ReaderStateCtx);
+  const { mode, pixelEraser } = drawCtrl;
 
   const btnProps: ButtonProps = {
     shape: "circle",
     icon: <IconFont type="icon-eraser" />,
   };
 
-  return drawCtrl.mode === "erase" ? (
+  return mode === "erase" ? (
     <Popover
       content={
         <div className="width-seg-wrapper">
+          <Segmented
+            block
+            size="small"
+            className="pixel-seg"
+            options={["Pixel", "Object"]}
+            value={pixelEraser ? "Pixel" : "Object"}
+            onChange={(value) => {
+              if (value === "Pixel") updateDrawCtrl({ pixelEraser: true });
+              else updateDrawCtrl({ pixelEraser: false });
+            }}
+          />
           <WidthSelect
             drawCtrl={drawCtrl}
             updateDrawCtrl={updateDrawCtrl}
