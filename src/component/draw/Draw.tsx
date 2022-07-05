@@ -265,6 +265,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       scope.current.tool.maxDistance = eraserWidth;
     }, [eraserWidth]);
     const erased = useRef(new Set<string>());
+    const replaced = useRef(new Map<string, paper.Item>());
 
     const handleEarserDrag =
       paperMode === "erase"
@@ -277,9 +278,34 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
             });
 
             hitRes.forEach(({ item }) => {
-              item.opacity = 0.5;
-              item.guide = true;
-              if (item.name) erased.current.add(item.name);
+              if (!(item instanceof paper.Path)) return;
+
+              let topItem: paper.PathItem = item;
+              while (topItem.parent !== layer) {
+                if (!(topItem.parent instanceof paper.PathItem)) break;
+                topItem = topItem.parent;
+              }
+              const { name } = topItem;
+
+              if (drawCtrl.pixelEraser) {
+                const radius = (eraserWidth + item.strokeWidth) / 2;
+                const circle = new Path.Circle(e.point, radius);
+                circle.remove();
+
+                const sub = item.subtract(circle, { trace: false });
+                item.replaceWith(sub);
+                if (topItem === item) topItem = sub;
+
+                replaced.current.set(name, topItem);
+                if (!(topItem as paper.Path | paper.CompoundPath).length) {
+                  replaced.current.delete(name);
+                  erased.current.add(name);
+                }
+              } else {
+                topItem.opacity = 0.5;
+                topItem.guide = true;
+                erased.current.add(name);
+              }
             });
           }
         : null;
@@ -293,10 +319,20 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         onChange((prev) => DrawState.addStroke(prev, pathData));
       },
       erase() {
+        const items = Array.from(replaced.current);
+        const mutations = items.map(
+          ([uid, item]) => [uid, item.exportJSON()] as Mutation
+        );
+        if (mutations.length) {
+          onChange((prev) => DrawState.mutateStrokes(prev, mutations));
+        }
         const erasedList = Array.from(erased.current);
+        if (erasedList.length) {
+          onChange((prev) => DrawState.eraseStrokes(prev, erasedList));
+        }
+        replaced.current.clear();
         erased.current.clear();
         setPath(undefined);
-        onChange((prev) => DrawState.eraseStrokes(prev, erasedList));
       },
       select() {
         let selection: string[];
