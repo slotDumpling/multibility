@@ -80,7 +80,6 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       scp.project.addLayer(new Layer());
       scp.project.addLayer(new Layer());
       scp.project.layers[2].activate();
-      scp.project.layers.forEach((l) => (l.visible = false));
       new scp.Tool();
 
       return () => {
@@ -101,10 +100,9 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       const scp = scope.current;
       scp.view.viewSize = new Size(width, height).multiply(ratio);
       scp.view.scale(ratio, new Point(0, 0));
-      scp.project.layers.forEach((l) => (l.visible = true));
+      scp.view.update();
 
       return () => {
-        scp.project?.layers.forEach((l) => (l.visible = false));
         scp.view?.scale(1 / ratio, new Point(0, 0));
       };
     }, [width, height, ratio]);
@@ -116,11 +114,9 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       raster.project.layers[0].addChild(raster);
       raster.sendToBack();
       raster.onLoad = () => {
-        // render the image in full size to prevent blurring.
-        requestAnimationFrame(() => {
-          raster.fitBounds(new paper.Rectangle(0, 0, width, height));
-          raster.bringToFront();
-        });
+        raster.view.update();
+        raster.fitBounds(new paper.Rectangle(0, 0, width, height));
+        raster.bringToFront();
       };
 
       return () => void raster?.remove();
