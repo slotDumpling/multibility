@@ -204,13 +204,12 @@ export class DrawState {
         strokes = strokes.set(prevUid, stroke);
       }
     });
+    const prevRecord = drawState.getImmutable();
+    const currRecord = prevRecord
+      .set("strokes", strokes)
+      .update("historyStack", (s) => s.push(prevRecord));
     const lastOp: Operation = { type: "split", splitters };
-    return new DrawState(
-      drawState.getImmutable().set("strokes", strokes),
-      drawState.width,
-      drawState.height,
-      lastOp
-    );
+    return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
   }
 
   // sync with mutation.
