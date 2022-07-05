@@ -14,12 +14,11 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
   useDebugValue(currPageID);
 
   useEffect(() => {
-    const loadPrevPageID = async () => {
+    (async () => {
       const stored = await localforage.getItem<string>(`SCROLL_${noteID}`);
       if (!stored) return (scrolled.current = true);
       setPrevPageID(stored);
-    };
-    loadPrevPageID();
+    })();
   }, [noteID]);
 
   useEffect(() => {
@@ -33,9 +32,9 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
   useEffect(() => {
     if (!scrolled.current) return;
     localforage.setItem(`SCROLL_${noteID}`, currPageID);
-  }, [currPageID, noteID]);
+  }, [noteID, currPageID]);
 
-  const setRef = (pageID: string, el: HTMLElement | null) => {
+  const sectionRef = (pageID: string) => (el: HTMLElement | null) => {
     if (!el) return;
     setRefMap((prev) => prev.set(pageID, el));
   };
@@ -44,7 +43,7 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
     refMap.get(pageID)?.scrollIntoView();
   };
 
-  return { scrollPage, setInviewRatios, setRef, currPageID };
+  return { scrollPage, setInviewRatios, sectionRef, currPageID };
 }
 
 const largestKey = (map: Map<string, number>, order: string[]) => {

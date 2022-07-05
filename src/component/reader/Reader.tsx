@@ -82,7 +82,7 @@ export default function Reader() {
   const [forceLight, setForceLight] = useState(false);
 
   const { io, teamOn, teamState, addTeamStatePage } = useContext(TeamCtx);
-  const { setInviewRatios, scrollPage, setRef, currPageID } = useScrollPage(
+  const { setInviewRatios, scrollPage, sectionRef, currPageID } = useScrollPage(
     noteID,
     pageOrder
   );
@@ -220,7 +220,7 @@ export default function Reader() {
       <ReaderHeader />
       <main>
         {pageOrder?.map((uid) => (
-          <section key={uid} className="note-page" ref={(e) => setRef(uid, e)}>
+          <section key={uid} className="note-page" ref={sectionRef(uid)}>
             <PageContainer uid={uid} />
           </section>
         ))}
