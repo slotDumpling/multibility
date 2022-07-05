@@ -165,18 +165,21 @@ const NoteItem: FC<{
     })();
   }, [uid]);
 
-  if (!firstPage || !drawState) return null;
+  const timg = firstPage && drawState && (
+    <div className="timg-wrapper" data-landscape={firstPage.ratio < 1}>
+      <PageWrapper
+        drawState={drawState}
+        thumbnail={firstPage.image || dafaultImg}
+        preview
+      />
+      {team && <CloudTwoTone className="cloud-icon" />}
+      <CheckCircleFilled className="checked-icon" />
+    </div>
+  );
+
   return (
     <div className="note-item" data-selected={selected} onClick={handleClick}>
-      <div className="timg-wrapper" data-landscape={firstPage.ratio < 1}>
-        <PageWrapper
-          drawState={drawState}
-          thumbnail={firstPage.image || dafaultImg}
-          preview
-        />
-        {team && <CloudTwoTone className="cloud-icon" />}
-        <CheckCircleFilled className="checked-icon" />
-      </div>
+      {timg}
       <div className="content">
         {editing || <p className="name">{name}</p>}
         {editing && (
