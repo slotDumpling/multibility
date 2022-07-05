@@ -7,6 +7,7 @@ export interface DrawCtrl {
   color: string;
   highlight: boolean;
   lasso: boolean;
+  pixelEraser: boolean;
   widthList: number[];
 }
 
@@ -19,6 +20,7 @@ export const defaultDrawCtrl: Readonly<DrawCtrl> = {
   color: "#000000",
   highlight: false,
   lasso: true,
+  pixelEraser: false,
   widthList: defaultWidthList,
 };
 
