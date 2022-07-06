@@ -174,7 +174,6 @@ export async function saveTeamNote(
       if (!pdfIndex) return;
       page.image = images[pdfIndex - 1];
     });
-    note.thumbnail = images[0];
   }
 
   await createNewNote(note);

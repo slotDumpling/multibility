@@ -109,7 +109,6 @@ export async function LoadPDF(
     name,
     withImg: true,
     pdf,
-    thumbnail: images[0],
     pageRec,
     pageOrder,
   };

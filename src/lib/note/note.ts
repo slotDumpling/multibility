@@ -39,7 +39,6 @@ export interface NoteInfo {
   withImg: boolean;
   createTime: number;
   lastTime: number;
-  thumbnail?: string;
 }
 
 export type Note = NoteInfo & {
