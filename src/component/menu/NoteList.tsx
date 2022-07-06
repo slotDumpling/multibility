@@ -10,17 +10,16 @@ import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { CloudTwoTone, CheckCircleFilled } from "@ant-design/icons";
 import { SwipeDelete, SwipeDeleteContext } from "../ui/SwipeDelete";
 import { NoteInfo, NotePage } from "../../lib/note/note";
+import { DrawState } from "../../lib/draw/DrawState";
+import { PageWrapper } from "../reader/Reader";
 import { useNavigate } from "react-router-dom";
 import calender from "dayjs/plugin/calendar";
-import dafaultImg from "../ui/default.png";
-import { Setter } from "../../lib/hooks";
 import { NoteHeader } from "./NoteHeader";
+import { Setter } from "../../lib/hooks";
 import { List, Set } from "immutable";
 import { MenuCtx } from "./MainMenu";
 import { Input } from "antd";
 import dayjs from "dayjs";
-import { DrawState } from "../../lib/draw/DrawState";
-import { PageWrapper } from "../reader/Reader";
 
 dayjs.extend(calender);
 
@@ -164,13 +163,18 @@ const NoteItem: FC<{
     })();
   }, [uid]);
 
-  const timg = firstPage && drawState && (
-    <div className="timg-wrapper" data-landscape={firstPage.ratio < 1}>
-      <PageWrapper
-        drawState={drawState}
-        thumbnail={firstPage.image || dafaultImg}
-        preview
-      />
+  const timg = (
+    <div
+      className="timg-wrapper"
+      data-landscape={(firstPage?.ratio ?? 1.5) < 1}
+    >
+      {firstPage && drawState && (
+        <PageWrapper
+          drawState={drawState}
+          thumbnail={firstPage.image}
+          preview
+        />
+      )}
       {team && <CloudTwoTone className="cloud-icon" />}
       <CheckCircleFilled className="checked-icon" />
     </div>

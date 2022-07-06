@@ -189,6 +189,9 @@ $note-item-height: 5em
 .note-wrapper:not(.deleting)
   @include item-transition($note-item-height)
 
+.note-wrapper.enter .page-wrapper
+  display: none
+
 .note-item
   height: $note-item-height
   padding: 0 1em
@@ -209,12 +212,10 @@ $note-item-height: 5em
       background-color: white
       @media (prefers-color-scheme: dark)
         border: none
-    &[data-landscape=true]
-      .page-wrapper svg
-        width: 4em
-    &[data-landscape=false]
-      .page-wrapper svg
-        height: 4em
+    &[data-landscape=true] .page-wrapper svg
+      width: 4em
+    &[data-landscape=false] .page-wrapper svg
+      height: 4em
     .cloud-icon
       position: absolute
       bottom: 0
