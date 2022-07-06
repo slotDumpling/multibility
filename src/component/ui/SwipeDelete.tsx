@@ -15,17 +15,17 @@ import "./swipe-delete.sass";
 import { v4 as getUid } from "uuid";
 import { useEventWaiter } from "../../lib/hooks";
 
-const SwipedCtx = createContext({
+const SwipeDeleteContext = createContext({
   nowSwiped: "",
   setNowSwiped: (() => {}) as Dispatch<SetStateAction<string>>,
 });
 
-export const SwipeDeleteContext: FC = ({ children }) => {
+export const SwipeDeleteProvider: FC = ({ children }) => {
   const [nowSwiped, setNowSwiped] = useState("");
   return (
-    <SwipedCtx.Provider value={{ nowSwiped, setNowSwiped }}>
+    <SwipeDeleteContext.Provider value={{ nowSwiped, setNowSwiped }}>
       {children}
-    </SwipedCtx.Provider>
+    </SwipeDeleteContext.Provider>
   );
 };
 
@@ -36,7 +36,7 @@ export const SwipeDelete: FC<{
 }> = ({ children, onDelete, disable = false, className }) => {
   const [uid] = useState(getUid);
 
-  const { nowSwiped, setNowSwiped } = useContext(SwipedCtx);
+  const { nowSwiped, setNowSwiped } = useContext(SwipeDeleteContext);
   const [swiped, setSwiped] = useState(false);
   const deleting = swiped && (!nowSwiped || nowSwiped === uid);
   const [deleted, setDeleted] = useState(false);

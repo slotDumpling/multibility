@@ -6,7 +6,7 @@ import {
   ContainerOutlined,
 } from "@ant-design/icons";
 import { deleteTag, editTag, NoteTag, addNewTag } from "../../lib/note/archive";
-import { SwipeDelete, SwipeDeleteContext } from "../ui/SwipeDelete";
+import { SwipeDelete, SwipeDeleteProvider } from "../ui/SwipeDelete";
 import { Button, Input, Popconfirm, Select } from "antd";
 import { colors, getRandomColor } from "../../lib/color";
 import { ColorCirle } from "../widgets/ColorCircle";
@@ -200,11 +200,11 @@ export default function SideMenu() {
     <aside className="side-menu">
       <div className="tag-list">
         {allNoteTag}
-        <SwipeDeleteContext>
+        <SwipeDeleteProvider>
           {Object.values(allTags).map((tag) => (
             <TagItem key={tag.uid} noteTag={tag} />
           ))}
-        </SwipeDeleteContext>
+        </SwipeDeleteProvider>
         {adding && <NewTagItem setAdding={setAdding} />}
       </div>
       <footer>

@@ -8,7 +8,7 @@ import {
 } from "../../lib/note/archive";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { CloudTwoTone, CheckCircleFilled } from "@ant-design/icons";
-import { SwipeDelete, SwipeDeleteContext } from "../ui/SwipeDelete";
+import { SwipeDelete, SwipeDeleteProvider } from "../ui/SwipeDelete";
 import { NoteInfo, NotePage } from "../../lib/note/note";
 import { DrawState } from "../../lib/draw/DrawState";
 import { PageWrapper } from "../reader/Reader";
@@ -81,7 +81,7 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
   }, [noteList, editing]);
 
   return (
-    <SwipeDeleteContext>
+    <SwipeDeleteProvider>
       <TransitionGroup className="note-list">
         <NoteHeader
           sortType={sortType}
@@ -111,7 +111,7 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
           );
         })}
       </TransitionGroup>
-    </SwipeDeleteContext>
+    </SwipeDeleteProvider>
   );
 }
 
