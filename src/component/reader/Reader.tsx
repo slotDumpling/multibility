@@ -255,7 +255,8 @@ const PageContainer: FC<{
   updateStateSet: (cb: (prevSS: StateSet) => StateSet) => void;
   setInviewRatios: Setter<Map<string, number>>;
 }> = ({ uid, updateStateSet, setInviewRatios }) => {
-  const { pageRec, stateSet, teamState } = useContext(ReaderStateCtx);
+  const { pageRec, stateSet, teamState, currPageID, pageOrder } =
+    useContext(ReaderStateCtx);
 
   const page = pageRec?.get(uid);
   const drawState = stateSet?.getOneState(uid);
@@ -269,6 +270,13 @@ const PageContainer: FC<{
     setInviewRatios((prev) => prev.set(uid, ratio));
   };
 
+  const preload = useMemo(() => {
+    if (!pageOrder) return false;
+    const currIndex = pageOrder.indexOf(currPageID);
+    const selfIndex = pageOrder.indexOf(uid);
+    return Math.abs(selfIndex - currIndex) <= 1;
+  }, [currPageID, uid, pageOrder]);
+
   if (!page || !drawState) return null;
   return (
     <PageWrapper
@@ -277,19 +285,12 @@ const PageContainer: FC<{
       updateState={updateState}
       pdfIndex={page.pdfIndex}
       onViewChange={onViewChange}
+      preload={preload}
     />
   );
 };
 
-export const PageWrapper = ({
-  thumbnail,
-  drawState,
-  teamStateMap,
-  updateState,
-  pdfIndex,
-  preview = false,
-  onViewChange = () => {},
-}: {
+export const PageWrapper: FC<{
   drawState: DrawState;
   teamStateMap?: Map<string, DrawState>;
   thumbnail?: string;
@@ -297,6 +298,16 @@ export const PageWrapper = ({
   updateState?: (ds: DrawState) => void;
   onViewChange?: (visible: boolean, ratio: number) => void;
   preview?: boolean;
+  preload?: boolean;
+}> = ({
+  thumbnail,
+  drawState,
+  teamStateMap,
+  updateState,
+  pdfIndex,
+  preview = false,
+  onViewChange = () => {},
+  preload = false,
 }) => {
   const [ref, visible, entry] = useInView({ threshold: range(0, 1.1, 0.1) });
   useEffect(() => {
@@ -316,9 +327,10 @@ export const PageWrapper = ({
     [pdfIndex, noteID]
   );
 
+  const show = visible || preload;
   useEffect(() => {
-    if (!preview && visible) loadImage();
-  }, [visible, preview, loadImage]);
+    if (!preview && show) loadImage();
+  }, [show, preview, loadImage]);
 
   const { ignores } = useContext(TeamCtx);
   const otherStates = useMemo(
@@ -327,7 +339,7 @@ export const PageWrapper = ({
   );
 
   const imageLoaded = Boolean(fullImg || !pdfIndex);
-  const drawShow = visible && imageLoaded;
+  const drawShow = show && imageLoaded;
 
   const { height, width } = drawState;
   const ratio = height / width;
@@ -349,19 +361,13 @@ export const PageWrapper = ({
   );
 };
 
-const DrawWrapper = ({
-  drawState,
-  updateState,
-  otherStates,
-  preview = false,
-  imgSrc,
-}: {
+const DrawWrapper: FC<{
   drawState: DrawState;
   otherStates?: DrawState[];
   updateState?: (ds: DrawState) => void;
   preview?: boolean;
   imgSrc?: string;
-}) => {
+}> = ({ drawState, updateState, otherStates, preview = false, imgSrc }) => {
   const drawCtrl = useDrawCtrl();
   const [activeTool, setActiveTool] = useState<ActiveToolKey>("");
   const drawRef = useRef<DrawRefType>(null);
