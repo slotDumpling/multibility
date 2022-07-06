@@ -221,32 +221,32 @@ export default function Reader() {
   );
 
   return (
-    <ReaderStateCtx.Provider
-      value={{
-        noteID,
-        pageRec,
-        noteInfo,
-        stateSet,
-        teamState,
-        pageOrder,
-        currPageID,
-      }}
-    >
-      <ReaderMethodCtx.Provider
+    <DarkModeProvider>
+      <ReaderStateCtx.Provider
         value={{
-          addPage,
-          scrollPage,
-          deletePage,
-          saveReorder,
-          addFinalPage,
-          switchPageMarked,
+          noteID,
+          pageRec,
+          noteInfo,
+          stateSet,
+          teamState,
+          pageOrder,
+          currPageID,
         }}
       >
-        <DrawCtrlProvider>
-          <DarkModeProvider>{renderResult}</DarkModeProvider>
-        </DrawCtrlProvider>
-      </ReaderMethodCtx.Provider>
-    </ReaderStateCtx.Provider>
+        <ReaderMethodCtx.Provider
+          value={{
+            addPage,
+            scrollPage,
+            deletePage,
+            saveReorder,
+            addFinalPage,
+            switchPageMarked,
+          }}
+        >
+          <DrawCtrlProvider>{renderResult}</DrawCtrlProvider>
+        </ReaderMethodCtx.Provider>
+      </ReaderStateCtx.Provider>
+    </DarkModeProvider>
   );
 }
 
