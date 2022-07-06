@@ -1,4 +1,4 @@
-import { DrawState, Operation, Stroke, WIDTH } from "./DrawState";
+import { DrawState, Operation, Stroke } from "./DrawState";
 import { List, Map, Record } from "immutable";
 import { NotePage } from "../note/note";
 
@@ -25,15 +25,12 @@ export class StateSet {
     public lastOp?: SetOperation
   ) {}
 
-  static createFromPages(
-    pageRec: globalThis.Record<string, NotePage>,
-    width = WIDTH
-  ) {
+  static createFromPages(pageRec: globalThis.Record<string, NotePage>) {
     return new StateSet(
       defaultFactory().set(
         "states",
         Map(pageRec).map(({ state, ratio }) =>
-          DrawState.loadFromFlat(state, width, width * ratio)
+          DrawState.loadFromFlat(state, ratio)
         )
       )
     );
@@ -80,9 +77,9 @@ export class StateSet {
     return this;
   }
 
-  addState(pageID: string, notePage: NotePage, width = WIDTH) {
+  addState(pageID: string, notePage: NotePage) {
     const { state, ratio } = notePage;
-    const newDS = DrawState.loadFromFlat(state, width, width * ratio);
+    const newDS = DrawState.loadFromFlat(state, ratio);
     const currRecord = this.getImmutable().update("states", (s) =>
       s.set(pageID, newDS)
     );

@@ -105,8 +105,8 @@ export class DrawState {
     return this.getStrokeMap().has(uid);
   }
 
-  static createEmpty(width: number, height: number) {
-    return new DrawState(defaultFactory(), width, height);
+  static createEmpty(ratio: number, width = WIDTH) {
+    return new DrawState(defaultFactory(), width, width * ratio);
   }
 
   static undo(drawState: DrawState) {
@@ -244,14 +244,14 @@ export class DrawState {
 
   static loadFromFlat(
     flatState: FlatState,
-    width: number,
-    height: number
+    ratio: number,
+    width = WIDTH
   ): DrawState {
     const { strokes, operations } = flatState;
     let ds = new DrawState(
       defaultFactory().set("strokes", OrderedMap(strokes)),
       width,
-      height
+      width * ratio
     );
     operations?.forEach((op) => (ds = DrawState.pushOperation(ds, op)));
     return ds;

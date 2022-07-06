@@ -19,7 +19,7 @@ import { List, Set } from "immutable";
 import { MenuCtx } from "./MainMenu";
 import { Input } from "antd";
 import dayjs from "dayjs";
-import { DrawState, WIDTH } from "../../lib/draw/DrawState";
+import { DrawState } from "../../lib/draw/DrawState";
 import { PageWrapper } from "../reader/Reader";
 
 dayjs.extend(calender);
@@ -95,12 +95,11 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
         />
         {filterdList.map((noteInfo) => {
           const { uid } = noteInfo;
-          const removeNote = () => removeNotes([uid]);
           return (
             <CSSTransition key={uid} timeout={300}>
               <SwipeDelete
                 className="note-wrapper"
-                onDelete={removeNote}
+                onDelete={() => removeNotes([uid])}
                 disable={editing}
               >
                 <NoteItem
@@ -149,12 +148,12 @@ const NoteItem: FC<{
   };
 
   const [firstPage, setFirstPage] = useState<NotePage>();
-  const drawState = useMemo(
-    () =>
-      firstPage &&
-      DrawState.loadFromFlat(firstPage.state, WIDTH, WIDTH * firstPage.ratio),
-    [firstPage]
-  );
+  const drawState = useMemo(() => {
+    if (!firstPage) return;
+    const { state, ratio } = firstPage;
+    return DrawState.loadFromFlat(state, ratio);
+  }, [firstPage]);
+
   useEffect(() => {
     (async () => {
       const stored = await loadNote(uid);

@@ -1,5 +1,5 @@
 import { NotePage, TeamPage, TeamPageInfo } from "../note/note";
-import { DrawState, WIDTH } from "./DrawState";
+import { DrawState } from "./DrawState";
 import { SetOperation } from "./StateSet";
 import { Map, Record } from "immutable";
 
@@ -63,17 +63,14 @@ export class TeamState {
     );
   }
 
-  static createFromTeamPages(
-    teamPages: globalThis.Record<string, TeamPage>,
-    width = WIDTH
-  ) {
+  static createFromTeamPages(teamPages: globalThis.Record<string, TeamPage>) {
     let record = defaultFactory();
     Object.entries(teamPages).forEach(([pageID, teamPage]) => {
       const { states, ratio } = teamPage;
       const pageMap = Map(
         Object.entries(states).map(([userID, flatState]) => [
           userID,
-          DrawState.loadFromFlat(flatState, width, width * ratio),
+          DrawState.loadFromFlat(flatState, ratio),
         ])
       );
       record = record
@@ -92,13 +89,12 @@ export class TeamState {
     );
   }
 
-  pushOperation(setOp: SetOperation, userID: string, width = WIDTH) {
+  pushOperation(setOp: SetOperation, userID: string) {
     const { pageID, ...op } = setOp;
     const ratio = this.getPageRatio(pageID);
     if (!this.includesPage(pageID) || !ratio) return this;
     const prevDs =
-      this.getOneState(pageID, userID) ||
-      DrawState.createEmpty(width, width * ratio);
+      this.getOneState(pageID, userID) || DrawState.createEmpty(ratio);
 
     const ds = DrawState.pushOperation(prevDs, op);
     return this.setState(pageID, userID, ds);
@@ -109,11 +105,10 @@ export class TeamState {
     for (let [pageID, { state, ratio }] of Object.entries(pageRec)) {
       const prevDS = newTS.getOneState(pageID, userID);
       if (!prevDS) continue;
-      const { width } = prevDS;
       newTS = newTS.setState(
         pageID,
         userID,
-        DrawState.loadFromFlat(state, width, width * ratio)
+        DrawState.loadFromFlat(state, ratio)
       );
     }
     return newTS;
