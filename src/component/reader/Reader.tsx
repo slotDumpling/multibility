@@ -14,9 +14,9 @@ import {
   createPage,
   defaultNotePage,
 } from "../../lib/note/note";
-import { DrawCtrlContext, DrawCtrlProvider } from "../../lib/draw/DrawCtrl";
+import { DrawCtrlProvider, useDrawCtrl } from "../../lib/draw/DrawCtrl";
 import { NewPageInfo, ReorderInfo, SyncInfo } from "../../lib/network/io";
-import { DarkModeContext, DarkModeProvider } from "../../lib/dark";
+import { DarkModeProvider, useForceLight } from "../../lib/Dark";
 import { useMemoizedFn as useEvent, useSafeState } from "ahooks";
 import { SetOperation, StateSet } from "../../lib/draw/StateSet";
 import Draw, { ActiveToolKey, DrawRefType } from "../draw/Draw";
@@ -331,7 +331,7 @@ export const PageWrapper = ({
 
   const { height, width } = drawState;
   const ratio = height / width;
-  const { forceLight } = useContext(DarkModeContext);
+  const [forceLight] = useForceLight();
 
   return (
     <div ref={ref} className="page-wrapper" data-force-light={forceLight}>
@@ -362,7 +362,7 @@ const DrawWrapper = ({
   preview?: boolean;
   imgSrc?: string;
 }) => {
-  const { drawCtrl } = useContext(DrawCtrlContext);
+  const drawCtrl = useDrawCtrl();
   const [activeTool, setActiveTool] = useState<ActiveToolKey>("");
   const drawRef = useRef<DrawRefType>(null);
 

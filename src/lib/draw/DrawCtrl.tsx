@@ -1,5 +1,11 @@
 import localforage from "localforage";
-import React, { FC, useEffect, useState } from "react";
+import React, {
+  FC,
+  useContext,
+  useDebugValue,
+  useEffect,
+  useState,
+} from "react";
 export interface DrawCtrl {
   mode: "draw" | "erase" | "select" | "text";
   finger: boolean;
@@ -25,7 +31,7 @@ export const defaultDrawCtrl: Readonly<DrawCtrl> = {
   widthList: defaultWidthList,
 };
 
-export async function getDrawCtrl() {
+async function getDrawCtrl() {
   let drawCtrl = await localforage.getItem<DrawCtrl>("DRAW_CTRL");
   if (!drawCtrl) {
     drawCtrl = defaultDrawCtrl;
@@ -34,14 +40,26 @@ export async function getDrawCtrl() {
   return drawCtrl;
 }
 
-export async function saveDrawCtrl(drawCtrl: DrawCtrl) {
+async function saveDrawCtrl(drawCtrl: DrawCtrl) {
   await localforage.setItem("DRAW_CTRL", drawCtrl);
 }
 
-export const DrawCtrlContext = React.createContext({
+const DrawCtrlContext = React.createContext({
   drawCtrl: defaultDrawCtrl,
   updateDrawCtrl: (() => {}) as (updated: Partial<DrawCtrl>) => void,
 });
+
+export function useDrawCtrl() {
+  const { drawCtrl } = useContext(DrawCtrlContext);
+  useDebugValue(drawCtrl);
+  return drawCtrl;
+}
+
+export function useUpdateDrawCtrl() {
+  const { updateDrawCtrl } = useContext(DrawCtrlContext);
+  return updateDrawCtrl;
+}
+
 export const DrawCtrlProvider: FC = ({ children }) => {
   const [drawCtrl, setDrawCtrl] = useState(defaultDrawCtrl);
   useEffect(() => {

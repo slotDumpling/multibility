@@ -30,7 +30,7 @@ import { TeamCtx } from "./Team";
 import "./preview.sass";
 import { UserAvatar } from "../widgets/UserAvatar";
 import classNames from "classnames";
-import { DarkModeContext } from "../../lib/dark";
+import { useForceLight } from "../../lib/Dark";
 
 const PreviewCtx = React.createContext({
   activeKey: "ALL",
@@ -40,7 +40,7 @@ const PreviewCtx = React.createContext({
 const PageNavContent = () => {
   const { pageOrder, currPageID } = useContext(ReaderStateCtx);
   const { scrollPage, saveReorder } = useContext(ReaderMethodCtx);
-  const { forceLight } = useContext(DarkModeContext);
+  const [forceLight] = useForceLight();
   const { activeKey } = useContext(PreviewCtx);
   const refRec = useRef<Record<string, HTMLElement>>({});
 

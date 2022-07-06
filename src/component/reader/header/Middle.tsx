@@ -1,7 +1,6 @@
 import { FC, useContext } from "react";
 import { Button, message, Popover, ButtonProps, Segmented } from "antd";
 import { ReaderStateCtx } from "../Reader";
-import { DrawCtrlContext } from "../../../lib/draw/DrawCtrl";
 import {
   BulbFilled,
   BulbOutlined,
@@ -12,16 +11,17 @@ import {
 } from "@ant-design/icons";
 import IconFont from "../../ui/IconFont";
 import { PenPanel, WidthSelect } from "../tools/PenPanel";
-import { DarkModeContext } from "../../../lib/dark";
+import { useForceLight } from "../../../lib/Dark";
+import { useDrawCtrl, useUpdateDrawCtrl } from "../../../lib/draw/DrawCtrl";
 
 export const HeaderMiddle: FC<{
   handleUndo: () => void;
   handleRedo: () => void;
 }> = ({ handleUndo, handleRedo }) => {
   const { stateSet } = useContext(ReaderStateCtx);
-  const { drawCtrl, updateDrawCtrl } = useContext(DrawCtrlContext);
-  const { forceLight, setForceLight } = useContext(DarkModeContext);
-  const { mode, finger } = drawCtrl;
+  const { mode, finger } = useDrawCtrl();
+  const updateDrawCtrl = useUpdateDrawCtrl();
+  const [forceLight, setForceLight] = useForceLight();
 
   return (
     <div className="middle">
@@ -73,14 +73,14 @@ export const HeaderMiddle: FC<{
 };
 
 const PenButton = () => {
-  const { drawCtrl, updateDrawCtrl } = useContext(DrawCtrlContext);
-  const { mode } = drawCtrl;
+  const drawCtrl = useDrawCtrl();
+  const updateDrawCtrl = useUpdateDrawCtrl();
 
   const btnProps: ButtonProps = {
     shape: "circle",
     icon: <HighlightOutlined />,
   };
-  return mode === "draw" ? (
+  return drawCtrl.mode === "draw" ? (
     <Popover
       content={<PenPanel updateDrawCtrl={updateDrawCtrl} drawCtrl={drawCtrl} />}
       trigger="click"
@@ -100,8 +100,9 @@ const PenButton = () => {
 };
 
 const EraserButton = () => {
-  const { drawCtrl, updateDrawCtrl } = useContext(DrawCtrlContext);
+  const drawCtrl = useDrawCtrl();
   const { mode, pixelEraser } = drawCtrl;
+  const updateDrawCtrl = useUpdateDrawCtrl();
 
   const btnProps: ButtonProps = {
     shape: "circle",
@@ -147,10 +148,8 @@ const EraserButton = () => {
 };
 
 const SelectButton = () => {
-  const {
-    drawCtrl: { lasso, mode },
-    updateDrawCtrl,
-  } = useContext(DrawCtrlContext);
+  const { lasso, mode } = useDrawCtrl();
+  const updateDrawCtrl = useUpdateDrawCtrl();
 
   const icon = lasso ? <IconFont type="icon-lasso1" /> : <GatewayOutlined />;
 

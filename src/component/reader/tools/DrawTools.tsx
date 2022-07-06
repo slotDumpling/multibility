@@ -1,4 +1,4 @@
-import { FC, RefObject, useContext, useEffect, useRef, useState } from "react";
+import { FC, RefObject, useEffect, useRef, useState } from "react";
 import {
   CopyOutlined,
   DeleteOutlined,
@@ -15,7 +15,6 @@ import {
 import { Button, ButtonProps, Modal, Popover, Radio } from "antd";
 import { CSSTransition } from "react-transition-group";
 import { DrawCtrl } from "../../../lib/draw/DrawCtrl";
-import { DarkModeContext } from "../../../lib/dark";
 import { ColorSelect, PenPanel } from "./PenPanel";
 import TextArea from "antd/lib/input/TextArea";
 import { DrawRefType } from "../../draw/Draw";
@@ -24,6 +23,7 @@ import { useDrag } from "@use-gesture/react";
 import { createPortal } from "react-dom";
 import { saveAs } from "file-saver";
 import "./drawTools.sass";
+import { useForceLight } from "../../../lib/Dark";
 
 export const SelectTool: FC<{
   drawRef: RefObject<DrawRefType>;
@@ -130,7 +130,7 @@ export const TextTool: FC<{
   const [text, setText] = useState("");
   const [color, setColor] = useState(allColors[0]);
   const [align, setAlign] = useState("center");
-  const { forceLight } = useContext(DarkModeContext);
+  const [forceLight] = useForceLight();
 
   useEffect(() => {
     const pointText = drawRef.current?.pointText;

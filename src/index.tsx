@@ -2,7 +2,7 @@ import React, { LazyExoticComponent, Suspense } from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import { Loading, Page404 } from "./component/ui/Loading";
-import { loadDarkMode } from "./lib/dark";
+import { loadDarkMode } from "./lib/Dark";
 import Test from "./component/Test";
 import ReactDOM from "react-dom";
 import "./index.sass";

@@ -1,5 +1,11 @@
-import React, { FC, useState } from "react";
-import { Setter } from "./hooks";
+import React, {
+  Dispatch,
+  FC,
+  SetStateAction,
+  useContext,
+  useDebugValue,
+  useState,
+} from "react";
 
 export const loadDarkMode = async () => {
   const { auto: setAutoDarkMode } = await import("darkreader");
@@ -24,10 +30,18 @@ export const loadDarkMode = async () => {
   );
 };
 
-export const DarkModeContext = React.createContext({
+const DarkModeContext = React.createContext({
   forceLight: false,
-  setForceLight: (() => {}) as Setter<boolean>,
+  setForceLight: (() => {}) as Dispatch<SetStateAction<boolean>>,
 });
+export function useForceLight() {
+  const { forceLight, setForceLight } = useContext(DarkModeContext);
+  useDebugValue(forceLight);
+  return [forceLight, setForceLight] as [
+    typeof forceLight,
+    typeof setForceLight
+  ];
+}
 export const DarkModeProvider: FC = ({ children }) => {
   const [forceLight, setForceLight] = useState(false);
   return (
