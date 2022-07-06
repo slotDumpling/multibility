@@ -18,30 +18,30 @@ import {
   CaretDownOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
-import * as serviceWorkerRegistration from "../.././serviceWorkerRegistration";
+import * as serviceWorkerRegistration from "../../../serviceWorkerRegistration";
 import { CSSTransitionProps } from "react-transition-group/CSSTransition";
 import { createContext, useContext, useState } from "react";
-import { getUserName, saveUserName } from "../../lib/user";
-import { clearImageCache } from "../../lib/note/imgCache";
-import { createNewNote } from "../../lib/note/archive";
+import { getUserName, saveUserName } from "../../../lib/user";
+import { clearImageCache } from "../../../lib/note/imgCache";
+import { createNewNote } from "../../../lib/note/archive";
 import { CSSTransition } from "react-transition-group";
-import { getNoteID } from "../../lib/network/http";
+import { getNoteID } from "../../../lib/network/http";
 import { useNavigate } from "react-router-dom";
 import Dragger from "antd/lib/upload/Dragger";
 import { PasscodeInput } from "antd-mobile";
-import { Setter } from "../../lib/hooks";
+import { Setter } from "../../../lib/hooks";
 import localforage from "localforage";
-import { MenuCtx } from "./MainMenu";
+import { MenuCtx } from "../MainMenu";
 import { useEffect } from "react";
 import { FC } from "react";
-import "./rightTools.sass";
+import "./right.sass";
 
 const activeKeyCtx = createContext({
   active: "MENU",
   setActive: (() => {}) as Setter<string>,
 });
 
-export default function RightTools() {
+export default function Right() {
   return (
     <div className="right-tools">
       <JoinTeamButton />
@@ -83,7 +83,7 @@ const UploadPdfPage = () => {
   async function handleFile(file: File) {
     if (file.type !== "application/pdf") return;
     setLoading(true);
-    const { LoadPDF } = await import("../../lib/note/pdfImage");
+    const { LoadPDF } = await import("../../../lib/note/pdfImage");
     const note = await LoadPDF(file, setPercent);
     note.tagID = tagUid;
     const { tags, allNotes } = await createNewNote(note);

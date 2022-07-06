@@ -1,10 +1,10 @@
 import { Button, Drawer } from "antd";
 import { useContext, useEffect, useState } from "react";
 import { MenuOutlined } from "@ant-design/icons";
-import SideMenu from "./SideMenu";
-import { MenuCtx } from "./MainMenu";
+import SideMenu from "../SideMenu";
+import { MenuCtx } from "../MainMenu";
 
-export default function LeftTools() {
+export default function Left() {
   const [asideOn, setAsideOn] = useState(false);
   const { editing, tagUid, setEditing } = useContext(MenuCtx);
 

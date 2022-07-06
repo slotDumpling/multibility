@@ -8,13 +8,12 @@ import {
 import { createEmptyNote, NoteInfo } from "../../lib/note/note";
 import { FormOutlined } from "@ant-design/icons";
 import { Setter } from "../../lib/hooks";
-import RightTools from "./RightTools";
-import LeftTools from "./LeftTools";
 import SideMenu from "./SideMenu";
 import NoteList from "./NoteList";
 import { List } from "immutable";
 import { Button } from "antd";
 import "./menu.sass";
+import { MenuHeader } from "./header";
 
 export const MenuCtx = createContext({
   tagUid: "DEFAULT",
@@ -61,7 +60,6 @@ export default function MainMenu() {
     document.title = "Multibility";
   };
   useEffect(menuInit, []);
-  const logo = tagUid === "DEFAULT";
 
   return (
     <MenuCtx.Provider
@@ -78,11 +76,7 @@ export default function MainMenu() {
       }}
     >
       <div className="main-menu container">
-        <header>
-          <LeftTools />
-          <h2 data-logo={logo}>{logo ? "Multibility" : selectedTag.name}</h2>
-          <RightTools />
-        </header>
+        <MenuHeader />
         <main>
           <SideMenu />
           <NoteList noteList={noteList} />

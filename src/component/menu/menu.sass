@@ -5,36 +5,6 @@
   @include absolute
   display: flex
   flex-direction: column
-  header
-    position: relative
-    height: $header-low-height
-    padding: 0 15px
-    display: flex
-    justify-content: space-between
-    align-items: center
-    border-bottom: $dark-border
-  .left-tools, .right-tools
-    display: flex
-    justify-content: space-between
-  .left-tools
-    button.edit-btn
-      width: 70px
-  h2
-    @include text-overflow
-    margin: 0 30px !important
-    flex: 1
-    text-align: center
-    font-size: 1.3em
-    &[data-logo="true"]
-      flex: none
-      font-size: 1.5em
-      padding: 0 10px
-      background-image: linear-gradient(45deg, #9CA3AF, #6B7280, #9CA3AF)
-      background-size: 200% 100%
-      animation: logo-gradient 5s infinite
-      background-clip: text
-      font-family: sofia, sans-serif
-      color: #0000
   main
     flex: 1
     overflow: hidden
@@ -45,14 +15,6 @@
       right: 20px
       bottom: calc(20px + $safe-bottom)
 
-@keyframes logo-gradient
-  from
-    background-position-x: 0
-  50%
-    background-position-x: 100%
-  to
-    background-position-x: 0
-
 .side-menu
   transition: all 0.5s
   width: 300px
@@ -61,6 +23,8 @@
   flex-direction: column
   border-right: $default-border
   background-color: #eee3
+  @media (max-width: 640px)
+    display: none
   footer
     border-top: $default-border
     padding: 10px
@@ -74,34 +38,8 @@
   top: $header-low-height !important
   bottom: 0 !important
   height: auto !important
-
-@media (max-width: 640px)
-  button.large, main > .side-menu
+  @media (min-width: 640px)
     display: none
-  .left-tools, .right-tools
-    width: 75px
-
-@media (min-width: 640px)
-  button.small, .aside-btn, .aside-drawer
-    display: none
-  .left-tools, .right-tools
-    width: 130px
-
-@mixin item-transition($height)
-  &.enter
-    height: 0
-    opacity: 0
-  &.enter-active
-    height: $height
-    opacity: 1
-    transition: all $speed
-  &.exit
-    height: $height
-    opacity: 1
-  &.exit-active
-    height: 0
-    opacity: 0
-    transition: all $speed
 
 .tag-list
   flex: 1
@@ -187,7 +125,20 @@
 
 $note-item-height: 5em
 .note-wrapper:not(.deleting)
-  @include item-transition($note-item-height)
+  &.enter
+    height: 0
+    opacity: 0
+  &.enter-active
+    height: $note-item-height
+    opacity: 1
+    transition: all $speed
+  &.exit
+    height: $note-item-height
+    opacity: 1
+  &.exit-active
+    height: 0
+    opacity: 0
+    transition: all $speed
 
 .note-wrapper.enter .page-wrapper
   display: none
