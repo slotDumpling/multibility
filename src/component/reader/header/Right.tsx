@@ -3,7 +3,7 @@ import { Badge, Alert, Modal, Button, Divider, message, Popover } from "antd";
 import Search from "antd/lib/input/Search";
 import { useNavigate } from "react-router-dom";
 import { PasscodeInput } from "antd-mobile";
-import { ReaderMethodCtx, ReaderStateCtx } from "../Reader";
+import { ReaderStateCtx } from "../Reader";
 import { TeamCtx } from "../Team";
 import { getUserID, saveUserName } from "../../../lib/user";
 import PageNav from "../PageNav";
@@ -24,11 +24,13 @@ import { UserAvatar } from "../../widgets/UserAvatar";
 import { putNote } from "../../../lib/network/http";
 import copy from "clipboard-copy";
 
-export const HeaderRight = () => {
+export const HeaderRight: FC<{
+  instantSave: () => Promise<void> | undefined;
+}> = ({ instantSave }) => {
   const { teamOn } = useContext(TeamCtx);
   return (
     <div className="right">
-      {teamOn ? <RoomInfo /> : <JoinRoom />}
+      {teamOn ? <RoomInfo /> : <JoinRoom instantSave={instantSave} />}
       <PageNav />
     </div>
   );
@@ -209,9 +211,10 @@ const RoomInfo: FC = () => {
   );
 };
 
-const JoinRoom = () => {
+const JoinRoom: FC<{
+  instantSave: () => Promise<void> | undefined;
+}> = ({ instantSave }) => {
   const { noteID } = useContext(ReaderStateCtx);
-  const { instantSave } = useContext(ReaderMethodCtx);
   const nav = useNavigate();
 
   const createRoom = async () => {

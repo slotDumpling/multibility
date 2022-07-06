@@ -1,4 +1,5 @@
 import localforage from "localforage";
+import React, { FC, useEffect, useState } from "react";
 export interface DrawCtrl {
   mode: "draw" | "erase" | "select" | "text";
   finger: boolean;
@@ -36,3 +37,27 @@ export async function getDrawCtrl() {
 export async function saveDrawCtrl(drawCtrl: DrawCtrl) {
   await localforage.setItem("DRAW_CTRL", drawCtrl);
 }
+
+export const DrawCtrlContext = React.createContext({
+  drawCtrl: defaultDrawCtrl,
+  updateDrawCtrl: (() => {}) as (updated: Partial<DrawCtrl>) => void,
+});
+export const DrawCtrlProvider: FC = ({ children }) => {
+  const [drawCtrl, setDrawCtrl] = useState(defaultDrawCtrl);
+  useEffect(() => {
+    getDrawCtrl().then(setDrawCtrl);
+  }, []);
+
+  const updateDrawCtrl = (updated: Partial<DrawCtrl>) => {
+    setDrawCtrl((prev) => {
+      const newCtrl = { ...prev, ...updated };
+      saveDrawCtrl(newCtrl);
+      return newCtrl;
+    });
+  };
+  return (
+    <DrawCtrlContext.Provider value={{ drawCtrl, updateDrawCtrl }}>
+      {children}
+    </DrawCtrlContext.Provider>
+  );
+};

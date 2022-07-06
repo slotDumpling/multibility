@@ -14,13 +14,13 @@ import {
 } from "@ant-design/icons";
 import { Button, ButtonProps, Modal, Popover, Radio } from "antd";
 import { CSSTransition } from "react-transition-group";
-import { DrawCtrl } from "../../../lib/draw/drawCtrl";
+import { DrawCtrl } from "../../../lib/draw/DrawCtrl";
+import { DarkModeContext } from "../../../lib/dark";
 import { ColorSelect, PenPanel } from "./PenPanel";
 import TextArea from "antd/lib/input/TextArea";
 import { DrawRefType } from "../../draw/Draw";
 import { allColors } from "../../../lib/color";
 import { useDrag } from "@use-gesture/react";
-import { ReaderStateCtx } from "../Reader";
 import { createPortal } from "react-dom";
 import { saveAs } from "file-saver";
 import "./drawTools.sass";
@@ -130,7 +130,7 @@ export const TextTool: FC<{
   const [text, setText] = useState("");
   const [color, setColor] = useState(allColors[0]);
   const [align, setAlign] = useState("center");
-  const { forceLight } = useContext(ReaderStateCtx);
+  const { forceLight } = useContext(DarkModeContext);
 
   useEffect(() => {
     const pointText = drawRef.current?.pointText;

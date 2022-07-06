@@ -9,17 +9,14 @@ import {
   createContext,
 } from "react";
 import {
-  DrawCtrl,
-  getDrawCtrl,
-  defaultDrawCtrl,
-} from "../../lib/draw/drawCtrl";
-import {
   NoteInfo,
   NotePage,
   createPage,
   defaultNotePage,
 } from "../../lib/note/note";
+import { DrawCtrlContext, DrawCtrlProvider } from "../../lib/draw/DrawCtrl";
 import { NewPageInfo, ReorderInfo, SyncInfo } from "../../lib/network/io";
+import { DarkModeContext, DarkModeProvider } from "../../lib/dark";
 import { useMemoizedFn as useEvent, useSafeState } from "ahooks";
 import { SetOperation, StateSet } from "../../lib/draw/StateSet";
 import Draw, { ActiveToolKey, DrawRefType } from "../draw/Draw";
@@ -47,26 +44,16 @@ export const ReaderStateCtx = createContext({
   teamState: undefined as TeamState | undefined,
   pageRec: undefined as Map<string, NotePage> | undefined,
   pageOrder: undefined as string[] | undefined,
-  saved: true,
   currPageID: "",
-  drawCtrl: defaultDrawCtrl,
-  forceLight: false,
 });
 
 export const ReaderMethodCtx = createContext({
   scrollPage: (pageID: string) => {},
   switchPageMarked: (pageID: string) => {},
-  updateStateSet: (cb: (prevSS: StateSet) => StateSet) => {},
   addPage: (prevPageID: string, copy?: boolean) => {},
   addFinalPage: () => {},
   deletePage: (pageID: string) => {},
   saveReorder: async (order: string[], push: boolean) => {},
-  setInviewRatios: (() => {}) as Setter<Map<string, number>>,
-  setDrawCtrl: (() => {}) as Setter<DrawCtrl>,
-  instantSave: (() => {}) as () => Promise<void> | undefined,
-  handleUndo: () => {},
-  handleRedo: () => {},
-  setForceLight: (() => {}) as Setter<boolean>,
 });
 
 export default function Reader() {
@@ -76,10 +63,8 @@ export default function Reader() {
   const [pageRec, setPageRec] = useState<Map<string, NotePage>>();
   const [noteInfo, setNoteInfo] = useState<NoteInfo>();
   const [stateSet, setStateSet] = useState<StateSet>();
-  const [drawCtrl, setDrawCtrl] = useState(defaultDrawCtrl);
   const [pageOrder, setPageOrder] = useState<string[]>();
   const [saved, setSaved] = useSafeState(true);
-  const [forceLight, setForceLight] = useState(false);
 
   const { io, teamOn, teamState, addTeamStatePage } = useContext(TeamCtx);
   const { setInviewRatios, scrollPage, sectionRef, currPageID } = useScrollPage(
@@ -99,7 +84,6 @@ export default function Reader() {
       setPageOrder(pageOrder);
       setNoteInfo(noteInfo);
       setStateSet(StateSet.createFromPages(pageRec));
-      setDrawCtrl(await getDrawCtrl());
     })();
   }, [nav, noteID, teamOn]);
 
@@ -213,15 +197,22 @@ export default function Reader() {
     newOrder?.length && saveReorder(newOrder, true);
   };
 
-  const handleUndo = () => updateStateSet((prev) => prev.undo());
-  const handleRedo = () => updateStateSet((prev) => prev.redo());
   const renderResult = (
-    <div className="reader container" data-force-light={forceLight}>
-      <ReaderHeader />
+    <div className="reader container">
+      <ReaderHeader
+        saved={saved}
+        instantSave={instantSave}
+        handleUndo={() => updateStateSet((prev) => prev.undo())}
+        handleRedo={() => updateStateSet((prev) => prev.redo())}
+      />
       <main>
         {pageOrder?.map((uid) => (
           <section key={uid} className="note-page" ref={sectionRef(uid)}>
-            <PageContainer uid={uid} />
+            <PageContainer
+              uid={uid}
+              updateStateSet={updateStateSet}
+              setInviewRatios={setInviewRatios}
+            />
           </section>
         ))}
         <AddPageButton />
@@ -232,16 +223,13 @@ export default function Reader() {
   return (
     <ReaderStateCtx.Provider
       value={{
-        saved,
         noteID,
         pageRec,
-        drawCtrl,
         noteInfo,
         stateSet,
         teamState,
         pageOrder,
         currPageID,
-        forceLight,
       }}
     >
       <ReaderMethodCtx.Provider
@@ -249,33 +237,36 @@ export default function Reader() {
           addPage,
           scrollPage,
           deletePage,
-          setDrawCtrl,
           saveReorder,
-          instantSave,
           addFinalPage,
-          handleRedo,
-          handleUndo,
-          updateStateSet,
-          setInviewRatios,
           switchPageMarked,
-          setForceLight,
         }}
       >
-        {renderResult}
+        <DrawCtrlProvider>
+          <DarkModeProvider>{renderResult}</DarkModeProvider>
+        </DrawCtrlProvider>
       </ReaderMethodCtx.Provider>
     </ReaderStateCtx.Provider>
   );
 }
 
-const PageContainer: FC<{ uid: string }> = ({ uid }) => {
+const PageContainer: FC<{
+  uid: string;
+  updateStateSet: (cb: (prevSS: StateSet) => StateSet) => void;
+  setInviewRatios: Setter<Map<string, number>>;
+}> = ({ uid, updateStateSet, setInviewRatios }) => {
   const { pageRec, stateSet, teamState } = useContext(ReaderStateCtx);
-  const { updateStateSet } = useContext(ReaderMethodCtx);
 
   const page = pageRec?.get(uid);
   const drawState = stateSet?.getOneState(uid);
   const teamStateMap = teamState?.getOnePageStateMap(uid);
   const updateState = (ds: DrawState) => {
     updateStateSet((prev) => prev.setState(uid, ds));
+  };
+
+  const onViewChange = (visible: boolean, ratio: number) => {
+    if (!visible) return setInviewRatios((prev) => prev.delete(uid));
+    setInviewRatios((prev) => prev.set(uid, ratio));
   };
 
   if (!page || !drawState) return null;
@@ -285,7 +276,7 @@ const PageContainer: FC<{ uid: string }> = ({ uid }) => {
       teamStateMap={teamStateMap}
       updateState={updateState}
       pdfIndex={page.pdfIndex}
-      uid={uid}
+      onViewChange={onViewChange}
     />
   );
 };
@@ -297,30 +288,24 @@ export const PageWrapper = ({
   updateState,
   pdfIndex,
   preview = false,
-  uid = "",
+  onViewChange = () => {},
 }: {
   drawState: DrawState;
-  uid?: string;
   teamStateMap?: Map<string, DrawState>;
   thumbnail?: string;
   pdfIndex?: number;
   updateState?: (ds: DrawState) => void;
+  onViewChange?: (visible: boolean, ratio: number) => void;
   preview?: boolean;
 }) => {
-  const { setInviewRatios } = useContext(ReaderMethodCtx);
+  const [ref, visible, entry] = useInView({ threshold: range(0, 1.1, 0.1) });
+  useEffect(() => {
+    if (!entry || !visible) return onViewChange(false, 0);
+    onViewChange(true, entry.intersectionRatio);
+  }, [visible, entry, onViewChange]);
+
   const { noteID } = useContext(ReaderStateCtx);
   const [fullImg, setFullImg] = useState<string>();
-  const [ref, visible, entry] = useInView({ threshold: range(0, 1.1, 0.1) });
-
-  useEffect(() => {
-    if (preview) return;
-    if (!entry || !visible) {
-      setInviewRatios((prev) => prev.delete(uid));
-    } else {
-      setInviewRatios((prev) => prev.set(uid, entry.intersectionRatio));
-    }
-  }, [visible, entry, uid, preview, setInviewRatios]);
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const loadImage = useCallback(
     once(async () => {
@@ -346,9 +331,10 @@ export const PageWrapper = ({
 
   const { height, width } = drawState;
   const ratio = height / width;
+  const { forceLight } = useContext(DarkModeContext);
 
   return (
-    <div ref={ref} className="page-wrapper">
+    <div ref={ref} className="page-wrapper" data-force-light={forceLight}>
       <svg viewBox={`0 0 100 ${ratio * 100}`} />
       {drawShow && (
         <DrawWrapper
@@ -376,7 +362,7 @@ const DrawWrapper = ({
   preview?: boolean;
   imgSrc?: string;
 }) => {
-  const { drawCtrl } = useContext(ReaderStateCtx);
+  const { drawCtrl } = useContext(DrawCtrlContext);
   const [activeTool, setActiveTool] = useState<ActiveToolKey>("");
   const drawRef = useRef<DrawRefType>(null);
 

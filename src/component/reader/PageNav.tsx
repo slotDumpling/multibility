@@ -30,6 +30,7 @@ import { TeamCtx } from "./Team";
 import "./preview.sass";
 import { UserAvatar } from "../widgets/UserAvatar";
 import classNames from "classnames";
+import { DarkModeContext } from "../../lib/dark";
 
 const PreviewCtx = React.createContext({
   activeKey: "ALL",
@@ -37,8 +38,9 @@ const PreviewCtx = React.createContext({
 });
 
 const PageNavContent = () => {
-  const { pageOrder, currPageID, forceLight } = useContext(ReaderStateCtx);
+  const { pageOrder, currPageID } = useContext(ReaderStateCtx);
   const { scrollPage, saveReorder } = useContext(ReaderMethodCtx);
+  const { forceLight } = useContext(DarkModeContext);
   const { activeKey } = useContext(PreviewCtx);
   const refRec = useRef<Record<string, HTMLElement>>({});
 
@@ -132,7 +134,6 @@ const PagePreview: FC<{
           {...dragHandleProps}
         >
           <PageWrapper
-            uid={uid}
             drawState={teamStateMap?.get(chosen) || drawState}
             teamStateMap={chosen ? undefined : teamStateMap}
             thumbnail={image}

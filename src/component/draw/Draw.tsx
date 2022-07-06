@@ -15,7 +15,7 @@ import {
   Splitter,
   Stroke,
 } from "../../lib/draw/DrawState";
-import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/drawCtrl";
+import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/DrawCtrl";
 import { usePreventTouch, usePreventGesture } from "./touch";
 import { releaseCanvas } from "../../lib/draw/canvas";
 import { usePinch } from "@use-gesture/react";

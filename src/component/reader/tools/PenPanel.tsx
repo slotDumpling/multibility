@@ -1,5 +1,5 @@
 import { CSSProperties, FC, useEffect, useMemo, useState } from "react";
-import { defaultWidthList, DrawCtrl } from "../../../lib/draw/drawCtrl";
+import { defaultWidthList, DrawCtrl } from "../../../lib/draw/DrawCtrl";
 import { ColorCirle } from "../../widgets/ColorCircle";
 import { WIDTH } from "../../../lib/draw/DrawState";
 import { Popover, Segmented, Slider } from "antd";

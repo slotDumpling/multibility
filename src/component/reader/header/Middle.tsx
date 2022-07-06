@@ -1,7 +1,7 @@
 import { FC, useContext } from "react";
 import { Button, message, Popover, ButtonProps, Segmented } from "antd";
-import { ReaderMethodCtx, ReaderStateCtx } from "../Reader";
-import { DrawCtrl, saveDrawCtrl } from "../../../lib/draw/drawCtrl";
+import { ReaderStateCtx } from "../Reader";
+import { DrawCtrlContext } from "../../../lib/draw/DrawCtrl";
 import {
   BulbFilled,
   BulbOutlined,
@@ -12,20 +12,16 @@ import {
 } from "@ant-design/icons";
 import IconFont from "../../ui/IconFont";
 import { PenPanel, WidthSelect } from "../tools/PenPanel";
+import { DarkModeContext } from "../../../lib/dark";
 
-export const HeaderMiddle = () => {
-  const { stateSet, drawCtrl, forceLight } = useContext(ReaderStateCtx);
-  const { setDrawCtrl, handleUndo, handleRedo, setForceLight } =
-    useContext(ReaderMethodCtx);
+export const HeaderMiddle: FC<{
+  handleUndo: () => void;
+  handleRedo: () => void;
+}> = ({ handleUndo, handleRedo }) => {
+  const { stateSet } = useContext(ReaderStateCtx);
+  const { drawCtrl, updateDrawCtrl } = useContext(DrawCtrlContext);
+  const { forceLight, setForceLight } = useContext(DarkModeContext);
   const { mode, finger } = drawCtrl;
-
-  const updateDrawCtrl = (updated: Partial<DrawCtrl>) => {
-    setDrawCtrl((prev) => {
-      const newCtrl = { ...prev, ...updated };
-      saveDrawCtrl(newCtrl);
-      return newCtrl;
-    });
-  };
 
   return (
     <div className="middle">
@@ -63,23 +59,21 @@ export const HeaderMiddle = () => {
         icon={forceLight ? <BulbFilled /> : <BulbOutlined />}
         onClick={() => setForceLight((prev) => !prev)}
       />
-      <PenButton updateDrawCtrl={updateDrawCtrl} />
-      <EraserButton updateDrawCtrl={updateDrawCtrl} />
+      <PenButton />
+      <EraserButton />
       <Button
         type={mode === "text" ? "default" : "text"}
         shape="circle"
         onClick={() => updateDrawCtrl({ mode: "text" })}
         icon={<IconFont type="icon-text1" />}
       />
-      <SelectButton updateDrawCtrl={updateDrawCtrl} />
+      <SelectButton />
     </div>
   );
 };
 
-const PenButton: FC<{
-  updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
-}> = ({ updateDrawCtrl }) => {
-  const { drawCtrl } = useContext(ReaderStateCtx);
+const PenButton = () => {
+  const { drawCtrl, updateDrawCtrl } = useContext(DrawCtrlContext);
   const { mode } = drawCtrl;
 
   const btnProps: ButtonProps = {
@@ -105,10 +99,8 @@ const PenButton: FC<{
   );
 };
 
-const EraserButton: FC<{
-  updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
-}> = ({ updateDrawCtrl }) => {
-  const { drawCtrl } = useContext(ReaderStateCtx);
+const EraserButton = () => {
+  const { drawCtrl, updateDrawCtrl } = useContext(DrawCtrlContext);
   const { mode, pixelEraser } = drawCtrl;
 
   const btnProps: ButtonProps = {
@@ -154,12 +146,11 @@ const EraserButton: FC<{
   );
 };
 
-const SelectButton: FC<{
-  updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
-}> = ({ updateDrawCtrl }) => {
+const SelectButton = () => {
   const {
     drawCtrl: { lasso, mode },
-  } = useContext(ReaderStateCtx);
+    updateDrawCtrl,
+  } = useContext(DrawCtrlContext);
 
   const icon = lasso ? <IconFont type="icon-lasso1" /> : <GatewayOutlined />;
 
