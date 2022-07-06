@@ -112,9 +112,11 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       scope.current.activate();
       const raster = new Raster(imgSrc);
       raster.project.layers[0].addChild(raster);
+      raster.sendToBack();
       raster.onLoad = () => {
         raster.view.update();
         raster.fitBounds(new paper.Rectangle(0, 0, width, height));
+        raster.bringToFront();
       };
 
       return () => void raster?.remove();
