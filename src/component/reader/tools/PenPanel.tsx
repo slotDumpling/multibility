@@ -8,6 +8,7 @@ import { Setter } from "../../../lib/hooks";
 import IconFont from "../../ui/IconFont";
 import { List } from "immutable";
 import "./penPanel.sass";
+import { useForceLight } from "../../../lib/Dark";
 
 export const PenPanel: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
@@ -135,8 +136,9 @@ export const ColorSelect: FC<{
   color: string;
   setColor: (color: string) => void;
 }> = ({ setColor, color }) => {
+  const [forceLight] = useForceLight();
   return (
-    <div className="color-select">
+    <div className="color-select" data-force-light={forceLight}>
       {allColors.map((c) => (
         <label key={c}>
           <input

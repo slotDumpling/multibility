@@ -19,7 +19,7 @@ export const loadDarkMode = async () => {
       ],
       invert: [
         "[data-force-light=false] .draw-canvas",
-        "[data-force-light=false] .color-select .circle",
+        ".color-select[data-force-light=false]  .circle",
         "[data-force-light=false] .width-circle.lineWidth",
         "[data-force-light=false] .font-icon",
       ],
@@ -30,22 +30,19 @@ export const loadDarkMode = async () => {
   );
 };
 
-const DarkModeContext = React.createContext({
-  forceLight: false,
-  setForceLight: (() => {}) as Dispatch<SetStateAction<boolean>>,
-});
+const DarkModeContext = React.createContext([false, () => {}] as [
+  boolean,
+  Dispatch<SetStateAction<boolean>>
+]);
 export function useForceLight() {
-  const { forceLight, setForceLight } = useContext(DarkModeContext);
-  useDebugValue(forceLight);
-  return [forceLight, setForceLight] as [
-    typeof forceLight,
-    typeof setForceLight
-  ];
+  const tuple = useContext(DarkModeContext);
+  useDebugValue(tuple[0]);
+  return tuple;
 }
 export const DarkModeProvider: FC = ({ children }) => {
-  const [forceLight, setForceLight] = useState(false);
+  const tuple = useState(false);
   return (
-    <DarkModeContext.Provider value={{ forceLight, setForceLight }}>
+    <DarkModeContext.Provider value={tuple}>
       {children}
     </DarkModeContext.Provider>
   );
