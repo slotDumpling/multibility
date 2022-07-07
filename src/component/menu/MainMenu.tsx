@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import {
   createNewNote,
   getAllNotes,
@@ -15,7 +15,7 @@ import { Button } from "antd";
 import "./menu.sass";
 import { MenuHeader } from "./header";
 
-export const MenuCtx = createContext({
+export const MenuCtx = React.createContext({
   tagUid: "DEFAULT",
   editing: false,
   allNotes: {} as Record<string, NoteInfo>,

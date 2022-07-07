@@ -1,4 +1,4 @@
-import {
+import React, {
   FC,
   useRef,
   useMemo,
@@ -6,7 +6,6 @@ import {
   useEffect,
   useContext,
   useCallback,
-  createContext,
 } from "react";
 import {
   NoteInfo,
@@ -36,16 +35,16 @@ import { Map } from "immutable";
 import { message } from "antd";
 import "./reader.sass";
 
-export const ReaderStateCtx = createContext({
-  noteID: "",
-  noteInfo: undefined as NoteInfo | undefined,
-  stateSet: undefined as StateSet | undefined,
-  pageRec: undefined as Map<string, NotePage> | undefined,
-  pageOrder: undefined as string[] | undefined,
-  currPageID: "",
-});
+export const ReaderStateCtx = React.createContext<{
+  noteID: string;
+  noteInfo?: NoteInfo;
+  stateSet?: StateSet;
+  pageRec?: Map<string, NotePage>;
+  pageOrder?: string[];
+  currPageID: string;
+}>({ noteID: "", currPageID: "" });
 
-export const ReaderMethodCtx = createContext({
+export const ReaderMethodCtx = React.createContext({
   scrollPage: (pageID: string) => {},
   switchPageMarked: (pageID: string) => {},
   addPage: (prevPageID: string, copy?: boolean) => {},

@@ -30,15 +30,16 @@ export const loadDarkMode = async () => {
   );
 };
 
-const DarkModeContext = React.createContext([false, () => {}] as [
-  boolean,
-  Dispatch<SetStateAction<boolean>>
-]);
+const DarkModeContext = React.createContext<
+  [boolean, Dispatch<SetStateAction<boolean>>]
+>([false, () => {}]);
+
 export function useForceLight() {
   const tuple = useContext(DarkModeContext);
   useDebugValue(tuple[0]);
   return tuple;
 }
+
 export const DarkModeProvider: FC = ({ children }) => {
   const tuple = useState(false);
   return (

@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   getTeamNoteState,
   loadTeamNoteInfo,
@@ -17,7 +17,7 @@ import { message } from "antd";
 import { Set } from "immutable";
 import Reader from "./Reader";
 
-export const TeamCtx = createContext({
+export const TeamCtx = React.createContext({
   io: undefined as Socket | undefined,
   code: 0,
   teamOn: false,

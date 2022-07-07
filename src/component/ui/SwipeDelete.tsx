@@ -1,13 +1,12 @@
 import React, {
-  createContext,
-  Dispatch,
   FC,
+  useRef,
+  Dispatch,
+  useState,
+  useEffect,
+  useContext,
   SetStateAction,
   TransitionEventHandler,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
 } from "react";
 import { useSwipeable } from "react-swipeable";
 import classNames from "classnames";
@@ -15,7 +14,7 @@ import "./swipe-delete.sass";
 import { v4 as getUid } from "uuid";
 import { useEventWaiter } from "../../lib/hooks";
 
-const SwipeDeleteContext = createContext({
+const SwipeDeleteContext = React.createContext({
   nowSwiped: "",
   setNowSwiped: (() => {}) as Dispatch<SetStateAction<string>>,
 });
