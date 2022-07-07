@@ -16,41 +16,6 @@
     top: calc( $header-high-height + 10px )
   > * + *
     margin-left: 5px
-  .rotate-wrapper
-    position: relative
-    width: 40px
-    display: flex
-    justify-content: center
-    touch-action: none
-    transition: width $speed
-    button
-      width: 100%
-      transition: opacity $speed
-    .arrow
-      position: absolute
-      top: 50%
-      transform: translateY(-50%)
-      transition: opacity $speed
-      display: flex
-      opacity: 0
-      pointer-events: none
-      &.left
-        left: 5px
-      &.right
-        right: 5px
-    &:not([data-dragged="true"]):hover
-      width: 60px
-      .arrow
-        opacity: 0.5
-    &[data-dragged="true"]
-      overflow: hidden
-      width: 90px
-      .gear
-        @include absolute(5px, -47px, 5px, -45px)
-        background: linear-gradient(to right, #aaa 20%, #0000 0)
-        background-size: 5px 100%
-      button
-        opacity: 0
 
 .select-tool.enter
   transform: translate(-50%, -10px)

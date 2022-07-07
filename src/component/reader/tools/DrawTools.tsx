@@ -1,29 +1,25 @@
-import { FC, RefObject, useEffect, useRef, useState } from "react";
+import { FC, RefObject, useEffect, useState } from "react";
 import {
   CopyOutlined,
   DeleteOutlined,
   PictureOutlined,
   BgColorsOutlined,
-  CaretLeftOutlined,
   AlignLeftOutlined,
   FontColorsOutlined,
-  CaretRightOutlined,
   AlignRightOutlined,
-  RotateRightOutlined,
   AlignCenterOutlined,
 } from "@ant-design/icons";
 import { Button, ButtonProps, Modal, Popover, Radio } from "antd";
 import { CSSTransition } from "react-transition-group";
 import { DrawCtrl } from "../../../lib/draw/DrawCtrl";
 import { ColorSelect, PenPanel } from "./PenPanel";
+import { useForceLight } from "../../../lib/Dark";
 import TextArea from "antd/lib/input/TextArea";
-import { DrawRefType } from "../../draw/Draw";
 import { allColors } from "../../../lib/color";
-import { useDrag } from "@use-gesture/react";
+import { DrawRefType } from "../../draw/Draw";
 import { createPortal } from "react-dom";
 import { saveAs } from "file-saver";
 import "./drawTools.sass";
-import { useForceLight } from "../../../lib/Dark";
 
 export const SelectTool: FC<{
   drawRef: RefObject<DrawRefType>;
@@ -44,25 +40,6 @@ export const SelectToolContent: FC<{
   };
 
   const [currDrawCtrl, setCurrDrawCtrl] = useState<Partial<DrawCtrl>>({});
-  const rotateEl = useRef<HTMLDivElement>(null);
-  const [dragged, setDragged] = useState(false);
-  const [transX, setTransX] = useState(0);
-  const gearStyle = { transform: `translateX(${transX}px)` };
-
-  useDrag(
-    ({ first, last, offset, delta }) => {
-      setTransX(offset[0]);
-      drawRef.current?.rotateSelected(delta[0] / 2, last);
-      first && setDragged(true);
-      last && setDragged(false);
-    },
-    {
-      target: rotateEl,
-      filterTaps: true,
-      rubberband: 0.05,
-      bounds: { left: -90, right: 90 },
-    }
-  );
 
   const getRaster = () => {
     if (!drawRef.current) return;
@@ -96,16 +73,6 @@ export const SelectToolContent: FC<{
       >
         <Button icon={<BgColorsOutlined />} {...btnProps} />
       </Popover>
-      <div className="rotate-wrapper" data-dragged={dragged} ref={rotateEl}>
-        <Button
-          icon={<RotateRightOutlined />}
-          onClick={() => drawRef.current?.rotateSelected(90, true)}
-          {...btnProps}
-        />
-        <CaretLeftOutlined className="arrow left" />
-        <CaretRightOutlined className="arrow right" />
-        <div className="gear" style={gearStyle} />
-      </div>
       <Button
         icon={<CopyOutlined />}
         onClick={() => drawRef.current?.duplicateSelected()}

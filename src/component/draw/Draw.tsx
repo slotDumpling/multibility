@@ -17,6 +17,7 @@ import {
 } from "../../lib/draw/DrawState";
 import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/DrawCtrl";
 import { usePreventTouch, usePreventGesture } from "./touch";
+import { getCursorStyle, ROTATE_CURSOR } from "./cursor";
 import { releaseCanvas } from "../../lib/draw/canvas";
 import { usePinch } from "@use-gesture/react";
 import useSize from "@react-hook/size";
@@ -28,7 +29,6 @@ const { Path, Size, Point, Group, Color, Raster, Layer } = paper;
 export type ActiveToolKey = "" | "select" | "text";
 export interface DrawRefType {
   deleteSelected: () => void;
-  rotateSelected: (angle: number, last?: boolean) => void;
   duplicateSelected: () => void;
   mutateStyle: (updated: Partial<DrawCtrl>) => void;
   rasterize: () => string;
@@ -67,6 +67,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     const [group, setGroup] = useState<paper.Item[]>([]);
     const [path, setPath] = usePaperItem<paper.Path>();
     const [rect, setRect] = usePaperItem<paper.Path.Rectangle>();
+    const [rotateHandle, setRotateHandle] = usePaperItem<paper.Path>();
 
     useEffect(() => {
       const cvs = canvasEl.current;
@@ -158,7 +159,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       setSelected(false);
       setPath(undefined);
       setRect(undefined);
-    }, [setPath, setRect]);
+      setRotateHandle(undefined);
+    }, [setPath, setRect, setRotateHandle]);
 
     useEffect(() => {
       if (mode === "select") return resetSelect;
@@ -188,12 +190,16 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           setSelected(false);
         } else {
           // check if the point hit the segment point.
-          const hitRes = rect?.hitTest(e.point, { segments: true });
+          let hitRes =
+            rect?.hitTest(e.point, { segments: true }) ??
+            rotateHandle?.hitTest(e.point, { segments: true, selected: true });
           hitRef.current = hitRes;
           if (hitRes) return;
+
           // if the point is outside of selection, reset selection
           if (rect?.contains(e.point)) return;
           downRect(e);
+          setRotateHandle(undefined);
           setSelected(false);
         }
       },
@@ -231,25 +237,42 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       select: lasso ? dragPath : resizeRect,
       selected(e: paper.MouseEvent) {
         const hitRes = hitRef.current;
-        if (hitRes?.segment) {
-          // resize selected items
-          const moveP = hitRes.segment.point;
-          const baseP = hitRes.segment.next.next.point;
-          const diagonal = moveP.subtract(baseP);
-          const projection = e.point.subtract(baseP).project(diagonal);
-          const scale = projection.x / diagonal.x;
-          if (scale < 0) return;
+        if (hitRes?.segment && rect) {
+          const segment = hitRes.segment;
+          const rotating = segment.selected;
+          if (rotating) {
+            // rotate select items
+            const { center } = rect.bounds;
+            const axis = segment.point.subtract(center);
+            const line = e.point.subtract(center);
+            const angle = line.angle - axis.angle;
+            rect.rotate(angle, center);
+            rotateHandle?.rotate(angle, center);
+            chosenItems.forEach((item) => {
+              item?.rotate(angle, center);
+            });
+          } else {
+            // resize selected items
+            const moveP = segment.point;
+            const baseP = segment.next.next.point;
+            const diagonal = moveP.subtract(baseP);
+            const projection = e.point.subtract(baseP).project(diagonal);
+            const scale = projection.x / diagonal.x;
+            if (scale < 0) return;
 
-          rect?.scale(scale, baseP);
-          chosenItems.forEach((item) => {
-            item.scale(scale, baseP);
-            item.strokeWidth *= scale;
-          });
+            rect.scale(scale, baseP);
+            rotateHandle?.scale(scale, baseP);
+            chosenItems.forEach((item) => {
+              item.scale(scale, baseP);
+              item.strokeWidth *= scale;
+            });
+          }
         } else {
           // move selected items
           chosenItems.forEach((item) => item.translate(e.delta));
           path?.translate(e.delta);
           rect?.translate(e.delta);
+          rotateHandle?.translate(e.delta);
         }
       },
       text(e: paper.MouseEvent) {
@@ -343,6 +366,11 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         } else {
           if (!rect || Math.abs(rect.area) < 1_000) return setRect(undefined);
           selection = checkLasso(group, rect);
+          const link = new Path();
+          const { topCenter } = rect.bounds;
+          link.add(topCenter, topCenter.subtract(new Point(0, 100)));
+          link.lastSegment.selected = true;
+          setRotateHandle(link);
         }
         setChosenIDs(selection);
         setSelected(true);
@@ -363,14 +391,17 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       } else if (paperMode === "selected") {
         setCursor(lasso ? "crosshair" : "nwse-resize");
       } else if (paperMode === "draw" || paperMode === "erase") {
-        setCursor(cursorStyle(drawCtrl, ratio));
+        setCursor(getCursorStyle(drawCtrl, ratio));
       }
     }, [paperMode, lasso, drawCtrl, ratio]);
 
     const handleMove = {
       selected(e: paper.MouseEvent) {
-        const hitRes = rect?.hitTest(e.point, { segments: true });
+        const hitRes =
+          rect?.hitTest(e.point, { segments: true }) ??
+          rotateHandle?.hitTest(e.point, { segments: true, selected: true });
         if (hitRes?.segment) {
+          if (hitRes.segment.selected) return setCursor(ROTATE_CURSOR);
           const moveP = hitRes.segment.point;
           const baseP = hitRes.segment.next.next.point;
           const diagonal = moveP.subtract(baseP);
@@ -424,20 +455,6 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       resetSelect();
       if (!chosenIDs.length) return;
       onChange((prev) => DrawState.eraseStrokes(prev, chosenIDs));
-    };
-
-    const rotateSelected = (angle: number, last = false) => {
-      let aniCount = last ? 10 : 1;
-      const dAngle = angle / aniCount;
-      const center = (rect || path)?.position;
-      const rotate = () => {
-        chosenItems.forEach((item) => item.rotate(dAngle, center));
-        rect?.rotate(dAngle, center);
-        path?.rotate(dAngle, center);
-        if (--aniCount > 0) requestAnimationFrame(rotate);
-        else last && updateMutation();
-      };
-      rotate();
     };
 
     const mutateStyle = (updated: Partial<DrawCtrl>) => {
@@ -500,7 +517,6 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       deleteSelected,
       duplicateSelected,
       cancelText,
-      rotateSelected,
       submitText,
       mutateStyle,
       rasterize,
@@ -638,14 +654,6 @@ const startStroke = (drawCtrl: DrawCtrl) => {
   return path;
 };
 
-const cursorStyle = (drawCtrl: DrawCtrl, ratio: number) => {
-  const { lineWidth, eraserWidth, mode } = drawCtrl;
-  const size = ratio * (mode === "erase" ? eraserWidth : lineWidth);
-  if (size < 5) return "crosshair";
-  const half = size / 2;
-  return `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="%23FFF7" width="${size}" height="${size}" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5"/></svg>') ${half} ${half}, auto`;
-};
-
 const moveDash = (item: paper.Item) => {
   item.dashOffset = 0;
   item.dashArray = [30, 20];
@@ -692,7 +700,7 @@ const checkLasso = (items: paper.Item[], selection: paper.Path) => {
       } else {
         const checkedP = new Path.Rectangle(item.bounds);
         checkedP.remove();
-        return isInside(checkedP);
+        return isInside(checkedP) || selection.isInside(item.bounds);
       }
     })
     .map(({ name }) => name);
