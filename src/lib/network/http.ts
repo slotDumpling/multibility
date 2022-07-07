@@ -7,6 +7,7 @@ import {
 } from "../note/note";
 import { loadNote, saveTeamNote, updateTeamNote } from "../note/archive";
 import { getUserID } from "../user";
+import localforage from "localforage";
 
 export let BASE_URL = "https://api.slotdumpling.top/paint";
 // BASE_URL = "http://192.168.1.14:8090/paint";
@@ -123,6 +124,7 @@ export async function updatePages(noteID: string) {
   }
 }
 
+const teamForage = localforage.createInstance({ name: "teamState" });
 export async function getTeamNoteState(noteID: string) {
   try {
     const { data } = await axios.get(`state/${noteID}`, {
@@ -130,9 +132,14 @@ export async function getTeamNoteState(noteID: string) {
     });
     if (data.statusCode !== 200) return null;
     const { teamPages } = data;
+    teamForage.setItem(noteID, teamPages);
     return teamPages as Record<string, TeamPage>;
   } catch (e) {
     console.error(e);
     return null;
   }
+}
+
+export async function getCachedTeamState(noteID: string) {
+  return teamForage.getItem<Record<string, TeamPage>>(noteID);
 }

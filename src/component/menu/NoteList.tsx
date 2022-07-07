@@ -16,10 +16,12 @@ import { useNavigate } from "react-router-dom";
 import calender from "dayjs/plugin/calendar";
 import { NoteHeader } from "./NoteHeader";
 import { Setter } from "../../lib/hooks";
-import { List, Set } from "immutable";
+import { List, Map, Set } from "immutable";
 import { MenuCtx } from "./MainMenu";
 import { Input } from "antd";
 import dayjs from "dayjs";
+import { getCachedTeamState } from "../../lib/network/http";
+import { TeamState } from "../../lib/draw/TeamState";
 
 dayjs.extend(calender);
 
@@ -152,6 +154,7 @@ const NoteItem: FC<{
     const { state, ratio } = firstPage;
     return DrawState.loadFromFlat(state, ratio);
   }, [firstPage]);
+  const [teamStateMap, setTeamStateMap] = useState<Map<string, DrawState>>();
 
   useEffect(() => {
     (async () => {
@@ -159,7 +162,13 @@ const NoteItem: FC<{
       if (!stored) return;
       const { pageRec, pageOrder } = stored;
       const firstID = pageOrder[0];
-      firstID && setFirstPage(pageRec[firstID]);
+      if (!firstID) return;
+      setFirstPage(pageRec[firstID]);
+      const teamNote = await getCachedTeamState(uid);
+      if (!teamNote) return;
+      setTeamStateMap(
+        TeamState.createFromTeamPages(teamNote).getOnePageStateMap(firstID)
+      );
     })();
   }, [uid]);
 
@@ -171,6 +180,7 @@ const NoteItem: FC<{
       {firstPage && drawState && (
         <PageWrapper
           drawState={drawState}
+          teamStateMap={teamStateMap}
           thumbnail={firstPage.image}
           preview
         />

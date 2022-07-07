@@ -42,7 +42,7 @@ export class TeamState {
   getPageValidUsers(pageID: string) {
     const map = this.getOnePageStateMap(pageID);
     if (!map) return [];
-    return Array.from(map?.filter((ds) => !ds.isEmpty()).keys());
+    return Array.from(map.filter((ds) => !ds.isEmpty()).keys());
   }
 
   getPageRatio(pageID: string) {
