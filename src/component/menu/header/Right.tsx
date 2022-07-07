@@ -1,3 +1,4 @@
+import { useContext, useState } from "react";
 import {
   Menu,
   Input,
@@ -20,7 +21,6 @@ import {
 } from "@ant-design/icons";
 import * as serviceWorkerRegistration from "../../../serviceWorkerRegistration";
 import { CSSTransitionProps } from "react-transition-group/CSSTransition";
-import { createContext, useContext, useState } from "react";
 import { getUserName, saveUserName } from "../../../lib/user";
 import { clearImageCache } from "../../../lib/note/imgCache";
 import { createNewNote } from "../../../lib/note/archive";
@@ -29,17 +29,12 @@ import { getNoteID } from "../../../lib/network/http";
 import { useNavigate } from "react-router-dom";
 import Dragger from "antd/lib/upload/Dragger";
 import { PasscodeInput } from "antd-mobile";
-import { Setter } from "../../../lib/hooks";
 import localforage from "localforage";
 import { MenuCtx } from "../MainMenu";
 import { useEffect } from "react";
 import { FC } from "react";
 import "./right.sass";
-
-const activeKeyCtx = createContext({
-  active: "MENU",
-  setActive: (() => {}) as Setter<string>,
-});
+import { ActiveKeyProvider, useActiveKey } from "../../../lib/hooks";
 
 export default function Right() {
   return (
@@ -56,7 +51,7 @@ const SeconaryMenu: FC<
     keyName: string;
   } & CSSTransitionProps
 > = ({ children, title, keyName, ...cssTransProps }) => {
-  const { active, setActive } = useContext(activeKeyCtx);
+  const [active, setActive] = useActiveKey();
   return (
     <CSSTransition in={active === keyName} {...cssTransProps}>
       <div className="secondary">
@@ -113,7 +108,7 @@ const UploadPdfPage = () => {
 };
 
 const ProfilePage = () => {
-  const { setActive } = useContext(activeKeyCtx);
+  const [, setActive] = useActiveKey();
   const userName = getUserName();
   const [name, setName] = useState(userName);
   const handleEnter = () => {
@@ -202,7 +197,7 @@ const menuItems = [
 ];
 
 const PrimaryMenu = () => {
-  const { setActive } = useContext(activeKeyCtx);
+  const [, setActive] = useActiveKey();
   return (
     <div className="primary-menu">
       <Menu onClick={({ key }) => setActive(key)} items={menuItems} />
@@ -212,7 +207,7 @@ const PrimaryMenu = () => {
 
 const OthersPage = () => {
   const [height, setHeight] = useState(0);
-  const [active, setActive] = useState("");
+  const [active, setActive] = useActiveKey();
 
   const calcHeight = (el: HTMLElement) => {
     setHeight(el.clientHeight);
@@ -224,26 +219,19 @@ const OthersPage = () => {
     unmountOnExit: true,
   };
 
-  useEffect(() => setActive("MENU"), []);
+  useEffect(() => setActive("MENU"), [setActive]);
 
   return (
-    <activeKeyCtx.Provider value={{ active, setActive }}>
-      <section className="others-menu" style={{ height }}>
-        <CSSTransition in={active === "MENU"} {...cssTransProps}>
-          <PrimaryMenu />
-        </CSSTransition>
-        {menuItems.map(({ key, label, component }) => (
-          <SeconaryMenu
-            key={key}
-            keyName={key}
-            title={label}
-            {...cssTransProps}
-          >
-            {component}
-          </SeconaryMenu>
-        ))}
-      </section>
-    </activeKeyCtx.Provider>
+    <section className="others-menu" style={{ height }}>
+      <CSSTransition in={active === "MENU"} {...cssTransProps}>
+        <PrimaryMenu />
+      </CSSTransition>
+      {menuItems.map(({ key, label, component }) => (
+        <SeconaryMenu key={key} keyName={key} title={label} {...cssTransProps}>
+          {component}
+        </SeconaryMenu>
+      ))}
+    </section>
   );
 };
 
@@ -252,7 +240,11 @@ const OthersButton = () => {
     <Popover
       placement="bottomRight"
       trigger="click"
-      content={<OthersPage />}
+      content={
+        <ActiveKeyProvider initKey="">
+          <OthersPage />
+        </ActiveKeyProvider>
+      }
       zIndex={900}
     >
       <Button className="large" shape="circle" icon={<CaretDownOutlined />} />

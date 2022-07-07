@@ -20,28 +20,23 @@ import {
   DropResult,
   DragDropContext,
 } from "react-beautiful-dnd";
+import { ActiveKeyProvider, Setter, useActiveKey } from "../../lib/hooks";
 import { PageWrapper, ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { Avatar, Button, Drawer, Menu, Popover, Tabs } from "antd";
+import { UserAvatar } from "../widgets/UserAvatar";
+import { useForceLight } from "../../lib/Dark";
 import { AddPageButton } from "./ReaderUtils";
 import { exchange } from "./lib/array";
-import { Setter } from "../../lib/hooks";
 import IconFont from "../ui/IconFont";
+import classNames from "classnames";
 import { TeamCtx } from "./Team";
 import "./preview.sass";
-import { UserAvatar } from "../widgets/UserAvatar";
-import classNames from "classnames";
-import { useForceLight } from "../../lib/Dark";
-
-const PreviewCtx = React.createContext({
-  activeKey: "ALL",
-  setActiveKey: (() => {}) as Setter<string>,
-});
 
 const PageNavContent = () => {
   const { pageOrder, currPageID } = useContext(ReaderStateCtx);
   const { scrollPage, saveReorder } = useContext(ReaderMethodCtx);
   const [forceLight] = useForceLight();
-  const { activeKey } = useContext(PreviewCtx);
+  const [activeKey] = useActiveKey();
   const refRec = useRef<Record<string, HTMLElement>>({});
 
   const onDragEnd = ({ source, destination }: DropResult) => {
@@ -55,12 +50,19 @@ const PageNavContent = () => {
     requestAnimationFrame(() => scrollPage(pageID));
   };
 
+  const title = {
+    ALL: "All Pages",
+    MARKED: "Bookmarks",
+    WRITTEN: "Notes",
+  }[activeKey];
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => refRec.current[currPageID]?.scrollIntoView(), []);
 
   return (
     <div className="preview-container" data-force-light={forceLight}>
       <PreviewTabs />
+      <h3>{title}</h3>
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="preview-list">
           {({ droppableProps, innerRef, placeholder }) => (
@@ -91,7 +93,7 @@ const PagePreview: FC<{
   const { stateSet, pageRec, currPageID } = useContext(ReaderStateCtx);
   const { teamState } = useContext(TeamCtx);
   const { scrollPage } = useContext(ReaderMethodCtx);
-  const { activeKey } = useContext(PreviewCtx);
+  const [activeKey] = useActiveKey();
   const [chosen, setChosen] = useState("");
 
   const page = pageRec?.get(uid);
@@ -252,7 +254,7 @@ const PreviewOption = ({ uid }: { uid: string }) => {
 };
 
 const PreviewTabs = () => {
-  const { activeKey, setActiveKey } = useContext(PreviewCtx);
+  const [activeKey, setActiveKey] = useActiveKey();
   const { TabPane } = Tabs;
   return (
     <Tabs
@@ -272,15 +274,9 @@ const PreviewTabs = () => {
 
 export default function PageNav() {
   const [navOn, setNavOn] = useState(false);
-  const [activeKey, setActiveKey] = useState<string>("ALL");
-  const title = {
-    ALL: "All Pages",
-    MARKED: "Bookmarks",
-    WRITTEN: "Notes",
-  }[activeKey];
 
   return (
-    <PreviewCtx.Provider value={{ activeKey, setActiveKey }}>
+    <ActiveKeyProvider initKey="ALL">
       <Button
         type="text"
         icon={navOn ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -290,7 +286,7 @@ export default function PageNav() {
         visible={navOn}
         onClose={() => setNavOn(false)}
         width={200}
-        title={title}
+        // title={title}
         closable={false}
         zIndex={800}
         className="preview-drawer"
@@ -300,6 +296,6 @@ export default function PageNav() {
       >
         <PageNavContent />
       </Drawer>
-    </PreviewCtx.Provider>
+    </ActiveKeyProvider>
   );
 }
