@@ -27,7 +27,6 @@ import { SelectTool, TextTool } from "./tools/DrawTools";
 import { debounce, last, once, range } from "lodash-es";
 import { useInView } from "react-intersection-observer";
 import { DrawState } from "../../lib/draw/DrawState";
-import { TeamState } from "../../lib/draw/TeamState";
 import { useScrollPage } from "./lib/scroll";
 import { insertAfter } from "./lib/array";
 import { Setter } from "../../lib/hooks";
@@ -41,7 +40,6 @@ export const ReaderStateCtx = createContext({
   noteID: "",
   noteInfo: undefined as NoteInfo | undefined,
   stateSet: undefined as StateSet | undefined,
-  teamState: undefined as TeamState | undefined,
   pageRec: undefined as Map<string, NotePage> | undefined,
   pageOrder: undefined as string[] | undefined,
   currPageID: "",
@@ -66,7 +64,7 @@ export default function Reader() {
   const [pageOrder, setPageOrder] = useState<string[]>();
   const [saved, setSaved] = useSafeState(true);
 
-  const { io, teamOn, teamState, addTeamStatePage } = useContext(TeamCtx);
+  const { io, teamOn, addTeamStatePage } = useContext(TeamCtx);
   const { setInviewRatios, scrollPage, sectionRef, currPageID } = useScrollPage(
     noteID,
     pageOrder
@@ -228,7 +226,6 @@ export default function Reader() {
           pageRec,
           noteInfo,
           stateSet,
-          teamState,
           pageOrder,
           currPageID,
         }}
@@ -255,8 +252,9 @@ const PageContainer: FC<{
   updateStateSet: (cb: (prevSS: StateSet) => StateSet) => void;
   setInviewRatios: Setter<Map<string, number>>;
 }> = ({ uid, updateStateSet, setInviewRatios }) => {
-  const { pageRec, stateSet, teamState, currPageID, pageOrder } =
+  const { pageRec, stateSet, currPageID, pageOrder } =
     useContext(ReaderStateCtx);
+  const { teamState } = useContext(TeamCtx);
 
   const page = pageRec?.get(uid);
   const drawState = stateSet?.getOneState(uid);

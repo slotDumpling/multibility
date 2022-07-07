@@ -88,8 +88,8 @@ const PagePreview: FC<{
   pageIndex: number;
   refRec: Record<string, HTMLElement>;
 }> = ({ uid, pageIndex, refRec }) => {
-  const { stateSet, teamState, pageRec, currPageID } =
-    useContext(ReaderStateCtx);
+  const { stateSet, pageRec, currPageID } = useContext(ReaderStateCtx);
+  const { teamState } = useContext(TeamCtx);
   const { scrollPage } = useContext(ReaderMethodCtx);
   const { activeKey } = useContext(PreviewCtx);
   const [chosen, setChosen] = useState("");
@@ -158,8 +158,8 @@ const PreviewTools: FC<{
   setChosen: Setter<string>;
 }> = ({ uid, index, chosen, setChosen }) => {
   const { switchPageMarked } = useContext(ReaderMethodCtx);
-  const { teamState, pageRec } = useContext(ReaderStateCtx);
-  const { ignores } = useContext(TeamCtx);
+  const { pageRec } = useContext(ReaderStateCtx);
+  const { ignores, teamState } = useContext(TeamCtx);
   const userIDs = useMemo(
     () =>
       teamState
