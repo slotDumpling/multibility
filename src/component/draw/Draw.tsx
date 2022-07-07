@@ -366,7 +366,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           selection = checkLasso(group, rect);
           const link = new Path();
           const { topCenter } = rect.bounds;
-          link.add(topCenter, topCenter.subtract(new Point(0, 50)));
+          link.add(topCenter, topCenter.subtract(new Point(0, 100)));
           link.lastSegment.selected = true;
           setRotateHandle(link);
         }
