@@ -248,9 +248,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
             const angle = line.angle - axis.angle;
             rect.rotate(angle, center);
             rotateHandle?.rotate(angle, center);
-            chosenItems.forEach((item) => {
-              item?.rotate(angle, center);
-            });
+            chosenItems.forEach((item) => item?.rotate(angle, center));
           } else {
             // resize selected items
             const moveP = segment.point;
@@ -368,12 +366,12 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           selection = checkLasso(group, rect);
           const link = new Path();
           const { topCenter } = rect.bounds;
-          link.add(topCenter, topCenter.subtract(new Point(0, 100)));
+          link.add(topCenter, topCenter.subtract(new Point(0, 50)));
           link.lastSegment.selected = true;
           setRotateHandle(link);
         }
-        setChosenIDs(selection);
         setSelected(true);
+        setChosenIDs(selection);
         setActiveTool("select");
       },
       selected() {
