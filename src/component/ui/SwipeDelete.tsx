@@ -1,31 +1,22 @@
 import React, {
   FC,
   useRef,
-  Dispatch,
   useState,
   useEffect,
   useContext,
-  SetStateAction,
-  TransitionEventHandler,
+  createContext,
 } from "react";
+import { Setter, useTransitionEnd } from "../../lib/hooks";
 import { useSwipeable } from "react-swipeable";
 import classNames from "classnames";
-import "./swipe-delete.sass";
 import { v4 as getUid } from "uuid";
-import { useEventWaiter } from "../../lib/hooks";
+import "./swipe-delete.sass";
 
-const SwipeDeleteContext = React.createContext({
-  nowSwiped: "",
-  setNowSwiped: (() => {}) as Dispatch<SetStateAction<string>>,
-});
+const SwipeCtx = createContext<[string, Setter<string>]>(["", () => {}]);
 
 export const SwipeDeleteProvider: FC = ({ children }) => {
-  const [nowSwiped, setNowSwiped] = useState("");
-  return (
-    <SwipeDeleteContext.Provider value={{ nowSwiped, setNowSwiped }}>
-      {children}
-    </SwipeDeleteContext.Provider>
-  );
+  const tuple = useState("");
+  return <SwipeCtx.Provider value={tuple}>{children}</SwipeCtx.Provider>;
 };
 
 export const SwipeDelete: FC<{
@@ -35,7 +26,7 @@ export const SwipeDelete: FC<{
 }> = ({ children, onDelete, disable = false, className }) => {
   const [uid] = useState(getUid);
 
-  const { nowSwiped, setNowSwiped } = useContext(SwipeDeleteContext);
+  const [nowSwiped, setNowSwiped] = useContext(SwipeCtx);
   const [swiped, setSwiped] = useState(false);
   const deleting = swiped && (!nowSwiped || nowSwiped === uid);
   const [deleted, setDeleted] = useState(false);
@@ -73,16 +64,15 @@ export const SwipeDelete: FC<{
     setSwiped(false);
   }, [disable, setNowSwiped]);
 
-  const [transDidEnd, transEnd] = useEventWaiter();
+  const [transDidEnd, handler] = useTransitionEnd({
+    propertyName: "height",
+    active: deleted,
+  });
   const handleClick = async () => {
     setDeleted(true);
     await transDidEnd;
     onDelete();
     setNowSwiped("");
-  };
-
-  const handleTransEnd: TransitionEventHandler = (e) => {
-    if (e.propertyName === "height" && deleted) transEnd();
   };
 
   return (
@@ -92,7 +82,7 @@ export const SwipeDelete: FC<{
       data-deleting={deleting}
       {...swipeHandler}
       style={{ height }}
-      onTransitionEnd={handleTransEnd}
+      onTransitionEnd={handler}
     >
       <div className="content" ref={wrapper}>
         {children}

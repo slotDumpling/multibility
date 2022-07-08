@@ -3,6 +3,7 @@ import React, {
   Dispatch,
   FC,
   SetStateAction,
+  TransitionEventHandler,
   useContext,
   useDebugValue,
   useRef,
@@ -11,15 +12,23 @@ import React, {
 
 export type Setter<T> = Dispatch<SetStateAction<T>>;
 
-export function useEventWaiter(): [Promise<void>, () => void] {
+export function useTransitionEnd({
+  propertyName,
+  active = true,
+}: {
+  propertyName: string;
+  active?: boolean;
+}): [Promise<void>, TransitionEventHandler] {
   const resRef = useRef(() => {});
-  const resolve = () => resRef.current();
-
   const [promise] = useState(
     () => new Promise<void>((res) => (resRef.current = res))
   );
-
-  return [promise, resolve];
+  return [
+    promise,
+    (e) => {
+      if (e.propertyName === propertyName && active) resRef.current();
+    },
+  ];
 }
 
 const ActiveKeyCtx = createContext<[string, Setter<string>]>(["", () => {}]);
