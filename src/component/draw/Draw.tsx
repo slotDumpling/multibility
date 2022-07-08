@@ -340,9 +340,9 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         if (drawCtrl.pixelEraser) {
           const items = Array.from(replaced.current);
           replaced.current.clear();
-          const splitters = items.map(([uid, item]) => {
+          const splitters: Splitter[] = items.map(([uid, item]) => {
             const paths = flattenCP(item);
-            return [uid, paths.map((i) => i.exportJSON())] as Splitter;
+            return [uid, paths.map((i) => i.exportJSON())];
           });
           if (!splitters.length) return;
           onChange((prev) => DrawState.splitStrokes(prev, splitters));
