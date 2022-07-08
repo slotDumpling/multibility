@@ -219,7 +219,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       s1.point.x = x;
       s2.point = e.point;
       s3.point.y = y;
-      if (Math.abs(rect.area) >= 1_000) rect.selected = true;
+      rect.selected = true;
     };
 
     const handleDrag = {
