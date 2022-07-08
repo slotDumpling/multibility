@@ -162,6 +162,7 @@ export default function Reader() {
   const updateStateSet = (cb: (prevSS: StateSet) => StateSet) => {
     if (!stateSet) return;
     const newSS = cb(stateSet);
+    if (newSS === stateSet) return;
     setStateSet(newSS);
     const lastDS = newSS.getLastDS();
     const lastOp = newSS.lastOp;
@@ -373,6 +374,7 @@ const DrawWrapper: FC<{
     (arg: ((s: DrawState) => DrawState) | DrawState) => {
       if (!updateState) return;
       const newDS = arg instanceof DrawState ? arg : arg(drawState);
+      if (newDS === drawState) return;
       updateState(newDS);
     }
   );
