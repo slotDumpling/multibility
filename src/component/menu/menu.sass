@@ -62,17 +62,21 @@
   align-items: center
   cursor: pointer
   transition: height $speed, background $speed
+  --light-color: #E5E7EB
   &[data-editing="true"]
     height: 8em
     flex-direction: column
     justify-content: space-evenly
-    background-color: #f1f0f5
+    background-color: #f1f0f5 !important
     .buttons
       width: 100%
       display: flex
       justify-content: space-between
-  &[data-curr="true"]
-    background-color: #f1f0f5
+  &[data-curr=true]
+    background-color: var(--light-color)
+    color: var(--dark-color)
+    > button
+      color: var(--dark-color)
   > .tag-circle
     margin-right: 10px
   .all-note-icon

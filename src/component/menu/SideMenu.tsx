@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect, useState } from "react";
+import { CSSProperties, FC, useContext, useEffect, useState } from "react";
 import {
   TagOutlined,
   DeleteOutlined,
@@ -8,7 +8,7 @@ import {
 import { deleteTag, editTag, NoteTag, addNewTag } from "../../lib/note/archive";
 import { SwipeDelete, SwipeDeleteProvider } from "../ui/SwipeDelete";
 import { Button, Input, Popconfirm, Select } from "antd";
-import { colors, getRandomColor } from "../../lib/color";
+import { colors, getColorPalette, getRandomColor } from "../../lib/color";
 import { ColorCirle } from "../widgets/ColorCircle";
 import { MenuCtx } from "./MainMenu";
 import { Setter } from "../../lib/hooks";
@@ -118,6 +118,8 @@ const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
     </>
   );
 
+  const { light, dark } = getColorPalette(color);
+
   return (
     <SwipeDelete className="tag-wrapper" onDelete={removeTag} disable={editing}>
       <div
@@ -125,6 +127,9 @@ const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
         data-curr={tagUid === uid}
         data-editing={tagEditing}
         onClick={() => setTagUid(uid)}
+        style={
+          { "--light-color": light, "--dark-color": dark } as CSSProperties
+        }
       >
         {tagEditing ? editingPanel : displayPanel}
       </div>
