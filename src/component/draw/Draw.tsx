@@ -280,42 +280,40 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     const erased = useRef(new Set<string>());
     const replaced = useRef(new Map<string, paper.Item>());
 
-    const handleEarserDrag =
-      paperMode === "erase"
-        ? (e: paper.ToolEvent) => {
-            const layer = scope.current.project.layers[1];
-            const hitRes = layer.hitTestAll(e.point, {
-              class: paper.Path,
-              stroke: true,
-              tolerance: eraserWidth / 2,
-            });
+    const handelToolDrag = (e: paper.ToolEvent) => {
+      if (paperMode !== "erase") return;
+      const layer = scope.current.project.layers[1];
+      const hitRes = layer.hitTestAll(e.point, {
+        class: paper.Path,
+        stroke: true,
+        tolerance: eraserWidth / 2,
+      });
 
-            hitRes.forEach(({ item }) => {
-              if (!(item instanceof paper.Path)) return;
-              let topItem: paper.PathItem = item;
-              while (topItem.parent !== layer) {
-                if (!(topItem.parent instanceof paper.PathItem)) break;
-                topItem = topItem.parent;
-              }
-              const { name } = topItem;
+      hitRes.forEach(({ item }) => {
+        if (!(item instanceof paper.Path)) return;
+        let topItem: paper.PathItem = item;
+        while (topItem.parent !== layer) {
+          if (!(topItem.parent instanceof paper.PathItem)) break;
+          topItem = topItem.parent;
+        }
+        const { name } = topItem;
 
-              if (drawCtrl.pixelEraser) {
-                const radius = (eraserWidth + item.strokeWidth) / 2;
-                const circle = new Path.Circle(e.point, radius);
-                circle.remove();
+        if (drawCtrl.pixelEraser) {
+          const radius = (eraserWidth + item.strokeWidth) / 2;
+          const circle = new Path.Circle(e.point, radius);
+          circle.remove();
 
-                const sub = item.subtract(circle, { trace: false });
-                item.replaceWith(sub);
-                if (topItem === item) topItem = sub;
-                replaced.current.set(name, topItem);
-              } else {
-                topItem.opacity = 0.5;
-                topItem.guide = true;
-                erased.current.add(name);
-              }
-            });
-          }
-        : null;
+          const sub = item.subtract(circle, { trace: false });
+          item.replaceWith(sub);
+          if (topItem === item) topItem = sub;
+          replaced.current.set(name, topItem);
+        } else {
+          topItem.opacity = 0.5;
+          topItem.guide = true;
+          erased.current.add(name);
+        }
+      });
+    };
 
     const handleUp = {
       draw() {
@@ -426,7 +424,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       view.onMouseDrag = activate(handleDrag);
       view.onMouseUp = activate(handleUp);
       view.onMouseMove = activate(handleMove);
-      if (tool) tool.onMouseDrag = activate(handleEarserDrag);
+      tool.onMouseDrag = activate(handelToolDrag);
     };
     useEffect(handleViewEvent);
 
