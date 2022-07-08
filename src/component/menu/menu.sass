@@ -23,8 +23,6 @@
   flex-direction: column
   border-right: $default-border
   background-color: #eee3
-  @media (max-width: 640px)
-    display: none
   footer
     border-top: $default-border
     padding: 10px
@@ -33,6 +31,10 @@
     display: flex
     > * + *
       margin-left: 10px
+
+.main-menu.container .side-menu
+  @media (max-width: 640px)
+    display: none
 
 .aside-drawer
   top: $header-low-height !important
