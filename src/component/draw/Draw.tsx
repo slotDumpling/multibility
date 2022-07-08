@@ -17,9 +17,9 @@ import {
 } from "../../lib/draw/DrawState";
 import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/DrawCtrl";
 import { usePreventTouch, usePreventGesture } from "./touch";
-import { getCursorStyle, ROTATE_CURSOR } from "./cursor";
 import { releaseCanvas } from "../../lib/draw/canvas";
 import { usePinch } from "@use-gesture/react";
+import { getCursorStyle } from "./cursor";
 import useSize from "@react-hook/size";
 import paper from "paper";
 import "./draw.sass";
@@ -77,9 +77,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       scp.setup(cvs);
       scp.settings.handleSize = 10;
       scp.settings.hitTolerance = 20;
-      scp.project.addLayer(new Layer());
-      scp.project.addLayer(new Layer());
-      scp.project.addLayer(new Layer());
+      [0, 1, 2].forEach(() => scp.project.addLayer(new Layer()));
       scp.project.layers[2].activate();
       new scp.Tool();
 
@@ -205,16 +203,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       },
       text(e: paper.MouseEvent) {
         const layer = scope.current.project.layers[1];
-        const t =
-          getClickedText(layer, e.point) ??
-          new paper.PointText({
-            point: e.point.add(new Point(0, 50)),
-            content: "Insert text...",
-            fontSize: 50,
-            justification: "center",
-            fillColor: "#1890ff55",
-          });
-        setPointText(t as paper.PointText);
+        const t = getClickedText(layer, e.point) ?? startText(e.point);
+        setPointText(t);
       },
     }[paperMode];
 
@@ -399,7 +389,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           rect?.hitTest(e.point, { segments: true }) ??
           rotateHandle?.hitTest(e.point, { segments: true, selected: true });
         if (hitRes?.segment) {
-          if (hitRes.segment.selected) return setCursor(ROTATE_CURSOR);
+          if (hitRes.segment.selected) return setCursor("move");
           const moveP = hitRes.segment.point;
           const baseP = hitRes.segment.next.next.point;
           const diagonal = moveP.subtract(baseP);
@@ -442,9 +432,10 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const updateMutation = () => {
       if (!chosenItems?.length) return;
-      const mutations = chosenItems.map(
-        (p) => [p.name, p.exportJSON()] as Mutation
-      );
+      const mutations: Mutation[] = chosenItems.map((p) => [
+        p.name,
+        p.exportJSON(),
+      ]);
       onChange((prev) => DrawState.mutateStrokes(prev, mutations));
     };
 
@@ -472,9 +463,10 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       rect?.translate(transP);
       path?.translate(transP);
 
-      const mutations = copies.map(
-        (item) => [DrawState.getUid(), item.exportJSON()] as Mutation
-      );
+      const mutations: Mutation[] = copies.map((item) => [
+        DrawState.getUid(),
+        item.exportJSON(),
+      ]);
       onChange((prev) => DrawState.mutateStrokes(prev, mutations));
       setChosenIDs(mutations.map(([uid]) => uid));
     };
@@ -733,7 +725,17 @@ const getClickedText = (layer: paper.Layer, point: paper.Point) => {
     class: paper.PointText,
     fill: true,
   });
-  return hitRes?.item;
+  if (hitRes?.item instanceof paper.PointText) return hitRes?.item;
+};
+
+const startText = (point: paper.Point) => {
+  return new paper.PointText({
+    point: point.add(new Point(0, 50)),
+    content: "Insert text...",
+    fontSize: 50,
+    justification: "center",
+    fillColor: "#1890ff55",
+  });
 };
 
 const flattenCP = (cp: paper.Item): paper.Path[] => {
