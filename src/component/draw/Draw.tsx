@@ -219,6 +219,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       s1.point.x = x;
       s2.point = e.point;
       s3.point.y = y;
+      if (Math.abs(rect.area) >= 1_000) rect.selected = true;
     };
 
     const handleDrag = {
@@ -614,7 +615,6 @@ const paintBackground = (
 const startRect = (point: paper.Point) => {
   const rect = new Path.Rectangle(point, new Size(0, 0));
   rect.onFrame = () => {}; // the handle size bug
-  rect.selected = true;
   return rect;
 };
 
