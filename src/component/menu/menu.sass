@@ -31,6 +31,9 @@
     display: flex
     > * + *
       margin-left: 10px
+    .edit-btn
+      @media (min-width: 640px)
+        display: none
 
 .main-menu.container .side-menu
   @media (max-width: 640px)
@@ -52,7 +55,7 @@
     border-radius: 1em
     will-change: transform
     margin-bottom: 10px
-    &.deleted
+    &[data-deleted=true]
       margin-bottom: 0
 
 .tag-item
@@ -63,7 +66,7 @@
   cursor: pointer
   transition: height $speed, background $speed
   --light-color: #E5E7EB
-  &[data-editing="true"]
+  &[data-editing=true]
     height: 8em
     flex-direction: column
     justify-content: space-evenly
@@ -151,7 +154,7 @@ $note-item-height: 5em
 
 .note-item
   height: $note-item-height
-  padding: 0 1em
+  padding-left: 20px
   margin: 0 20px
   display: flex
   align-items: center
@@ -160,8 +163,9 @@ $note-item-height: 5em
   border-bottom: $light-border
   .timg-wrapper
     @include flex-center
-    width: 4em
-    height: 4em
+    $timg-size: 4em
+    width: $timg-size
+    height: $timg-size
     position: relative
     margin-right: 1em
     .page-wrapper
@@ -170,9 +174,9 @@ $note-item-height: 5em
       @media (prefers-color-scheme: dark)
         border: none
     &[data-landscape=true] .page-wrapper svg
-      width: 4em
+      width: $timg-size
     &[data-landscape=false] .page-wrapper svg
-      height: 4em
+      height: $timg-size
     .cloud-icon
       position: absolute
       bottom: 0
@@ -188,6 +192,7 @@ $note-item-height: 5em
   .content
     flex: 1
     padding: 5px
+    margin-right: 10px
     overflow: hidden
     .name
       @include text-overflow
@@ -202,10 +207,19 @@ $note-item-height: 5em
       @include text-overflow
       margin-left: 6px
       color: #0005
+    .tag
+      @include text-overflow
+      max-width: 7em
+      padding: 0 0.5em
+      margin-left: 1em
+      border-radius: 2em
+      background-color: var(--light-color)
+      color: var(--dark-color)
   &::before
     @include pseudo-el(0, -20px, -1px, -20px)
+    z-index: -1
     transition: background $fast-speed
-  &[data-selected="true"]
+  &[data-selected=true]
     &::before
       background-color: $blue-color-light
     .page-wrapper, .cloud-icon

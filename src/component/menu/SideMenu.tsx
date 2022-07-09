@@ -1,4 +1,4 @@
-import { CSSProperties, FC, useContext, useEffect, useState } from "react";
+import { FC, useContext, useEffect, useState } from "react";
 import {
   TagOutlined,
   DeleteOutlined,
@@ -43,7 +43,7 @@ const TagInput: FC<{
 
 const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
   const { uid, color, name, notes } = noteTag;
-  const { editing, tagUid, setAllTags, setTagUid } = useContext(MenuCtx);
+  const { editing, currTagID, setAllTags, setCurrTagID } = useContext(MenuCtx);
   const [tagName, setTagName] = useState(name);
   const [tagColor, setTagColor] = useState(color);
   const [tagEditing, setTagEditing] = useState(false);
@@ -51,7 +51,7 @@ const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
 
   async function removeTag() {
     const tags = await deleteTag(uid);
-    setTagUid("DEFAULT");
+    setCurrTagID("DEFAULT");
     setAllTags(tags);
   }
 
@@ -118,18 +118,14 @@ const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
     </>
   );
 
-  const { light, dark } = getColorPalette(color);
-
   return (
     <SwipeDelete className="tag-wrapper" onDelete={removeTag} disable={editing}>
       <div
         className="tag-item"
-        data-curr={tagUid === uid}
+        data-curr={currTagID === uid}
         data-editing={tagEditing}
-        onClick={() => setTagUid(uid)}
-        style={
-          { "--light-color": light, "--dark-color": dark } as CSSProperties
-        }
+        onClick={() => setCurrTagID(uid)}
+        style={getColorPalette(color)}
       >
         {tagEditing ? editingPanel : displayPanel}
       </div>
@@ -170,7 +166,7 @@ const NewTagItem: FC<{ setAdding: Setter<boolean> }> = ({ setAdding }) => {
 };
 
 export default function SideMenu() {
-  const { allTags, editing, tagUid, allNotes, setTagUid, setEditing } =
+  const { allTags, editing, currTagID, allNotes, setCurrTagID, setEditing } =
     useContext(MenuCtx);
   const [adding, setAdding] = useState(false);
 
@@ -178,8 +174,8 @@ export default function SideMenu() {
     <div className="tag-wrapper">
       <div
         className="tag-item"
-        data-curr={tagUid === "DEFAULT"}
-        onClick={() => setTagUid("DEFAULT")}
+        data-curr={currTagID === "DEFAULT"}
+        onClick={() => setCurrTagID("DEFAULT")}
       >
         <ContainerOutlined className="all-note-icon" />
         <span className="tag-name">All Notes</span>
@@ -192,7 +188,7 @@ export default function SideMenu() {
 
   const editButton = (
     <Button
-      className="edit-btn small"
+      className="edit-btn"
       shape="round"
       type={editing ? "primary" : "default"}
       onClick={swichEditing}

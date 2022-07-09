@@ -22,6 +22,7 @@ import { Input } from "antd";
 import dayjs from "dayjs";
 import { getCachedTeamState } from "../../lib/network/http";
 import { TeamState } from "../../lib/draw/TeamState";
+import { getColorPalette } from "../../lib/color";
 
 dayjs.extend(calender);
 
@@ -122,7 +123,7 @@ const NoteItem: FC<{
   selected: boolean;
   setSelectNotes: Setter<Set<string>>;
 }> = ({ noteInfo, selected, setSelectNotes }) => {
-  const { team, uid, name, lastTime } = noteInfo;
+  const { team, uid, name, lastTime, tagID } = noteInfo;
   const date = useMemo(() => dayjs(lastTime).calendar(), [lastTime]);
   const href = `${team ? "team" : "reader"}/${uid}`;
 
@@ -172,6 +173,9 @@ const NoteItem: FC<{
     })();
   }, [uid]);
 
+  const { allTags, currTagID } = useContext(MenuCtx);
+  const tag = allTags[tagID];
+
   const timg = (
     <div
       className="timg-wrapper"
@@ -205,6 +209,11 @@ const NoteItem: FC<{
           />
         )}
         <span className="date">{date}</span>
+        {tag && currTagID === "DEFAULT" && (
+          <span className="tag" style={getColorPalette(tag.color)}>
+            {tag.name}
+          </span>
+        )}
       </div>
     </div>
   );

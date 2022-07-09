@@ -5,12 +5,14 @@ import Right from "./Right";
 import "./header.sass";
 
 export function MenuHeader() {
-  const { tagUid, allTags } = useContext(MenuCtx);
-  const logo = tagUid === "DEFAULT";
+  const { currTagID, allTags } = useContext(MenuCtx);
+  const logo = currTagID === "DEFAULT";
   return (
     <header>
       <Left />
-      <h2 data-logo={logo}>{logo ? "Multibility" : allTags[tagUid]?.name}</h2>
+      <h2 data-logo={logo}>
+        {logo ? "Multibility" : allTags[currTagID]?.name}
+      </h2>
       <Right />
     </header>
   );

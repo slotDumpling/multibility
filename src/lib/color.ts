@@ -1,3 +1,4 @@
+import { CSSProperties } from "react";
 import hash from "string-hash";
 export const colors = [
   "#f97316",
@@ -51,5 +52,9 @@ const colorPalette: Record<string, { light: string; dark: string }> = {
 };
 
 export const getColorPalette = (color: string) => {
-  return colorPalette[color] ?? { light: "#E5E7EB", dark: "#374151" };
+  const palette = colorPalette[color] ?? { light: "#E5E7EB", dark: "#374151" };
+  return {
+    "--light-color": palette.light,
+    "--dark-color": palette.dark,
+  } as CSSProperties;
 };

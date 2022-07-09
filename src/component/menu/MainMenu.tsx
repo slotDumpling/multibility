@@ -16,13 +16,13 @@ import "./menu.sass";
 import { MenuHeader } from "./header";
 
 export const MenuCtx = React.createContext({
-  tagUid: "DEFAULT",
+  currTagID: "DEFAULT",
   editing: false,
   allNotes: {} as Record<string, NoteInfo>,
   allTags: {} as Record<string, NoteTag>,
   setAllNotes: (() => {}) as Setter<Record<string, NoteInfo>>,
   setAllTags: (() => {}) as Setter<Record<string, NoteTag>>,
-  setTagUid: (() => {}) as Setter<string>,
+  setCurrTagID: (() => {}) as Setter<string>,
   setEditing: (() => {}) as Setter<boolean>,
   menuInit: () => {},
 });
@@ -30,18 +30,18 @@ export const MenuCtx = React.createContext({
 export default function MainMenu() {
   const [allNotes, setAllNotes] = useState<Record<string, NoteInfo>>({});
   const [allTags, setAllTags] = useState<Record<string, NoteTag>>({});
-  const [tagUid, setTagUid] = useState("DEFAULT");
+  const [currTagID, setCurrTagID] = useState("DEFAULT");
   const [editing, setEditing] = useState(false);
 
   const selectedTag = useMemo(
     () =>
-      allTags[tagUid] ?? {
+      allTags[currTagID] ?? {
         uid: "",
         name: "All Notes",
         color: "#000000",
         notes: Object.keys(allNotes),
       },
-    [allNotes, allTags, tagUid]
+    [allNotes, allTags, currTagID]
   );
 
   const noteList = useMemo(
@@ -64,14 +64,14 @@ export default function MainMenu() {
   return (
     <MenuCtx.Provider
       value={{
-        tagUid,
+        currTagID,
         editing,
         allNotes,
         allTags,
         setAllNotes,
         setAllTags,
         setEditing,
-        setTagUid,
+        setCurrTagID,
         menuInit,
       }}
     >
@@ -88,11 +88,11 @@ export default function MainMenu() {
 }
 
 export const NewNoteButton = () => {
-  const { tagUid, setAllTags, setAllNotes } = useContext(MenuCtx);
+  const { currTagID, setAllTags, setAllNotes } = useContext(MenuCtx);
 
   async function addNewNote() {
     const note = createEmptyNote();
-    note.tagID = tagUid;
+    note.tagID = currTagID;
     const { tags, allNotes } = await createNewNote(note);
     setAllTags(tags);
     setAllNotes(allNotes);

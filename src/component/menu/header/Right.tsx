@@ -72,7 +72,7 @@ const SeconaryMenu: FC<
 
 const UploadPdfPage = () => {
   const [loading, setLoading] = useState(false);
-  const { tagUid, setAllTags, setAllNotes } = useContext(MenuCtx);
+  const { currTagID, setAllTags, setAllNotes } = useContext(MenuCtx);
   const [percent, setPercent] = useState(0);
 
   async function handleFile(file: File) {
@@ -80,7 +80,7 @@ const UploadPdfPage = () => {
     setLoading(true);
     const { LoadPDF } = await import("../../../lib/note/pdfImage");
     const note = await LoadPDF(file, setPercent);
-    note.tagID = tagUid;
+    note.tagID = currTagID;
     const { tags, allNotes } = await createNewNote(note);
     setAllTags(tags);
     setAllNotes(allNotes);

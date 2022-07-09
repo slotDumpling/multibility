@@ -6,12 +6,12 @@ import { MenuCtx } from "../MainMenu";
 
 export default function Left() {
   const [asideOn, setAsideOn] = useState(false);
-  const { editing, tagUid, setEditing } = useContext(MenuCtx);
+  const { editing, currTagID, setEditing } = useContext(MenuCtx);
 
   useEffect(() => {
     if (!editing) setAsideOn(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tagUid]);
+  }, [currTagID]);
 
   const editButton = (
     <Button
