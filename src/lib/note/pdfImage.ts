@@ -91,9 +91,11 @@ export async function LoadPDF(
   const pageOrder: string[] = [];
   images.forEach((image, idx) => {
     const pageID = getUid();
+    const ratio = ratios[idx];
+    if (!ratio) return;
     pageRec[pageID] = {
       image,
-      ratio: ratios[idx],
+      ratio,
       state: {
         strokes: {},
       },

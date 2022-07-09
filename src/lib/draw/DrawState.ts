@@ -275,7 +275,9 @@ export class DrawState {
       const [stroke, index] = record;
       mergedStrokes.push(stroke);
 
-      const { value, done } = iterators[index].next();
+      const iterator = iterators[index];
+      if (!iterator) break;
+      const { value, done } = iterator.next();
       done || heap.push([value, index]);
     }
     return mergedStrokes;

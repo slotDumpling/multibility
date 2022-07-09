@@ -78,7 +78,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       scp.settings.handleSize = 10;
       scp.settings.hitTolerance = 20;
       [0, 1, 2].forEach(() => scp.project.addLayer(new Layer()));
-      scp.project.layers[2].activate();
+      scp.project.layers[2]?.activate();
       new scp.Tool();
 
       return () => {
@@ -110,7 +110,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       if (!imgSrc) return;
       scope.current.activate();
       const raster = new Raster(imgSrc);
-      raster.project.layers[0].addChild(raster);
+      raster.project.layers[0]?.addChild(raster);
       raster.sendToBack();
       raster.onLoad = () => {
         raster.view.update();
@@ -131,6 +131,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     useEffect(() => {
       const tempGroup: paper.Item[] = [];
       const layer = scope.current.project.layers[1];
+      if (!layer) return;
 
       scope.current.activate();
       mergedStrokes.forEach((stroke) => {
@@ -203,6 +204,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       },
       text(e: paper.MouseEvent) {
         const layer = scope.current.project.layers[1];
+        if (!layer) return;
         const t = getClickedText(layer, e.point) ?? startText(e.point);
         setPointText(t);
       },
@@ -216,6 +218,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       if (!rect) return;
       const { x, y } = e.point;
       const [, s1, s2, s3] = rect.segments;
+      if (!s1 || !s2 || !s3) return;
       s1.point.x = x;
       s2.point = e.point;
       s3.point.y = y;
@@ -284,13 +287,13 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     const handelToolDrag = (e: paper.ToolEvent) => {
       if (paperMode !== "erase") return;
       const layer = scope.current.project.layers[1];
-      const hitRes = layer.hitTestAll(e.point, {
+      const hitRes = layer?.hitTestAll(e.point, {
         class: paper.Path,
         stroke: true,
         tolerance: eraserWidth / 2,
       });
 
-      hitRes.forEach(({ item }) => {
+      hitRes?.forEach(({ item }) => {
         if (!(item instanceof paper.Path)) return;
         let topItem: paper.PathItem = item;
         while (topItem.parent !== layer) {
@@ -402,6 +405,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       },
       text(e: paper.MouseEvent) {
         const layer = scope.current.project.layers[1];
+        if (!layer) return;
         if (getClickedText(layer, e.point)) setCursor("text");
         else setCursor("crosshair");
       },
@@ -472,7 +476,9 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const rasterize = () => {
       const g = new Group(chosenItems);
-      g.addTo(scope.current.project.layers[1]);
+      const layer = scope.current.project.layers[1];
+      if (!layer) return "";
+      g.addTo(layer);
       return g.rasterize({ insert: false }).toDataURL();
     };
 
@@ -608,7 +614,7 @@ const paintBackground = (
   scope.activate();
   const bgRect = new Path.Rectangle(new Point(0, 0), new Point(width, height));
   bgRect.fillColor = new Color("#fff");
-  scope.project.layers[0].addChild(bgRect);
+  scope.project.layers[0]?.addChild(bgRect);
   return bgRect;
 };
 
@@ -648,7 +654,10 @@ const moveDash = (item: paper.Item) => {
   item.onFrame = () => (item.dashOffset += 3);
 };
 
-const getCenterTranslate = (view: paper.View, projSize: paper.Size) => {
+const getCenterTranslate = (
+  view: paper.View,
+  projSize: paper.Size
+): [number, number] => {
   const { x, y } = view.center;
   const { width: viewW, height: viewH } = view.size;
   const { width: projW, height: projH } = projSize;

@@ -95,7 +95,7 @@ export const TextTool: FC<{
   visible: boolean;
 }> = ({ visible, drawRef }) => {
   const [text, setText] = useState("");
-  const [color, setColor] = useState(allColors[0]);
+  const [color, setColor] = useState(allColors[0]!);
   const [align, setAlign] = useState("center");
   const [forceLight] = useForceLight();
 
@@ -106,10 +106,10 @@ export const TextTool: FC<{
     setAlign(justification);
     if (name) {
       setText(content);
-      setColor(fillColor?.toCSS(true) ?? allColors[0]);
+      setColor(fillColor?.toCSS(true) ?? allColors[0]!);
     } else {
       setText("");
-      setColor(allColors[0]);
+      setColor(allColors[0]!);
     }
   }, [visible, drawRef]);
 

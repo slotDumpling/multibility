@@ -48,8 +48,8 @@ export default function MainMenu() {
     () =>
       List(
         selectedTag.notes
-          .filter((uid) => uid in allNotes)
           .map((uid) => allNotes[uid])
+          .filter((n): n is NoteInfo => n !== undefined)
       ),
     [selectedTag, allNotes]
   );

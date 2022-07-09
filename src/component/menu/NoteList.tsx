@@ -135,10 +135,7 @@ const NoteItem: FC<{
     const newName = noteName.trim();
     if (!newName || newName === name) return setNoteName(name);
     editNoteData(uid, { name: newName });
-    setAllNotes((prev) => ({
-      ...prev,
-      [uid]: { ...prev[uid], name: newName },
-    }));
+    setAllNotes((prev) => ({ ...prev, [uid]: { ...noteInfo, name: newName } }));
   };
 
   const handleClick = () => {

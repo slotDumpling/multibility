@@ -1,6 +1,7 @@
 export function exchange<T>(list: T[], fromIndex: number, toIndex: number) {
   const result = list.slice();
   const [removed] = result.splice(fromIndex, 1);
+  if (!removed) return list;
   result.splice(toIndex, 0, removed);
   return result;
 }

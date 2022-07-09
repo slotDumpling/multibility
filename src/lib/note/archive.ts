@@ -71,7 +71,9 @@ export async function editNoteData(uid: string, noteData: Partial<Note>) {
 
   const allNotes = await getAllNotes();
   const { pageRec, pageOrder, ...noteInfo } = noteData;
-  allNotes[uid] = { ...allNotes[uid], ...noteInfo };
+  const prevNoteInfo = allNotes[uid];
+  if (!prevNoteInfo) return;
+  allNotes[uid] = { ...prevNoteInfo, ...noteInfo };
 
   await localforage.setItem("ALL_NOTES", allNotes);
   const prevNote = await loadNote(uid);
@@ -85,8 +87,9 @@ export async function saveNoteInfo(noteInfo: NoteInfo) {
   allNotes[uid] = noteInfo;
   await localforage.setItem("ALL_NOTES", allNotes);
   const tags = await getAllTags();
-  if (tagID in tags) {
-    tags[tagID].notes.push(noteInfo.uid);
+  const tag = tags[tagID];
+  if (tag) {
+    tag.notes.push(noteInfo.uid);
     await localforage.setItem("ALL_TAGS", tags);
   }
   return { tags, allNotes };
@@ -111,8 +114,8 @@ export async function deleteNote(uid: string) {
   await localforage.setItem("ALL_NOTES", allNotes);
 
   const { tagID } = note;
-  if (tagID in tags) {
-    const prevTag = tags[tagID];
+  const prevTag = tags[tagID];
+  if (prevTag) {
     prevTag.notes = prevTag.notes.filter((id) => id !== uid);
     await localforage.setItem("ALL_TAGS", tags);
   }
@@ -123,16 +126,17 @@ export async function moveNoteTag(noteID: string, tagID: string) {
   const note = await loadNote(noteID);
   const allNotes = await getAllNotes();
   const tags = await getAllTags();
-  if (!note) return { tags, allNotes };
+  const noteInfo = allNotes[noteID];
+  if (!note || !noteInfo) return { tags, allNotes };
 
   const { tagID: prevTagId } = note;
   note.tagID = tagID;
   await localforage.setItem(noteID, note);
-  allNotes[noteID].tagID = tagID;
+  noteInfo.tagID = tagID;
   await localforage.setItem("ALL_NOTES", allNotes);
 
-  if (prevTagId in tags) {
-    const prevTag = tags[prevTagId];
+  const prevTag = tags[prevTagId];
+  if (prevTag) {
     prevTag.notes = prevTag.notes.filter((id) => id !== noteID);
   }
   tags[tagID]?.notes.push(noteID);
@@ -192,13 +196,14 @@ export async function updateTeamNote(
   const { getOneImage } = await import("./pdfImage");
 
   // parse timgs & set empty states for new pages.
-  for (let [pageID, page] of Object.entries(pageInfos)) {
+  for (let [pageID, teamPage] of Object.entries(pageInfos)) {
     if (pageID in pageRec) continue;
-    const { pdfIndex } = page;
+    const { pdfIndex } = teamPage;
     const state = getDefaultFlatState();
-    pageRec[pageID] = { ...page, state };
+    const notePage: NotePage = { ...teamPage, state };
     if (!pdf || !pdfIndex) continue;
-    pageRec[pageID].image = await getOneImage(pdf, pdfIndex, 0.5);
+    notePage.image = await getOneImage(pdf, pdfIndex, 0.5);
+    pageRec[pageID] = notePage;
   }
   await editNoteData(noteID, { pageOrder, pageRec });
   return true;
