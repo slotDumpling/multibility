@@ -197,6 +197,8 @@ $note-item-height: 5em
       padding: 0 0 0 5px
       background-color: #0000
       border-color: #eee
+    > span
+      display: inline-block
     .date
       @include text-overflow
       margin-left: 6px
@@ -211,8 +213,6 @@ $note-item-height: 5em
       color: var(--dark-color)
   &::before
     @include pseudo-el(0, -20px, -1px, -20px)
-    z-index: -1
-    transition: background $fast-speed
   &[data-selected=true]
     &::before
       background-color: $blue-color-light
