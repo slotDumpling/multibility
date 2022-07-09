@@ -96,11 +96,6 @@
   display: flex
   align-items: center
 
-.rc-virtual-list-scrollbar
-  width: 4px !important
-  right: 3px !important
-  opacity: 0.5
-
 .note-list
   flex: 1
   padding-bottom: calc(80px + $safe-bottom)
@@ -229,10 +224,15 @@ $note-item-height: 5em
     .name-input
       border-color: #0000
 
+.tag-drop
+  ul
+    background: #fff
+    max-height: 150px
+    overflow: auto
 .tag-select
   display: flex
   align-items: center
-  max-width: 150px
+  width: 100px
   .tag-circle
     margin-right: 10px
   .none-tag-icon

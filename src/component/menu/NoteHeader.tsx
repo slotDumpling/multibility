@@ -117,6 +117,7 @@ export const NoteHeader: FC<{
 
   const tagButton = (
     <Dropdown
+      overlayClassName="tag-drop"
       disabled={disabled}
       overlay={overlay}
       trigger={["click"]}

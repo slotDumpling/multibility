@@ -20,7 +20,12 @@ const TagInput: FC<{
   setTagColor: Setter<string>;
 }> = ({ tagName, setTagName, tagColor, setTagColor }) => {
   const colorSelector = (
-    <Select value={tagColor} onSelect={setTagColor} listHeight={150}>
+    <Select
+      value={tagColor}
+      onSelect={setTagColor}
+      listHeight={150}
+      virtual={false}
+    >
       {colors.map((c) => (
         <Select.Option value={c} key={c}>
           <ColorCirle className="tag-circle" color={c} />
