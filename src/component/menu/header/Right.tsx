@@ -95,6 +95,7 @@ const UploadPdfPage = () => {
         name="pdf"
         id="pdf-upload"
         multiple={false}
+        accept=".pdf"
         style={{ display: "none" }}
         onChange={({ target: { files } }) => {
           const file = files && files[0];
