@@ -232,7 +232,7 @@ const JoinRoom: FC<{
       onClick={() => {
         Modal.confirm({
           title: "Enable team editing",
-          content: "This will make your note public.",
+          content: "This will make your note public to anyone with the link.",
           icon: <TeamOutlined style={{ color: "#555" }} />,
           onOk: createRoom,
         });
