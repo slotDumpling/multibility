@@ -21,20 +21,19 @@ import {
 } from "@ant-design/icons";
 import * as serviceWorkerRegistration from "../../../serviceWorkerRegistration";
 import { CSSTransitionProps } from "react-transition-group/CSSTransition";
+import { ActiveKeyProvider, useActiveKey } from "../../../lib/hooks";
 import { getUserName, saveUserName } from "../../../lib/user";
 import { clearImageCache } from "../../../lib/note/imgCache";
 import { createNewNote } from "../../../lib/note/archive";
 import { CSSTransition } from "react-transition-group";
 import { getNoteID } from "../../../lib/network/http";
 import { useNavigate } from "react-router-dom";
-import Dragger from "antd/lib/upload/Dragger";
 import { PasscodeInput } from "antd-mobile";
 import localforage from "localforage";
 import { MenuCtx } from "../MainMenu";
 import { useEffect } from "react";
 import { FC } from "react";
 import "./right.sass";
-import { ActiveKeyProvider, useActiveKey } from "../../../lib/hooks";
 
 export default function Right() {
   return (
@@ -90,20 +89,30 @@ const UploadPdfPage = () => {
   }
 
   return (
-    <Dragger
-      className="pdf-upload"
-      disabled={loading}
-      multiple={false}
-      action="#"
-      accept="application/pdf"
-      beforeUpload={handleFile}
-    >
-      <p className="ant-upload-drag-icon">
-        {loading && <Progress width={48} type="circle" percent={percent} />}
-        {loading || <InboxOutlined />}
-      </p>
-      <p className="ant-upload-hint">Click or drag a pdf file here.</p>
-    </Dragger>
+    <label>
+      <input
+        type="file"
+        name="pdf"
+        id="pdf-upload"
+        multiple={false}
+        style={{ display: "none" }}
+        onChange={({ target: { files } }) => {
+          const file = files && files[0];
+          if (!file) return;
+          handleFile(file);
+        }}
+      />
+      <div className="pdf-upload">
+        <div className="icon-wrapper">
+          {loading ? (
+            <Progress width={48} type="circle" percent={percent} />
+          ) : (
+            <InboxOutlined className="inbox-icon" />
+          )}
+        </div>
+        <p className="hint">Click to upload a pdf file.</p>
+      </div>
+    </label>
   );
 };
 

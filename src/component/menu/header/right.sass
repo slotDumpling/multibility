@@ -1,4 +1,5 @@
 @import ../../_var
+@import ../../_mixins
 
 @mixin page-trans($move: 0)
   &.enter
@@ -41,10 +42,20 @@
     margin-bottom: 10px
 
 .pdf-upload
-  .ant-upload-drag-icon .anticon-check
-    transform: scale(0.5)
-  & + .ant-upload-list
-    display: none
+  height: 150px
+  cursor: pointer
+  background-color: #eee5
+  border: $default-border
+  border-radius: 5px
+  .icon-wrapper
+    @include flex-center
+    height: 100px
+    .inbox-icon
+      color: $blue-color
+      font-size: 50px
+  .hint
+    color: #777
+    text-align: center
 
 .profile-page
   button
