@@ -53,7 +53,6 @@
   .tag-wrapper
     overflow: hidden
     border-radius: 1em
-    will-change: transform
     margin-bottom: 10px
     &[data-deleted=true]
       margin-bottom: 0
@@ -114,7 +113,7 @@
     background-color: #fff
     > * + *
       margin-left: 10px
-    &[data-editing="true"]
+    &[data-editing=true]
       position: sticky
       top: 0
       z-index: 100
