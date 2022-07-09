@@ -90,19 +90,6 @@ const UploadPdfPage = () => {
 
   return (
     <label>
-      <input
-        type="file"
-        name="pdf"
-        id="pdf-upload"
-        multiple={false}
-        accept=".pdf"
-        style={{ display: "none" }}
-        onChange={({ target: { files } }) => {
-          const file = files && files[0];
-          if (!file) return;
-          handleFile(file);
-        }}
-      />
       <div className="pdf-upload">
         <div className="icon-wrapper">
           {loading ? (
@@ -113,6 +100,16 @@ const UploadPdfPage = () => {
         </div>
         <p className="hint">Click to upload a pdf file.</p>
       </div>
+      <input
+        type="file"
+        multiple={false}
+        accept=".pdf"
+        onChange={({ target: { files } }) => {
+          const file = files && files[0];
+          if (!file) return;
+          handleFile(file);
+        }}
+      />
     </label>
   );
 };
