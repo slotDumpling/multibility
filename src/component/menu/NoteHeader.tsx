@@ -38,11 +38,11 @@ export const NoteHeader: FC<{
     <Menu
       onClick={({ key }) => setSortType(key)}
       selectedKeys={[sortType]}
-      className="sort-drop"
       items={[
         {
           type: "group",
           label: "Sort by",
+          className: "sort-drop",
           children: [
             { icon: <FileOutlined />, key: "CREATE", label: "Date created" },
             { icon: <FileTextOutlined />, key: "LAST", label: "Date modified" },
