@@ -23,6 +23,7 @@ import dayjs from "dayjs";
 import { getCachedTeamState } from "../../lib/network/http";
 import { TeamState } from "../../lib/draw/TeamState";
 import { getColorPalette } from "../../lib/color";
+import classNames from "classnames";
 
 dayjs.extend(calender);
 
@@ -95,18 +96,21 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
           onMove={(tagID) => moveNotes(selectedNotes.toArray(), tagID)}
           disabled={selectedNotes.size === 0}
         />
-        {filterdList.map((noteInfo) => {
+        {filterdList.map((noteInfo, index) => {
           const { uid } = noteInfo;
+          const selected = selectedNotes.has(uid);
+          const nextUid = filterdList.get(index + 1)?.uid;
+          const last = !nextUid || !selectedNotes.has(nextUid);
           return (
             <CSSTransition key={uid} timeout={300}>
               <SwipeDelete
-                className="note-wrapper"
+                className={classNames("note-wrapper", { selected, last })}
                 onDelete={() => removeNotes([uid])}
                 disable={editing}
               >
                 <NoteItem
                   noteInfo={noteInfo}
-                  selected={selectedNotes.has(uid)}
+                  selected={selected}
                   setSelectNotes={setSelectNotes}
                 />
               </SwipeDelete>
@@ -205,12 +209,14 @@ const NoteItem: FC<{
             onBlur={saveNoteName}
           />
         )}
-        <span className="date">{date}</span>
-        {tag && currTagID === "DEFAULT" && (
-          <span className="tag" style={getColorPalette(tag.color)}>
-            {tag.name}
-          </span>
-        )}
+        <p className="info">
+          <span className="date">{date}</span>
+          {tag && currTagID === "DEFAULT" && (
+            <span className="tag" style={getColorPalette(tag.color)}>
+              {tag.name}
+            </span>
+          )}
+        </p>
       </div>
     </div>
   );
