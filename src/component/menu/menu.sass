@@ -217,19 +217,22 @@ $note-item-height: 6em
     .name-input
       border-color: #0000
 
-.note-wrapper.selected
-  .note-item::before
-    @include pseudo-el(5px, -10px, 0, -10px)
-    border-top-left-radius: 10px
-    border-top-right-radius: 10px
-  & + & .note-item::before
-    top: 0
-    border-top-left-radius: 0
-    border-top-right-radius: 0
-  &.last .note-item::before
-    bottom: 6px
-    border-bottom-left-radius: 10px
-    border-bottom-right-radius: 10px
+.note-wrapper
+  &.selected
+    .note-item::before
+      @include pseudo-el(5px, -10px, 0, -10px)
+      border-top-left-radius: 1em
+      border-top-right-radius: 1em
+    & + & .note-item::before
+      top: 0
+      border-top-left-radius: 0
+      border-top-right-radius: 0
+    &.last .note-item::before
+      bottom: 6px
+      border-bottom-left-radius: 1em
+      border-bottom-right-radius: 1em
+  &.last .note-item
+    box-shadow: none
 
 .tag-drop
   ul

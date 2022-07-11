@@ -100,7 +100,7 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
           const { uid } = noteInfo;
           const selected = selectedNotes.has(uid);
           const nextUid = filterdList.get(index + 1)?.uid;
-          const last = !nextUid || !selectedNotes.has(nextUid);
+          const last = (nextUid && selectedNotes.has(nextUid)) !== selected;
           return (
             <CSSTransition key={uid} timeout={300}>
               <SwipeDelete
