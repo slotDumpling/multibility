@@ -1,5 +1,5 @@
 import { Button, message } from "antd";
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { ReaderMethodCtx } from "./Reader";
 import { PlusOutlined } from "@ant-design/icons";
 
