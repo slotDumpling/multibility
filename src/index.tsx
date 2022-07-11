@@ -7,7 +7,7 @@ import Test from "./component/Test";
 import ReactDOM from "react-dom";
 import "./index.sass";
 
-const MainMenu = React.lazy(() => import("./component/menu/MainMenu"));
+const MainMenu = React.lazy(() => import("./component/menu"));
 const Reader = React.lazy(() => import("./component/reader/Reader"));
 const Team = React.lazy(() => import("./component/reader/Team"));
 const SuspendLazy = (Component: LazyExoticComponent<() => JSX.Element>) => (

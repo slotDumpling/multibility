@@ -279,7 +279,6 @@ export default function PageNav() {
         visible={navOn}
         onClose={() => setNavOn(false)}
         width={200}
-        // title={title}
         closable={false}
         zIndex={800}
         className="preview-drawer"

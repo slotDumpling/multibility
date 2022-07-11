@@ -1,0 +1,82 @@
+@import ../../_mixins
+@import ../../_var
+
+.side-menu
+  width: 300px
+  height: 100%
+  display: flex
+  flex-direction: column
+  border-right: $default-border
+  background-color: #eee3
+  footer
+    border-top: $default-border
+    padding: 10px
+    padding-bottom: calc(10px + $safe-bottom)
+    overflow: hidden
+    display: flex
+    > * + *
+      margin-left: 10px
+    .edit-btn
+      @include for-desktop
+        display: none
+
+.main-menu.container .side-menu
+  @include for-phone
+    display: none
+
+.aside-drawer
+  top: $header-low-height !important
+  bottom: 0 !important
+  height: auto !important
+  @include for-desktop
+    display: none
+
+.tag-list
+  flex: 1
+  overflow: hidden auto
+  padding: 20px
+  .tag-wrapper
+    overflow: hidden
+    border-radius: 1em
+    margin-bottom: 10px
+    &[data-deleted=true]
+      margin-bottom: 0
+
+.tag-item
+  height: 3em
+  padding: 0 20px
+  display: flex
+  align-items: center
+  cursor: pointer
+  transition: height $speed, background $speed
+  --light-color: #E5E7EB
+  &[data-editing=true]
+    height: 8em
+    flex-direction: column
+    justify-content: space-evenly
+    background-color: #f1f0f5 !important
+    .buttons
+      width: 100%
+      display: flex
+      justify-content: space-between
+  &[data-curr=true]
+    background-color: var(--light-color)
+    color: var(--dark-color)
+    > button
+      color: var(--dark-color)
+  > .tag-circle
+    margin-right: 10px
+  .all-note-icon
+    font-size: 12px
+    margin-right: 10px
+  .tag-name
+    @include text-overflow
+    flex: 1
+    margin: 0 10px 0 0 !important
+  .tag-num
+    width: 24px
+    text-align: center
+
+.ant-select-selection-item, .ant-select-item-option-content
+  display: flex
+  align-items: center

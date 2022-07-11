@@ -1,8 +1,8 @@
 import { Button, Drawer } from "antd";
 import { useContext, useEffect, useState } from "react";
 import { MenuOutlined } from "@ant-design/icons";
-import SideMenu from "../SideMenu";
-import { MenuCtx } from "../MainMenu";
+import { SideMenu } from "../aside";
+import { MenuCtx } from "../Menu";
 
 export default function Left() {
   const [asideOn, setAsideOn] = useState(false);

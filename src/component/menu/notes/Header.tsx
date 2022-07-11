@@ -1,6 +1,6 @@
 import { Button, ButtonProps, Dropdown, Input, Menu, Popconfirm } from "antd";
 import { FC, useContext } from "react";
-import { MenuCtx } from "./MainMenu";
+import { MenuCtx } from "../Menu";
 import {
   SwapOutlined,
   TagsOutlined,
@@ -12,8 +12,8 @@ import {
   CheckSquareOutlined,
   SortAscendingOutlined,
 } from "@ant-design/icons";
-import { Setter } from "../../lib/hooks";
-import { ColorCirle } from "../widgets/ColorCircle";
+import { Setter } from "../../../lib/hooks";
+import { ColorCirle } from "../../widgets/ColorCircle";
 
 export const NoteHeader: FC<{
   sortType: string;

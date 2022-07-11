@@ -5,29 +5,29 @@ import {
   moveNoteTag,
   editNoteData,
   loadNote,
-} from "../../lib/note/archive";
+} from "../../../lib/note/archive";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { CloudTwoTone, CheckCircleFilled } from "@ant-design/icons";
-import { SwipeDelete, SwipeDeleteProvider } from "../ui/SwipeDelete";
-import { NoteInfo, NotePage } from "../../lib/note/note";
-import { DrawState } from "../../lib/draw/DrawState";
-import { PageWrapper } from "../reader/Reader";
+import { SwipeDelete, SwipeDeleteProvider } from "../../ui/SwipeDelete";
+import { NoteInfo, NotePage } from "../../../lib/note/note";
+import { DrawState } from "../../../lib/draw/DrawState";
+import { PageWrapper } from "../../reader/Reader";
 import { useNavigate } from "react-router-dom";
 import calender from "dayjs/plugin/calendar";
-import { NoteHeader } from "./NoteHeader";
-import { Setter } from "../../lib/hooks";
+import { NoteHeader } from "./Header";
+import { Setter } from "../../../lib/hooks";
 import { List, Map, Set } from "immutable";
-import { MenuCtx } from "./MainMenu";
+import { MenuCtx } from "../Menu";
 import { Input } from "antd";
 import dayjs from "dayjs";
-import { getCachedTeamState } from "../../lib/network/http";
-import { TeamState } from "../../lib/draw/TeamState";
-import { getColorPalette } from "../../lib/color";
+import { getCachedTeamState } from "../../../lib/network/http";
+import { TeamState } from "../../../lib/draw/TeamState";
+import { getColorPalette } from "../../../lib/color";
 import classNames from "classnames";
 
 dayjs.extend(calender);
 
-export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
+export const NoteList: FC<{ noteList: List<NoteInfo> }> = ({ noteList }) => {
   const { editing, setAllTags, setAllNotes } = useContext(MenuCtx);
   const [sortType, setSortType] = useState("LAST");
   const [searchText, setSearchText] = useState("");
@@ -120,7 +120,7 @@ export default function NoteList({ noteList }: { noteList: List<NoteInfo> }) {
       </TransitionGroup>
     </SwipeDeleteProvider>
   );
-}
+};
 
 const NoteItem: FC<{
   noteInfo: NoteInfo;

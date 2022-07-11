@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { MenuCtx } from "../MainMenu";
+import { MenuCtx } from "../Menu";
 import Left from "./Left";
 import Right from "./Right";
 import "./header.sass";

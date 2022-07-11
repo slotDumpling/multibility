@@ -30,7 +30,7 @@ import { getNoteID } from "../../../lib/network/http";
 import { useNavigate } from "react-router-dom";
 import { PasscodeInput } from "antd-mobile";
 import localforage from "localforage";
-import { MenuCtx } from "../MainMenu";
+import { MenuCtx } from "../Menu";
 import { useEffect } from "react";
 import { FC } from "react";
 import "./right.sass";

@@ -8,12 +8,11 @@ import {
 import { createEmptyNote, NoteInfo } from "../../lib/note/note";
 import { FormOutlined } from "@ant-design/icons";
 import { Setter } from "../../lib/hooks";
-import SideMenu from "./SideMenu";
-import NoteList from "./NoteList";
+import { MenuHeader } from "./header";
+import { SideMenu } from "./aside";
+import { NoteList } from "./notes";
 import { List } from "immutable";
 import { Button } from "antd";
-import "./menu.sass";
-import { MenuHeader } from "./header";
 
 export const MenuCtx = React.createContext({
   currTagID: "DEFAULT",
