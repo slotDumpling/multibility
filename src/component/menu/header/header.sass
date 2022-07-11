@@ -14,11 +14,11 @@
     justify-content: space-between
     button.edit-btn
       width: 70px
-    @media (max-width: 640px)
+    @include for-phone
       width: 75px
       button.large
         display: none
-    @media (min-width: 640px)
+    @include for-desktop
       width: 130px
       button.small, .aside-btn
         display: none

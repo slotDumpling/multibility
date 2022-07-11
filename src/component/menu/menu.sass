@@ -31,18 +31,18 @@
     > * + *
       margin-left: 10px
     .edit-btn
-      @media (min-width: 640px)
+      @include for-desktop
         display: none
 
 .main-menu.container .side-menu
-  @media (max-width: 640px)
+  @include for-phone
     display: none
 
 .aside-drawer
   top: $header-low-height !important
   bottom: 0 !important
   height: auto !important
-  @media (min-width: 640px)
+  @include for-desktop
     display: none
 
 .tag-list

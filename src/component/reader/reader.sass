@@ -22,9 +22,9 @@
     display: block
 
 html
-  @media (max-width: 640px)
+  @include for-phone
     scroll-padding-top: $header-high-height
-  @media (min-width: 640px)
+  @include for-desktop
     scroll-padding-top: $header-low-height
 
 .add-btn-wrapper

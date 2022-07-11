@@ -34,3 +34,11 @@
   backdrop-filter: blur(20px) saturate(180%)
   @supports not (backdrop-filter: none)
     background-color: #fff
+
+@mixin for-phone
+  @media (max-width: 640px)
+    @content
+
+@mixin for-desktop
+  @media (min-width: 640px)
+    @content

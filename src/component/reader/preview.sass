@@ -95,7 +95,7 @@
     background-color: #0000
   .ant-drawer-content
     overflow: hidden
-  @media (max-width: 640px)
+  @include for-phone
     top: $header-high-height
-  @media (min-width: 640px)
+  @include for-desktop
     top: $header-low-height

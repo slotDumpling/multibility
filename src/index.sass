@@ -1,4 +1,5 @@
 @import ./component/_var
+@import ./component/_mixins
 @import ~antd/dist/antd.min.css
 
 @font-face
@@ -50,7 +51,7 @@ code, .code-font
 .ant-message-notice-content
   border-radius: 10px
 
-@media (min-width: 640px)
+@include for-desktop
   .ant-message
     top: calc( $header-low-height + 5px )
   @supports not (-webkit-touch-callout: none)
@@ -66,7 +67,7 @@ code, .code-font
       &:hover
         background-color: darken($bg-color, 10%)
 
-@media (max-width: 640px)
+@include for-phone
   .ant-message
     top: calc( $header-high-height + 5px )
 

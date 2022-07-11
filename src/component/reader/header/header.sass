@@ -24,14 +24,14 @@
     .force-light-btn
       @media (prefers-color-scheme: light)
         visibility: hidden
-  @media (max-width: 640px)
+  @include for-phone
     height: $header-high-height
     > .middle
       grid-template-columns: repeat(4, 1fr)
       border-left: $default-border
       border-right: $default-border
       padding: 0 20px
-  @media (min-width: 640px)
+  @include for-desktop
     height: $header-low-height
     > .left, > .right
       grid-template-columns: repeat(2, 1fr)
