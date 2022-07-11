@@ -24,7 +24,7 @@
       cursor: pointer
       position: relative
       border: $default-border
-      &[data-curr="true"]
+      &[data-curr=true]
         border-color: $blue-color
         box-shadow: 0 0 0 2px $blue-color
       &::before
@@ -33,7 +33,7 @@
         box-shadow: $shadow-2-down
         opacity: 0
         transition: opacity 0.5s
-      &[data-dragged="true"]::before
+      &[data-dragged=true]::before
         opacity: 1
       .bookmark
         position: absolute
@@ -47,22 +47,25 @@
           clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 75%, 0 100%)
           background-color: #ddd
           transition: background $speed
-        &[data-marked="true"]::after
+        &[data-marked=true]::after
           background-color: $blue-color
       @mixin page-corner
         position: absolute
-        background-color: #444
-        color: #fff
+        @include back-blur
         padding: 0 .5em
       .index
         @include page-corner
         right: 0px
         bottom: 0px
+        border-top: $dark-border
+        border-left: $dark-border
         border-radius: 5px 0 0 0
       .option
         @include page-corner
         left: 0px
         bottom: 0px
+        border-top: $dark-border
+        border-right: $dark-border
         border-radius: 0 5px 0 0
         &::after
           @include pseudo-el(-10px, -10px, -10px, -10px)
@@ -85,7 +88,7 @@
   cursor: pointer
   &::before
     @include pseudo-el(-20px, -20px, -20px, -20px)
-  &[data-chosen="true"]
+  &[data-chosen=true]
     border-color: $blue-color
 
 .preview-drawer

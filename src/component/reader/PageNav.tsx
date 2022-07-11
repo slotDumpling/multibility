@@ -168,12 +168,12 @@ const PreviewTools: FC<{
 
   return (
     <div className="tools" onClick={(e) => e.stopPropagation()}>
-      <span
+      <div
         className="bookmark"
         data-marked={marked}
         onClick={() => switchPageMarked(uid)}
       />
-      <span className="index">{index + 1}</span>
+      <div className="index">{index + 1}</div>
       <PreviewOption uid={uid} />
       <TeamAvatars userIDs={userIDs} chosen={chosen} setChosen={setChosen} />
     </div>
@@ -239,9 +239,9 @@ const PreviewOption = ({ uid }: { uid: string }) => {
       placement="left"
       destroyTooltipOnHide
     >
-      <span className="option">
+      <div className="option">
         <MoreOutlined />
-      </span>
+      </div>
     </Popover>
   );
 };
