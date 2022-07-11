@@ -29,11 +29,11 @@
   bottom: $bottom
   left: $left
 
-@mixin back-blur
-  background-color: #fffc
-  backdrop-filter: blur(20px) saturate(180%)
-  @supports not (backdrop-filter: none)
-    background-color: #fff
+@mixin back-blur($color: #fff)
+  background-color: $color
+  @supports (backdrop-filter: none)
+    background-color: transparentize($color, 0.2)
+    backdrop-filter: blur(20px) saturate(180%)
 
 @mixin for-phone
   @media (max-width: 640px)
