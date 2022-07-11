@@ -2,6 +2,8 @@ import { useDebugValue, useEffect, useMemo, useRef, useState } from "react";
 import localforage from "localforage";
 import { Map } from "immutable";
 
+const scrollForage = localforage.createInstance({ name: "scroll" });
+
 export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
   const [refMap, setRefMap] = useState(Map<string, HTMLElement>());
   const scrolled = useRef(false);
@@ -15,7 +17,7 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
 
   useEffect(() => {
     (async () => {
-      const stored = await localforage.getItem<string>(`SCROLL_${noteID}`);
+      const stored = await scrollForage.getItem<string>(noteID);
       if (!stored) return (scrolled.current = true);
       setPrevPageID(stored);
     })();
@@ -31,7 +33,7 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
 
   useEffect(() => {
     if (!scrolled.current) return;
-    localforage.setItem(`SCROLL_${noteID}`, currPageID);
+    scrollForage.setItem(noteID, currPageID);
   }, [noteID, currPageID]);
 
   const sectionRef = (pageID: string) => (el: HTMLElement | null) => {
