@@ -78,6 +78,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       scp.settings.handleSize = 10;
       scp.settings.hitTolerance = 20;
       [0, 1, 2].forEach(() => scp.project.addLayer(new Layer()));
+      scp.project.layers.forEach((l) => (l.visible = false));
       scp.project.layers[2]?.activate();
       new scp.Tool();
 
@@ -99,6 +100,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       const scp = scope.current;
       scp.view.viewSize = new Size(width, height).multiply(ratio);
       scp.view.scale(ratio, new Point(0, 0));
+      scp.project.layers.forEach((l) => (l.visible = true));
       scp.view.update();
 
       return () => {
