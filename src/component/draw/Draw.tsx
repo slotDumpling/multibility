@@ -19,7 +19,7 @@ import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/DrawCtrl";
 import { usePreventTouch, usePreventGesture } from "./touch";
 import { releaseCanvas } from "../../lib/draw/canvas";
 import { usePinch } from "@use-gesture/react";
-import { getCursorStyle } from "./cursor";
+import { getCursorStyle, ROTATE_CURSOR } from "./cursor";
 import useSize from "@react-hook/size";
 import paper from "paper";
 import "./draw.sass";
@@ -137,7 +137,6 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       mergedStrokes.forEach((stroke) => {
         const self = drawState.hasStroke(stroke.uid);
         const item = paintStroke(stroke, layer, !self);
-        if (!item) return;
         if (self) tempGroup.push(item);
       });
       setGroup(tempGroup);
@@ -391,7 +390,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
           rect?.hitTest(e.point, { segments: true }) ??
           rotateHandle?.hitTest(e.point, { segments: true, selected: true });
         if (hitRes?.segment) {
-          if (hitRes.segment.selected) return setCursor("move");
+          if (hitRes.segment.selected) return setCursor(ROTATE_CURSOR);
           const moveP = hitRes.segment.point;
           const baseP = hitRes.segment.next.next.point;
           const diagonal = moveP.subtract(baseP);
@@ -597,12 +596,13 @@ const paintStroke = (stroke: Stroke, layer: paper.Layer, readonly = false) => {
   let { pathData, uid } = stroke;
   try {
     const item = layer.importJSON(pathData);
-    if (!item) return;
+    if (!item) return new paper.Item();
     item.name = uid;
     item.guide = readonly;
     return item;
   } catch (e) {
     console.error(e);
+    return new paper.Item();
   }
 };
 
