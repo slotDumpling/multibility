@@ -402,12 +402,10 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         const baseP = hitRes.segment.next.next.point;
         const diagonal = moveP.subtract(baseP);
         const { x, y } = diagonal;
-        setCursor(x * y < 0 ? "nesw-resize" : "nwse-resize");
-      } else if (rect?.contains(e.point) || path?.contains(e.point)) {
-        setCursor("move");
-      } else {
-        setCursor("crosshair");
+        return setCursor(x * y < 0 ? "nesw-resize" : "nwse-resize");
       }
+      if ((rect ?? path)?.contains(e.point)) return setCursor("move");
+      setCursor("crosshair");
     };
 
     const handleMove = {
@@ -418,9 +416,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         if (getClickedText(layer, e.point)) setCursor("text");
         else setCursor("crosshair");
       },
-      select: null,
-      draw: null,
-      erase: null,
+      ...{ select: null, draw: null, erase: null },
     }[paperMode];
 
     const handleViewEvent = () => {
