@@ -16,10 +16,10 @@ import {
   Stroke,
 } from "../../lib/draw/DrawState";
 import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/DrawCtrl";
+import { getCircleCursor, getRotateCurcor } from "./cursor/cursor";
 import { usePreventTouch, usePreventGesture } from "./touch";
 import { releaseCanvas } from "../../lib/draw/canvas";
 import { usePinch } from "@use-gesture/react";
-import { getCircleCursor, getResizeCursor, getRotateCurcor } from "./cursor";
 import useSize from "@react-hook/size";
 import paper from "paper";
 import "./draw.sass";
@@ -400,7 +400,9 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         const moveP = hitRes.segment.point;
         const baseP = hitRes.segment.next.next.point;
         const diagonal = moveP.subtract(baseP);
-        setCursor(getResizeCursor(diagonal.angle));
+        const { x, y } = diagonal;
+        console.log(diagonal.angle);
+        setCursor(x * y < 0 ? "nesw-resize" : "nwse-resize");
       } else if (rect?.contains(e.point) || path?.contains(e.point)) {
         setCursor("move");
       } else {
