@@ -402,7 +402,6 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         const baseP = hitRes.segment.next.next.point;
         const diagonal = moveP.subtract(baseP);
         const { x, y } = diagonal;
-        console.log(diagonal.angle);
         setCursor(x * y < 0 ? "nesw-resize" : "nwse-resize");
       } else if (rect?.contains(e.point) || path?.contains(e.point)) {
         setCursor("move");
