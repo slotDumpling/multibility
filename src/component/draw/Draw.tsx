@@ -19,7 +19,7 @@ import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/DrawCtrl";
 import { usePreventTouch, usePreventGesture } from "./touch";
 import { releaseCanvas } from "../../lib/draw/canvas";
 import { usePinch } from "@use-gesture/react";
-import { getCursorStyle, ROTATE_CURSOR } from "./cursor";
+import { getCircleCursor, getResizeCursor, getRotateCurcor } from "./cursor";
 import useSize from "@react-hook/size";
 import paper from "paper";
 import "./draw.sass";
@@ -238,6 +238,7 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
             const { center } = rect.bounds;
             const axis = segment.point.subtract(center);
             const line = e.point.subtract(center);
+            setCursor(getRotateCurcor(line.angle));
             const angle = line.angle - axis.angle;
             rect.rotate(angle, center);
             rotateHandle?.rotate(angle, center);
@@ -365,8 +366,9 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
         setChosenIDs(selection);
         setActiveTool("select");
       },
-      selected() {
+      selected(e: paper.MouseEvent) {
         updateMutation();
+        handleSelectedCursor(e);
       },
       text() {
         setActiveTool("text");
@@ -380,28 +382,34 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
       } else if (paperMode === "selected") {
         setCursor(lasso ? "crosshair" : "nwse-resize");
       } else if (paperMode === "draw" || paperMode === "erase") {
-        setCursor(getCursorStyle(drawCtrl, ratio));
+        setCursor(getCircleCursor(drawCtrl, ratio));
       }
     }, [paperMode, lasso, drawCtrl, ratio]);
 
-    const handleMove = {
-      selected(e: paper.MouseEvent) {
-        const hitRes =
-          rect?.hitTest(e.point, { segments: true }) ??
-          rotateHandle?.hitTest(e.point, { segments: true, selected: true });
-        if (hitRes?.segment) {
-          if (hitRes.segment.selected) return setCursor(ROTATE_CURSOR);
-          const moveP = hitRes.segment.point;
-          const baseP = hitRes.segment.next.next.point;
-          const diagonal = moveP.subtract(baseP);
-          const { x, y } = diagonal;
-          setCursor(x * y < 0 ? "nesw-resize" : "nwse-resize");
-        } else if (rect?.contains(e.point) || path?.contains(e.point)) {
-          setCursor("move");
-        } else {
-          setCursor("crosshair");
+    const handleSelectedCursor = (e: paper.MouseEvent) => {
+      const hitRes =
+        rect?.hitTest(e.point, { segments: true }) ??
+        rotateHandle?.hitTest(e.point, { segments: true, selected: true });
+      if (hitRes?.segment) {
+        if (hitRes.segment.selected) {
+          const center = rect?.bounds.center;
+          if (!center) return;
+          const line = hitRes.segment.point.subtract(center);
+          return setCursor(getRotateCurcor(line.angle));
         }
-      },
+        const moveP = hitRes.segment.point;
+        const baseP = hitRes.segment.next.next.point;
+        const diagonal = moveP.subtract(baseP);
+        setCursor(getResizeCursor(diagonal.angle));
+      } else if (rect?.contains(e.point) || path?.contains(e.point)) {
+        setCursor("move");
+      } else {
+        setCursor("crosshair");
+      }
+    };
+
+    const handleMove = {
+      selected: handleSelectedCursor,
       text(e: paper.MouseEvent) {
         const layer = scope.current.project.layers[1];
         if (!layer) return;
