@@ -7,9 +7,9 @@ import {
   FileOutlined,
   DeleteOutlined,
   SearchOutlined,
+  SelectOutlined,
   FileTextOutlined,
-  RollbackOutlined,
-  CheckSquareOutlined,
+  ArrowLeftOutlined,
   SortAscendingOutlined,
 } from "@ant-design/icons";
 import { Setter } from "../../../lib/hooks";
@@ -142,7 +142,7 @@ export const NoteHeader: FC<{
           <Button
             className="small"
             onClick={() => setEditing(false)}
-            icon={<RollbackOutlined />}
+            icon={<ArrowLeftOutlined />}
             {...btnProps}
           />
           {tagButton}
@@ -162,7 +162,7 @@ export const NoteHeader: FC<{
           <Button
             className="small"
             onClick={() => setEditing(true)}
-            icon={<CheckSquareOutlined />}
+            icon={<SelectOutlined />}
             {...btnProps}
           />
         </>

@@ -85,7 +85,6 @@ $note-item-height: 6em
       @include absolute-center
       font-size: 20px
       border-radius: 10px
-      opacity: 0
       color: $blue-color
       background: #fff
   .content
@@ -94,7 +93,8 @@ $note-item-height: 6em
     overflow: hidden
     .name
       @include text-overflow
-      margin: 1px 0 1px 6px
+      margin: 0
+      padding: 1px 0 1px 6px
       font-size: 1.2em
     .name-input
       font-size: 1.2em
@@ -103,13 +103,14 @@ $note-item-height: 6em
       border-color: #eee
     .info
       @include text-overflow
-      margin: 0 0 0 6px
+      margin: 5px 0 0 0
+      padding-left: 6px
       .date
         color: #0005
       .tag
         padding: 0 0.5em
         margin-left: 1em
-        border-radius: 0.5em
+        border-radius: 1em
         background-color: var(--light-color)
         color: var(--dark-color)
   &[data-selected=true]
@@ -122,11 +123,15 @@ $note-item-height: 6em
       opacity: 1
     .name-input
       border-color: #0000
+  &[data-selected=false]
+    .checked-icon
+      display: none
 
 .note-wrapper
   &.selected
     .note-item::before
       @include pseudo-el(5px, -10px, 0, -10px)
+      z-index: -1
       border-top-left-radius: 1em
       border-top-right-radius: 1em
     & + & .note-item::before

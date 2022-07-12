@@ -14,3 +14,11 @@
       position: fixed
       right: 20px
       bottom: calc(20px + $safe-bottom)
+
+@include for-phone
+  button.large
+    display: none
+
+@include for-desktop
+  button.small, .aside-btn
+    display: none
