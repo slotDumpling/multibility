@@ -98,14 +98,13 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
     useEffect(() => {
       if (!ratio) return;
       const scp = scope.current;
+      const zero = new Point(0, 0);
       scp.view.viewSize = new Size(width, height).multiply(ratio);
-      scp.view.scale(ratio, new Point(0, 0));
+      scp.view.scale(ratio, zero);
       scp.project.layers.forEach((l) => (l.visible = true));
       scp.view.update();
 
-      return () => {
-        scp.view?.scale(1 / ratio, new Point(0, 0));
-      };
+      return () => scp.view?.scale(1 / ratio, zero);
     }, [width, height, ratio]);
 
     useEffect(() => {
