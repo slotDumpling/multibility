@@ -17,13 +17,13 @@
     transition: left $speed ease-in, transform $speed
     background-color: #ff4d4f
     color: #fff
-  &[data-deleting="true"]
+  &[data-deleting=true], &[data-deleted=true]
     > .content
       transform: translateX(-$button-width)
       pointer-events: none
     > .button
       transform: translateX(-$button-width)
-  &[data-deleted="true"]
+  &[data-deleted=true]
     height: 0 !important
     > .button
       left: $button-width
