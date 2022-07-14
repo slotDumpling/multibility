@@ -5,24 +5,24 @@ import {
   moveNoteTag,
   editNoteData,
   loadNote,
-} from "../../../lib/note/archive";
+} from "lib/note/archive";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { CloudTwoTone, CheckCircleFilled } from "@ant-design/icons";
-import { SwipeDelete, SwipeDeleteProvider } from "../../ui/SwipeDelete";
-import { NoteInfo, NotePage } from "../../../lib/note/note";
-import { DrawState } from "../../../lib/draw/DrawState";
-import { PageWrapper } from "../../reader/Reader";
+import { SwipeDelete, SwipeDeleteProvider } from "component/ui/SwipeDelete";
+import { NoteInfo, NotePage } from "lib/note/note";
+import { DrawState } from "lib/draw/DrawState";
+import { PageWrapper } from "component/reader/Reader";
 import { useNavigate } from "react-router-dom";
 import calender from "dayjs/plugin/calendar";
 import { MenuHeader } from "../header";
-import { Setter } from "../../../lib/hooks";
+import { Setter } from "lib/hooks";
 import { List, Map, Set } from "immutable";
 import { MenuCtx } from "../Menu";
 import { Input } from "antd";
 import dayjs from "dayjs";
-import { getCachedTeamState } from "../../../lib/network/http";
-import { TeamState } from "../../../lib/draw/TeamState";
-import { getColorPalette } from "../../../lib/color";
+import { getCachedTeamState } from "lib/network/http";
+import { TeamState } from "lib/draw/TeamState";
+import { getColorPalette } from "lib/color";
 import classNames from "classnames";
 import { ListTools } from "../header/ListTools";
 

@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { PasscodeInput } from "antd-mobile";
 import { ReaderStateCtx } from "../Reader";
 import { TeamCtx } from "../Team";
-import { getUserID, saveUserName } from "../../../lib/user";
-import PageNav from "../PageNav";
+import { getUserID, saveUserName } from "lib/user";
+import { PageNav } from "../PageNav";
 import {
   EyeOutlined,
   FormOutlined,
@@ -19,9 +19,9 @@ import {
   EyeInvisibleOutlined,
   UsergroupAddOutlined,
 } from "@ant-design/icons";
-import { editNoteData } from "../../../lib/note/archive";
-import { UserAvatar } from "../../widgets/UserAvatar";
-import { putNote } from "../../../lib/network/http";
+import { editNoteData } from "lib/note/archive";
+import { UserAvatar } from "component/widgets/UserAvatar";
+import { putNote } from "lib/network/http";
 import copy from "clipboard-copy";
 
 export const HeaderRight: FC<{
@@ -63,7 +63,7 @@ const UserCard: FC<{ userID: string }> = ({ userID }) => {
 
   return (
     <div className="user-item" data-online={online}>
-      <UserAvatar userID={userID} size="small" className="room-avatar" />
+      <UserAvatar userInfo={userInfo} size="small" className="room-avatar" />
       {renaming || <span className="user-name">{userName}</span>}
       {renaming && (
         <Search

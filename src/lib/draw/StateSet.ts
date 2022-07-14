@@ -1,6 +1,6 @@
 import { DrawState, Operation, Stroke } from "./DrawState";
 import { List, Map, Record } from "immutable";
-import { NotePage } from "../note/note";
+import { NotePage } from "lib/note/note";
 
 interface StateSetRecordType {
   states: Map<string, DrawState>;

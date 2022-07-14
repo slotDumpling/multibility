@@ -1,4 +1,4 @@
-import { getDefaultFlatState, FlatState } from "../draw/DrawState";
+import { getDefaultFlatState, FlatState } from "lib/draw/DrawState";
 import { v4 as getUid } from "uuid";
 import dayjs from "dayjs";
 

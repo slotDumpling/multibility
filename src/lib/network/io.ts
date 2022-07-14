@@ -1,7 +1,7 @@
 import { io } from "socket.io-client";
-import { Stroke } from "../draw/DrawState";
-import { NotePage } from "../note/note";
-import { getUserID, getUserName } from "../user";
+import { Stroke } from "lib/draw/DrawState";
+import { NotePage } from "lib/note/note";
+import { getUserID, getUserName } from "lib/user";
 import { BASE_URL } from "./http";
 
 export const IoFactory = (noteID: string) => () =>

@@ -13,14 +13,14 @@ import {
   DropResult,
   DragDropContext,
 } from "react-beautiful-dnd";
-import { ActiveKeyProvider, Setter, useActiveKey } from "../../lib/hooks";
+import { ActiveKeyProvider, Setter, useActiveKey } from "lib/hooks";
 import { PageWrapper, ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import { Avatar, Button, Drawer, Menu, Popover, Tabs } from "antd";
-import { UserAvatar } from "../widgets/UserAvatar";
-import { useForceLight } from "../../lib/Dark";
+import { UserAvatar } from "component/widgets/UserAvatar";
+import { useForceLight } from "lib/Dark";
 import { AddPageButton } from "./ReaderUtils";
 import { exchange } from "./lib/array";
-import IconFont from "../ui/IconFont";
+import IconFont from "component/ui/IconFont";
 import classNames from "classnames";
 import { TeamCtx } from "./Team";
 import "./preview.sass";
@@ -185,6 +185,7 @@ const TeamAvatars: FC<{
   chosen: string;
   setChosen: Setter<string>;
 }> = ({ userIDs, chosen, setChosen }) => {
+  const { userRec } = useContext(TeamCtx);
   return (
     <Avatar.Group
       maxCount={2}
@@ -192,16 +193,20 @@ const TeamAvatars: FC<{
       className={classNames("team-group", { chosen })}
       maxPopoverPlacement="bottom"
     >
-      {userIDs.map((userID) => (
-        <UserAvatar
-          key={userID}
-          size="default"
-          userID={userID}
-          className="preview-avatar"
-          chosen={chosen === userID}
-          onClick={() => setChosen((prev) => (prev === userID ? "" : userID))}
-        />
-      ))}
+      {userIDs.map((userID) => {
+        const userInfo = userRec[userID];
+        if (!userInfo) return null;
+        return (
+          <UserAvatar
+            key={userID}
+            size="default"
+            userInfo={userInfo}
+            className="preview-avatar"
+            chosen={chosen === userID}
+            onClick={() => setChosen((prev) => (prev === userID ? "" : userID))}
+          />
+        );
+      })}
     </Avatar.Group>
   );
 };
@@ -265,7 +270,7 @@ const PreviewTabs = () => {
   );
 };
 
-export default function PageNav() {
+export const PageNav = () => {
   const [navOn, setNavOn] = useState(false);
 
   return (
@@ -290,4 +295,4 @@ export default function PageNav() {
       </Drawer>
     </ActiveKeyProvider>
   );
-}
+};

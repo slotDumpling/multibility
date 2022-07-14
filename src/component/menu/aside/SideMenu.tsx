@@ -6,18 +6,13 @@ import {
   SettingOutlined,
   ContainerOutlined,
 } from "@ant-design/icons";
-import {
-  deleteTag,
-  editTag,
-  NoteTag,
-  addNewTag,
-} from "../../../lib/note/archive";
-import { SwipeDelete, SwipeDeleteProvider } from "../../ui/SwipeDelete";
 import { Button, Input, Popconfirm, Select } from "antd";
-import { colors, getColorPalette, getRandomColor } from "../../../lib/color";
-import { ColorCirle } from "../../widgets/ColorCircle";
+import { deleteTag, editTag, NoteTag, addNewTag } from "lib/note/archive";
+import { colors, getColorPalette, getRandomColor } from "lib/color";
+import { Setter } from "lib/hooks";
+import { SwipeDelete, SwipeDeleteProvider } from "component/ui/SwipeDelete";
+import { ColorCirle } from "component/widgets/ColorCircle";
 import { MenuCtx } from "../Menu";
-import { Setter } from "../../../lib/hooks";
 
 const TagInput: FC<{
   tagName: string;

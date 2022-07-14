@@ -7,29 +7,24 @@ import React, {
   useContext,
   useCallback,
 } from "react";
-import {
-  NoteInfo,
-  NotePage,
-  createPage,
-  defaultNotePage,
-} from "../../lib/note/note";
-import { DrawCtrlProvider, useDrawCtrl } from "../../lib/draw/DrawCtrl";
-import { NewPageInfo, ReorderInfo, SyncInfo } from "../../lib/network/io";
-import { DarkModeProvider, useForceLight } from "../../lib/Dark";
+import { NoteInfo, NotePage, createPage, defaultNotePage } from "lib/note/note";
+import { DrawCtrlProvider, useDrawCtrl } from "lib/draw/DrawCtrl";
+import { NewPageInfo, ReorderInfo, SyncInfo } from "lib/network/io";
+import { DarkModeProvider, useForceLight } from "lib/Dark";
 import { useMemoizedFn as useEvent, useSafeState } from "ahooks";
-import { SetOperation, StateSet } from "../../lib/draw/StateSet";
-import Draw, { ActiveToolKey, DrawRefType } from "../draw/Draw";
-import { loadNote, editNoteData } from "../../lib/note/archive";
+import { SetOperation, StateSet } from "lib/draw/StateSet";
+import Draw, { ActiveToolKey, DrawRefType } from "component/draw/Draw";
+import { loadNote, editNoteData } from "lib/note/archive";
 import { AddPageButton, showPageDelMsg } from "./ReaderUtils";
 import { useParams, useNavigate } from "react-router-dom";
 import { SelectTool, TextTool } from "./tools/DrawTools";
 import { debounce, last, once, range } from "lodash-es";
 import { useInView } from "react-intersection-observer";
-import { DrawState } from "../../lib/draw/DrawState";
+import { DrawState } from "lib/draw/DrawState";
 import { useScrollPage } from "./lib/scroll";
 import { insertAfter } from "./lib/array";
-import { Setter } from "../../lib/hooks";
-import ReaderHeader from "./header";
+import { Setter } from "lib/hooks";
+import { Header } from "./header";
 import { TeamCtx } from "./Team";
 import { Map } from "immutable";
 import { message } from "antd";
@@ -197,7 +192,7 @@ export default function Reader() {
 
   const renderResult = (
     <div className="reader container">
-      <ReaderHeader
+      <Header
         saved={saved}
         instantSave={instantSave}
         handleUndo={() => updateStateSet((prev) => prev.undo())}
@@ -319,7 +314,7 @@ export const PageWrapper: FC<{
   const loadImage = useCallback(
     once(async () => {
       if (!pdfIndex) return;
-      const { getNotePageImage } = await import("../../lib/note/pdfImage");
+      const { getNotePageImage } = await import("lib/note/pdfImage");
       setFullImg(await getNotePageImage(noteID, pdfIndex));
     }),
     [pdfIndex, noteID]

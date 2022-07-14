@@ -6,7 +6,7 @@ import React, {
   useContext,
   createContext,
 } from "react";
-import { Setter, useTransitionEnd } from "../../lib/hooks";
+import { Setter, useTransitionEnd } from "lib/hooks";
 import { useSwipeable } from "react-swipeable";
 import classNames from "classnames";
 import { v4 as getUid } from "uuid";

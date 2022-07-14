@@ -1,4 +1,4 @@
-import { createVirtualCanvas, releaseCanvas } from "../draw/canvas";
+import { createVirtualCanvas, releaseCanvas } from "lib/draw/canvas";
 import { createEmptyNote, Note, NotePage } from "./note";
 import localforage from "localforage";
 import { v4 as getUid } from "uuid";

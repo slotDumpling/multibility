@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { getAllNotes, getAllTags, NoteTag } from "../../lib/note/archive";
-import { NoteInfo } from "../../lib/note/note";
-import { Setter } from "../../lib/hooks";
+import { getAllNotes, getAllTags, NoteTag } from "lib/note/archive";
+import { NoteInfo } from "lib/note/note";
+import { Setter } from "lib/hooks";
 import { SideMenu } from "./aside";
 import { NoteList } from "./notes";
 import { List } from "immutable";

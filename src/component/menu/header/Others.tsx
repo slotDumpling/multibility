@@ -18,12 +18,12 @@ import {
   CaretDownOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
-import * as serviceWorkerRegistration from "../../../serviceWorkerRegistration";
+import * as serviceWorkerRegistration from "serviceWorkerRegistration";
 import { CSSTransitionProps } from "react-transition-group/CSSTransition";
-import { ActiveKeyProvider, useActiveKey } from "../../../lib/hooks";
-import { getUserName, saveUserName } from "../../../lib/user";
-import { clearImageCache } from "../../../lib/note/imgCache";
-import { createNewNote } from "../../../lib/note/archive";
+import { ActiveKeyProvider, useActiveKey } from "lib/hooks";
+import { getUserName, saveUserName } from "lib/user";
+import { clearImageCache } from "lib/note/imgCache";
+import { createNewNote } from "lib/note/archive";
 import { CSSTransition } from "react-transition-group";
 import localforage from "localforage";
 import { MenuCtx } from "../Menu";
@@ -62,7 +62,7 @@ const UploadPdfPage = () => {
   async function handleFile(file: File) {
     if (file.type !== "application/pdf") return;
     setLoading(true);
-    const { LoadPDF } = await import("../../../lib/note/pdfImage");
+    const { LoadPDF } = await import("lib/note/pdfImage");
     const note = await LoadPDF(file, setPercent);
     note.tagID = currTagID;
     const { tags, allNotes } = await createNewNote(note);

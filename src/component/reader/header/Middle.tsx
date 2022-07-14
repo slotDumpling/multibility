@@ -9,10 +9,10 @@ import {
   GatewayOutlined,
   HighlightOutlined,
 } from "@ant-design/icons";
-import IconFont from "../../ui/IconFont";
+import IconFont from "component/ui/IconFont";
 import { PenPanel, WidthSelect } from "../tools/PenPanel";
-import { useForceLight } from "../../../lib/Dark";
-import { useDrawCtrl, useUpdateDrawCtrl } from "../../../lib/draw/DrawCtrl";
+import { useForceLight } from "lib/Dark";
+import { useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
 
 export const HeaderMiddle: FC<{
   handleUndo: () => void;

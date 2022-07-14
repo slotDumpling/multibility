@@ -1,5 +1,5 @@
-import { createVirtualCanvas } from "../../../lib/draw/canvas";
-import { DrawCtrl } from "../../../lib/draw/DrawCtrl";
+import { createVirtualCanvas } from "lib/draw/canvas";
+import { DrawCtrl } from "lib/draw/DrawCtrl";
 import rotateImg from "./rotate.png";
 
 export const getCircleCursor = (drawCtrl: DrawCtrl, ratio: number) => {

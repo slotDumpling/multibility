@@ -1,5 +1,5 @@
 import { Note, NoteInfo, NotePage, TeamNoteInfo, TeamPageInfo } from "./note";
-import { getDefaultFlatState } from "../draw/DrawState";
+import { getDefaultFlatState } from "lib/draw/DrawState";
 import localforage from "localforage";
 import { v4 as getUid } from "uuid";
 import { pickBy } from "lodash-es";
@@ -171,7 +171,7 @@ export async function saveTeamNote(
 
   // parse timg for each page
   if (file) {
-    const { getPDFImages } = await import("../note/pdfImage");
+    const { getPDFImages } = await import("./pdfImage");
     const { images } = await getPDFImages(file, 0.5);
     Object.values(pageRec).forEach((page) => {
       const { pdfIndex } = page;

@@ -1,4 +1,4 @@
-import { NotePage, TeamPage, TeamPageInfo } from "../note/note";
+import { NotePage, TeamPage, TeamPageInfo } from "lib/note/note";
 import { DrawState } from "./DrawState";
 import { SetOperation } from "./StateSet";
 import { Map, Record } from "immutable";

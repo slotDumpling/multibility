@@ -4,9 +4,9 @@ import {
   TeamNoteInfo,
   TeamPage,
   TeamPageInfo,
-} from "../note/note";
-import { loadNote, saveTeamNote, updateTeamNote } from "../note/archive";
-import { getUserID } from "../user";
+} from "lib/note/note";
+import { loadNote, saveTeamNote, updateTeamNote } from "lib/note/archive";
+import { getUserID } from "lib/user";
 import localforage from "localforage";
 
 export let BASE_URL = "https://api.slotdumpling.top/paint";

@@ -12,8 +12,8 @@ import {
   ArrowLeftOutlined,
   SortAscendingOutlined,
 } from "@ant-design/icons";
-import { Setter } from "../../../lib/hooks";
-import { ColorCirle } from "../../widgets/ColorCircle";
+import { Setter } from "lib/hooks";
+import { ColorCirle } from "component/widgets/ColorCircle";
 
 export const ListTools: FC<{
   sortType: string;

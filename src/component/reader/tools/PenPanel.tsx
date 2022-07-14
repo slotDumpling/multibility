@@ -1,14 +1,14 @@
 import { CSSProperties, FC, useEffect, useMemo, useState } from "react";
-import { defaultWidthList, DrawCtrl } from "../../../lib/draw/DrawCtrl";
-import { ColorCirle } from "../../widgets/ColorCircle";
-import { WIDTH } from "../../../lib/draw/DrawState";
+import { defaultWidthList, DrawCtrl } from "lib/draw/DrawCtrl";
+import { ColorCirle } from "component/widgets/ColorCircle";
+import { WIDTH } from "lib/draw/DrawState";
 import { Popover, Segmented, Slider } from "antd";
-import { allColors } from "../../../lib/color";
-import { Setter } from "../../../lib/hooks";
-import IconFont from "../../ui/IconFont";
+import { allColors } from "lib/color";
+import { Setter } from "lib/hooks";
+import IconFont from "component/ui/IconFont";
 import { List } from "immutable";
 import "./penPanel.sass";
-import { useForceLight } from "../../../lib/Dark";
+import { useForceLight } from "lib/Dark";
 
 export const PenPanel: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;

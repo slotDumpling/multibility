@@ -9,19 +9,14 @@ import React, {
   SetStateAction,
   useImperativeHandle,
 } from "react";
-import {
-  DrawState,
-  Mutation,
-  Splitter,
-  Stroke,
-} from "../../lib/draw/DrawState";
-import { defaultDrawCtrl, DrawCtrl } from "../../lib/draw/DrawCtrl";
-import { getCircleCursor, getRotateCurcor } from "./cursor/cursor";
-import { usePreventTouch, usePreventGesture } from "./touch";
-import { releaseCanvas } from "../../lib/draw/canvas";
+import paper from "paper";
 import { usePinch } from "@use-gesture/react";
 import useSize from "@react-hook/size";
-import paper from "paper";
+import { DrawState, Mutation, Splitter, Stroke } from "lib/draw/DrawState";
+import { defaultDrawCtrl, DrawCtrl } from "lib/draw/DrawCtrl";
+import { releaseCanvas } from "lib/draw/canvas";
+import { getCircleCursor, getRotateCurcor } from "./cursor/cursor";
+import { usePreventTouch, usePreventGesture } from "./touch";
 import "./draw.sass";
 
 const { Path, Size, Point, Group, Color, Raster, Layer } = paper;

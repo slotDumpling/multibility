@@ -1,25 +1,23 @@
 import { Avatar } from "antd";
 import { AvatarSize } from "antd/lib/avatar/SizeContext";
-import { FC, useContext, useMemo } from "react";
-import { getHashedColor } from "../../lib/color";
-import { TeamCtx } from "../reader/Team";
+import { FC, useMemo } from "react";
+import { getHashedColor } from "lib/color";
+import { UserInfo } from "lib/user";
 
 export const UserAvatar: FC<{
-  userID: string;
+  userInfo: UserInfo;
   size?: AvatarSize;
   onClick?: () => void;
   chosen?: boolean;
   className?: string;
 }> = ({
-  userID,
+  userInfo,
   size = "default",
   onClick = () => {},
   chosen = false,
   className,
 }) => {
-  const { userRec } = useContext(TeamCtx);
-  const color = useMemo(() => getHashedColor(userID), [userID]);
-  const userInfo = userRec[userID];
+  const color = useMemo(() => getHashedColor(userInfo.userID), [userInfo]);
   if (!userInfo) return null;
   const { userName } = userInfo;
 

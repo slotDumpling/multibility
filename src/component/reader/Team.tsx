@@ -3,16 +3,16 @@ import {
   getTeamNoteState,
   loadTeamNoteInfo,
   updatePages,
-} from "../../lib/network/http";
+} from "lib/network/http";
 import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
-import { IoFactory, NewPageInfo } from "../../lib/network/io";
+import { IoFactory, NewPageInfo } from "lib/network/io";
 import { useNavigate, useParams } from "react-router-dom";
-import { TeamState } from "../../lib/draw/TeamState";
-import { getUserID, UserInfo } from "../../lib/user";
-import { NotePage } from "../../lib/note/note";
+import { TeamState } from "lib/draw/TeamState";
+import { getUserID, UserInfo } from "lib/user";
+import { NotePage } from "lib/note/note";
 import { Socket } from "socket.io-client";
-import { Setter } from "../../lib/hooks";
-import { Loading } from "../ui/Loading";
+import { Setter } from "lib/hooks";
+import { Loading } from "component/ui/Loading";
 import { message } from "antd";
 import { Set } from "immutable";
 import Reader from "./Reader";
