@@ -3,12 +3,15 @@
   text-overflow: ellipsis
   white-space: nowrap
 
-@mixin absolute($top: 0, $right: 0, $bottom: 0, $left: 0)
-  position: absolute
+@mixin inset($top: 0, $right: 0, $bottom: 0, $left: 0)
   top: $top
   right: $right
   bottom: $bottom
   left: $left
+
+@mixin absolute($top: 0, $right: 0, $bottom: 0, $left: 0)
+  position: absolute
+  @include inset($top, $right, $bottom, $left)
 
 @mixin absolute-center
   position: absolute
@@ -24,10 +27,7 @@
 @mixin pseudo-el($top: 0, $right: 0, $bottom: 0, $left: 0)
   position: absolute
   content: ""
-  top: $top
-  right: $right
-  bottom: $bottom
-  left: $left
+  @include inset($top, $right, $bottom, $left)
 
 @mixin back-blur($color: #fff)
   background-color: $color
