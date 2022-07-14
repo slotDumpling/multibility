@@ -1,0 +1,92 @@
+@import ../../../sass/_mixins
+@import ../../../sass/_var
+
+.pen-panel
+  min-width: 200px
+  margin: 4px 0
+  position: relative
+  .color-select
+    transition: filter $speed
+  &::after
+    @include pseudo-el(0, 0, 0, 0)
+    visibility: hidden
+    transition: visibility $speed
+  &[data-blur="true"]
+    .color-select
+      filter: blur(5px) opacity(0.5)
+    &::after
+      visibility: visible
+  .pen-status
+    padding: 5px
+    margin-bottom: 10px
+    display: flex
+    justify-content: space-between
+    .width-seg
+      margin-right: 20px
+
+.hi-wrapper
+  display: block
+  $border-shadow: 0 0 0 2px rgba(0, 0, 0, 0.04)
+  input[type="checkbox"]
+    display: none
+    &:checked + .hi-switch
+      background-color: #fff
+      box-shadow: $border-shadow, $shadow-1
+      @media (prefers-color-scheme: dark)
+        background-color: #ddd
+  .hi-switch
+    @include flex-center
+    height: 100%
+    width: 40px
+    border-radius: 5px
+    font-size: 1.2em
+    background-color: rgba(0, 0, 0, 0.04)
+    transition: background $speed, box-shadow $speed
+    box-shadow: $border-shadow
+    cursor: pointer
+
+.width-seg
+  border-radius: 5px
+  > *
+    border-radius: 5px
+  .ant-segmented-item
+    display: flex
+  .ant-segmented-item-label
+    padding: 0
+  .circle-wrapper
+    @include flex-center
+    min-width: 30px
+    padding: 10px
+    height: 100%
+    .width-circle
+      width: var(--real-size)
+      height: var(--real-size)
+
+.ctrl-slider
+  width: 200px
+  .ant-slider-handle::after
+    @include pseudo-el(-20px, -20px, -20px, -20px)
+
+.color-select
+  display: grid
+  grid-template-columns: repeat(4, 1fr)
+  gap: 10px 0
+  place-items: center
+  input[type="radio"]
+    display: none
+    &:checked + .circle
+      border-width: 6px
+      background-color: #0000 !important
+  .circle
+    cursor: pointer
+    width: 30px
+    height: 30px
+    border-radius: 15px
+    border: 15px solid
+    transition: all 0.2s
+    &[data-color="#000000"]
+      box-shadow: 0 0 0 1px #ddd
+
+@media (prefers-color-scheme: dark)
+  .ant-segmented-item-selected, .ant-segmented-thumb
+    background-color: #ddd

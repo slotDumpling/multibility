@@ -1,0 +1,118 @@
+@import ../../../sass/_mixins
+@import ../../../sass/_var
+
+.side-menu
+  position: fixed
+  top: 0
+  left: 0
+  bottom: 0
+  width: 300px
+  z-index: 1000
+  display: flex
+  flex-direction: column
+  border-right: $default-border
+  background-color: #F9FAFB
+  transition: transform $fast-speed
+  @include for-phone
+    transform: translateX(-100%)
+  @include for-desktop
+    button.aside-btn
+      opacity: 0
+  header
+    display: flex
+    align-items: center
+    justify-content: space-between
+    height: $header-low-height
+    padding: 0 20px
+    h2.logo
+      margin: 0
+      text-align: center
+      font-size: 1.5em
+      background-image: linear-gradient(45deg, #9CA3AF, #6B7280, #9CA3AF)
+      background-size: 200% 100%
+      animation: logo-gradient 5s infinite
+      background-clip: text
+      font-family: sofia, sans-serif
+      color: #0000
+
+@keyframes logo-gradient
+  from
+    background-position-x: 0
+  50%
+    background-position-x: 100%
+  to
+    background-position-x: 0
+
+input#aside-check
+  display: none
+  @include for-phone
+    &:checked
+      + .side-menu
+        transform: translate(0)
+      ~ .aside-label .aside-mask
+        backdrop-filter: blur(5px)
+        visibility: visible
+
+.aside-label
+  cursor: pointer
+  button.aside-btn
+    pointer-events: none
+  .aside-mask
+    position: fixed
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    z-index: 900
+    visibility: hidden
+    transition: all $fast-speed
+
+.tag-list
+  flex: 1
+  overflow: hidden auto
+  padding: 10px 20px 20px 20px
+  .tag-wrapper
+    overflow: hidden
+    border-radius: 1em
+    margin-bottom: 10px
+    &[data-deleted=true]
+      margin-bottom: 0
+
+.tag-item
+  height: 3em
+  padding: 0 20px
+  display: flex
+  align-items: center
+  cursor: pointer
+  transition: height $speed, background $speed
+  --light-color: #E5E7EB
+  &[data-editing=true]
+    height: 8em
+    flex-direction: column
+    justify-content: space-evenly
+    background-color: #f1f0f5 !important
+    .buttons
+      width: 100%
+      display: flex
+      justify-content: space-between
+  &[data-curr=true]
+    background-color: var(--light-color)
+    color: var(--dark-color)
+    > button
+      color: var(--dark-color)
+  > .tag-circle
+    margin-right: 10px
+  .all-note-icon
+    font-size: 12px
+    margin-right: 10px
+  .tag-name
+    @include text-overflow
+    flex: 1
+    margin: 0 10px 0 0 !important
+  .tag-num
+    width: 24px
+    text-align: center
+
+.ant-select-selection-item, .ant-select-item-option-content
+  display: flex
+  align-items: center

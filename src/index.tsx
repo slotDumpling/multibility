@@ -1,15 +1,15 @@
 import React, { LazyExoticComponent, Suspense } from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
-import { Loading, Page404 } from "./component/ui/Loading";
+import { Loading, Page404 } from "./component/Loading";
 import { loadDarkMode } from "./lib/Dark";
-import Test from "./component/Test";
+import Test from "./pages/test";
 import ReactDOM from "react-dom";
 import "./index.sass";
 
-const MainMenu = React.lazy(() => import("./component/menu"));
-const Reader = React.lazy(() => import("./component/reader/Reader"));
-const Team = React.lazy(() => import("./component/reader/Team"));
+const MainMenu = React.lazy(() => import("pages/menu"));
+const Reader = React.lazy(() => import("pages/reader/Reader"));
+const Team = React.lazy(() => import("pages/reader/Team"));
 const SuspendLazy = (Component: LazyExoticComponent<() => JSX.Element>) => (
   <Suspense fallback={<Loading />}>
     <Component />

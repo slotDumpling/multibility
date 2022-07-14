@@ -1,0 +1,99 @@
+@import ../../../sass/_mixins
+@import ../../../sass/_var
+
+.reader.container header
+  position: sticky
+  top: 0
+  z-index: 900
+  padding: 0 20px
+  display: flex
+  align-items: center
+  justify-content: space-between
+  border-bottom: $dark-border
+  &::before
+    @include pseudo-el(-1px, 0, 0, 0)
+    @include back-blur
+    z-index: -1
+  @media (display-mode: standalone)
+    background-color: #fff
+  > .left, > .middle, > .right
+    display: grid
+    gap: 10px
+  > .middle
+    > button.ant-btn-default
+      background-color: #fff5
+    .force-light-btn
+      @media (prefers-color-scheme: light)
+        visibility: hidden
+  @include for-phone
+    height: $header-high-height
+    > .middle
+      grid-template-columns: repeat(4, 1fr)
+      border-left: $default-border
+      border-right: $default-border
+      padding: 0 20px
+  @include for-desktop
+    height: $header-low-height
+    > .left, > .right
+      grid-template-columns: repeat(2, 1fr)
+    > .middle
+      grid-template-columns: repeat(9, 1fr)
+      .force-light-btn
+        grid-column: span 2
+
+.team-title
+  display: flex
+  justify-content: space-between
+  align-items: center
+
+.team-popover
+  width: 200px
+  display: flex
+  flex-direction: column
+  .disconn-alert
+    margin: -16px -16px 16px -16px
+  .code-display
+    pointer-events: none
+    align-self: center
+  .share-btn
+    width: 162px
+    margin-top: 15px
+    border-radius: 8px
+    align-self: center
+  .user-list
+    display: flex
+    flex-direction: column
+    max-height: 150px
+    overflow: auto
+    padding: 0 10px
+    margin-bottom: 10px
+    .user-item
+      display: flex
+      align-items: center
+      &:not(:last-of-type)
+        margin-bottom: 10px
+      &:not([data-online="true"])
+        .room-avatar, .user-name
+          opacity: 0.5
+          filter: grayscale(0.5)
+      .room-avatar
+        margin-right: 10px
+      .user-name
+        @include text-overflow
+        flex: 1
+      .rename-input
+        flex: 1
+        margin-left: -6px
+        input
+          padding-left: 5px
+
+.width-seg-wrapper
+  display: flex
+  flex-direction: column
+  margin: 4px 0
+  > * + *
+    margin-top: 15px
+  .pixel-seg
+    border-radius: 5px
+    > *
+      border-radius: 5px

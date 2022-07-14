@@ -41,7 +41,7 @@ interface DrawPropType {
   imgSrc?: string;
 }
 
-const Draw = React.forwardRef<DrawRefType, DrawPropType>(
+const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
   (
     {
       drawState,
@@ -577,8 +577,8 @@ const Draw = React.forwardRef<DrawRefType, DrawPropType>(
   }
 );
 
-Draw.displayName = "Draw";
-export default React.memo(Draw);
+DrawRaw.displayName = "Draw";
+export const Draw = React.memo(DrawRaw);
 
 function usePaperItem<T extends paper.Item>() {
   const tuple = useState<T | undefined>();

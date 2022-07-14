@@ -1,0 +1,56 @@
+@import ../../../sass/_mixins
+@import ../../../sass/_var
+
+.select-tool
+  @include back-blur
+  position: absolute
+  left: 50%
+  padding: 5px
+  transform: translateX(-50%)
+  border-radius: 50px
+  border: $dark-border
+  display: flex
+  @include for-desktop
+    top: calc( $header-low-height + 10px )
+  @include for-phone
+    top: calc( $header-high-height + 10px )
+  > * + *
+    margin-left: 5px
+
+.select-tool.enter
+  transform: translate(-50%, -10px)
+  opacity: 0
+.select-tool.enter-active
+  transform: translateX(-50%)
+  opacity: 1
+  transition: opacity $speed, transform $speed
+.select-tool.exit
+  transform: translateX(-50%)
+  opacity: 1
+.select-tool.exit-active
+  transform: translate(-50%, -10px)
+  opacity: 0
+  transition: opacity $speed, transform $speed
+
+.select-tool ~ .select-tool
+  display: none
+
+.insert-option
+  margin: 15px 0
+  > * + *
+    margin-left: 10px
+
+.font-color-drop
+  width: 200px
+  padding: 10px
+  background-color: white
+  border-radius: 5px
+
+.raster-modal
+  .ant-modal-confirm-content
+    @include flex-center
+    margin: 20px 10px 0 10px !important
+  .raster
+    max-height: 50vh
+    max-width: 100%
+    border: $default-border

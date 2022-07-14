@@ -1,0 +1,24 @@
+@import ../../sass/_var
+@import ../../sass/_mixins
+
+.reader.container
+  main
+    background-color: #fafafa
+    padding-bottom: $safe-bottom
+    .note-page
+      outline: $default-border
+      &:not(:first-of-type)
+        margin-top: 10px
+    .add-btn-wrapper
+      padding: 20px
+      &:first-child
+        display: none
+
+html
+  @include for-phone
+    scroll-padding-top: $header-high-height
+  @include for-desktop
+    scroll-padding-top: $header-low-height
+
+.add-btn-wrapper
+  width: 100%
