@@ -6,7 +6,7 @@ import { PasscodeInput } from "antd-mobile";
 import { ReaderStateCtx } from "../Reader";
 import { TeamCtx } from "../Team";
 import { getUserID, saveUserName } from "lib/user";
-import { PageNav } from "../PageNav";
+import { PageNavButton } from "../PageNav";
 import {
   EyeOutlined,
   FormOutlined,
@@ -31,7 +31,7 @@ export const HeaderRight: FC<{
   return (
     <div className="right">
       {teamOn ? <RoomInfo /> : <JoinRoom instantSave={instantSave} />}
-      <PageNav />
+      <PageNavButton />
     </div>
   );
 };

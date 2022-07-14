@@ -26,6 +26,7 @@ import { TeamCtx } from "./Team";
 import { Map } from "immutable";
 import { message } from "antd";
 import "./reader.sass";
+import { PageNav } from "./PageNav";
 
 export const ReaderStateCtx = React.createContext<{
   noteID: string;
@@ -207,6 +208,7 @@ export default function Reader() {
         ))}
         <AddPageButton />
       </main>
+      <PageNav />
     </div>
   );
 

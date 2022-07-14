@@ -1,10 +1,57 @@
 @import ../../sass/_mixins
 @import ../../sass/_var
 
-.preview-container
+$card-width: 200px
+.preview-drop
+  position: fixed
+  z-index: 1000
+  padding: 20px
+  padding-bottom: calc( 20px + $safe-bottom )
+  display: flex
+  pointer-events: none
+  transition: transform $fast-speed
+  @include for-desktop
+    @include inset($header-low-height, 0, 0, 0)
+  @include for-phone
+    @include inset($header-high-height, 0, 0, 0)
+  .opposite
+    width: calc( 100% - $card-width )
+
+input#preview-check
+  display: none
+  &:not(:checked) + .preview-drop
+    transform: translateX(250px)
+    &[data-left=true]
+      transform: translateX(-250px)
+
+.preview-card
   display: flex
   flex-direction: column
-  height: 100%
+  width: $card-width
+  border-radius: 10px
+  background-color: #fff
+  border: $dark-border
+  box-shadow: $shadow-2-down
+  pointer-events: auto
+
+  .drag-handle
+    height: 20px
+    position: relative
+    cursor: pointer
+    touch-action: none
+    &::before
+      @include pseudo-el(50%, auto, auto, 50%)
+      transform: translate(-50%, -50%)
+      height: 5px
+      width: 40px
+      border-radius: 10px
+      background-color: #ddd
+      transition: background $speed
+    &::after
+      @include pseudo-el(-20px, 0, 0, 0)
+    &:hover::before
+      background-color: #ccc
+
   .tabs .anticon
     margin: 0 15px
   h3
@@ -13,14 +60,13 @@
   .page-list
     flex: 1
     overflow: hidden auto
-    padding: 2px 25px calc($safe-bottom + 20px) 25px
+    padding: 3px 25px calc($safe-bottom + 20px) 25px
     scroll-padding-top: 30%
-    > * + *
-      margin-top: 20px
     .page
       cursor: pointer
       position: relative
       border: $default-border
+      margin-bottom: 20px
       &[data-curr=true]
         border-color: $blue-color
         box-shadow: 0 0 0 2px $blue-color
@@ -87,14 +133,7 @@
   &[data-chosen=true]
     border-color: $blue-color
 
-.preview-drawer
-  bottom: 0 !important
-  height: auto !important
-  .ant-drawer-mask
-    background-color: #0000
-  .ant-drawer-content
-    overflow: hidden
-  @include for-phone
-    top: $header-high-height
-  @include for-desktop
-    top: $header-low-height
+.preview-label
+  cursor: pointer
+  button
+    pointer-events: none

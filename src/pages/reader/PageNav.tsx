@@ -1,11 +1,10 @@
 import { FC, useRef, useMemo, useState, useEffect, useContext } from "react";
 import {
+  MenuOutlined,
   MoreOutlined,
   PlusOutlined,
   CopyOutlined,
   DeleteOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
 } from "@ant-design/icons";
 import {
   Draggable,
@@ -13,10 +12,10 @@ import {
   DropResult,
   DragDropContext,
 } from "react-beautiful-dnd";
+import { Avatar, Button, Menu, Popover, Tabs } from "antd";
 import { ActiveKeyProvider, Setter, useActiveKey } from "lib/hooks";
 import { ReaderMethodCtx, ReaderStateCtx } from "./Reader";
 import PageWrapper from "component/PageWrapper";
-import { Avatar, Button, Drawer, Menu, Popover, Tabs } from "antd";
 import { UserAvatar } from "component/UserAvatar";
 import { useForceLight } from "lib/Dark";
 import { AddPageButton } from "./ReaderUtils";
@@ -26,12 +25,43 @@ import classNames from "classnames";
 import { TeamCtx } from "./Team";
 import "./preview.sass";
 
-const PageNavContent = () => {
+const PreviewCard: FC<{ left: boolean; visible: boolean }> = ({
+  left,
+  visible,
+}) => {
+  const [forceLight] = useForceLight();
+
+  const [activeKey] = useActiveKey();
+  const title = {
+    ALL: "All Pages",
+    MARKED: "Bookmarks",
+    WRITTEN: "Notes",
+  }[activeKey];
+
+  return (
+    <Draggable draggableId={"CARD"} index={left ? 0 : 1}>
+      {({ innerRef, draggableProps, dragHandleProps }) => (
+        <div
+          className="preview-card"
+          ref={innerRef}
+          data-force-light={forceLight}
+          {...draggableProps}
+        >
+          <div className="drag-handle" {...dragHandleProps} />
+          <PreviewTabs />
+          <h3>{title}</h3>
+          <PageList visible={visible} />
+        </div>
+      )}
+    </Draggable>
+  );
+};
+
+const PageList: FC<{ visible: boolean }> = ({ visible }) => {
   const { pageOrder, currPageID } = useContext(ReaderStateCtx);
   const { scrollPage, saveReorder } = useContext(ReaderMethodCtx);
-  const [forceLight] = useForceLight();
-  const [activeKey] = useActiveKey();
   const refRec = useRef<Record<string, HTMLElement>>({});
+  const [activeKey] = useActiveKey();
 
   const onDragEnd = ({ source, destination }: DropResult) => {
     if (!destination || !pageOrder) return;
@@ -44,38 +74,30 @@ const PageNavContent = () => {
     requestAnimationFrame(() => scrollPage(pageID));
   };
 
-  const title = {
-    ALL: "All Pages",
-    MARKED: "Bookmarks",
-    WRITTEN: "Notes",
-  }[activeKey];
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => refRec.current[currPageID]?.scrollIntoView(), []);
+  useEffect(() => {
+    if (visible) return;
+    refRec.current[currPageID]?.scrollIntoView();
+  }, [visible, currPageID]);
 
   return (
-    <div className="preview-container" data-force-light={forceLight}>
-      <PreviewTabs />
-      <h3>{title}</h3>
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="preview-list">
-          {({ droppableProps, innerRef, placeholder }) => (
-            <div className="page-list" ref={innerRef} {...droppableProps}>
-              {pageOrder?.map((uid, index) => (
-                <PagePreview
-                  key={uid}
-                  uid={uid}
-                  pageIndex={index}
-                  refRec={refRec.current}
-                />
-              ))}
-              {placeholder}
-              {activeKey === "ALL" && <AddPageButton />}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
-    </div>
+    <DragDropContext onDragEnd={onDragEnd}>
+      <Droppable droppableId="preview-list">
+        {({ droppableProps, innerRef, placeholder }) => (
+          <div className="page-list" ref={innerRef} {...droppableProps}>
+            {pageOrder?.map((uid, index) => (
+              <PagePreview
+                key={uid}
+                uid={uid}
+                pageIndex={index}
+                refRec={refRec.current}
+              />
+            ))}
+            {placeholder}
+            {activeKey === "ALL" && <AddPageButton />}
+          </div>
+        )}
+      </Droppable>
+    </DragDropContext>
   );
 };
 
@@ -273,28 +295,63 @@ const PreviewTabs = () => {
 };
 
 export const PageNav = () => {
-  const [navOn, setNavOn] = useState(false);
+  const [checked, setChecked] = useState(false);
+  const [left, setLeft] = useState(false);
+
+  const previewBody = (
+    <PreviewCard left={left} visible={checked} key="preview-drag" />
+  );
+
+  const opposite = (
+    <Draggable key="opposite" draggableId="opposite" index={left ? 1 : 0}>
+      {({ innerRef, draggableProps, dragHandleProps }) => (
+        <div
+          className="opposite"
+          ref={innerRef}
+          {...draggableProps}
+          {...dragHandleProps}
+        />
+      )}
+    </Draggable>
+  );
 
   return (
     <ActiveKeyProvider initKey="ALL">
-      <Button
-        type="text"
-        icon={navOn ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-        onClick={() => setNavOn((prev) => !prev)}
+      <input
+        onChange={(e) => setChecked(e.target.checked)}
+        type="checkbox"
+        name="preview-check"
+        id="preview-check"
       />
-      <Drawer
-        visible={navOn}
-        onClose={() => setNavOn(false)}
-        width={200}
-        closable={false}
-        zIndex={800}
-        className="preview-drawer"
-        bodyStyle={{ padding: 0, overflow: "hidden" }}
-        headerStyle={{ textAlign: "center" }}
-        destroyOnClose
+      <DragDropContext
+        onDragEnd={({ draggableId, destination }) => {
+          if (draggableId !== "CARD") return;
+          if (destination?.index === 0) setLeft(true);
+          if (destination?.index === 1) setLeft(false);
+        }}
       >
-        <PageNavContent />
-      </Drawer>
+        <Droppable droppableId="preview-drop" direction="horizontal">
+          {({ droppableProps, innerRef, placeholder }) => (
+            <div
+              className="preview-drop"
+              data-left={left}
+              ref={innerRef}
+              {...droppableProps}
+            >
+              {left ? [previewBody, opposite] : [opposite, previewBody]}
+              {placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
     </ActiveKeyProvider>
+  );
+};
+
+export const PageNavButton = () => {
+  return (
+    <label htmlFor="preview-check" className="preview-label">
+      <Button type="text" icon={<MenuOutlined />} />
+    </label>
   );
 };
