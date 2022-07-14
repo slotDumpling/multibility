@@ -1,19 +1,12 @@
-import { useContext } from "react";
-import { MenuCtx } from "../Menu";
-import Left from "./Left";
-import Right from "./Right";
+import { Nav } from "./Nav";
+import { FC } from "react";
 import "./header.sass";
 
-export function MenuHeader() {
-  const { currTagID, allTags } = useContext(MenuCtx);
-  const logo = currTagID === "DEFAULT";
+export const MenuHeader: FC = ({ children }) => {
   return (
     <header>
-      <Left />
-      <h2 data-logo={logo}>
-        {logo ? "Multibility" : allTags[currTagID]?.name}
-      </h2>
-      <Right />
+      <Nav />
+      {children}
     </header>
   );
-}
+};

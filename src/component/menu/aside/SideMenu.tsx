@@ -1,6 +1,7 @@
 import { FC, useContext, useEffect, useState } from "react";
 import {
-  TagOutlined,
+  MenuOutlined,
+  PlusOutlined,
   DeleteOutlined,
   SettingOutlined,
   ContainerOutlined,
@@ -41,7 +42,6 @@ const TagInput: FC<{
 
   return (
     <Input
-      autoFocus
       placeholder="Tag name..."
       className="tag-name-input"
       addonBefore={colorSelector}
@@ -53,11 +53,12 @@ const TagInput: FC<{
 
 const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
   const { uid, color, name, notes } = noteTag;
-  const { editing, currTagID, setAllTags, setCurrTagID } = useContext(MenuCtx);
+  const { currTagID, setAllTags, setCurrTagID } = useContext(MenuCtx);
   const [tagName, setTagName] = useState(name);
   const [tagColor, setTagColor] = useState(color);
   const [tagEditing, setTagEditing] = useState(false);
-  useEffect(() => setTagEditing(false), [editing]);
+  const curr = currTagID === uid;
+  useEffect(() => setTagEditing(false), [curr]);
 
   async function removeTag() {
     const tags = await deleteTag(uid);
@@ -87,14 +88,15 @@ const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
     <>
       <ColorCirle className="tag-circle" color={tagColor} />
       <span className="tag-name">{tagName}</span>
-      {editing || <span className="tag-num">{notes.length}</span>}
-      {editing && (
+      {curr ? (
         <Button
           size="small"
           type="text"
           onClick={() => setTagEditing(true)}
           icon={<SettingOutlined />}
         />
+      ) : (
+        <span className="tag-num">{notes.length}</span>
       )}
     </>
   );
@@ -129,10 +131,14 @@ const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
   );
 
   return (
-    <SwipeDelete className="tag-wrapper" onDelete={removeTag} disable={editing}>
+    <SwipeDelete
+      className="tag-wrapper"
+      onDelete={removeTag}
+      disable={tagEditing}
+    >
       <div
         className="tag-item"
-        data-curr={currTagID === uid}
+        data-curr={curr}
         data-editing={tagEditing}
         onClick={() => setCurrTagID(uid)}
         style={getColorPalette(color)}
@@ -176,8 +182,7 @@ const NewTagItem: FC<{ setAdding: Setter<boolean> }> = ({ setAdding }) => {
 };
 
 export const SideMenu = () => {
-  const { allTags, editing, currTagID, allNotes, setCurrTagID, setEditing } =
-    useContext(MenuCtx);
+  const { allTags, currTagID, allNotes, setCurrTagID } = useContext(MenuCtx);
   const [adding, setAdding] = useState(false);
 
   const allNoteTag = (
@@ -194,41 +199,45 @@ export const SideMenu = () => {
     </div>
   );
 
-  const swichEditing = () => setEditing((prev) => !prev);
-
-  const editButton = (
-    <Button
-      className="edit-btn"
-      shape="round"
-      type={editing ? "primary" : "default"}
-      onClick={swichEditing}
-    >
-      {editing ? "Done" : "Edit"}
-    </Button>
+  const header = (
+    <header>
+      <label htmlFor="aside-check" className="aside-label">
+        <Button
+          style={{ pointerEvents: "none" }}
+          className="aside-btn"
+          type="text"
+          icon={<MenuOutlined />}
+        />
+      </label>
+      <h2 className="logo">Multibility</h2>
+      <Button
+        className="new-tag-btn"
+        type="text"
+        icon={<PlusOutlined />}
+        onClick={() => setAdding(true)}
+        disabled={adding}
+      />
+    </header>
   );
 
   return (
-    <aside className="side-menu">
-      <div className="tag-list">
-        {allNoteTag}
-        <SwipeDeleteProvider>
-          {Object.values(allTags).map((tag) => (
-            <TagItem key={tag.uid} noteTag={tag} />
-          ))}
-        </SwipeDeleteProvider>
-        {adding && <NewTagItem setAdding={setAdding} />}
-      </div>
-      <footer>
-        <Button
-          shape="round"
-          icon={<TagOutlined />}
-          onClick={() => setAdding(true)}
-          disabled={adding}
-        >
-          Add
-        </Button>
-        {editButton}
-      </footer>
-    </aside>
+    <>
+      <input type="checkbox" name="aside-check" id="aside-check" />
+      <aside className="side-menu">
+        {header}
+        <div className="tag-list">
+          {allNoteTag}
+          <SwipeDeleteProvider>
+            {Object.values(allTags).map((tag) => (
+              <TagItem key={tag.uid} noteTag={tag} />
+            ))}
+          </SwipeDeleteProvider>
+          {adding && <NewTagItem setAdding={setAdding} />}
+        </div>
+      </aside>
+      <label htmlFor="aside-check" className="aside-label">
+        <div className="aside-mask" />
+      </label>
+    </>
   );
 };

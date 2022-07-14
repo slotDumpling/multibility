@@ -1,44 +1,52 @@
 @import ../../_mixins
 @import ../../_var
 
-.main-menu.container header
-  position: relative
-  height: $header-low-height
-  padding: 0 15px
+.main-menu.container .note-list header
+  @include back-blur
+  position: sticky
+  top: 0
+  padding: 0 20px
+  z-index: 100
+  border-bottom: $default-border
   display: flex
-  justify-content: space-between
-  align-items: center
-  border-bottom: $dark-border
-  .left-tools, .right-tools
+  flex-direction: column
+  > *
     display: flex
+    align-items: center
+    height: $header-low-height
+  nav
     justify-content: space-between
-    button.edit-btn
-      width: 70px
-    @include for-phone
-      width: 75px
-    @include for-desktop
-      width: 130px
-  h2
-    @include text-overflow
-    margin: 0 30px !important
-    flex: 1
-    text-align: center
-    font-size: 1.3em
-    &[data-logo="true"]
-      flex: none
-      font-size: 1.5em
-      padding: 0 10px
-      background-image: linear-gradient(45deg, #9CA3AF, #6B7280, #9CA3AF)
-      background-size: 200% 100%
-      animation: logo-gradient 5s infinite
-      background-clip: text
-      font-family: sofia, sans-serif
-      color: #0000
-
-@keyframes logo-gradient
-  from
-    background-position-x: 0
-  50%
-    background-position-x: 100%
-  to
-    background-position-x: 0
+    .nav-left
+      display: flex
+      align-items: center
+      flex: 1
+      overflow: hidden
+      h2
+        @include text-overflow
+        margin: 0 10px
+        color: #555
+    .nav-right > * + *
+      margin-left: 10px
+  .list-tools
+    justify-content: center
+    grid-column: span 2
+    > * + *
+      margin-left: 10px
+    .search-input
+      width: 200px
+      height: 32px
+      background-color: #eee8
+      border-radius: 50px
+      &:focus-within, &:hover
+        background-color: #eee
+    button
+      transition-property: background
+      background-color: #eee8
+      &:hover
+        background-color: #eee
+  @include for-phone
+    button.large
+      display: none
+  @include for-desktop
+    button.small
+      display: none

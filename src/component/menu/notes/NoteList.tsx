@@ -14,7 +14,7 @@ import { DrawState } from "../../../lib/draw/DrawState";
 import { PageWrapper } from "../../reader/Reader";
 import { useNavigate } from "react-router-dom";
 import calender from "dayjs/plugin/calendar";
-import { NoteHeader } from "./Header";
+import { MenuHeader } from "../header";
 import { Setter } from "../../../lib/hooks";
 import { List, Map, Set } from "immutable";
 import { MenuCtx } from "../Menu";
@@ -24,6 +24,7 @@ import { getCachedTeamState } from "../../../lib/network/http";
 import { TeamState } from "../../../lib/draw/TeamState";
 import { getColorPalette } from "../../../lib/color";
 import classNames from "classnames";
+import { ListTools } from "../header/ListTools";
 
 dayjs.extend(calender);
 
@@ -87,15 +88,17 @@ export const NoteList: FC<{ noteList: List<NoteInfo> }> = ({ noteList }) => {
   return (
     <SwipeDeleteProvider>
       <TransitionGroup className="note-list">
-        <NoteHeader
-          sortType={sortType}
-          setSortType={setSortType}
-          searchText={searchText}
-          setSearchText={setSearchText}
-          onDelete={() => removeNotes(selectedNotes.toArray())}
-          onMove={(tagID) => moveNotes(selectedNotes.toArray(), tagID)}
-          disabled={selectedNotes.size === 0}
-        />
+        <MenuHeader>
+          <ListTools
+            sortType={sortType}
+            setSortType={setSortType}
+            searchText={searchText}
+            setSearchText={setSearchText}
+            onDelete={() => removeNotes(selectedNotes.toArray())}
+            onMove={(tagID) => moveNotes(selectedNotes.toArray(), tagID)}
+            disabled={selectedNotes.size === 0}
+          />
+        </MenuHeader>
         {filterdList.map((noteInfo, index) => {
           const { uid } = noteInfo;
           const selected = selectedNotes.has(uid);

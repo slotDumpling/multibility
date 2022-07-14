@@ -1,18 +1,10 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
-import {
-  createNewNote,
-  getAllNotes,
-  getAllTags,
-  NoteTag,
-} from "../../lib/note/archive";
-import { createEmptyNote, NoteInfo } from "../../lib/note/note";
-import { FormOutlined } from "@ant-design/icons";
+import React, { useEffect, useMemo, useState } from "react";
+import { getAllNotes, getAllTags, NoteTag } from "../../lib/note/archive";
+import { NoteInfo } from "../../lib/note/note";
 import { Setter } from "../../lib/hooks";
-import { MenuHeader } from "./header";
 import { SideMenu } from "./aside";
 import { NoteList } from "./notes";
 import { List } from "immutable";
-import { Button } from "antd";
 
 export const MenuCtx = React.createContext({
   currTagID: "DEFAULT",
@@ -75,36 +67,9 @@ export default function MainMenu() {
       }}
     >
       <div className="main-menu container">
-        <MenuHeader />
-        <main>
-          <SideMenu />
-          <NoteList noteList={noteList} />
-          <NewNoteButton />
-        </main>
+        <SideMenu />
+        <NoteList noteList={noteList} />
       </div>
     </MenuCtx.Provider>
   );
 }
-
-export const NewNoteButton = () => {
-  const { currTagID, setAllTags, setAllNotes } = useContext(MenuCtx);
-
-  async function addNewNote() {
-    const note = createEmptyNote();
-    note.tagID = currTagID;
-    const { tags, allNotes } = await createNewNote(note);
-    setAllTags(tags);
-    setAllNotes(allNotes);
-  }
-
-  return (
-    <Button
-      className="new-note"
-      size="large"
-      type="primary"
-      shape="circle"
-      onClick={addNewNote}
-      icon={<FormOutlined />}
-    />
-  );
-};

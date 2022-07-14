@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, FC, useEffect } from "react";
 import {
   Menu,
   Input,
@@ -9,7 +9,6 @@ import {
   Popconfirm,
 } from "antd";
 import {
-  TeamOutlined,
   UserOutlined,
   SyncOutlined,
   ClearOutlined,
@@ -26,23 +25,9 @@ import { getUserName, saveUserName } from "../../../lib/user";
 import { clearImageCache } from "../../../lib/note/imgCache";
 import { createNewNote } from "../../../lib/note/archive";
 import { CSSTransition } from "react-transition-group";
-import { getNoteID } from "../../../lib/network/http";
-import { useNavigate } from "react-router-dom";
-import { PasscodeInput } from "antd-mobile";
 import localforage from "localforage";
 import { MenuCtx } from "../Menu";
-import { useEffect } from "react";
-import { FC } from "react";
-import "./right.sass";
-
-export default function Right() {
-  return (
-    <div className="right-tools">
-      <JoinTeamButton />
-      <OthersButton />
-    </div>
-  );
-}
+import "./others.sass";
 
 const SeconaryMenu: FC<
   {
@@ -242,7 +227,7 @@ const OthersPage = () => {
   );
 };
 
-const OthersButton = () => {
+export function OthersMenu() {
   return (
     <Popover
       placement="bottomRight"
@@ -254,49 +239,8 @@ const OthersButton = () => {
       }
       zIndex={900}
     >
-      <Button className="large" shape="circle" icon={<CaretDownOutlined />} />
       <Button className="small" type="text" icon={<CaretDownOutlined />} />
+      <Button className="large" shape="circle" icon={<CaretDownOutlined />} />
     </Popover>
   );
-};
-
-const JoinTeamButton = () => {
-  const [roomCode, setRoomCode] = useState("");
-  const [wrong, setWrong] = useState(false);
-
-  const nav = useNavigate();
-  async function handleSubmit(code: string) {
-    const noteID = await getNoteID(code);
-    if (noteID) return nav(`/team/${noteID}`);
-    setRoomCode("");
-    setWrong(true);
-  }
-
-  return (
-    <Popover
-      placement="bottomRight"
-      trigger="click"
-      title="Join a team note"
-      destroyTooltipOnHide
-      onVisibleChange={() => setWrong(false)}
-      content={
-        <PasscodeInput
-          plain
-          length={4}
-          error={wrong}
-          value={roomCode}
-          onChange={(v) => {
-            setWrong(false);
-            setRoomCode(v);
-          }}
-          onFill={handleSubmit}
-        />
-      }
-    >
-      <Button className="team-btn large" shape="round" icon={<TeamOutlined />}>
-        Team
-      </Button>
-      <Button className="team-btn small" type="text" icon={<TeamOutlined />} />
-    </Popover>
-  );
-};
+}

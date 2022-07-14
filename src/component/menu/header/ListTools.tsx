@@ -15,7 +15,7 @@ import {
 import { Setter } from "../../../lib/hooks";
 import { ColorCirle } from "../../widgets/ColorCircle";
 
-export const NoteHeader: FC<{
+export const ListTools: FC<{
   sortType: string;
   setSortType: Setter<string>;
   searchText: string;
@@ -55,7 +55,7 @@ export const NoteHeader: FC<{
 
   const btnProps: ButtonProps = { type: "text", shape: "circle" };
   const sortButton = (
-    <Dropdown overlay={sortMenu} trigger={["click"]} placement="bottom">
+    <Dropdown overlay={sortMenu} trigger={["click"]} placement="bottomRight">
       <Button
         className="sort-btn"
         icon={<SwapOutlined rotate={90} />}
@@ -136,11 +136,10 @@ export const NoteHeader: FC<{
   );
 
   return (
-    <div className="head-tools" data-editing={editing}>
+    <div className="list-tools" data-editing={editing}>
       {editing ? (
         <>
           <Button
-            className="small"
             onClick={() => setEditing(false)}
             icon={<ArrowLeftOutlined />}
             {...btnProps}
@@ -150,6 +149,11 @@ export const NoteHeader: FC<{
         </>
       ) : (
         <>
+          <Button
+            onClick={() => setEditing(true)}
+            icon={<SelectOutlined />}
+            {...btnProps}
+          />
           <Input
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
@@ -159,12 +163,6 @@ export const NoteHeader: FC<{
             allowClear
           />
           {sortButton}
-          <Button
-            className="small"
-            onClick={() => setEditing(true)}
-            icon={<SelectOutlined />}
-            {...btnProps}
-          />
         </>
       )}
     </div>

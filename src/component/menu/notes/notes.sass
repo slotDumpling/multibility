@@ -2,33 +2,13 @@
 @import ../../_var
 
 .note-list
-  flex: 1
-  padding-bottom: calc(80px + $safe-bottom)
-  overflow: hidden auto
-  position: relative
+  @include for-desktop
+    margin-left: 300px
+  padding-bottom: $safe-bottom
   -webkit-transform: translateZ(0)
-  .head-tools
-    @include flex-center
-    height: 60px
-    background-color: #fff
-    > * + *
-      margin-left: 10px
-    &[data-editing=true]
-      position: sticky
-      top: 0
-      z-index: 100
-    .search-input
-      width: 200px
-      height: 32px
-      background-color: #eee8
-      border-radius: 50px
-      &:focus-within, &:hover
-        background-color: #eee
-    button
-      transition-property: background
-      background-color: #eee8
-      &:hover
-        background-color: #eee
+
+.note-wrapper.enter .page-wrapper
+  display: none
 
 $note-item-height: 6em
 .note-wrapper:not(.deleting)
@@ -46,9 +26,6 @@ $note-item-height: 6em
     height: 0
     opacity: 0
     transition: all $speed
-
-.note-wrapper.enter .page-wrapper
-  display: none
 
 .note-item
   height: $note-item-height
