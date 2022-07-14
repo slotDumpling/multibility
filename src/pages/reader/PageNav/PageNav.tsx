@@ -14,15 +14,15 @@ import {
 } from "react-beautiful-dnd";
 import { Avatar, Button, Menu, Popover, Tabs } from "antd";
 import { ActiveKeyProvider, Setter, useActiveKey } from "lib/hooks";
-import { ReaderMethodCtx, ReaderStateCtx } from "./Reader";
+import { ReaderMethodCtx, ReaderStateCtx } from "../Reader";
 import PageWrapper from "component/PageWrapper";
 import { UserAvatar } from "component/UserAvatar";
 import { useForceLight } from "lib/Dark";
-import { AddPageButton } from "./ReaderUtils";
-import { exchange } from "./lib/array";
+import { AddPageButton } from "../ReaderUtils";
+import { exchange } from "../lib/array";
 import IconFont from "component/IconFont";
 import classNames from "classnames";
-import { TeamCtx } from "./Team";
+import { TeamCtx } from "../Team";
 import "./preview.sass";
 
 const PreviewCard: FC<{ left: boolean; visible: boolean }> = ({

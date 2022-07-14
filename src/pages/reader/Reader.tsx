@@ -20,13 +20,13 @@ import { DrawState } from "lib/draw/DrawState";
 import { useScrollPage } from "./lib/scroll";
 import { debounce, last } from "lodash-es";
 import { insertAfter } from "./lib/array";
+import { PageNav } from "./PageNav";
 import { Setter } from "lib/hooks";
 import { Header } from "./header";
 import { TeamCtx } from "./Team";
 import { Map } from "immutable";
 import { message } from "antd";
 import "./reader.sass";
-import { PageNav } from "./PageNav";
 
 export const ReaderStateCtx = React.createContext<{
   noteID: string;
