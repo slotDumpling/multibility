@@ -286,7 +286,7 @@ const PreviewTabs = () => {
       className="tabs"
       activeKey={activeKey}
       onChange={setActiveKey}
-      tabBarGutter={10}
+      tabBarGutter={0}
       size="small"
       centered
     >
