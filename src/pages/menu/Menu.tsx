@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { getAllNotes, getAllTags, NoteTag } from "lib/note/archive";
 import { NoteInfo } from "lib/note/note";
-import { Setter } from "lib/hooks";
+import { AsideOpenProvider, Setter } from "lib/hooks";
 import { SideMenu } from "./aside";
 import { NoteList } from "./notes";
 import { List } from "immutable";
@@ -67,8 +67,10 @@ export default function MainMenu() {
       }}
     >
       <div className="main-menu container">
-        <SideMenu />
-        <NoteList noteList={noteList} />
+        <AsideOpenProvider>
+          <SideMenu />
+          <NoteList noteList={noteList} />
+        </AsideOpenProvider>
       </div>
     </MenuCtx.Provider>
   );

@@ -21,7 +21,7 @@ import { useScrollPage } from "./lib/scroll";
 import { debounce, last } from "lodash-es";
 import { insertAfter } from "./lib/array";
 import { PageNav } from "./PageNav";
-import { Setter } from "lib/hooks";
+import { AsideOpenProvider, Setter } from "lib/hooks";
 import { Header } from "./header";
 import { TeamCtx } from "./Team";
 import { Map } from "immutable";
@@ -234,7 +234,9 @@ export default function Reader() {
             switchPageMarked,
           }}
         >
-          <DrawCtrlProvider>{renderResult}</DrawCtrlProvider>
+          <DrawCtrlProvider>
+            <AsideOpenProvider>{renderResult}</AsideOpenProvider>
+          </DrawCtrlProvider>
         </ReaderMethodCtx.Provider>
       </ReaderStateCtx.Provider>
     </DarkModeProvider>

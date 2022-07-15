@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { getNoteID } from "lib/network/http";
 import { PasscodeInput } from "antd-mobile";
 import { OthersMenu } from "./Others";
+import { useAsideOpen } from "lib/hooks";
 
 export const Nav = () => {
   return (
@@ -20,17 +21,17 @@ export const Nav = () => {
 
 const Left = () => {
   const { allTags, currTagID } = useContext(MenuCtx);
+  const [, setAsideOpen] = useAsideOpen();
+
   const title = allTags[currTagID]?.name ?? "All notes";
   return (
     <div className="nav-left">
-      <label htmlFor="aside-check" className="aside-label">
-        <Button
-          style={{ pointerEvents: "none" }}
-          className="aside-btn small"
-          type="text"
-          icon={<MenuOutlined />}
-        />
-      </label>
+      <Button
+        className="aside-btn small"
+        type="text"
+        icon={<MenuOutlined />}
+        onClick={() => setAsideOpen(true)}
+      />
       <h2>
         <b>{title}</b>
       </h2>

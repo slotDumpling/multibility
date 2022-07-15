@@ -17,12 +17,10 @@ $card-width: 200px
   .opposite
     width: calc( 100% - $card-width )
 
-input#preview-check
-  display: none
-  &:not(:checked) + .preview-drop
-    transform: translateX(250px)
-    &[data-left=true]
-      transform: translateX(-250px)
+.preview-drop[data-open=false]
+  transform: translateX(250px)
+  &[data-left=true]
+    transform: translateX(-250px)
 
 .preview-card
   display: flex
@@ -48,19 +46,23 @@ input#preview-check
       background-color: #ddd
       transition: background $speed
     &::after
-      @include pseudo-el(-20px, 0, 0, 0)
+      @include pseudo-el(-20px, 0, -20px, 0)
     &:hover::before
-      background-color: #ccc
+      background-color: #bbb
 
-  .tabs .anticon
-    margin: 0 15px
+  .tabs
+    .ant-tabs-nav
+      margin: 0
+    .anticon
+      margin: 0 15px
   h3
     text-align: center
-    margin-bottom: 15px
+    margin: 0
   .page-list
+    @include overlay-scroll
     flex: 1
-    overflow: hidden auto
-    padding: 3px 25px calc($safe-bottom + 20px) 25px
+    padding: 20px
+      bottom: calc($safe-bottom + 20px)
     scroll-padding-top: 30%
     .page
       cursor: pointer
@@ -132,8 +134,3 @@ input#preview-check
     @include pseudo-el(-20px, -20px, -20px, -20px)
   &[data-chosen=true]
     border-color: $blue-color
-
-.preview-label
-  cursor: pointer
-  button
-    pointer-events: none

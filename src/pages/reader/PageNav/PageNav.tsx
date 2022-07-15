@@ -13,7 +13,12 @@ import {
   DragDropContext,
 } from "react-beautiful-dnd";
 import { Avatar, Button, Menu, Popover, Tabs } from "antd";
-import { ActiveKeyProvider, Setter, useActiveKey } from "lib/hooks";
+import {
+  ActiveKeyProvider,
+  Setter,
+  useActiveKey,
+  useAsideOpen,
+} from "lib/hooks";
 import { ReaderMethodCtx, ReaderStateCtx } from "../Reader";
 import PageWrapper from "component/PageWrapper";
 import { UserAvatar } from "component/UserAvatar";
@@ -25,10 +30,7 @@ import classNames from "classnames";
 import { TeamCtx } from "../Team";
 import "./preview.sass";
 
-const PreviewCard: FC<{ left: boolean; visible: boolean }> = ({
-  left,
-  visible,
-}) => {
+const PreviewCard: FC<{ left: boolean }> = ({ left }) => {
   const [forceLight] = useForceLight();
 
   const [activeKey] = useActiveKey();
@@ -48,20 +50,21 @@ const PreviewCard: FC<{ left: boolean; visible: boolean }> = ({
           {...draggableProps}
         >
           <div className="drag-handle" {...dragHandleProps} />
-          <PreviewTabs />
           <h3>{title}</h3>
-          <PageList visible={visible} />
+          <PreviewTabs />
+          <PageList />
         </div>
       )}
     </Draggable>
   );
 };
 
-const PageList: FC<{ visible: boolean }> = ({ visible }) => {
+const PageList: FC = () => {
   const { pageOrder, currPageID } = useContext(ReaderStateCtx);
   const { scrollPage, saveReorder } = useContext(ReaderMethodCtx);
   const refRec = useRef<Record<string, HTMLElement>>({});
   const [activeKey] = useActiveKey();
+  const [asideOpen] = useAsideOpen();
 
   const onDragEnd = ({ source, destination }: DropResult) => {
     if (!destination || !pageOrder) return;
@@ -75,9 +78,9 @@ const PageList: FC<{ visible: boolean }> = ({ visible }) => {
   };
 
   useEffect(() => {
-    if (visible) return;
+    if (asideOpen) return;
     refRec.current[currPageID]?.scrollIntoView();
-  }, [visible, currPageID]);
+  }, [asideOpen, currPageID]);
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
@@ -295,12 +298,10 @@ const PreviewTabs = () => {
 };
 
 export const PageNav = () => {
-  const [checked, setChecked] = useState(false);
   const [left, setLeft] = useState(false);
+  const [asideOpen] = useAsideOpen();
 
-  const previewBody = (
-    <PreviewCard left={left} visible={checked} key="preview-drag" />
-  );
+  const previewBody = <PreviewCard left={left} key="preview-drag" />;
 
   const opposite = (
     <Draggable key="opposite" draggableId="opposite" index={left ? 1 : 0}>
@@ -317,12 +318,6 @@ export const PageNav = () => {
 
   return (
     <ActiveKeyProvider initKey="ALL">
-      <input
-        onChange={(e) => setChecked(e.target.checked)}
-        type="checkbox"
-        name="preview-check"
-        id="preview-check"
-      />
       <DragDropContext
         onDragEnd={({ draggableId, destination }) => {
           if (draggableId !== "CARD") return;
@@ -335,6 +330,7 @@ export const PageNav = () => {
             <div
               className="preview-drop"
               data-left={left}
+              data-open={asideOpen}
               ref={innerRef}
               {...droppableProps}
             >
@@ -349,9 +345,12 @@ export const PageNav = () => {
 };
 
 export const PageNavButton = () => {
+  const [, setAsideOpen] = useAsideOpen();
   return (
-    <label htmlFor="preview-check" className="preview-label">
-      <Button type="text" icon={<MenuOutlined />} />
-    </label>
+    <Button
+      type="text"
+      icon={<MenuOutlined />}
+      onClick={() => setAsideOpen((prev) => !prev)}
+    />
   );
 };

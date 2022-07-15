@@ -13,6 +13,8 @@
   transition: transform $fast-speed
   @include for-phone
     transform: translateX(-100%)
+    &[data-open=true]
+      transform: translateX(0)
   @include for-desktop
     button.aside-btn
       opacity: 0
@@ -41,32 +43,23 @@
   to
     background-position-x: 0
 
-input#aside-check
-  display: none
-  @include for-phone
-    &:checked
-      + .side-menu
-        transform: translate(0)
-      ~ .aside-label .aside-mask
-        opacity: 1
-        pointer-events: auto
-
-.aside-label
-  cursor: pointer
-  button.aside-btn
-    pointer-events: none
-  .aside-mask
-    position: fixed
-    @include inset(0, 0, 0, 0)
-    z-index: 900
-    opacity: 0
-    pointer-events: none
-    backdrop-filter: blur(5px)
-    transition: opacity $fast-speed
+.aside-mask
+  position: fixed
+  @include inset(0, 0, 0, 0)
+  z-index: 900
+  opacity: 0
+  pointer-events: none
+  backdrop-filter: blur(5px)
+  transition: opacity $fast-speed
+  @include for-desktop
+    display: none
+  &[data-open=true]
+    opacity: 1
+    pointer-events: auto
 
 .tag-list
+  @include overlay-scroll
   flex: 1
-  overflow: hidden auto
   padding: 10px 20px 20px 20px
   .tag-wrapper
     overflow: hidden

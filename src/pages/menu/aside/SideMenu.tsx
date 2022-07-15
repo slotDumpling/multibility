@@ -9,7 +9,7 @@ import {
 import { Button, Input, Popconfirm, Select } from "antd";
 import { deleteTag, editTag, NoteTag, addNewTag } from "lib/note/archive";
 import { colors, getColorPalette, getRandomColor } from "lib/color";
-import { Setter } from "lib/hooks";
+import { Setter, useAsideOpen } from "lib/hooks";
 import { SwipeDelete, SwipeDeleteProvider } from "component/SwipeDelete";
 import { ColorCirle } from "component/ColorCircle";
 import { MenuCtx } from "../Menu";
@@ -179,6 +179,7 @@ const NewTagItem: FC<{ setAdding: Setter<boolean> }> = ({ setAdding }) => {
 export const SideMenu = () => {
   const { allTags, currTagID, allNotes, setCurrTagID } = useContext(MenuCtx);
   const [adding, setAdding] = useState(false);
+  const [asideOpen, setAsideOpen] = useAsideOpen();
 
   const allNoteTag = (
     <div className="tag-wrapper">
@@ -196,14 +197,12 @@ export const SideMenu = () => {
 
   const header = (
     <header>
-      <label htmlFor="aside-check" className="aside-label">
-        <Button
-          style={{ pointerEvents: "none" }}
-          className="aside-btn"
-          type="text"
-          icon={<MenuOutlined />}
-        />
-      </label>
+      <Button
+        className="aside-btn"
+        type="text"
+        icon={<MenuOutlined />}
+        onClick={() => setAsideOpen(false)}
+      />
       <h2 className="logo">Multibility</h2>
       <Button
         className="new-tag-btn"
@@ -217,8 +216,7 @@ export const SideMenu = () => {
 
   return (
     <>
-      <input type="checkbox" name="aside-check" id="aside-check" />
-      <aside className="side-menu">
+      <aside className="side-menu" data-open={asideOpen}>
         {header}
         <div className="tag-list">
           {allNoteTag}
@@ -230,9 +228,11 @@ export const SideMenu = () => {
           {adding && <NewTagItem setAdding={setAdding} />}
         </div>
       </aside>
-      <label htmlFor="aside-check" className="aside-label">
-        <div className="aside-mask" />
-      </label>
+      <div
+        className="aside-mask"
+        onClick={() => setAsideOpen(false)}
+        data-open={asideOpen}
+      />
     </>
   );
 };

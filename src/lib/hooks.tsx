@@ -47,3 +47,20 @@ export const ActiveKeyProvider: FC<{ initKey: string }> = ({
     <ActiveKeyCtx.Provider value={tuple}>{children}</ActiveKeyCtx.Provider>
   );
 };
+
+const AsideOpenCtx = createContext<[boolean, Setter<boolean>]>([
+  false,
+  () => {},
+]);
+export function useAsideOpen() {
+  const tuple = useContext(AsideOpenCtx);
+  useDebugValue(tuple[0]);
+  return tuple;
+}
+
+export const AsideOpenProvider: FC = ({ children }) => {
+  const tuple = useState(false);
+  return (
+    <AsideOpenCtx.Provider value={tuple}>{children}</AsideOpenCtx.Provider>
+  );
+};
