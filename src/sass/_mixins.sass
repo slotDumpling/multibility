@@ -42,3 +42,8 @@
 @mixin for-desktop
   @media (min-width: 640px)
     @content
+
+@mixin overlay-scroll
+  overflow: hidden auto
+  @supports (overflow: overlay)
+    overflow: hidden overlay
