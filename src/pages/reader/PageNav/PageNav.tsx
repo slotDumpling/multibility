@@ -1,4 +1,11 @@
-import { FC, useRef, useMemo, useState, useEffect, useContext } from "react";
+import React, {
+  FC,
+  useRef,
+  useMemo,
+  useState,
+  useContext,
+  useLayoutEffect,
+} from "react";
 import {
   MenuOutlined,
   MoreOutlined,
@@ -28,11 +35,11 @@ import { exchange } from "../lib/array";
 import IconFont from "component/IconFont";
 import classNames from "classnames";
 import { TeamCtx } from "../Team";
+import { useMemoizedFn as useEvent } from "ahooks";
 import "./preview.sass";
 
 const PreviewCard: FC<{ left: boolean }> = ({ left }) => {
   const [forceLight] = useForceLight();
-
   const [activeKey] = useActiveKey();
   const title = {
     ALL: "All Pages",
@@ -42,7 +49,7 @@ const PreviewCard: FC<{ left: boolean }> = ({ left }) => {
 
   return (
     <Draggable draggableId={"CARD"} index={left ? 0 : 1}>
-      {({ innerRef, draggableProps, dragHandleProps }) => (
+      {({ innerRef, draggableProps, dragHandleProps }, { isDragging }) => (
         <div
           className="preview-card"
           ref={innerRef}
@@ -52,14 +59,14 @@ const PreviewCard: FC<{ left: boolean }> = ({ left }) => {
           <div className="drag-handle" {...dragHandleProps} />
           <h3>{title}</h3>
           <PreviewTabs />
-          <PageList />
+          <PageList dragged={isDragging} />
         </div>
       )}
     </Draggable>
   );
 };
 
-const PageList: FC = () => {
+const PageList: FC<{ dragged: boolean }> = React.memo(({ dragged }) => {
   const { pageOrder, currPageID } = useContext(ReaderStateCtx);
   const { scrollPage, saveReorder } = useContext(ReaderMethodCtx);
   const refRec = useRef<Record<string, HTMLElement>>({});
@@ -77,16 +84,36 @@ const PageList: FC = () => {
     requestAnimationFrame(() => scrollPage(pageID));
   };
 
-  useEffect(() => {
-    if (asideOpen) return;
+  const initScroll = useEvent(() => {
     refRec.current[currPageID]?.scrollIntoView();
-  }, [asideOpen, currPageID]);
+  });
+  useLayoutEffect(() => {
+    if (asideOpen) initScroll();
+  }, [asideOpen, initScroll]);
+
+  const listRef = useRef<HTMLDivElement>();
+  const scrollTop = useRef(0);
+  useLayoutEffect(() => {
+    if (!listRef.current) return;
+    if (dragged) {
+      scrollTop.current = listRef.current.scrollTop;
+    } else {
+      listRef.current.scrollTop = scrollTop.current;
+    }
+  }, [dragged]);
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <Droppable droppableId="preview-list">
         {({ droppableProps, innerRef, placeholder }) => (
-          <div className="page-list" ref={innerRef} {...droppableProps}>
+          <div
+            className="page-list"
+            ref={(e) => {
+              e && (listRef.current = e);
+              innerRef(e);
+            }}
+            {...droppableProps}
+          >
             {pageOrder?.map((uid, index) => (
               <PagePreview
                 key={uid}
@@ -102,7 +129,7 @@ const PageList: FC = () => {
       </Droppable>
     </DragDropContext>
   );
-};
+});
 
 const PagePreview: FC<{
   uid: string;

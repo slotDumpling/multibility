@@ -3,25 +3,28 @@
 
 $card-width: 200px
 .preview-drop
+  @include inset(0, 0, 0, 0)
   position: fixed
   z-index: 1000
   padding: 20px
   padding-bottom: calc( 20px + $safe-bottom )
   display: flex
   pointer-events: none
-  transition: transform $fast-speed, visibility $fast-speed
+  transition: opacity $fast-speed, transform $fast-speed
+  transform: translateZ(0)
+  &[data-open=false]
+    opacity: 0
+    transform: translateX(150px)
+    &[data-left=true]
+      transform: translateX(-150px)
+    .preview-card
+      pointer-events: none
   @include for-desktop
-    @include inset($header-low-height, 0, 0, 0)
+    padding-top: calc( 20px + $header-low-height )
   @include for-phone
-    @include inset($header-high-height, 0, 0, 0)
+    padding-top: calc( 20px + $header-high-height )
   .opposite
     width: calc( 100% - $card-width )
-
-.preview-drop[data-open=false]
-  transform: translateX(250px)
-  visibility: hidden
-  &[data-left=true]
-    transform: translateX(-250px)
 
 .preview-card
   display: flex
@@ -32,6 +35,7 @@ $card-width: 200px
   background-color: #fff
   box-shadow: $shadow-2-down
   pointer-events: auto
+  // never set transition: transform
 
   .drag-handle
     height: 20px

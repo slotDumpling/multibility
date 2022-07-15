@@ -1,4 +1,11 @@
-import { FC, useRef, useMemo, useState, useEffect, useCallback } from "react";
+import React, {
+  FC,
+  useRef,
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { useDrawCtrl } from "lib/draw/DrawCtrl";
 import { useForceLight } from "lib/Dark";
 import { useMemoizedFn as useEvent } from "ahooks";
@@ -10,7 +17,7 @@ import { DrawState } from "lib/draw/DrawState";
 import { Map, Set } from "immutable";
 import "./page-wrapper.sass";
 
-export const PageWrapper: FC<{
+const PageWrapperRaw: FC<{
   drawState: DrawState;
   teamStateMap?: Map<string, DrawState>;
   thumbnail?: string;
@@ -29,14 +36,16 @@ export const PageWrapper: FC<{
   pdfIndex,
   noteID = "",
   preview = false,
-  onViewChange = () => {},
+  onViewChange,
   preload = false,
-  ignores = Set(),
+  ignores = Set<string>(),
 }) => {
-  const [ref, visible, entry] = useInView({ threshold: range(0, 1.1, 0.1) });
+  useEffect(() => console.log(preview));
+  const threshold = onViewChange && range(0, 1.2, 0.2);
+  const [ref, visible, entry] = useInView({ threshold });
   useEffect(() => {
-    if (!entry || !visible) return onViewChange(false, 0);
-    onViewChange(true, entry.intersectionRatio);
+    if (!entry || !visible) return onViewChange?.(false, 0);
+    onViewChange?.(true, entry.intersectionRatio);
   }, [visible, entry, onViewChange]);
 
   const [fullImg, setFullImg] = useState<string>();
@@ -82,6 +91,9 @@ export const PageWrapper: FC<{
     </div>
   );
 };
+PageWrapperRaw.displayName = "PageWrapper";
+export const PageWrapper = React.memo(PageWrapperRaw);
+
 const DrawWrapper: FC<{
   drawState: DrawState;
   otherStates?: DrawState[];
