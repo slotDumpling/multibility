@@ -40,6 +40,53 @@ import { NotePage } from "lib/note/note";
 import { TeamState } from "lib/draw/TeamState";
 import "./preview.sass";
 
+export const PageNav = () => {
+  const [left, setLeft] = useState(false);
+  const [asideOpen] = useAsideOpen();
+
+  const opposite = (
+    <Draggable draggableId="opposite" index={left ? 1 : 0}>
+      {({ innerRef, draggableProps, dragHandleProps }) => (
+        <div
+          className="opposite"
+          ref={innerRef}
+          {...draggableProps}
+          {...dragHandleProps}
+        />
+      )}
+    </Draggable>
+  );
+
+  return (
+    <ActiveKeyProvider initKey="ALL">
+      <DragDropContext
+        onDragEnd={({ draggableId, destination }) => {
+          if (draggableId !== "CARD") return;
+          if (destination?.index === 0) setLeft(true);
+          if (destination?.index === 1) setLeft(false);
+        }}
+      >
+        <Droppable droppableId="preview-drop" direction="horizontal">
+          {({ droppableProps, innerRef, placeholder }, { isDraggingOver }) => (
+            <div
+              className="preview-drop"
+              data-left={left}
+              data-open={asideOpen}
+              data-dragged={isDraggingOver}
+              ref={innerRef}
+              {...droppableProps}
+            >
+              {opposite}
+              <PreviewCard left={left} />
+              {placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+    </ActiveKeyProvider>
+  );
+};
+
 const PreviewCard: FC<{ left: boolean }> = ({ left }) => {
   const [activeKey] = useActiveKey();
   const [asideOpen, setAsideOpen] = useAsideOpen();
@@ -330,52 +377,5 @@ const PreviewTabs = () => {
       <TabPane tab={<IconFont type="icon-bookmark2" />} key="MARKED" />
       <TabPane tab={<IconFont type="icon-write" />} key="WRITTEN" />
     </Tabs>
-  );
-};
-
-export const PageNav = () => {
-  const [left, setLeft] = useState(false);
-  const [asideOpen] = useAsideOpen();
-
-  const opposite = (
-    <Draggable draggableId="opposite" index={left ? 1 : 0}>
-      {({ innerRef, draggableProps, dragHandleProps }) => (
-        <div
-          className="opposite"
-          ref={innerRef}
-          {...draggableProps}
-          {...dragHandleProps}
-        />
-      )}
-    </Draggable>
-  );
-
-  return (
-    <ActiveKeyProvider initKey="ALL">
-      <DragDropContext
-        onDragEnd={({ draggableId, destination }) => {
-          if (draggableId !== "CARD") return;
-          if (destination?.index === 0) setLeft(true);
-          if (destination?.index === 1) setLeft(false);
-        }}
-      >
-        <Droppable droppableId="preview-drop" direction="horizontal">
-          {({ droppableProps, innerRef, placeholder }, { isDraggingOver }) => (
-            <div
-              className="preview-drop"
-              data-left={left}
-              data-open={asideOpen}
-              data-dragged={isDraggingOver}
-              ref={innerRef}
-              {...droppableProps}
-            >
-              {opposite}
-              <PreviewCard left={left} />
-              {placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
-    </ActiveKeyProvider>
   );
 };

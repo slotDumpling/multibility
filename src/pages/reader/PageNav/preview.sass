@@ -41,6 +41,8 @@ $card-width: 200px
   pointer-events: auto
   &[data-open=false]
     pointer-events: none
+  &[data-animating=true]
+    transition: transform $slow-speed cubic-bezier(0.2, 0, 0, 1) !important
 
   .drag-handle
     height: 20px
@@ -58,7 +60,7 @@ $card-width: 200px
     &::after
       @include pseudo-el(-20px, 0, -20px, 0)
     &:hover::before
-      background-color: #bbb
+      background-color: #ccc
 
   .tabs
     .ant-tabs-nav
@@ -81,6 +83,8 @@ $card-width: 200px
       &[data-curr=true]
         border-color: $blue-color
         box-shadow: 0 0 0 2px $blue-color
+      &[data-animating=true]
+        transition: transform $speed !important
       &::before
         @include pseudo-el
         z-index: -1
@@ -143,6 +147,3 @@ $card-width: 200px
     @include pseudo-el(-20px, -20px, -20px, -20px)
   &[data-chosen=true]
     border-color: $blue-color
-
-[data-rbd-draggable-id][data-animating=true]
-  transition: transform 0.3s !important
