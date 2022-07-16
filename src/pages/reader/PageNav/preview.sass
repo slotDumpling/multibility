@@ -15,6 +15,8 @@ $card-width: 200px
     transform: translateX(150px)
     &[data-left=true]
       transform: translateX(-150px)
+  &[data-dragged=true]
+    pointer-events: auto
   @include for-desktop
     padding: $header-low-height+20px 20px calc(20px + $safe-bottom) 20px
   @include for-phone
