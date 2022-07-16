@@ -5,6 +5,7 @@ import React, {
   useState,
   useContext,
   useLayoutEffect,
+  useEffect,
 } from "react";
 import {
   MoreOutlined,
@@ -34,8 +35,10 @@ import IconFont from "component/IconFont";
 import classNames from "classnames";
 import { TeamCtx } from "../Team";
 import { useMemoizedFn as useEvent } from "ahooks";
-import "./preview.sass";
 import { useSwipeable } from "react-swipeable";
+import { NotePage } from "lib/note/note";
+import { TeamState } from "lib/draw/TeamState";
+import "./preview.sass";
 
 const PreviewCard: FC<{ left: boolean }> = ({ left }) => {
   const [activeKey] = useActiveKey();
@@ -164,8 +167,18 @@ const PagePreview: FC<{
   const drawState = stateSet?.getOneState(uid);
   const teamStateMap = teamState?.getOnePageStateMap(uid);
 
+  const marked = useRef(false);
+  useEffect(() => {
+    if (activeKey !== "MARKED") marked.current = false;
+  }, [activeKey]);
+
+  const userIDs = useMemo(
+    () => TeamState.getValidUsers(teamStateMap, ignores),
+    [teamStateMap, ignores]
+  );
+
   if (!page || !drawState) return null;
-  const { image, marked } = page;
+  marked.current = page.marked || marked.current;
 
   if (
     activeKey === "WRITTEN" &&
@@ -174,7 +187,7 @@ const PagePreview: FC<{
   ) {
     return null;
   }
-  if (activeKey === "MARKED" && !marked) return null;
+  if (activeKey === "MARKED" && !marked.current) return null;
   const curr = currPageID === uid;
 
   return (
@@ -203,7 +216,7 @@ const PagePreview: FC<{
           <PageWrapper
             drawState={teamStateMap?.get(chosen) || drawState}
             teamStateMap={chosen ? undefined : teamStateMap}
-            thumbnail={image}
+            thumbnail={page.image}
             ignores={ignores}
             preview
           />
@@ -212,6 +225,8 @@ const PagePreview: FC<{
             index={pageIndex}
             chosen={chosen}
             setChosen={setChosen}
+            page={page}
+            userIDs={userIDs}
           />
         </div>
       )}
@@ -224,26 +239,15 @@ const PreviewTools: FC<{
   index: number;
   chosen: string;
   setChosen: Setter<string>;
-}> = ({ uid, index, chosen, setChosen }) => {
+  page: NotePage;
+  userIDs: string[];
+}> = ({ uid, index, chosen, setChosen, page, userIDs }) => {
   const { switchPageMarked } = useContext(ReaderMethodCtx);
-  const { pageRec } = useContext(ReaderStateCtx);
-  const { ignores, teamState } = useContext(TeamCtx);
-  const userIDs = useMemo(
-    () =>
-      teamState
-        ?.getPageValidUsers(uid)
-        .filter((userID) => !ignores.has(userID)) || [],
-    [teamState, ignores, uid]
-  );
-  const page = pageRec?.get(uid);
-  if (!page) return null;
-  const { marked } = page;
-
   return (
     <div className="tools" onClick={(e) => e.stopPropagation()}>
       <div
         className="bookmark"
-        data-marked={marked}
+        data-marked={page.marked}
         onClick={() => switchPageMarked(uid)}
       />
       <div className="index">{index + 1}</div>
@@ -375,11 +379,12 @@ export const PageNav = () => {
         }}
       >
         <Droppable droppableId="preview-drop" direction="horizontal">
-          {({ droppableProps, innerRef, placeholder }) => (
+          {({ droppableProps, innerRef, placeholder }, { isDraggingOver }) => (
             <div
               className="preview-drop"
               data-left={left}
               data-open={asideOpen}
+              data-dragged={isDraggingOver}
               ref={innerRef}
               {...droppableProps}
             >
