@@ -40,7 +40,6 @@ const PageWrapperRaw: FC<{
   preload = false,
   ignores = Set<string>(),
 }) => {
-  useEffect(() => console.log(preview));
   const threshold = onViewChange && range(0, 1.2, 0.2);
   const [ref, visible, entry] = useInView({ threshold });
   useEffect(() => {
