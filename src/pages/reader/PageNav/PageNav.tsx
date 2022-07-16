@@ -43,11 +43,13 @@ import "./preview.sass";
 const PreviewCard: FC<{ left: boolean }> = ({ left }) => {
   const [activeKey] = useActiveKey();
   const [asideOpen, setAsideOpen] = useAsideOpen();
+
   const title = {
     ALL: "All Pages",
     MARKED: "Bookmarks",
     WRITTEN: "Notes",
   }[activeKey];
+
   const { ref: swipeRef, ...swipeHandler } = useSwipeable({
     onSwipedLeft() {
       if (left) setAsideOpen(false);
@@ -111,30 +113,11 @@ const PageList: FC<{ dragged: boolean }> = React.memo(({ dragged }) => {
     if (asideOpen) initScroll();
   }, [asideOpen, initScroll]);
 
-  // prevent page-list scroll pos reset.
-  const listRef = useRef<HTMLDivElement>();
-  const scrollTop = useRef(0);
-  useLayoutEffect(() => {
-    if (!listRef.current) return;
-    if (dragged) {
-      scrollTop.current = listRef.current.scrollTop;
-    } else {
-      listRef.current.scrollTop = scrollTop.current;
-    }
-  }, [dragged]);
-
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <Droppable droppableId="preview-list">
         {({ droppableProps, innerRef, placeholder }) => (
-          <div
-            className="page-list"
-            ref={(e) => {
-              e && (listRef.current = e);
-              innerRef(e);
-            }}
-            {...droppableProps}
-          >
+          <div className="page-list" ref={innerRef} {...droppableProps}>
             {pageOrder?.map((uid, index) => (
               <PagePreview
                 key={uid}
@@ -354,10 +337,8 @@ export const PageNav = () => {
   const [left, setLeft] = useState(false);
   const [asideOpen] = useAsideOpen();
 
-  const previewBody = <PreviewCard left={left} key="preview-drag" />;
-
   const opposite = (
-    <Draggable key="opposite" draggableId="opposite" index={left ? 1 : 0}>
+    <Draggable draggableId="opposite" index={left ? 1 : 0}>
       {({ innerRef, draggableProps, dragHandleProps }) => (
         <div
           className="opposite"
@@ -388,7 +369,8 @@ export const PageNav = () => {
               ref={innerRef}
               {...droppableProps}
             >
-              {left ? [previewBody, opposite] : [opposite, previewBody]}
+              {opposite}
+              <PreviewCard left={left} />
               {placeholder}
             </div>
           )}

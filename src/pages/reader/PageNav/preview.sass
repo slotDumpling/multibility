@@ -7,9 +7,17 @@ $card-width: 200px
   position: fixed
   z-index: 1000
   display: flex
+  justify-content: space-between
   pointer-events: none
   transition: opacity $fast-speed, transform $speed
   transform: translateZ(0)
+  .opposite
+    width: min($card-width, calc(100% - $card-width))
+    margin: 0 0 0 auto
+  &[data-left=true]
+    flex-direction: row-reverse
+    .opposite
+      margin: 0 auto 0 0
   &[data-open=false]
     opacity: 0
     transform: translateX(150px)
@@ -21,8 +29,6 @@ $card-width: 200px
     padding: $header-low-height+20px 20px calc(20px + $safe-bottom) 20px
   @include for-phone
     padding: $header-high-height+10px 10px calc(10px + $safe-bottom) 10px
-  .opposite
-    width: calc( 100% - $card-width )
 
 .preview-card
   display: flex
