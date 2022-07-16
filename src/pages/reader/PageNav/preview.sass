@@ -6,23 +6,19 @@ $card-width: 200px
   @include inset(0, 0, 0, 0)
   position: fixed
   z-index: 1000
-  padding: 20px
-  padding-bottom: calc( 20px + $safe-bottom )
   display: flex
   pointer-events: none
-  transition: opacity $fast-speed, transform $fast-speed
+  transition: opacity $fast-speed, transform $speed
   transform: translateZ(0)
   &[data-open=false]
     opacity: 0
     transform: translateX(150px)
     &[data-left=true]
       transform: translateX(-150px)
-    .preview-card
-      pointer-events: none
   @include for-desktop
-    padding-top: calc( 20px + $header-low-height )
+    padding: $header-low-height+20px 20px calc(20px + $safe-bottom) 20px
   @include for-phone
-    padding-top: calc( 20px + $header-high-height )
+    padding: $header-high-height+10px 10px calc(10px + $safe-bottom) 10px
   .opposite
     width: calc( 100% - $card-width )
 
@@ -35,7 +31,8 @@ $card-width: 200px
   background-color: #fff
   box-shadow: $shadow-2-down
   pointer-events: auto
-  // never set transition: transform
+  &[data-open=false]
+    pointer-events: none
 
   .drag-handle
     height: 20px
@@ -81,8 +78,8 @@ $card-width: 200px
         z-index: -1
         box-shadow: $shadow-2-down
         opacity: 0
-        transition: opacity 0.5s
-      &[data-dragged=true]::before
+        transition: opacity $speed
+      &:active[data-dragged=true]::before
         opacity: 1
       .bookmark
         position: absolute
@@ -138,3 +135,6 @@ $card-width: 200px
     @include pseudo-el(-20px, -20px, -20px, -20px)
   &[data-chosen=true]
     border-color: $blue-color
+
+[data-rbd-draggable-id][data-animating=true]
+  transition: transform 0.3s !important

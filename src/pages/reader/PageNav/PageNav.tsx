@@ -7,7 +7,6 @@ import React, {
   useLayoutEffect,
 } from "react";
 import {
-  MenuOutlined,
   MoreOutlined,
   PlusOutlined,
   CopyOutlined,
@@ -19,7 +18,7 @@ import {
   DropResult,
   DragDropContext,
 } from "react-beautiful-dnd";
-import { Avatar, Button, Menu, Popover, Tabs } from "antd";
+import { Avatar, Menu, Popover, Tabs } from "antd";
 import {
   ActiveKeyProvider,
   Setter,
@@ -29,7 +28,6 @@ import {
 import { ReaderMethodCtx, ReaderStateCtx } from "../Reader";
 import PageWrapper from "component/PageWrapper";
 import { UserAvatar } from "component/UserAvatar";
-import { useForceLight } from "lib/Dark";
 import { AddPageButton } from "../ReaderUtils";
 import { exchange } from "../lib/array";
 import IconFont from "component/IconFont";
@@ -37,24 +35,43 @@ import classNames from "classnames";
 import { TeamCtx } from "../Team";
 import { useMemoizedFn as useEvent } from "ahooks";
 import "./preview.sass";
+import { useSwipeable } from "react-swipeable";
 
 const PreviewCard: FC<{ left: boolean }> = ({ left }) => {
-  const [forceLight] = useForceLight();
   const [activeKey] = useActiveKey();
+  const [asideOpen, setAsideOpen] = useAsideOpen();
   const title = {
     ALL: "All Pages",
     MARKED: "Bookmarks",
     WRITTEN: "Notes",
   }[activeKey];
+  const { ref: swipeRef, ...swipeHandler } = useSwipeable({
+    onSwipedLeft() {
+      if (left) setAsideOpen(false);
+    },
+    onSwipedRight() {
+      if (!left) setAsideOpen(false);
+    },
+    swipeDuration: 200,
+  });
 
   return (
     <Draggable draggableId={"CARD"} index={left ? 0 : 1}>
-      {({ innerRef, draggableProps, dragHandleProps }, { isDragging }) => (
+      {(
+        { innerRef, draggableProps, dragHandleProps },
+        { isDragging, isDropAnimating }
+      ) => (
         <div
           className="preview-card"
-          ref={innerRef}
-          data-force-light={forceLight}
+          ref={(e) => {
+            innerRef(e);
+            swipeRef(e);
+          }}
+          data-open={asideOpen}
+          data-dragged={isDragging}
+          data-animating={isDropAnimating}
           {...draggableProps}
+          {...swipeHandler}
         >
           <div className="drag-handle" {...dragHandleProps} />
           <h3>{title}</h3>
@@ -91,6 +108,7 @@ const PageList: FC<{ dragged: boolean }> = React.memo(({ dragged }) => {
     if (asideOpen) initScroll();
   }, [asideOpen, initScroll]);
 
+  // prevent page-list scroll pos reset.
   const listRef = useRef<HTMLDivElement>();
   const scrollTop = useRef(0);
   useLayoutEffect(() => {
@@ -167,7 +185,7 @@ const PagePreview: FC<{
     >
       {(
         { innerRef, draggableProps, dragHandleProps },
-        { isDragging: dragged }
+        { isDragging, isDropAnimating }
       ) => (
         <div
           ref={(e) => {
@@ -176,7 +194,8 @@ const PagePreview: FC<{
           }}
           className="page"
           data-curr={curr}
-          data-dragged={dragged}
+          data-dragged={isDragging}
+          data-animating={isDropAnimating}
           onClick={() => scrollPage(uid)}
           {...draggableProps}
           {...dragHandleProps}
@@ -270,26 +289,28 @@ const PreviewOption = ({ uid }: { uid: string }) => {
 
   const menu = (
     <Menu
-      onClick={({ key }) => {
-        if (key === "ADD") {
-          addPage(uid);
-        } else if (key === "COPY") {
-          addPage(uid, true);
-        } else if (key === "DELETE") {
-          deletePage(uid);
-        }
-      }}
       items={[
-        { key: "ADD", icon: <PlusOutlined />, label: "Add page" },
-        { key: "COPY", icon: <CopyOutlined />, label: "Duplicate" },
+        {
+          key: "ADD",
+          icon: <PlusOutlined />,
+          label: "Add page",
+          onClick: () => addPage(uid),
+        },
+        {
+          key: "COPY",
+          icon: <CopyOutlined />,
+          label: "Duplicate",
+          onClick: () => addPage(uid, true),
+        },
         {
           key: "DELETE",
           icon: <DeleteOutlined />,
           label: "Delete",
           danger: true,
+          onClick: () => deletePage(uid),
         },
       ]}
-    ></Menu>
+    />
   );
   return (
     <Popover
@@ -297,6 +318,7 @@ const PreviewOption = ({ uid }: { uid: string }) => {
       trigger="click"
       placement="left"
       destroyTooltipOnHide
+      getPopupContainer={(e) => e.parentElement?.parentElement?.parentElement!}
     >
       <div className="option">
         <MoreOutlined />
@@ -368,16 +390,5 @@ export const PageNav = () => {
         </Droppable>
       </DragDropContext>
     </ActiveKeyProvider>
-  );
-};
-
-export const PageNavButton = () => {
-  const [, setAsideOpen] = useAsideOpen();
-  return (
-    <Button
-      type="text"
-      icon={<MenuOutlined />}
-      onClick={() => setAsideOpen((prev) => !prev)}
-    />
   );
 };

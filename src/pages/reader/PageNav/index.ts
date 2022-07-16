@@ -1,1 +1,1 @@
-export { PageNav, PageNavButton } from "./PageNav";
+export { PageNav } from "./PageNav";
