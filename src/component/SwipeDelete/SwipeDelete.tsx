@@ -53,7 +53,6 @@ export const SwipeDelete: FC<{
   const swipeHandler = useSwipeable({
     onSwipedLeft: showDelete,
     onSwipedRight: hideDelete,
-    preventDefaultTouchmoveEvent: true,
     trackTouch: !disable,
   });
 
