@@ -30,11 +30,11 @@ import "./reader.sass";
 
 export const ReaderStateCtx = React.createContext<{
   noteID: string;
+  currPageID: string;
   noteInfo?: NoteInfo;
   stateSet?: StateSet;
   pageRec?: Map<string, NotePage>;
   pageOrder?: string[];
-  currPageID: string;
 }>({ noteID: "", currPageID: "" });
 
 export const ReaderMethodCtx = React.createContext({

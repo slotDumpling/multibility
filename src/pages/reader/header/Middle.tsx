@@ -25,7 +25,7 @@ export const HeaderMiddle: FC<{
   const [forceLight, setForceLight] = useForceLight();
 
   return (
-    <div className="middle">
+    <div className="middle" data-force-light={forceLight}>
       <Button
         type="text"
         icon={<UndoOutlined />}

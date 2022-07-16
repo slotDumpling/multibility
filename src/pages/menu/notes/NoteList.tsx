@@ -35,7 +35,8 @@ import { ListTools } from "../header/ListTools";
 dayjs.extend(calender);
 
 export const NoteList: FC<{ noteList: List<NoteInfo> }> = ({ noteList }) => {
-  const { editing, setAllTags, setAllNotes } = useContext(MenuCtx);
+  const { setAllTags, setAllNotes } = useContext(MenuCtx);
+  const [editing, setEditing] = useState(false);
   const [sortType, setSortType] = useState("LAST");
   const [searchText, setSearchText] = useState("");
   const [selectedNotes, setSelectNotes] = useState(Set<string>());
@@ -98,6 +99,8 @@ export const NoteList: FC<{ noteList: List<NoteInfo> }> = ({ noteList }) => {
           <ListTools
             sortType={sortType}
             setSortType={setSortType}
+            editing={editing}
+            setEditing={setEditing}
             searchText={searchText}
             setSearchText={setSearchText}
             onDelete={() => removeNotes(selectedNotes.toArray())}
@@ -120,6 +123,7 @@ export const NoteList: FC<{ noteList: List<NoteInfo> }> = ({ noteList }) => {
                 <NoteItem
                   noteInfo={noteInfo}
                   selected={selected}
+                  editing={editing}
                   setSelectNotes={setSelectNotes}
                 />
               </SwipeDelete>
@@ -134,13 +138,14 @@ export const NoteList: FC<{ noteList: List<NoteInfo> }> = ({ noteList }) => {
 const NoteItem: FC<{
   noteInfo: NoteInfo;
   selected: boolean;
+  editing: boolean;
   setSelectNotes: Setter<Set<string>>;
-}> = ({ noteInfo, selected, setSelectNotes }) => {
+}> = ({ noteInfo, selected, editing, setSelectNotes }) => {
   const { team, uid, name, lastTime, tagID } = noteInfo;
   const date = useMemo(() => dayjs(lastTime).calendar(), [lastTime]);
   const href = `${team ? "team" : "reader"}/${uid}`;
 
-  const { editing, setAllNotes } = useContext(MenuCtx);
+  const { setAllNotes } = useContext(MenuCtx);
   const [noteName, setNoteName] = useState(name);
   const nav = useNavigate();
 

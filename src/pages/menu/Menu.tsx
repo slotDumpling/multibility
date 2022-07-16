@@ -8,21 +8,17 @@ import { List } from "immutable";
 
 export const MenuCtx = React.createContext({
   currTagID: "DEFAULT",
-  editing: false,
   allNotes: {} as Record<string, NoteInfo>,
   allTags: {} as Record<string, NoteTag>,
   setAllNotes: (() => {}) as Setter<Record<string, NoteInfo>>,
   setAllTags: (() => {}) as Setter<Record<string, NoteTag>>,
   setCurrTagID: (() => {}) as Setter<string>,
-  setEditing: (() => {}) as Setter<boolean>,
-  menuInit: () => {},
 });
 
 export default function MainMenu() {
   const [allNotes, setAllNotes] = useState<Record<string, NoteInfo>>({});
   const [allTags, setAllTags] = useState<Record<string, NoteTag>>({});
   const [currTagID, setCurrTagID] = useState("DEFAULT");
-  const [editing, setEditing] = useState(false);
 
   const selectedTag = useMemo(
     () =>
@@ -45,25 +41,21 @@ export default function MainMenu() {
     [selectedTag, allNotes]
   );
 
-  const menuInit = () => {
+  useEffect(() => {
     getAllNotes().then(setAllNotes);
     getAllTags().then(setAllTags);
     document.title = "Multibility";
-  };
-  useEffect(menuInit, []);
+  }, []);
 
   return (
     <MenuCtx.Provider
       value={{
         currTagID,
-        editing,
         allNotes,
         allTags,
         setAllNotes,
         setAllTags,
-        setEditing,
         setCurrTagID,
-        menuInit,
       }}
     >
       <div className="main-menu container">

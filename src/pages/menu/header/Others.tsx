@@ -129,24 +129,20 @@ const ProfilePage = () => {
 };
 
 const SettingsPage = () => {
-  const { menuInit } = useContext(MenuCtx);
-
   const clearAll = async () => {
     await localforage.clear();
     await clearImageCache();
-    menuInit();
+    window.location.reload();
+  };
+
+  const clearServiceWorker = async () => {
+    await serviceWorkerRegistration.unregister();
+    window.location.reload();
   };
 
   return (
     <div className="setting-menu">
-      <Button
-        icon={<SyncOutlined />}
-        onClick={async () => {
-          await serviceWorkerRegistration.unregister();
-          window.location.reload();
-        }}
-        block
-      >
+      <Button icon={<SyncOutlined />} onClick={clearServiceWorker} block>
         Update
       </Button>
       <Popconfirm

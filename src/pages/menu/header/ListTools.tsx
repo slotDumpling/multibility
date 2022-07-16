@@ -18,6 +18,8 @@ import { ColorCirle } from "component/ColorCircle";
 export const ListTools: FC<{
   sortType: string;
   setSortType: Setter<string>;
+  editing: boolean;
+  setEditing: Setter<boolean>;
   searchText: string;
   setSearchText: Setter<string>;
   onDelete: () => void;
@@ -26,13 +28,15 @@ export const ListTools: FC<{
 }> = ({
   sortType,
   setSortType,
+  editing,
+  setEditing,
   searchText,
   setSearchText,
   onDelete,
   onMove,
   disabled = true,
 }) => {
-  const { editing, allTags, setEditing } = useContext(MenuCtx);
+  const { allTags } = useContext(MenuCtx);
 
   const sortMenu = (
     <Menu
