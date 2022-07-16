@@ -66,6 +66,8 @@ export const WidthSelect: FC<{
       "--real-size": `calc(${100 / WIDTH}vw * ${width})`,
     } as CSSProperties);
 
+  const [forceLight] = useForceLight();
+
   const options = [
     { value: -1, label: null },
     ...widthList.map((width, index) => ({
@@ -95,7 +97,11 @@ export const WidthSelect: FC<{
             />
           }
         >
-          <div className="circle-wrapper" style={realSizeStyle(width)}>
+          <div
+            className="circle-wrapper"
+            data-force-light={forceLight}
+            style={realSizeStyle(width)}
+          >
             <ColorCirle className={"width-circle " + field} color={color} />
           </div>
         </Popover>

@@ -7,6 +7,7 @@ import {
   UndoOutlined,
   RedoOutlined,
   GatewayOutlined,
+  HighlightTwoTone,
   HighlightOutlined,
 } from "@ant-design/icons";
 import IconFont from "component/IconFont";
@@ -27,21 +28,18 @@ export const HeaderMiddle: FC<{
     <div className="middle">
       <Button
         type="text"
-        shape="circle"
         icon={<UndoOutlined />}
         onClick={handleUndo}
         disabled={!stateSet?.isUndoable()}
       />
       <Button
         type="text"
-        shape="circle"
         icon={<RedoOutlined />}
         onClick={handleRedo}
         disabled={!stateSet?.isRedoable()}
       />
       <Button
-        type={finger ? "default" : "text"}
-        shape="circle"
+        type={finger ? "link" : "text"}
         onClick={() => {
           updateDrawCtrl({ finger: !finger });
           message.destroy("FINGER");
@@ -55,15 +53,13 @@ export const HeaderMiddle: FC<{
       <Button
         className="force-light-btn"
         type="text"
-        shape="circle"
         icon={forceLight ? <BulbFilled /> : <BulbOutlined />}
         onClick={() => setForceLight((prev) => !prev)}
       />
       <PenButton />
       <EraserButton />
       <Button
-        type={mode === "text" ? "default" : "text"}
-        shape="circle"
+        type={mode === "text" ? "link" : "text"}
         onClick={() => updateDrawCtrl({ mode: "text" })}
         icon={<IconFont type="icon-text1" />}
       />
@@ -74,13 +70,10 @@ export const HeaderMiddle: FC<{
 
 const PenButton = () => {
   const drawCtrl = useDrawCtrl();
+  const { mode, color } = drawCtrl;
   const updateDrawCtrl = useUpdateDrawCtrl();
 
-  const btnProps: ButtonProps = {
-    shape: "circle",
-    icon: <HighlightOutlined />,
-  };
-  return drawCtrl.mode === "draw" ? (
+  return mode === "draw" ? (
     <Popover
       content={<PenPanel updateDrawCtrl={updateDrawCtrl} drawCtrl={drawCtrl} />}
       trigger="click"
@@ -88,13 +81,16 @@ const PenButton = () => {
       getPopupContainer={(e) => e.parentElement!}
       destroyTooltipOnHide
     >
-      <Button type="default" {...btnProps} />
+      <Button
+        type="link"
+        icon={<HighlightTwoTone twoToneColor={color} className="pen-icon" />}
+      />
     </Popover>
   ) : (
     <Button
       type="text"
       onClick={() => updateDrawCtrl({ mode: "draw" })}
-      {...btnProps}
+      icon={<HighlightOutlined />}
     />
   );
 };
@@ -136,7 +132,7 @@ const EraserButton = () => {
       getPopupContainer={(e) => e.parentElement!}
       destroyTooltipOnHide
     >
-      <Button type="default" {...btnProps} />
+      <Button type="link" {...btnProps} />
     </Popover>
   ) : (
     <Button
@@ -155,15 +151,13 @@ const SelectButton = () => {
 
   return mode === "select" ? (
     <Button
-      type="default"
-      shape="circle"
+      type="link"
       icon={icon}
       onClick={() => updateDrawCtrl({ lasso: !lasso })}
     />
   ) : (
     <Button
       type="text"
-      shape="circle"
       icon={icon}
       onClick={() => updateDrawCtrl({ mode: "select" })}
     />

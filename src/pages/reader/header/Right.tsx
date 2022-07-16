@@ -6,9 +6,9 @@ import { PasscodeInput } from "antd-mobile";
 import { ReaderStateCtx } from "../Reader";
 import { TeamCtx } from "../Team";
 import { getUserID, saveUserName } from "lib/user";
-import { PageNavButton } from "../PageNav";
 import {
   EyeOutlined,
+  MenuOutlined,
   FormOutlined,
   TeamOutlined,
   CopyOutlined,
@@ -23,6 +23,7 @@ import { editNoteData } from "lib/note/archive";
 import { UserAvatar } from "component/UserAvatar";
 import { putNote } from "lib/network/http";
 import copy from "clipboard-copy";
+import { useAsideOpen } from "lib/hooks";
 
 export const HeaderRight: FC<{
   instantSave: () => Promise<void> | undefined;
@@ -33,6 +34,17 @@ export const HeaderRight: FC<{
       {teamOn ? <RoomInfo /> : <JoinRoom instantSave={instantSave} />}
       <PageNavButton />
     </div>
+  );
+};
+
+const PageNavButton = () => {
+  const [asideOpen, setAsideOpen] = useAsideOpen();
+  return (
+    <Button
+      type={asideOpen ? "link" : "text"}
+      icon={<MenuOutlined />}
+      onClick={() => setAsideOpen((prev) => !prev)}
+    />
   );
 };
 

@@ -43,6 +43,14 @@
   @media (min-width: 640px)
     @content
 
+@mixin for-light
+  @media (prefers-color-scheme: light)
+    @content
+
+@mixin for-dark
+  @media (prefers-color-scheme: dark)
+    @content
+
 @mixin overlay-scroll
   overflow: hidden auto
   overscroll-behavior: contain
