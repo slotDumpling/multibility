@@ -11,9 +11,9 @@
   border: $dark-border
   display: flex
   @include for-desktop
-    top: calc( $header-low-height + 10px )
+    top: $header-low-height+10px
   @include for-phone
-    top: calc( $header-high-height + 10px )
+    top: $header-high-height+10px
   > * + *
     margin-left: 5px
 
