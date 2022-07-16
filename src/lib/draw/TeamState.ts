@@ -1,7 +1,7 @@
 import { NotePage, TeamPage, TeamPageInfo } from "lib/note/note";
 import { DrawState } from "./DrawState";
 import { SetOperation } from "./StateSet";
-import { Map, Record } from "immutable";
+import { Map, Record, Set } from "immutable";
 
 interface TeamStateRecordType {
   pageStates: Map<string, Map<string, DrawState>>;
@@ -37,12 +37,6 @@ export class TeamState {
 
   getOnePageStateMap(pageID: string) {
     return this.getPageStates().get(pageID);
-  }
-
-  getPageValidUsers(pageID: string) {
-    const map = this.getOnePageStateMap(pageID);
-    if (!map) return [];
-    return Array.from(map.filter((ds) => !ds.isEmpty()).keys());
   }
 
   getPageRatio(pageID: string) {
@@ -112,5 +106,18 @@ export class TeamState {
       );
     }
     return newTS;
+  }
+
+  static getValidUsers(
+    teamStateMap?: Map<string, DrawState>,
+    ignores = Set<string>()
+  ) {
+    if (!teamStateMap) return [];
+    return Array.from(
+      teamStateMap
+        .filter((ds) => !ds.isEmpty())
+        .deleteAll(ignores)
+        .keys()
+    );
   }
 }
