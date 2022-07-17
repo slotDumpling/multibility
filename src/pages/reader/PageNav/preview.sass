@@ -45,21 +45,25 @@ $card-width: 200px
     transition: transform $slow-speed cubic-bezier(0.2, 0, 0, 1) !important
 
   .drag-handle
+    @include flex-center
     height: 20px
     position: relative
     cursor: pointer
     touch-action: none
     &::before
-      @include pseudo-el(50%, auto, auto, 50%)
-      transform: translate(-50%, -50%)
+      content: ""
+      display: block
       height: 5px
       width: 40px
-      border-radius: 10px
+      border-radius: 5px
       background-color: #ddd
       transition: background $speed
     &::after
       @include pseudo-el(-20px, 0, -20px, 0)
     &:hover::before
+      background-color: #ccc
+  &[data-dragged=true]
+    .drag-handle::before
       background-color: #ccc
 
   .tabs
@@ -91,7 +95,7 @@ $card-width: 200px
         box-shadow: $shadow-2-down
         opacity: 0
         transition: opacity $speed
-      &:active[data-dragged=true]::before
+      &[data-dragged=true]::before
         opacity: 1
       .bookmark
         position: absolute
