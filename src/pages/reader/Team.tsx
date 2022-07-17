@@ -151,7 +151,7 @@ export default function Team() {
 const showJoinMsg = (userID: string, userName: string) => {
   message.destroy(userID);
   message.success({
-    content: `${userName} joined room`,
+    content: `${userName} joined the room`,
     icon: <LoginOutlined />,
     key: userID,
   });
@@ -160,7 +160,7 @@ const showJoinMsg = (userID: string, userName: string) => {
 const showLeaveMsg = (userID: string, userName: string) => {
   message.destroy(userID);
   message.warning({
-    content: `${userName} leaved room`,
+    content: `${userName} leaved the room`,
     icon: <LogoutOutlined />,
     key: userID,
   });
