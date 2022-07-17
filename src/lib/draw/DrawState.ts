@@ -1,5 +1,5 @@
 import { List, Record, OrderedMap, Map } from "immutable";
-import { v4, v5, validate } from "uuid";
+import { NIL, v4, v5, validate } from "uuid";
 import Heap from "heap";
 
 export const WIDTH = 2000;
@@ -195,12 +195,16 @@ export class DrawState {
     prevStrokes.forEach((stroke, prevUid) => {
       const splitStrokes = splitMap.get(prevUid);
       if (splitStrokes) {
-        splitStrokes.forEach((pathData, index) => {
-          if (!validate(prevUid)) prevUid = v4();
-          const uid = v5(String(index), prevUid);
-          const { timestamp } = stroke;
-          strokes = strokes.set(uid, { pathData, timestamp, uid });
-        });
+        strokes = strokes.merge(
+          splitStrokes.map((pathData, index) => {
+            // update legacy uid solution.
+            if (!validate(prevUid)) prevUid = v5(prevUid, NIL);
+
+            const uid = v5(String(index), prevUid);
+            const { timestamp } = stroke;
+            return [uid, { pathData, timestamp, uid }];
+          })
+        );
       } else {
         strokes = strokes.set(prevUid, stroke);
       }
