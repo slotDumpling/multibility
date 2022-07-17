@@ -72,7 +72,7 @@ export const NoteList: FC<MenuProps> = (props) => {
 
   return (
     <SwipeDeleteProvider>
-      <TransitionGroup className="note-list">
+      <div className="note-list">
         <header>
           <NoteNav {...props} />
           <ListTools
@@ -86,30 +86,32 @@ export const NoteList: FC<MenuProps> = (props) => {
             {...props}
           />
         </header>
-        {filterdList.map((noteInfo, index) => {
-          const { uid } = noteInfo;
-          const selected = selectedNotes.has(uid);
-          const nextUid = filterdList.get(index + 1)?.uid;
-          const last = (nextUid && selectedNotes.has(nextUid)) !== selected;
-          return (
-            <CSSTransition key={uid} timeout={300}>
-              <SwipeDelete
-                className={classNames("note-wrapper", { selected, last })}
-                onDelete={() => removeNote(uid)}
-                disable={editing}
-              >
-                <NoteItem
-                  noteInfo={noteInfo}
-                  selected={selected}
-                  editing={editing}
-                  setSelectNotes={setSelectNotes}
-                  {...props}
-                />
-              </SwipeDelete>
-            </CSSTransition>
-          );
-        })}
-      </TransitionGroup>
+        <TransitionGroup component={null}>
+          {filterdList.map((noteInfo, index) => {
+            const { uid } = noteInfo;
+            const selected = selectedNotes.has(uid);
+            const nextUid = filterdList.get(index + 1)?.uid;
+            const last = (nextUid && selectedNotes.has(nextUid)) !== selected;
+            return (
+              <CSSTransition key={uid} timeout={300}>
+                <SwipeDelete
+                  className={classNames("note-wrapper", { selected, last })}
+                  onDelete={() => removeNote(uid)}
+                  disable={editing}
+                >
+                  <NoteItem
+                    noteInfo={noteInfo}
+                    selected={selected}
+                    editing={editing}
+                    setSelectNotes={setSelectNotes}
+                    {...props}
+                  />
+                </SwipeDelete>
+              </CSSTransition>
+            );
+          })}
+        </TransitionGroup>
+      </div>
     </SwipeDeleteProvider>
   );
 };
