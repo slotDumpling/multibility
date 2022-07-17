@@ -55,4 +55,5 @@
   overflow: hidden auto
   overscroll-behavior: contain
   @supports (overflow: overlay)
-    overflow: hidden overlay
+    @include for-desktop
+      overflow: hidden overlay
