@@ -1,6 +1,6 @@
 import { Button, Popover } from "antd";
 import { MenuOutlined, FormOutlined, TeamOutlined } from "@ant-design/icons";
-import { useContext, useState } from "react";
+import { FC, useContext, useState } from "react";
 import { MenuCtx } from "../Menu";
 import { createEmptyNote } from "lib/note/note";
 import { createNewNote } from "lib/note/archive";
@@ -10,7 +10,7 @@ import { PasscodeInput } from "antd-mobile";
 import { OthersMenu } from "./Others";
 import { useAsideOpen } from "lib/hooks";
 
-export const Nav = () => {
+export const NoteNav: FC = () => {
   return (
     <nav>
       <Left />

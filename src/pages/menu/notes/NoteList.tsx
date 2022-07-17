@@ -19,28 +19,26 @@ import { SwipeDelete, SwipeDeleteProvider } from "component/SwipeDelete";
 import { NoteInfo, NotePage } from "lib/note/note";
 import { DrawState } from "lib/draw/DrawState";
 import { useNavigate } from "react-router-dom";
-import calender from "dayjs/plugin/calendar";
-import { MenuHeader } from "../header";
 import { Setter } from "lib/hooks";
 import { List, Map, Set } from "immutable";
 import { MenuCtx } from "../Menu";
 import { Input } from "antd";
-import dayjs from "dayjs";
 import { getCachedTeamState } from "lib/network/http";
 import { TeamState } from "lib/draw/TeamState";
 import { getColorPalette } from "lib/color";
 import classNames from "classnames";
-import { ListTools } from "../header/ListTools";
-
+import { NoteNav, ListTools } from "../header";
+import dayjs from "dayjs";
+import calender from "dayjs/plugin/calendar";
 dayjs.extend(calender);
 
-export const NoteList: FC<{ noteList: List<NoteInfo> }> = ({ noteList }) => {
-  const { setAllTags, setAllNotes } = useContext(MenuCtx);
+export const NoteList = () => {
   const [editing, setEditing] = useState(false);
   const [sortType, setSortType] = useState("LAST");
   const [searchText, setSearchText] = useState("");
   const [selectedNotes, setSelectNotes] = useState(Set<string>());
 
+  const { setAllTags, setAllNotes } = useContext(MenuCtx);
   const removeNotes = async (uids: string[]) => {
     let tags: Record<string, NoteTag> | undefined;
     let allNotes: Record<string, NoteInfo> | undefined;
@@ -64,6 +62,17 @@ export const NoteList: FC<{ noteList: List<NoteInfo> }> = ({ noteList }) => {
     tags && setAllTags(tags);
     allNotes && setAllNotes(allNotes);
   };
+
+  const { currTagID, allNotes, allTags } = useContext(MenuCtx);
+  const noteList = useMemo(
+    () =>
+      List(
+        (allTags[currTagID]?.notes ?? Object.keys(allNotes))
+          .map((uid) => allNotes[uid])
+          .filter((n): n is NoteInfo => n !== undefined)
+      ),
+    [allNotes, allTags, currTagID]
+  );
 
   const sortedList = useMemo(() => {
     const comparator = (t0: number, t1: number) => t1 - t0;
@@ -95,7 +104,8 @@ export const NoteList: FC<{ noteList: List<NoteInfo> }> = ({ noteList }) => {
   return (
     <SwipeDeleteProvider>
       <TransitionGroup className="note-list">
-        <MenuHeader>
+        <header>
+          <NoteNav />
           <ListTools
             sortType={sortType}
             setSortType={setSortType}
@@ -107,7 +117,7 @@ export const NoteList: FC<{ noteList: List<NoteInfo> }> = ({ noteList }) => {
             onMove={(tagID) => moveNotes(selectedNotes.toArray(), tagID)}
             disabled={selectedNotes.size === 0}
           />
-        </MenuHeader>
+        </header>
         {filterdList.map((noteInfo, index) => {
           const { uid } = noteInfo;
           const selected = selectedNotes.has(uid);
@@ -171,8 +181,7 @@ const NoteItem: FC<{
     <div className="note-item" data-selected={selected} onClick={handleClick}>
       <NoteTimg uid={uid} team={team} />
       <div className="content">
-        {editing || <p className="name">{name}</p>}
-        {editing && (
+        {editing && !selected ? (
           <Input
             className="name-input"
             value={noteName}
@@ -180,6 +189,8 @@ const NoteItem: FC<{
             onClick={(e) => e.stopPropagation()}
             onBlur={saveNoteName}
           />
+        ) : (
+          <p className="name">{name}</p>
         )}
         <p className="info">
           <span className="date">{date}</span>
