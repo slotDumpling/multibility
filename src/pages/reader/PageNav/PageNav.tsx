@@ -26,7 +26,7 @@ import {
   useActiveKey,
   useAsideOpen,
 } from "lib/hooks";
-import { ReaderMethodCtx, ReaderStateCtx } from "../Reader";
+import { ReaderStateCtx } from "../Reader";
 import PageWrapper from "component/PageWrapper";
 import { UserAvatar } from "component/UserAvatar";
 import { AddPageButton } from "../ReaderUtils";
@@ -40,7 +40,16 @@ import { NotePage } from "lib/note/note";
 import { TeamState } from "lib/draw/TeamState";
 import "./preview.sass";
 
-export const PageNav = () => {
+interface PreviewProps {
+  scrollPage: (pageID: string) => void;
+  switchPageMarked: (pageID: string) => void;
+  addPage: (prevPageID: string, copy?: boolean) => void;
+  addFinalPage: () => void;
+  deletePage: (pageID: string) => void;
+  saveReorder: (order: string[], push: boolean) => Promise<void>;
+}
+
+export const PageNav: FC<PreviewProps> = (props) => {
   const [left, setLeft] = useState(false);
   const [asideOpen] = useAsideOpen();
 
@@ -77,7 +86,7 @@ export const PageNav = () => {
               {...droppableProps}
             >
               {opposite}
-              <PreviewCard left={left} />
+              <PreviewCard left={left} {...props} />
               {placeholder}
             </div>
           )}
@@ -87,7 +96,10 @@ export const PageNav = () => {
   );
 };
 
-const PreviewCard: FC<{ left: boolean }> = ({ left }) => {
+const PreviewCard: FC<{ left: boolean } & PreviewProps> = ({
+  left,
+  ...props
+}) => {
   const [activeKey] = useActiveKey();
   const [asideOpen, setAsideOpen] = useAsideOpen();
 
@@ -106,6 +118,9 @@ const PreviewCard: FC<{ left: boolean }> = ({ left }) => {
     },
     swipeDuration: 200,
   });
+
+  const previewTabs = useMemo(() => <PreviewTabs />, []);
+  const pageList = useMemo(() => <PageList {...props} />, [props]);
 
   return (
     <Draggable draggableId={"CARD"} index={left ? 0 : 1}>
@@ -127,20 +142,20 @@ const PreviewCard: FC<{ left: boolean }> = ({ left }) => {
         >
           <div className="drag-handle" {...dragHandleProps} />
           <h3>{title}</h3>
-          <PreviewTabs />
-          <PageList dragged={isDragging} />
+          {previewTabs}
+          {pageList}
         </div>
       )}
     </Draggable>
   );
 };
 
-const PageList: FC<{ dragged: boolean }> = React.memo(({ dragged }) => {
+const PageList: FC<PreviewProps> = (props) => {
   const { pageOrder, currPageID } = useContext(ReaderStateCtx);
-  const { scrollPage, saveReorder } = useContext(ReaderMethodCtx);
   const refRec = useRef<Record<string, HTMLElement>>({});
   const [activeKey] = useActiveKey();
   const [asideOpen] = useAsideOpen();
+  const { saveReorder, scrollPage, addFinalPage } = props;
 
   const onDragEnd = ({ source, destination }: DropResult) => {
     if (!destination || !pageOrder) return;
@@ -171,25 +186,29 @@ const PageList: FC<{ dragged: boolean }> = React.memo(({ dragged }) => {
                 uid={uid}
                 pageIndex={index}
                 refRec={refRec.current}
+                {...props}
               />
             ))}
             {placeholder}
-            {activeKey === "ALL" && <AddPageButton />}
+            {activeKey === "ALL" && (
+              <AddPageButton addFinalPage={addFinalPage} />
+            )}
           </div>
         )}
       </Droppable>
     </DragDropContext>
   );
-});
+};
 
-const PagePreview: FC<{
-  uid: string;
-  pageIndex: number;
-  refRec: Record<string, HTMLElement>;
-}> = ({ uid, pageIndex, refRec }) => {
+const PagePreview: FC<
+  {
+    uid: string;
+    pageIndex: number;
+    refRec: Record<string, HTMLElement>;
+  } & PreviewProps
+> = ({ uid, pageIndex, refRec, ...props }) => {
   const { stateSet, pageRec, currPageID } = useContext(ReaderStateCtx);
   const { teamState, ignores } = useContext(TeamCtx);
-  const { scrollPage } = useContext(ReaderMethodCtx);
   const [activeKey] = useActiveKey();
   const [chosen, setChosen] = useState("");
 
@@ -219,6 +238,7 @@ const PagePreview: FC<{
   }
   if (activeKey === "MARKED" && !marked.current) return null;
   const curr = currPageID === uid;
+  const { scrollPage } = props;
 
   return (
     <Draggable
@@ -257,6 +277,7 @@ const PagePreview: FC<{
             setChosen={setChosen}
             page={page}
             userIDs={userIDs}
+            {...props}
           />
         </div>
       )}
@@ -264,15 +285,17 @@ const PagePreview: FC<{
   );
 };
 
-const PreviewTools: FC<{
-  uid: string;
-  index: number;
-  chosen: string;
-  setChosen: Setter<string>;
-  page: NotePage;
-  userIDs: string[];
-}> = ({ uid, index, chosen, setChosen, page, userIDs }) => {
-  const { switchPageMarked } = useContext(ReaderMethodCtx);
+const PreviewTools: FC<
+  {
+    uid: string;
+    index: number;
+    chosen: string;
+    setChosen: Setter<string>;
+    page: NotePage;
+    userIDs: string[];
+  } & PreviewProps
+> = React.memo(({ uid, index, chosen, setChosen, page, userIDs, ...props }) => {
+  const { switchPageMarked } = props;
   return (
     <div className="tools" onClick={(e) => e.stopPropagation()}>
       <div
@@ -281,11 +304,12 @@ const PreviewTools: FC<{
         onClick={() => switchPageMarked(uid)}
       />
       <div className="index">{index + 1}</div>
-      <PreviewOption uid={uid} />
+      <PreviewOption uid={uid} {...props} />
       <TeamAvatars userIDs={userIDs} chosen={chosen} setChosen={setChosen} />
     </div>
   );
-};
+});
+PreviewTools.displayName = "PreviewTools";
 
 const TeamAvatars: FC<{
   userIDs: string[];
@@ -318,9 +342,11 @@ const TeamAvatars: FC<{
   );
 };
 
-const PreviewOption = ({ uid }: { uid: string }) => {
-  const { addPage, deletePage } = useContext(ReaderMethodCtx);
-
+const PreviewOption: FC<{ uid: string } & PreviewProps> = ({
+  uid,
+  addPage,
+  deletePage,
+}) => {
   const menu = (
     <Menu
       items={[
@@ -361,7 +387,7 @@ const PreviewOption = ({ uid }: { uid: string }) => {
   );
 };
 
-const PreviewTabs = () => {
+const PreviewTabs: FC = () => {
   const [activeKey, setActiveKey] = useActiveKey();
   const { TabPane } = Tabs;
   return (

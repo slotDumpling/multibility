@@ -1,10 +1,10 @@
 import { Button, message } from "antd";
-import { useContext } from "react";
-import { ReaderMethodCtx } from "./Reader";
 import { PlusOutlined } from "@ant-design/icons";
+import { FC } from "react";
 
-export const AddPageButton = () => {
-  const { addFinalPage } = useContext(ReaderMethodCtx);
+export const AddPageButton: FC<{ addFinalPage: () => void }> = ({
+  addFinalPage,
+}) => {
   return (
     <div className="add-btn-wrapper">
       <Button

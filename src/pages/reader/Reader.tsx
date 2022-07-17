@@ -37,15 +37,6 @@ export const ReaderStateCtx = React.createContext<{
   pageOrder?: string[];
 }>({ noteID: "", currPageID: "" });
 
-export const ReaderMethodCtx = React.createContext({
-  scrollPage: (pageID: string) => {},
-  switchPageMarked: (pageID: string) => {},
-  addPage: (prevPageID: string, copy?: boolean) => {},
-  addFinalPage: () => {},
-  deletePage: (pageID: string) => {},
-  saveReorder: async (order: string[], push: boolean) => {},
-});
-
 export default function Reader() {
   const noteID = useParams().noteID ?? "";
   const nav = useNavigate();
@@ -206,9 +197,16 @@ export default function Reader() {
             />
           </section>
         ))}
-        <AddPageButton />
+        <AddPageButton addFinalPage={addFinalPage} />
       </main>
-      <PageNav />
+      <PageNav
+        addPage={addPage}
+        addFinalPage={addFinalPage}
+        scrollPage={scrollPage}
+        deletePage={deletePage}
+        saveReorder={saveReorder}
+        switchPageMarked={switchPageMarked}
+      />
     </div>
   );
 
@@ -224,20 +222,9 @@ export default function Reader() {
           currPageID,
         }}
       >
-        <ReaderMethodCtx.Provider
-          value={{
-            addPage,
-            scrollPage,
-            deletePage,
-            saveReorder,
-            addFinalPage,
-            switchPageMarked,
-          }}
-        >
-          <DrawCtrlProvider>
-            <AsideOpenProvider>{renderResult}</AsideOpenProvider>
-          </DrawCtrlProvider>
-        </ReaderMethodCtx.Provider>
+        <DrawCtrlProvider>
+          <AsideOpenProvider>{renderResult}</AsideOpenProvider>
+        </DrawCtrlProvider>
       </ReaderStateCtx.Provider>
     </DarkModeProvider>
   );
