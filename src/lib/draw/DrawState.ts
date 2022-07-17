@@ -1,5 +1,7 @@
 import { List, Record, OrderedMap, Map } from "immutable";
 import { v4 } from "uuid";
+// @ts-ignore
+import v5 from "uuid/v5";
 import Heap from "heap";
 
 export const WIDTH = 2000;
@@ -194,9 +196,16 @@ export class DrawState {
     const prevStrokes = drawState.getStrokeMap();
     prevStrokes.forEach((stroke, prevUid) => {
       const splitStrokes = splitMap.get(prevUid);
+      // update the legacy uid solution.
+      if (prevUid.length > 36) {
+        const namespace = prevUid.slice(0, 36);
+        const sub = prevUid.slice(36);
+        prevUid = v5(sub, namespace);
+      }
+
       if (splitStrokes) {
         splitStrokes.forEach((pathData, index) => {
-          const uid = prevUid + "-" + index;
+          const uid = v5(String(index), prevUid);
           const { timestamp } = stroke;
           strokes = strokes.set(uid, { pathData, timestamp, uid });
         });
