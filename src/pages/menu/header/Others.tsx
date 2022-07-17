@@ -1,4 +1,4 @@
-import { useContext, useState, FC, useEffect } from "react";
+import React, { useState, FC, useEffect } from "react";
 import {
   Menu,
   Input,
@@ -26,8 +26,8 @@ import { clearImageCache } from "lib/note/imgCache";
 import { createNewNote } from "lib/note/archive";
 import { CSSTransition } from "react-transition-group";
 import localforage from "localforage";
-import { MenuCtx } from "../Menu";
 import "./others.sass";
+import { MenuProps } from "../Menu";
 
 const SeconaryMenu: FC<
   {
@@ -54,9 +54,12 @@ const SeconaryMenu: FC<
   );
 };
 
-const UploadPdfPage = () => {
+const UploadPdfPage: FC<MenuProps> = ({
+  currTagID,
+  setAllTags,
+  setAllNotes,
+}) => {
   const [loading, setLoading] = useState(false);
-  const { currTagID, setAllTags, setAllNotes } = useContext(MenuCtx);
   const [percent, setPercent] = useState(0);
 
   async function handleFile(file: File) {
@@ -128,7 +131,7 @@ const ProfilePage = () => {
   );
 };
 
-const SettingsPage = () => {
+const SettingsPage: FC = () => {
   const clearAll = async () => {
     await localforage.clear();
     await clearImageCache();
@@ -167,19 +170,16 @@ const menuItems = [
   {
     key: "PDF",
     label: "Import PDF",
-    component: <UploadPdfPage />,
     icon: <FilePdfOutlined />,
   },
   {
     key: "PROFILE",
     label: "My profile",
-    component: <ProfilePage />,
     icon: <UserOutlined />,
   },
   {
     key: "SETTINGS",
     label: "Settings",
-    component: <SettingsPage />,
     icon: <SettingOutlined />,
   },
 ];
@@ -193,7 +193,7 @@ const PrimaryMenu = () => {
   );
 };
 
-const OthersPage = () => {
+const OthersPage: FC<MenuProps> = (props) => {
   const [height, setHeight] = useState(0);
   const [active, setActive] = useActiveKey();
 
@@ -209,28 +209,34 @@ const OthersPage = () => {
 
   useEffect(() => setActive("MENU"), [setActive]);
 
+  const components: Record<string, React.ReactNode> = {
+    PDF: <UploadPdfPage {...props} />,
+    PROFILE: <ProfilePage />,
+    SETTINGS: <SettingsPage />,
+  };
+
   return (
     <section className="others-menu" style={{ height }}>
       <CSSTransition in={active === "MENU"} {...cssTransProps}>
         <PrimaryMenu />
       </CSSTransition>
-      {menuItems.map(({ key, label, component }) => (
+      {menuItems.map(({ key, label }) => (
         <SeconaryMenu key={key} keyName={key} title={label} {...cssTransProps}>
-          {component}
+          {components[key]}
         </SeconaryMenu>
       ))}
     </section>
   );
 };
 
-export function OthersMenu() {
+export const OthersMenu: FC<MenuProps> = (props) => {
   return (
     <Popover
       placement="bottomRight"
       trigger="click"
       content={
         <ActiveKeyProvider initKey="">
-          <OthersPage />
+          <OthersPage {...props} />
         </ActiveKeyProvider>
       }
       zIndex={900}
@@ -239,4 +245,4 @@ export function OthersMenu() {
       <Button className="large" shape="circle" icon={<CaretDownOutlined />} />
     </Popover>
   );
-}
+};

@@ -1,18 +1,5 @@
-import React, {
-  FC,
-  useMemo,
-  useState,
-  useEffect,
-  useContext,
-  Suspense,
-} from "react";
-import {
-  NoteTag,
-  deleteNote,
-  moveNoteTag,
-  editNoteData,
-  loadNote,
-} from "lib/note/archive";
+import React, { FC, useMemo, useState, useEffect, Suspense } from "react";
+import { deleteNote, editNoteData, loadNote } from "lib/note/archive";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { CloudTwoTone, CheckCircleFilled } from "@ant-design/icons";
 import { SwipeDelete, SwipeDeleteProvider } from "component/SwipeDelete";
@@ -21,7 +8,6 @@ import { DrawState } from "lib/draw/DrawState";
 import { useNavigate } from "react-router-dom";
 import { Setter } from "lib/hooks";
 import { List, Map, Set } from "immutable";
-import { MenuCtx } from "../Menu";
 import { Input } from "antd";
 import { getCachedTeamState } from "lib/network/http";
 import { TeamState } from "lib/draw/TeamState";
@@ -30,40 +16,23 @@ import classNames from "classnames";
 import { NoteNav, ListTools } from "../header";
 import dayjs from "dayjs";
 import calender from "dayjs/plugin/calendar";
+import { MenuProps } from "../Menu";
 dayjs.extend(calender);
 
-export const NoteList = () => {
+export const NoteList: FC<MenuProps> = (props) => {
   const [editing, setEditing] = useState(false);
   const [sortType, setSortType] = useState("LAST");
   const [searchText, setSearchText] = useState("");
   const [selectedNotes, setSelectNotes] = useState(Set<string>());
 
-  const { setAllTags, setAllNotes } = useContext(MenuCtx);
-  const removeNotes = async (uids: string[]) => {
-    let tags: Record<string, NoteTag> | undefined;
-    let allNotes: Record<string, NoteInfo> | undefined;
-    for (let uid of uids) {
-      const res = await deleteNote(uid);
-      tags = res.tags;
-      allNotes = res.allNotes;
-    }
-    tags && setAllTags(tags);
-    allNotes && setAllNotes(allNotes);
+  const { setAllTags, setAllNotes } = props;
+  const removeNote = async (uid: string) => {
+    const { tags, allNotes } = await deleteNote(uid);
+    setAllNotes(allNotes);
+    setAllTags(tags);
   };
 
-  const moveNotes = async (noteIDs: string[], tagID: string) => {
-    let tags: Record<string, NoteTag> | undefined;
-    let allNotes: Record<string, NoteInfo> | undefined;
-    for (let noteID of noteIDs) {
-      const res = await moveNoteTag(noteID, tagID);
-      tags = res.tags;
-      allNotes = res.allNotes;
-    }
-    tags && setAllTags(tags);
-    allNotes && setAllNotes(allNotes);
-  };
-
-  const { currTagID, allNotes, allTags } = useContext(MenuCtx);
+  const { currTagID, allNotes, allTags } = props;
   const noteList = useMemo(
     () =>
       List(
@@ -105,7 +74,7 @@ export const NoteList = () => {
     <SwipeDeleteProvider>
       <TransitionGroup className="note-list">
         <header>
-          <NoteNav />
+          <NoteNav {...props} />
           <ListTools
             sortType={sortType}
             setSortType={setSortType}
@@ -113,9 +82,8 @@ export const NoteList = () => {
             setEditing={setEditing}
             searchText={searchText}
             setSearchText={setSearchText}
-            onDelete={() => removeNotes(selectedNotes.toArray())}
-            onMove={(tagID) => moveNotes(selectedNotes.toArray(), tagID)}
-            disabled={selectedNotes.size === 0}
+            selectedNotes={selectedNotes}
+            {...props}
           />
         </header>
         {filterdList.map((noteInfo, index) => {
@@ -127,7 +95,7 @@ export const NoteList = () => {
             <CSSTransition key={uid} timeout={300}>
               <SwipeDelete
                 className={classNames("note-wrapper", { selected, last })}
-                onDelete={() => removeNotes([uid])}
+                onDelete={() => removeNote(uid)}
                 disable={editing}
               >
                 <NoteItem
@@ -135,6 +103,7 @@ export const NoteList = () => {
                   selected={selected}
                   editing={editing}
                   setSelectNotes={setSelectNotes}
+                  {...props}
                 />
               </SwipeDelete>
             </CSSTransition>
@@ -145,17 +114,19 @@ export const NoteList = () => {
   );
 };
 
-const NoteItem: FC<{
-  noteInfo: NoteInfo;
-  selected: boolean;
-  editing: boolean;
-  setSelectNotes: Setter<Set<string>>;
-}> = ({ noteInfo, selected, editing, setSelectNotes }) => {
+const NoteItem: FC<
+  {
+    noteInfo: NoteInfo;
+    selected: boolean;
+    editing: boolean;
+    setSelectNotes: Setter<Set<string>>;
+  } & MenuProps
+> = ({ noteInfo, selected, editing, setSelectNotes, ...props }) => {
   const { team, uid, name, lastTime, tagID } = noteInfo;
   const date = useMemo(() => dayjs(lastTime).calendar(), [lastTime]);
   const href = `${team ? "team" : "reader"}/${uid}`;
 
-  const { setAllNotes } = useContext(MenuCtx);
+  const { setAllNotes } = props;
   const [noteName, setNoteName] = useState(name);
   const nav = useNavigate();
 
@@ -174,7 +145,7 @@ const NoteItem: FC<{
     });
   };
 
-  const { allTags, currTagID } = useContext(MenuCtx);
+  const { allTags, currTagID } = props;
   const tag = allTags[tagID];
 
   return (

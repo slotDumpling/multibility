@@ -5,14 +5,14 @@ import { AsideOpenProvider, Setter } from "lib/hooks";
 import { SideMenu } from "./aside";
 import { NoteList } from "./notes";
 
-export const MenuCtx = React.createContext({
-  currTagID: "DEFAULT",
-  allNotes: {} as Record<string, NoteInfo>,
-  allTags: {} as Record<string, NoteTag>,
-  setAllNotes: (() => {}) as Setter<Record<string, NoteInfo>>,
-  setAllTags: (() => {}) as Setter<Record<string, NoteTag>>,
-  setCurrTagID: (() => {}) as Setter<string>,
-});
+export interface MenuProps {
+  currTagID: string;
+  allNotes: Record<string, NoteInfo>;
+  allTags: Record<string, NoteTag>;
+  setAllNotes: Setter<Record<string, NoteInfo>>;
+  setAllTags: Setter<Record<string, NoteTag>>;
+  setCurrTagID: Setter<string>;
+}
 
 export default function MainMenu() {
   const [allNotes, setAllNotes] = useState<Record<string, NoteInfo>>({});
@@ -25,23 +25,21 @@ export default function MainMenu() {
     document.title = "Multibility";
   }, []);
 
+  const menuProps: MenuProps = {
+    allNotes,
+    allTags,
+    setAllNotes,
+    setAllTags,
+    currTagID,
+    setCurrTagID,
+  };
+
   return (
-    <MenuCtx.Provider
-      value={{
-        currTagID,
-        allNotes,
-        allTags,
-        setAllNotes,
-        setAllTags,
-        setCurrTagID,
-      }}
-    >
-      <div className="main-menu container">
-        <AsideOpenProvider>
-          <SideMenu />
-          <NoteList />
-        </AsideOpenProvider>
-      </div>
-    </MenuCtx.Provider>
+    <div className="main-menu container">
+      <AsideOpenProvider>
+        <SideMenu {...menuProps} />
+        <NoteList {...menuProps} />
+      </AsideOpenProvider>
+    </div>
   );
 }

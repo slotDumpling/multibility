@@ -1,6 +1,5 @@
 import { Button, ButtonProps, Dropdown, Input, Menu, Popconfirm } from "antd";
-import { FC, useContext } from "react";
-import { MenuCtx } from "../Menu";
+import { FC } from "react";
 import {
   SwapOutlined,
   TagsOutlined,
@@ -14,30 +13,33 @@ import {
 } from "@ant-design/icons";
 import { Setter } from "lib/hooks";
 import { ColorCirle } from "component/ColorCircle";
+import { deleteNote, moveNoteTag, NoteTag } from "lib/note/archive";
+import { Set } from "immutable";
+import { MenuProps } from "../Menu";
+import { NoteInfo } from "lib/note/note";
 
-export const ListTools: FC<{
-  sortType: string;
-  setSortType: Setter<string>;
-  editing: boolean;
-  setEditing: Setter<boolean>;
-  searchText: string;
-  setSearchText: Setter<string>;
-  onDelete: () => void;
-  onMove: (tagID: string) => void;
-  disabled: boolean;
-}> = ({
+export const ListTools: FC<
+  {
+    sortType: string;
+    setSortType: Setter<string>;
+    editing: boolean;
+    setEditing: Setter<boolean>;
+    searchText: string;
+    setSearchText: Setter<string>;
+    selectedNotes: Set<string>;
+  } & MenuProps
+> = ({
   sortType,
   setSortType,
   editing,
   setEditing,
   searchText,
   setSearchText,
-  onDelete,
-  onMove,
-  disabled = true,
+  selectedNotes,
+  setAllNotes,
+  setAllTags,
+  allTags,
 }) => {
-  const { allTags } = useContext(MenuCtx);
-
   const sortMenu = (
     <Menu
       onClick={({ key }) => setSortType(key)}
@@ -67,11 +69,36 @@ export const ListTools: FC<{
       />
     </Dropdown>
   );
+  const disabled = selectedNotes.size === 0;
+
+  const deleteNotes = async () => {
+    let tags: Record<string, NoteTag> | undefined;
+    let allNotes: Record<string, NoteInfo> | undefined;
+    for (let uid of selectedNotes.toArray()) {
+      const res = await deleteNote(uid);
+      tags = res.tags;
+      allNotes = res.allNotes;
+    }
+    tags && setAllTags(tags);
+    allNotes && setAllNotes(allNotes);
+  };
+
+  const moveNotes = async (tagID: string) => {
+    let tags: Record<string, NoteTag> | undefined;
+    let allNotes: Record<string, NoteInfo> | undefined;
+    for (let noteID of selectedNotes.toArray()) {
+      const res = await moveNoteTag(noteID, tagID);
+      tags = res.tags;
+      allNotes = res.allNotes;
+    }
+    tags && setAllTags(tags);
+    allNotes && setAllNotes(allNotes);
+  };
 
   const deleteButton = (
     <Popconfirm
       title="Notes will be deleted."
-      onConfirm={onDelete}
+      onConfirm={deleteNotes}
       icon={<DeleteOutlined />}
       placement="bottom"
       cancelText="Cancel"
@@ -105,7 +132,7 @@ export const ListTools: FC<{
 
   const overlay = (
     <Menu
-      onClick={({ key }) => onMove(key)}
+      onClick={({ key }) => moveNotes(key)}
       items={[
         {
           key: "DEFAULT",

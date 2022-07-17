@@ -1,7 +1,6 @@
 import { Button, Popover } from "antd";
 import { MenuOutlined, FormOutlined, TeamOutlined } from "@ant-design/icons";
-import { FC, useContext, useState } from "react";
-import { MenuCtx } from "../Menu";
+import { FC, useState } from "react";
 import { createEmptyNote } from "lib/note/note";
 import { createNewNote } from "lib/note/archive";
 import { useNavigate } from "react-router-dom";
@@ -9,18 +8,18 @@ import { getNoteID } from "lib/network/http";
 import { PasscodeInput } from "antd-mobile";
 import { OthersMenu } from "./Others";
 import { useAsideOpen } from "lib/hooks";
+import { MenuProps } from "../Menu";
 
-export const NoteNav: FC = () => {
+export const NoteNav: FC<MenuProps> = (props) => {
   return (
     <nav>
-      <Left />
-      <Right />
+      <Left {...props} />
+      <Right {...props} />
     </nav>
   );
 };
 
-const Left = () => {
-  const { allTags, currTagID } = useContext(MenuCtx);
+const Left: FC<MenuProps> = ({ allTags, currTagID }) => {
   const [, setAsideOpen] = useAsideOpen();
 
   const title = allTags[currTagID]?.name ?? "All notes";
@@ -39,19 +38,21 @@ const Left = () => {
   );
 };
 
-const Right = () => {
+const Right: FC<MenuProps> = (props) => {
   return (
     <div className="nav-right">
-      <NewNoteButton />
+      <NewNoteButton {...props} />
       <JoinTeamButton />
-      <OthersMenu />
+      <OthersMenu {...props} />
     </div>
   );
 };
 
-const NewNoteButton = () => {
-  const { currTagID, setAllTags, setAllNotes } = useContext(MenuCtx);
-
+const NewNoteButton: FC<MenuProps> = ({
+  currTagID,
+  setAllTags,
+  setAllNotes,
+}) => {
   async function addNewNote() {
     const note = createEmptyNote();
     note.tagID = currTagID;

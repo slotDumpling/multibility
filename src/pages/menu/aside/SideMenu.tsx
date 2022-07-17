@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import {
   MenuOutlined,
   PlusOutlined,
@@ -12,7 +12,7 @@ import { colors, getColorPalette, getRandomColor } from "lib/color";
 import { Setter, useAsideOpen } from "lib/hooks";
 import { SwipeDelete, SwipeDeleteProvider } from "component/SwipeDelete";
 import { ColorCirle } from "component/ColorCircle";
-import { MenuCtx } from "../Menu";
+import { MenuProps } from "../Menu";
 
 const TagInput: FC<{
   tagName: string;
@@ -46,9 +46,13 @@ const TagInput: FC<{
   );
 };
 
-const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
+const TagItem: FC<{ noteTag: NoteTag } & MenuProps> = ({
+  noteTag,
+  currTagID,
+  setAllTags,
+  setCurrTagID,
+}) => {
   const { uid, color, name, notes } = noteTag;
-  const { currTagID, setAllTags, setCurrTagID } = useContext(MenuCtx);
   const [tagName, setTagName] = useState(name);
   const [tagColor, setTagColor] = useState(color);
   const [tagEditing, setTagEditing] = useState(false);
@@ -144,10 +148,12 @@ const TagItem: FC<{ noteTag: NoteTag }> = ({ noteTag }) => {
   );
 };
 
-const NewTagItem: FC<{ setAdding: Setter<boolean> }> = ({ setAdding }) => {
+const NewTagItem: FC<{ setAdding: Setter<boolean> } & MenuProps> = ({
+  setAdding,
+  setAllTags,
+}) => {
   const [tagName, setTagName] = useState("");
   const [tagColor, setTagColor] = useState(getRandomColor());
-  const { setAllTags } = useContext(MenuCtx);
 
   const addTag = () => {
     const name = tagName.trim();
@@ -176,8 +182,8 @@ const NewTagItem: FC<{ setAdding: Setter<boolean> }> = ({ setAdding }) => {
   );
 };
 
-export const SideMenu = () => {
-  const { allTags, currTagID, allNotes, setCurrTagID } = useContext(MenuCtx);
+export const SideMenu: FC<MenuProps> = (props) => {
+  const { allTags, currTagID, allNotes, setCurrTagID } = props;
   const [adding, setAdding] = useState(false);
   const [asideOpen, setAsideOpen] = useAsideOpen();
 
@@ -222,10 +228,10 @@ export const SideMenu = () => {
           {allNoteTag}
           <SwipeDeleteProvider>
             {Object.values(allTags).map((tag) => (
-              <TagItem key={tag.uid} noteTag={tag} />
+              <TagItem key={tag.uid} noteTag={tag} {...props} />
             ))}
           </SwipeDeleteProvider>
-          {adding && <NewTagItem setAdding={setAdding} />}
+          {adding && <NewTagItem setAdding={setAdding} {...props} />}
         </div>
       </aside>
       <div
