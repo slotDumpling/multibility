@@ -1,6 +1,5 @@
-import { FC, useContext } from "react";
+import { FC } from "react";
 import { Button, message, Popover, ButtonProps, Segmented } from "antd";
-import { ReaderStateCtx } from "../Reader";
 import {
   BulbFilled,
   BulbOutlined,
@@ -18,8 +17,9 @@ import { useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
 export const HeaderMiddle: FC<{
   handleUndo: () => void;
   handleRedo: () => void;
-}> = ({ handleUndo, handleRedo }) => {
-  const { stateSet } = useContext(ReaderStateCtx);
+  undoable: boolean;
+  redoable: boolean;
+}> = ({ handleUndo, handleRedo, undoable, redoable }) => {
   const { mode, finger } = useDrawCtrl();
   const updateDrawCtrl = useUpdateDrawCtrl();
   const [forceLight, setForceLight] = useForceLight();
@@ -30,13 +30,13 @@ export const HeaderMiddle: FC<{
         type="text"
         icon={<UndoOutlined />}
         onClick={handleUndo}
-        disabled={!stateSet?.isUndoable()}
+        disabled={!undoable}
       />
       <Button
         type="text"
         icon={<RedoOutlined />}
         onClick={handleRedo}
-        disabled={!stateSet?.isRedoable()}
+        disabled={!redoable}
       />
       <Button
         type={finger ? "link" : "text"}

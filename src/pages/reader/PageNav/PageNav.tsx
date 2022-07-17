@@ -26,7 +26,7 @@ import {
   useActiveKey,
   useAsideOpen,
 } from "lib/hooks";
-import { ReaderStateCtx } from "../Reader";
+import { ReaderMethods, ReaderStates } from "../Reader";
 import PageWrapper from "component/PageWrapper";
 import { UserAvatar } from "component/UserAvatar";
 import { AddPageButton } from "../ReaderUtils";
@@ -40,16 +40,7 @@ import { NotePage } from "lib/note/note";
 import { TeamState } from "lib/draw/TeamState";
 import "./preview.sass";
 
-interface PreviewProps {
-  scrollPage: (pageID: string) => void;
-  switchPageMarked: (pageID: string) => void;
-  addPage: (prevPageID: string, copy?: boolean) => void;
-  addFinalPage: () => void;
-  deletePage: (pageID: string) => void;
-  saveReorder: (order: string[], push: boolean) => Promise<void>;
-}
-
-export const PageNav: FC<PreviewProps> = (props) => {
+export const PageNav: FC<ReaderMethods & ReaderStates> = (props) => {
   const [left, setLeft] = useState(false);
   const [asideOpen] = useAsideOpen();
 
@@ -96,7 +87,7 @@ export const PageNav: FC<PreviewProps> = (props) => {
   );
 };
 
-const PreviewCard: FC<{ left: boolean } & PreviewProps> = ({
+const PreviewCard: FC<{ left: boolean } & ReaderMethods & ReaderStates> = ({
   left,
   ...props
 }) => {
@@ -150,11 +141,11 @@ const PreviewCard: FC<{ left: boolean } & PreviewProps> = ({
   );
 };
 
-const PageList: FC<PreviewProps> = (props) => {
-  const { pageOrder, currPageID } = useContext(ReaderStateCtx);
+const PageList: FC<ReaderMethods & ReaderStates> = (props) => {
   const refRec = useRef<Record<string, HTMLElement>>({});
   const [activeKey] = useActiveKey();
   const [asideOpen] = useAsideOpen();
+  const { pageOrder, currPageID } = props;
   const { saveReorder, scrollPage, addFinalPage } = props;
 
   const onDragEnd = ({ source, destination }: DropResult) => {
@@ -205,9 +196,10 @@ const PagePreview: FC<
     uid: string;
     pageIndex: number;
     refRec: Record<string, HTMLElement>;
-  } & PreviewProps
+  } & ReaderMethods &
+    ReaderStates
 > = ({ uid, pageIndex, refRec, ...props }) => {
-  const { stateSet, pageRec, currPageID } = useContext(ReaderStateCtx);
+  const { stateSet, pageRec, currPageID } = props;
   const { teamState, ignores } = useContext(TeamCtx);
   const [activeKey] = useActiveKey();
   const [chosen, setChosen] = useState("");
@@ -293,7 +285,7 @@ const PreviewTools: FC<
     setChosen: Setter<string>;
     page: NotePage;
     userIDs: string[];
-  } & PreviewProps
+  } & ReaderMethods
 > = React.memo(({ uid, index, chosen, setChosen, page, userIDs, ...props }) => {
   const { switchPageMarked } = props;
   return (
@@ -342,7 +334,7 @@ const TeamAvatars: FC<{
   );
 };
 
-const PreviewOption: FC<{ uid: string } & PreviewProps> = ({
+const PreviewOption: FC<{ uid: string } & ReaderMethods> = ({
   uid,
   addPage,
   deletePage,

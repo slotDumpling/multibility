@@ -28,14 +28,22 @@ import { Map } from "immutable";
 import { message } from "antd";
 import "./reader.sass";
 
-export const ReaderStateCtx = React.createContext<{
+export interface ReaderStates {
   noteID: string;
   currPageID: string;
-  noteInfo?: NoteInfo;
   stateSet?: StateSet;
   pageRec?: Map<string, NotePage>;
   pageOrder?: string[];
-}>({ noteID: "", currPageID: "" });
+}
+
+export interface ReaderMethods {
+  scrollPage: (pageID: string) => void;
+  switchPageMarked: (pageID: string) => void;
+  addPage: (prevPageID: string, copy?: boolean) => void;
+  addFinalPage: () => void;
+  deletePage: (pageID: string) => void;
+  saveReorder: (order: string[], push: boolean) => Promise<void>;
+}
 
 export default function Reader() {
   const noteID = useParams().noteID ?? "";
@@ -179,6 +187,8 @@ export default function Reader() {
     newOrder?.length && saveReorder(newOrder, true);
   };
 
+  const readerStates = { noteID, pageRec, pageOrder, stateSet, currPageID };
+
   const renderResult = (
     <div className="reader container">
       <Header
@@ -186,6 +196,8 @@ export default function Reader() {
         instantSave={instantSave}
         handleUndo={() => updateStateSet((prev) => prev.undo())}
         handleRedo={() => updateStateSet((prev) => prev.redo())}
+        undoable={stateSet?.isUndoable() ?? false}
+        redoable={stateSet?.isRedoable() ?? false}
       />
       <main>
         {pageOrder?.map((uid) => (
@@ -194,6 +206,7 @@ export default function Reader() {
               uid={uid}
               updateStateSet={updateStateSet}
               setInviewRatios={setInviewRatios}
+              {...readerStates}
             />
           </section>
         ))}
@@ -206,37 +219,36 @@ export default function Reader() {
         deletePage={deletePage}
         saveReorder={saveReorder}
         switchPageMarked={switchPageMarked}
+        {...readerStates}
       />
     </div>
   );
 
   return (
-    <DarkModeProvider>
-      <ReaderStateCtx.Provider
-        value={{
-          noteID,
-          pageRec,
-          noteInfo,
-          stateSet,
-          pageOrder,
-          currPageID,
-        }}
-      >
-        <DrawCtrlProvider>
-          <AsideOpenProvider>{renderResult}</AsideOpenProvider>
-        </DrawCtrlProvider>
-      </ReaderStateCtx.Provider>
-    </DarkModeProvider>
+    <AsideOpenProvider>
+      <DarkModeProvider>
+        <DrawCtrlProvider>{renderResult}</DrawCtrlProvider>
+      </DarkModeProvider>
+    </AsideOpenProvider>
   );
 }
 
-const PageContainer: FC<{
-  uid: string;
-  updateStateSet: (cb: (prevSS: StateSet) => StateSet) => void;
-  setInviewRatios: Setter<Map<string, number>>;
-}> = ({ uid, updateStateSet, setInviewRatios }) => {
-  const { pageRec, stateSet, currPageID, pageOrder, noteID } =
-    useContext(ReaderStateCtx);
+const PageContainer: FC<
+  {
+    uid: string;
+    updateStateSet: (cb: (prevSS: StateSet) => StateSet) => void;
+    setInviewRatios: Setter<Map<string, number>>;
+  } & ReaderStates
+> = ({
+  uid,
+  updateStateSet,
+  setInviewRatios,
+  pageRec,
+  stateSet,
+  currPageID,
+  pageOrder,
+  noteID,
+}) => {
   const { teamState, ignores } = useContext(TeamCtx);
 
   const page = pageRec?.get(uid);

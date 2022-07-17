@@ -1,9 +1,8 @@
 import { FC, useMemo, useState, useEffect, useContext } from "react";
 import { Badge, Alert, Modal, Button, Divider, message, Popover } from "antd";
 import Search from "antd/lib/input/Search";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { PasscodeInput } from "antd-mobile";
-import { ReaderStateCtx } from "../Reader";
 import { TeamCtx } from "../Team";
 import { getUserID, saveUserName } from "lib/user";
 import {
@@ -108,13 +107,10 @@ const UserCard: FC<{ userID: string }> = ({ userID }) => {
 const RoomInfo: FC = () => {
   const { code, userRec, connected, loadInfo, loadState, resetIO } =
     useContext(TeamCtx);
-  const { noteInfo } = useContext(ReaderStateCtx);
   const link = window.location.href;
   const share = async () => {
-    const selfName = userRec[getUserID()]?.userName;
     try {
-      if (!noteInfo) return;
-      await copy(`${noteInfo.name} - ${selfName} - Multibility\n${link}`);
+      await copy(`${document.title}\n${link}`);
       message.destroy("copy");
       message.success({
         content: "Link copied!",
@@ -226,7 +222,7 @@ const RoomInfo: FC = () => {
 const JoinRoom: FC<{
   instantSave: () => Promise<void> | undefined;
 }> = ({ instantSave }) => {
-  const { noteID } = useContext(ReaderStateCtx);
+  const noteID = useParams().noteID ?? "";
   const nav = useNavigate();
 
   const createRoom = async () => {

@@ -8,11 +8,13 @@ export const Header: FC<{
   saved: boolean;
   handleUndo: () => void;
   handleRedo: () => void;
+  undoable: boolean;
+  redoable: boolean;
   instantSave: () => Promise<void> | undefined;
-}> = ({ saved, handleUndo, handleRedo, instantSave }) => (
+}> = ({ saved, instantSave, ...undoProps }) => (
   <header>
     <HeaderLeft saved={saved} instantSave={instantSave} />
-    <HeaderMiddle handleUndo={handleUndo} handleRedo={handleRedo} />
+    <HeaderMiddle {...undoProps} />
     <HeaderRight instantSave={instantSave} />
   </header>
 );
