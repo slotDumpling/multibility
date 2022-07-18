@@ -56,10 +56,8 @@ export default function Reader() {
   const [saved, setSaved] = useSafeState(true);
 
   const { io, teamOn, addTeamStatePage } = useContext(TeamCtx);
-  const { setInviewRatios, scrollPage, sectionRef, currPageID } = useScrollPage(
-    noteID,
-    pageOrder
-  );
+  const { setInviewRatios, scrollPage, sectionRef, currPageID, scrolling } =
+    useScrollPage(noteID, pageOrder);
 
   useEffect(() => {
     (async () => {
@@ -206,6 +204,7 @@ export default function Reader() {
               uid={uid}
               updateStateSet={updateStateSet}
               setInviewRatios={setInviewRatios}
+              scrolling={scrolling}
               {...readerStates}
             />
           </section>
@@ -238,11 +237,13 @@ const PageContainer: FC<
     uid: string;
     updateStateSet: (cb: (prevSS: StateSet) => StateSet) => void;
     setInviewRatios: Setter<Map<string, number>>;
+    scrolling: boolean;
   } & ReaderStates
 > = ({
   uid,
   updateStateSet,
   setInviewRatios,
+  scrolling,
   pageRec,
   stateSet,
   currPageID,
@@ -254,14 +255,14 @@ const PageContainer: FC<
   const page = pageRec?.get(uid);
   const drawState = stateSet?.getOneState(uid);
   const teamStateMap = teamState?.getOnePageStateMap(uid);
-  const updateState = (ds: DrawState) => {
+  const updateState = useEvent((ds: DrawState) => {
     updateStateSet((prev) => prev.setState(uid, ds));
-  };
+  });
 
-  const onViewChange = (visible: boolean, ratio: number) => {
-    if (!visible) return setInviewRatios((prev) => prev.delete(uid));
+  const onViewChange = useEvent((ratio: number) => {
+    if (!ratio) return setInviewRatios((prev) => prev.delete(uid));
     setInviewRatios((prev) => prev.set(uid, ratio));
-  };
+  });
 
   const preload = useMemo(() => {
     if (!pageOrder) return false;
@@ -281,6 +282,7 @@ const PageContainer: FC<
       ignores={ignores}
       onViewChange={onViewChange}
       preload={preload}
+      skipInView={scrolling}
     />
   );
 };

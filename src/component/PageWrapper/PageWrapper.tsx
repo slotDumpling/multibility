@@ -24,7 +24,7 @@ const PageWrapperRaw: FC<{
   pdfIndex?: number;
   noteID?: string;
   updateState?: (ds: DrawState) => void;
-  onViewChange?: (visible: boolean, ratio: number) => void;
+  onViewChange?: (ratio: number) => void;
   preview?: boolean;
   preload?: boolean;
   ignores?: Set<string>;
@@ -45,8 +45,9 @@ const PageWrapperRaw: FC<{
   const threshold = onViewChange && range(0, 1.2, 0.2);
   const [ref, visible, entry] = useInView({ threshold, skip: skipInView });
   useEffect(() => {
-    if (!entry || !visible) return onViewChange?.(false, 0);
-    onViewChange?.(true, entry.intersectionRatio);
+    if (!onViewChange) return;
+    if (!entry || !visible) return onViewChange(0);
+    onViewChange(entry.intersectionRatio);
   }, [visible, entry, onViewChange]);
 
   const [fullImg, setFullImg] = useState<string>();

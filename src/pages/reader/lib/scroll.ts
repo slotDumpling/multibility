@@ -1,8 +1,12 @@
 import { useDebugValue, useEffect, useMemo, useRef, useState } from "react";
 import localforage from "localforage";
 import { Map } from "immutable";
+import { debounce } from "lodash";
 
 const scrollForage = localforage.createInstance({ name: "scroll" });
+const persistScroll = debounce((noteID: string, currPageID: string) => {
+  scrollForage.setItem(noteID, currPageID);
+}, 5000);
 
 export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
   const [refMap, setRefMap] = useState(Map<string, HTMLElement>());
@@ -33,7 +37,7 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
 
   useEffect(() => {
     if (!scrolled.current) return;
-    scrollForage.setItem(noteID, currPageID);
+    persistScroll(noteID, currPageID);
   }, [noteID, currPageID]);
 
   const sectionRef = (pageID: string) => (el: HTMLElement | null) => {
@@ -41,11 +45,24 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
     setRefMap((prev) => prev.set(pageID, el));
   };
 
+  const taskID = useRef(0);
+  const [scrolling, setScrolling] = useState(false);
   const scrollPage = (pageID: string) => {
-    refMap.get(pageID)?.scrollIntoView();
+    const handleScroll = () => {
+      cancelAnimationFrame(taskID.current);
+      requestAnimationFrame(() => {
+        taskID.current = requestAnimationFrame(() => {
+          setScrolling(false);
+          document.removeEventListener("scroll", handleScroll);
+        });
+      });
+    };
+    setScrolling(true);
+    document.addEventListener("scroll", handleScroll);
+    refMap.get(pageID)?.scrollIntoView({ behavior: "smooth" });
   };
 
-  return { scrollPage, setInviewRatios, sectionRef, currPageID };
+  return { scrollPage, setInviewRatios, sectionRef, currPageID, scrolling };
 }
 
 const largestKey = (map: Map<string, number>, order: string[]) => {
