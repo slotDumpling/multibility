@@ -120,4 +120,7 @@ export class TeamState {
         .keys()
     );
   }
+  static isEmpty(teamStateMap?: Map<string, DrawState>) {
+    return !teamStateMap || teamStateMap.every((ds) => ds.isEmpty());
+  }
 }

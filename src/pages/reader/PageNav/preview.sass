@@ -5,7 +5,7 @@ $card-width: 200px
 .preview-drop
   @include inset(0, 0, 0, 0)
   position: fixed
-  z-index: 1000
+  z-index: 800
   display: flex
   justify-content: space-between
   pointer-events: none
@@ -91,12 +91,10 @@ $card-width: 200px
         transition: transform $speed !important
       &::before
         @include pseudo-el
-        z-index: -1
         box-shadow: $shadow-2-down
-        opacity: 0
         transition: opacity $speed
-      &[data-dragged=true]::before
-        opacity: 1
+      &[data-dragged=false]::before
+        opacity: 0
       .bookmark
         position: absolute
         top: -10px
@@ -106,15 +104,14 @@ $card-width: 200px
         cursor: pointer
         &::after
           @include pseudo-el(10px, 10px, 10px, 10px)
-          @include back-blur(#ddd)
           clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 75%, 0 100%)
           background-color: #ddd
           transition: background $speed
         &[data-marked=true]::after
           background-color: $blue-color
       @mixin page-corner
-        @include back-blur
         position: absolute
+        background-color: #fff
         padding: 0 .5em
       .index
         @include page-corner

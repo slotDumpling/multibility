@@ -40,7 +40,8 @@ import { NotePage } from "lib/note/note";
 import { TeamState } from "lib/draw/TeamState";
 import "./preview.sass";
 
-export const PageNav: FC<ReaderMethods & ReaderStates> = (props) => {
+type PreviewProps = ReaderMethods & ReaderStates;
+export const PageNav: FC<PreviewProps> = (props) => {
   const [left, setLeft] = useState(false);
   const [asideOpen] = useAsideOpen();
 
@@ -68,7 +69,7 @@ export const PageNav: FC<ReaderMethods & ReaderStates> = (props) => {
       >
         <Droppable droppableId="preview-drop" direction="horizontal">
           {({ droppableProps, innerRef, placeholder }, { isDraggingOver }) => (
-            <div
+            <aside
               className="preview-drop"
               data-left={left}
               data-open={asideOpen}
@@ -79,7 +80,7 @@ export const PageNav: FC<ReaderMethods & ReaderStates> = (props) => {
               {opposite}
               <PreviewCard left={left} {...props} />
               {placeholder}
-            </div>
+            </aside>
           )}
         </Droppable>
       </DragDropContext>
@@ -87,7 +88,7 @@ export const PageNav: FC<ReaderMethods & ReaderStates> = (props) => {
   );
 };
 
-const PreviewCard: FC<{ left: boolean } & ReaderMethods & ReaderStates> = ({
+const PreviewCard: FC<{ left: boolean } & PreviewProps> = ({
   left,
   ...props
 }) => {
@@ -110,9 +111,6 @@ const PreviewCard: FC<{ left: boolean } & ReaderMethods & ReaderStates> = ({
     swipeDuration: 200,
   });
 
-  const previewTabs = useMemo(() => <PreviewTabs />, []);
-  const pageList = useMemo(() => <PageList {...props} />, [props]);
-
   return (
     <Draggable draggableId={"CARD"} index={left ? 0 : 1}>
       {(
@@ -133,72 +131,76 @@ const PreviewCard: FC<{ left: boolean } & ReaderMethods & ReaderStates> = ({
         >
           <div className="drag-handle" {...dragHandleProps} />
           <h3>{title}</h3>
-          {previewTabs}
-          {pageList}
+          <PreviewTabs />
+          <PageList cardDragged={isDragging} {...props} />
         </div>
       )}
     </Draggable>
   );
 };
 
-const PageList: FC<ReaderMethods & ReaderStates> = (props) => {
-  const refRec = useRef<Record<string, HTMLElement>>({});
-  const [activeKey] = useActiveKey();
-  const [asideOpen] = useAsideOpen();
-  const { pageOrder, currPageID } = props;
-  const { saveReorder, scrollPage, addFinalPage } = props;
+const PageList: FC<PreviewProps & { cardDragged: boolean }> = React.memo(
+  ({ cardDragged, ...props }) => {
+    const refRec = useRef<Record<string, HTMLElement>>({});
+    const [activeKey] = useActiveKey();
+    const [asideOpen] = useAsideOpen();
+    const { pageOrder, currPageID } = props;
+    const { saveReorder, scrollPage, addFinalPage } = props;
 
-  const onDragEnd = ({ source, destination }: DropResult) => {
-    if (!destination || !pageOrder) return;
-    const { index: fromIndex } = source;
-    const { index: toIndex } = destination;
-    const pageID = pageOrder[fromIndex];
-    if (fromIndex === toIndex || !pageID) return;
-    const newOrder = exchange(pageOrder, fromIndex, toIndex);
-    saveReorder(newOrder, true);
-    requestAnimationFrame(() => scrollPage(pageID));
-  };
+    const onDragEnd = ({ source, destination }: DropResult) => {
+      if (!destination || !pageOrder) return;
+      const { index: fromIndex } = source;
+      const { index: toIndex } = destination;
+      const pageID = pageOrder[fromIndex];
+      if (fromIndex === toIndex || !pageID) return;
+      const newOrder = exchange(pageOrder, fromIndex, toIndex);
+      saveReorder(newOrder, true);
+      requestAnimationFrame(() => scrollPage(pageID));
+    };
 
-  const initScroll = useEvent(() => {
-    refRec.current[currPageID]?.scrollIntoView();
-  });
-  useLayoutEffect(() => {
-    if (asideOpen) initScroll();
-  }, [asideOpen, initScroll]);
+    const initScroll = useEvent(() => {
+      refRec.current[currPageID]?.scrollIntoView();
+    });
+    useLayoutEffect(() => {
+      if (asideOpen) initScroll();
+    }, [asideOpen, initScroll]);
 
-  return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId="preview-list">
-        {({ droppableProps, innerRef, placeholder }) => (
-          <div className="page-list" ref={innerRef} {...droppableProps}>
-            {pageOrder?.map((uid, index) => (
-              <PagePreview
-                key={uid}
-                uid={uid}
-                pageIndex={index}
-                refRec={refRec.current}
-                {...props}
-              />
-            ))}
-            {placeholder}
-            {activeKey === "ALL" && (
-              <AddPageButton addFinalPage={addFinalPage} />
-            )}
-          </div>
-        )}
-      </Droppable>
-    </DragDropContext>
-  );
-};
+    return (
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="preview-list">
+          {({ droppableProps, innerRef, placeholder }) => (
+            <div className="page-list" ref={innerRef} {...droppableProps}>
+              {pageOrder?.map((uid, index) => (
+                <PagePreview
+                  key={uid}
+                  uid={uid}
+                  pageIndex={index}
+                  refRec={refRec.current}
+                  cardDragged={cardDragged}
+                  {...props}
+                />
+              ))}
+              {placeholder}
+              {activeKey === "ALL" && (
+                <AddPageButton addFinalPage={addFinalPage} />
+              )}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+    );
+  }
+);
+PageList.displayName = "PageList";
 
 const PagePreview: FC<
   {
     uid: string;
     pageIndex: number;
     refRec: Record<string, HTMLElement>;
-  } & ReaderMethods &
-    ReaderStates
-> = ({ uid, pageIndex, refRec, ...props }) => {
+    cardDragged: boolean;
+  } & PreviewProps
+> = ({ uid, pageIndex, refRec, cardDragged, ...props }) => {
   const { stateSet, pageRec, currPageID } = props;
   const { teamState, ignores } = useContext(TeamCtx);
   const [activeKey] = useActiveKey();
@@ -224,7 +226,7 @@ const PagePreview: FC<
   if (
     activeKey === "WRITTEN" &&
     drawState.isEmpty() &&
-    (!teamStateMap || teamStateMap.every((ds) => ds.isEmpty()))
+    TeamState.isEmpty(teamStateMap)
   ) {
     return null;
   }
@@ -261,6 +263,7 @@ const PagePreview: FC<
             thumbnail={page.image}
             ignores={ignores}
             preview
+            skipInView={isDragging || cardDragged}
           />
           <PreviewTools
             uid={uid}
@@ -379,7 +382,7 @@ const PreviewOption: FC<{ uid: string } & ReaderMethods> = ({
   );
 };
 
-const PreviewTabs: FC = () => {
+const PreviewTabs: FC = React.memo(() => {
   const [activeKey, setActiveKey] = useActiveKey();
   const { TabPane } = Tabs;
   return (
@@ -396,4 +399,5 @@ const PreviewTabs: FC = () => {
       <TabPane tab={<IconFont type="icon-write" />} key="WRITTEN" />
     </Tabs>
   );
-};
+});
+PreviewTabs.displayName = "PreviewTabs";

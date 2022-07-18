@@ -28,6 +28,7 @@ const PageWrapperRaw: FC<{
   preview?: boolean;
   preload?: boolean;
   ignores?: Set<string>;
+  skipInView?: boolean;
 }> = ({
   thumbnail,
   drawState,
@@ -39,9 +40,10 @@ const PageWrapperRaw: FC<{
   onViewChange,
   preload = false,
   ignores = Set<string>(),
+  skipInView = false,
 }) => {
   const threshold = onViewChange && range(0, 1.2, 0.2);
-  const [ref, visible, entry] = useInView({ threshold });
+  const [ref, visible, entry] = useInView({ threshold, skip: skipInView });
   useEffect(() => {
     if (!entry || !visible) return onViewChange?.(false, 0);
     onViewChange?.(true, entry.intersectionRatio);
