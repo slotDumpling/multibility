@@ -442,7 +442,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     };
 
     const deleteSelected = () => {
-      setChosenIDs([]);
       resetSelect();
       if (!chosenIDs.length) return;
       onChange((prev) => DrawState.eraseStrokes(prev, chosenIDs));
@@ -464,6 +463,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       copies.forEach((item) => item.translate(transP));
       rect?.translate(transP);
       path?.translate(transP);
+      rotateHandle?.translate(transP);
 
       const mutations: Mutation[] = copies.map((item) => [
         DrawState.getUid(),
