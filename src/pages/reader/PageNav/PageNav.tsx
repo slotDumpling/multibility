@@ -5,7 +5,6 @@ import React, {
   useState,
   useContext,
   useLayoutEffect,
-  useEffect,
 } from "react";
 import {
   MoreOutlined,
@@ -163,7 +162,7 @@ const PageList: FC<PreviewProps & { cardDragged: boolean }> = React.memo(
     });
     useLayoutEffect(() => {
       if (asideOpen) initScroll();
-    }, [asideOpen, initScroll]);
+    }, [asideOpen, activeKey, initScroll]);
 
     return (
       <DragDropContext onDragEnd={onDragEnd}>
@@ -201,7 +200,7 @@ const PagePreview: FC<
     cardDragged: boolean;
   } & PreviewProps
 > = ({ uid, pageIndex, refRec, cardDragged, ...props }) => {
-  const { stateSet, pageRec, currPageID } = props;
+  const { stateSet, pageRec, currPageID, scrollPage } = props;
   const { teamState, ignores } = useContext(TeamCtx);
   const [activeKey] = useActiveKey();
   const [chosen, setChosen] = useState("");
@@ -211,9 +210,11 @@ const PagePreview: FC<
   const teamStateMap = teamState?.getOnePageStateMap(uid);
 
   const marked = useRef(false);
-  useEffect(() => {
-    if (activeKey !== "MARKED") marked.current = false;
-  }, [activeKey]);
+  if (activeKey === "MARKED") {
+    marked.current = page?.marked || marked.current;
+  } else {
+    marked.current = false;
+  }
 
   const userIDs = useMemo(
     () => TeamState.getValidUsers(teamStateMap, ignores),
@@ -221,7 +222,6 @@ const PagePreview: FC<
   );
 
   if (!page || !drawState) return null;
-  marked.current = page.marked || marked.current;
 
   if (
     activeKey === "WRITTEN" &&
@@ -232,7 +232,6 @@ const PagePreview: FC<
   }
   if (activeKey === "MARKED" && !marked.current) return null;
   const curr = currPageID === uid;
-  const { scrollPage } = props;
 
   return (
     <Draggable
