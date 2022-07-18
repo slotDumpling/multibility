@@ -40,6 +40,8 @@ interface DrawPropType {
   imgSrc?: string;
 }
 
+const HIT_TOLERANCE = 20;
+
 const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
   (
     {
@@ -70,7 +72,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
       scp.setup(cvs);
       scp.settings.handleSize = 10;
-      scp.settings.hitTolerance = 20;
+      scp.settings.hitTolerance = HIT_TOLERANCE;
       [0, 1, 2].forEach(() => scp.project.addLayer(new Layer()));
       scp.project.layers.forEach((l) => (l.visible = false));
       scp.project.layers[2]?.activate();
@@ -225,7 +227,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       select: lasso ? dragPath : resizeRect,
       selected(e: paper.MouseEvent) {
         const hitRes = hitRef.current;
-        if (hitRes?.segment && rect) {
+        if (hitRes?.segment && rect && rotateHandle) {
           const segment = hitRes.segment;
           const rotating = segment.selected;
           if (rotating) {
@@ -236,7 +238,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
             setCursor(getRotateCurcor(line.angle));
             const angle = line.angle - axis.angle;
             rect.rotate(angle, center);
-            rotateHandle?.rotate(angle, center);
+            rotateHandle.rotate(angle, center);
             chosenItems.forEach((item) => item?.rotate(angle, center));
           } else {
             // resize selected items
@@ -248,11 +250,14 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
             if (scale < 0) return;
 
             rect.scale(scale, baseP);
-            rotateHandle?.scale(scale, baseP);
             chosenItems.forEach((item) => {
               item.scale(scale, baseP);
               item.strokeWidth *= scale;
             });
+            rotateHandle.scale(scale, baseP);
+            const rBaseP = rotateHandle.segments[0]?.point;
+            if (!rBaseP) return;
+            rotateHandle.scale(100 / rotateHandle.length, rBaseP);
           }
         } else {
           // move selected items
@@ -544,6 +549,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         dScale = Math.pow(dScale, 1 / aniCount);
         const scaleView = () => {
           view.scale(dScale, originPorjP);
+          scope.current.settings.hitTolerance /= dScale;
           if (--aniCount > 0) requestAnimationFrame(scaleView);
           else if (last) putCenterBack(view, new Size(width, height));
         };
