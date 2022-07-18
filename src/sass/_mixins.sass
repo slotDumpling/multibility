@@ -31,7 +31,7 @@
 
 @mixin back-blur($color: #fff)
   background-color: $color
-  @supports (backdrop-filter: none)
+  @supports (backdrop-filter: none) and (-webkit-touch-callout: none)
     background-color: transparentize($color, 0.2)
     backdrop-filter: blur(20px) saturate(180%)
 
