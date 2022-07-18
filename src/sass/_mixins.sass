@@ -51,9 +51,6 @@
   @media (prefers-color-scheme: dark)
     @content
 
-@mixin overlay-scroll
+@mixin y-scroll
   overflow: hidden auto
   overscroll-behavior: contain
-  @supports (overflow: overlay)
-    @include for-desktop
-      overflow: hidden overlay
