@@ -13,7 +13,7 @@ import { DarkModeProvider } from "lib/Dark";
 import { useMemoizedFn as useEvent, useSafeState } from "ahooks";
 import { SetOperation, StateSet } from "lib/draw/StateSet";
 import { loadNote, editNoteData } from "lib/note/archive";
-import { AddPageButton, showPageDelMsg } from "./ReaderUtils";
+import { showPageDelMsg } from "./tools/Messages";
 import { useParams, useNavigate } from "react-router-dom";
 import PageWrapper from "component/PageWrapper";
 import { DrawState } from "lib/draw/DrawState";
@@ -27,6 +27,7 @@ import { TeamCtx } from "./Team";
 import { Map } from "immutable";
 import { message } from "antd";
 import "./reader.sass";
+import { AddPageButton } from "./tools/AddButton";
 
 export interface ReaderStates {
   noteID: string;

@@ -28,7 +28,6 @@ import {
 import { ReaderMethods, ReaderStates } from "../Reader";
 import PageWrapper from "component/PageWrapper";
 import { UserAvatar } from "component/UserAvatar";
-import { AddPageButton } from "../ReaderUtils";
 import { exchange } from "../lib/array";
 import IconFont from "component/IconFont";
 import classNames from "classnames";
@@ -38,6 +37,7 @@ import { useSwipeable } from "react-swipeable";
 import { NotePage } from "lib/note/note";
 import { TeamState } from "lib/draw/TeamState";
 import "./preview.sass";
+import { AddPageButton } from "../tools/AddButton";
 
 type PreviewProps = ReaderMethods & ReaderStates;
 export const PageNav: FC<PreviewProps> = (props) => {

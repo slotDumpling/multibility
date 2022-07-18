@@ -4,9 +4,9 @@ import {
   loadTeamNoteInfo,
   updatePages,
 } from "lib/network/http";
-import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
 import { IoFactory, NewPageInfo } from "lib/network/io";
 import { useNavigate, useParams } from "react-router-dom";
+import { showJoinMsg, showLeaveMsg } from "./tools/Messages";
 import { TeamState } from "lib/draw/TeamState";
 import { getUserID, UserInfo } from "lib/user";
 import { NotePage } from "lib/note/note";
@@ -147,21 +147,3 @@ export default function Team() {
     </Loading>
   );
 }
-
-const showJoinMsg = (userID: string, userName: string) => {
-  message.destroy(userID);
-  message.success({
-    content: `${userName} joined the room`,
-    icon: <LoginOutlined />,
-    key: userID,
-  });
-};
-
-const showLeaveMsg = (userID: string, userName: string) => {
-  message.destroy(userID);
-  message.warning({
-    content: `${userName} leaved the room`,
-    icon: <LogoutOutlined />,
-    key: userID,
-  });
-};
