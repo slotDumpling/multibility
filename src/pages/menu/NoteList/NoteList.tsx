@@ -13,7 +13,7 @@ import { getCachedTeamState } from "lib/network/http";
 import { TeamState } from "lib/draw/TeamState";
 import { getColorPalette } from "lib/color";
 import classNames from "classnames";
-import { NoteNav, ListTools } from "../header";
+import { NoteNav, ListTools } from "../Header";
 import dayjs from "dayjs";
 import calender from "dayjs/plugin/calendar";
 import { MenuProps } from "../Menu";

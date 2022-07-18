@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { getAllNotes, getAllTags, NoteTag } from "lib/note/archive";
 import { NoteInfo } from "lib/note/note";
 import { AsideOpenProvider, Setter } from "lib/hooks";
-import { SideMenu } from "./aside";
-import { NoteList } from "./notes";
+import { SideMenu } from "./Aside";
+import { NoteList } from "./NoteList";
 
 export interface MenuProps {
   currTagID: string;

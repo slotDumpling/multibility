@@ -22,12 +22,12 @@ import { debounce, last } from "lodash-es";
 import { insertAfter } from "./lib/array";
 import { PageNav } from "./PageNav";
 import { AsideOpenProvider, Setter } from "lib/hooks";
-import { Header } from "./header";
+import { AddPageButton } from "./tools/AddButton";
+import { Header } from "./Header";
 import { TeamCtx } from "./Team";
 import { Map } from "immutable";
 import { message } from "antd";
 import "./reader.sass";
-import { AddPageButton } from "./tools/AddButton";
 
 export interface ReaderStates {
   noteID: string;
