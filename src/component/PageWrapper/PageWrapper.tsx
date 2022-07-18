@@ -9,13 +9,12 @@ import React, {
 import { useDrawCtrl } from "lib/draw/DrawCtrl";
 import { useForceLight } from "lib/Dark";
 import { useMemoizedFn as useEvent } from "ahooks";
-import { Draw, ActiveToolKey, DrawRefType } from "component/draw";
+import { Draw, ActiveToolKey, DrawRefType } from "component/Draw";
 import { SelectTool, TextTool } from "pages/reader/tools/DrawTools";
 import { once, range } from "lodash-es";
 import { useInView } from "react-intersection-observer";
 import { DrawState } from "lib/draw/DrawState";
 import { Map, Set } from "immutable";
-import "./page-wrapper.sass";
 
 const PageWrapperRaw: FC<{
   drawState: DrawState;

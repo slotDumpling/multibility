@@ -1,4 +1,4 @@
-import React, {
+import {
   FC,
   useRef,
   useState,
@@ -10,7 +10,6 @@ import { Setter, useTransitionEnd } from "lib/hooks";
 import { useSwipeable } from "react-swipeable";
 import classNames from "classnames";
 import { v4 as getUid } from "uuid";
-import "./swipe-delete.sass";
 
 const SwipeCtx = createContext<[string, Setter<string>]>(["", () => {}]);
 

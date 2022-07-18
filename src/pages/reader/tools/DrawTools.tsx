@@ -16,7 +16,7 @@ import { ColorSelect, PenPanel } from "./PenPanel";
 import { useForceLight } from "lib/Dark";
 import TextArea from "antd/lib/input/TextArea";
 import { allColors } from "lib/color";
-import { DrawRefType } from "component/draw/Draw";
+import { DrawRefType } from "component/Draw";
 import { createPortal } from "react-dom";
 import { saveAs } from "file-saver";
 import "./drawTools.sass";

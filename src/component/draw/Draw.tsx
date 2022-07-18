@@ -15,9 +15,8 @@ import useSize from "@react-hook/size";
 import { DrawState, Mutation, Splitter, Stroke } from "lib/draw/DrawState";
 import { defaultDrawCtrl, DrawCtrl } from "lib/draw/DrawCtrl";
 import { releaseCanvas } from "lib/draw/canvas";
-import { getCircleCursor, getRotateCurcor } from "./cursor/cursor";
+import { getCircleCursor, getRotateCurcor } from "./cursor";
 import { usePreventTouch, usePreventGesture } from "./touch";
-import "./draw.sass";
 
 const { Path, Size, Point, Group, Color, Raster, Layer } = paper;
 

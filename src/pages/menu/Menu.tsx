@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getAllNotes, getAllTags, NoteTag } from "lib/note/archive";
 import { NoteInfo } from "lib/note/note";
 import { AsideOpenProvider, Setter } from "lib/hooks";
