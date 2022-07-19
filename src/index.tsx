@@ -1,10 +1,10 @@
 import React, { LazyExoticComponent, Suspense } from "react";
+import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import { Loading, Page404 } from "./component/Loading";
 import { loadDarkMode } from "./lib/Dark";
 import Test from "./pages/test";
-import ReactDOM from "react-dom";
 import "./index.sass";
 
 const MainMenu = React.lazy(() => import("pages/menu"));
@@ -16,7 +16,9 @@ const SuspendLazy = (Component: LazyExoticComponent<() => JSX.Element>) => (
   </Suspense>
 );
 
-ReactDOM.render(
+const root = createRoot(document.getElementById("root")!);
+
+root.render(
   <HashRouter>
     <Routes>
       <Route path="/" element={SuspendLazy(MainMenu)} />
@@ -29,8 +31,7 @@ ReactDOM.render(
       <Route path="/test" element={<Test />} />
       <Route path="*" element={<Page404 />} />
     </Routes>
-  </HashRouter>,
-  document.getElementById("root")
+  </HashRouter>
 );
 
 loadDarkMode();
