@@ -1,6 +1,7 @@
 import localforage from "localforage";
 import React, {
   FC,
+  PropsWithChildren,
   useContext,
   useDebugValue,
   useEffect,
@@ -60,7 +61,7 @@ export function useUpdateDrawCtrl() {
   return updateDrawCtrl;
 }
 
-export const DrawCtrlProvider: FC = ({ children }) => {
+export const DrawCtrlProvider: FC<PropsWithChildren> = ({ children }) => {
   const [drawCtrl, setDrawCtrl] = useState(defaultDrawCtrl);
   useEffect(() => {
     getDrawCtrl().then(setDrawCtrl);

@@ -1,4 +1,11 @@
-import { createContext, FC, useContext, useDebugValue, useState } from "react";
+import {
+  createContext,
+  FC,
+  PropsWithChildren,
+  useContext,
+  useDebugValue,
+  useState,
+} from "react";
 import { Setter } from "./hooks";
 
 export const loadDarkMode = async () => {
@@ -33,7 +40,7 @@ export function useForceLight() {
   return tuple;
 }
 
-export const DarkModeProvider: FC = ({ children }) => {
+export const DarkModeProvider: FC<PropsWithChildren> = ({ children }) => {
   const tuple = useState(false);
   return <DarkCtx.Provider value={tuple}>{children}</DarkCtx.Provider>;
 };

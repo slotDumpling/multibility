@@ -2,6 +2,7 @@ import React, {
   createContext,
   Dispatch,
   FC,
+  PropsWithChildren,
   SetStateAction,
   TransitionEventHandler,
   useContext,
@@ -38,7 +39,7 @@ export function useActiveKey() {
   return tuple;
 }
 
-export const ActiveKeyProvider: FC<{ initKey: string }> = ({
+export const ActiveKeyProvider: FC<PropsWithChildren<{ initKey: string }>> = ({
   children,
   initKey,
 }) => {
@@ -58,7 +59,7 @@ export function useAsideOpen() {
   return tuple;
 }
 
-export const AsideOpenProvider: FC = ({ children }) => {
+export const AsideOpenProvider: FC<PropsWithChildren> = ({ children }) => {
   const tuple = useState(false);
   return (
     <AsideOpenCtx.Provider value={tuple}>{children}</AsideOpenCtx.Provider>

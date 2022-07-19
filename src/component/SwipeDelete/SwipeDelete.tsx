@@ -5,6 +5,7 @@ import {
   useEffect,
   useContext,
   createContext,
+  PropsWithChildren,
 } from "react";
 import { Setter, useTransitionEnd } from "lib/hooks";
 import { useSwipeable } from "react-swipeable";
@@ -13,16 +14,18 @@ import { v4 as getUid } from "uuid";
 
 const SwipeCtx = createContext<[string, Setter<string>]>(["", () => {}]);
 
-export const SwipeDeleteProvider: FC = ({ children }) => {
+export const SwipeDeleteProvider: FC<PropsWithChildren> = ({ children }) => {
   const tuple = useState("");
   return <SwipeCtx.Provider value={tuple}>{children}</SwipeCtx.Provider>;
 };
 
-export const SwipeDelete: FC<{
-  onDelete: () => void;
-  disable?: boolean;
-  className?: string;
-}> = ({ children, onDelete, disable = false, className }) => {
+export const SwipeDelete: FC<
+  PropsWithChildren<{
+    onDelete: () => void;
+    disable?: boolean;
+    className?: string;
+  }>
+> = ({ children, onDelete, disable = false, className }) => {
   const [uid] = useState(getUid);
 
   const [nowSwiped, setNowSwiped] = useContext(SwipeCtx);

@@ -39,16 +39,18 @@ const SeconaryMenu: FC<
   return (
     <CSSTransition in={active === keyName} {...cssTransProps}>
       <div className="secondary">
-        <nav>
-          <Button
-            type="text"
-            shape="circle"
-            onClick={() => setActive("MENU")}
-            icon={<ArrowLeftOutlined />}
-          />
-          <h3>{title}</h3>
-        </nav>
-        {children}
+        <>
+          <nav>
+            <Button
+              type="text"
+              shape="circle"
+              onClick={() => setActive("MENU")}
+              icon={<ArrowLeftOutlined />}
+            />
+            <h3>{title}</h3>
+          </nav>
+          {children}
+        </>
       </div>
     </CSSTransition>
   );

@@ -1,7 +1,7 @@
 import { Skeleton } from "antd";
-import { FC } from "react";
+import { FC, PropsWithChildren } from "react";
 
-export const Loading: FC<{ loading?: boolean }> = ({
+export const Loading: FC<PropsWithChildren<{ loading?: boolean }>> = ({
   children,
   loading = true,
 }) => {
