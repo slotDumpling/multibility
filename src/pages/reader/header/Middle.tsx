@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { Button, message, Popover, ButtonProps, Segmented } from "antd";
+import { Button, message, Popover, Segmented } from "antd";
 import {
   BulbFilled,
   BulbOutlined,
@@ -100,11 +100,6 @@ const EraserButton = () => {
   const { mode, pixelEraser } = drawCtrl;
   const updateDrawCtrl = useUpdateDrawCtrl();
 
-  const btnProps: ButtonProps = {
-    shape: "circle",
-    icon: <IconFont type="icon-eraser" />,
-  };
-
   return mode === "erase" ? (
     <Popover
       content={
@@ -132,13 +127,13 @@ const EraserButton = () => {
       getPopupContainer={(e) => e.parentElement!}
       destroyTooltipOnHide
     >
-      <Button type="link" {...btnProps} />
+      <Button type="link" icon={<IconFont type="icon-eraser" />} />
     </Popover>
   ) : (
     <Button
       type="text"
       onClick={() => updateDrawCtrl({ mode: "erase" })}
-      {...btnProps}
+      icon={<IconFont type="icon-eraser" />}
     />
   );
 };
