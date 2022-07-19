@@ -68,11 +68,15 @@ export const PageNav: FC<PreviewProps> = (props) => {
           }}
         >
           <Droppable droppableId="preview-drop" direction="horizontal">
-            {({ droppableProps, innerRef, placeholder }) => (
+            {(
+              { droppableProps, innerRef, placeholder },
+              { isDraggingOver }
+            ) => (
               <aside
                 className="preview-drop"
                 data-left={left}
                 ref={innerRef}
+                data-dragged={isDraggingOver}
                 {...droppableProps}
               >
                 {opposite}

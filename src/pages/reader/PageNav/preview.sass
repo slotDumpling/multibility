@@ -35,6 +35,8 @@ $card-width: 200px
     flex-direction: row-reverse
     .opposite
       margin: 0 auto 0 0
+  &[data-dragged=true]
+    z-index: 1000
   @include for-desktop
     padding: $header-low-height+20px 20px calc(20px + $safe-bottom) 20px
   @include for-phone
