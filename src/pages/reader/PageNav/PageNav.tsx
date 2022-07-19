@@ -45,15 +45,8 @@ export const PageNav: FC<PreviewProps> = (props) => {
   const [asideOpen] = useAsideOpen();
 
   const opposite = (
-    <Draggable draggableId="opposite" index={left ? 1 : 0}>
-      {({ innerRef, draggableProps, dragHandleProps }) => (
-        <div
-          className="opposite"
-          ref={innerRef}
-          {...draggableProps}
-          {...dragHandleProps}
-        />
-      )}
+    <Draggable draggableId="OPPOSITE" index={left ? 1 : 0} isDragDisabled>
+      {({ innerRef }) => <div className="opposite" ref={innerRef} />}
     </Draggable>
   );
 
@@ -61,8 +54,7 @@ export const PageNav: FC<PreviewProps> = (props) => {
     <CSSTransition in={asideOpen} timeout={300} unmountOnExit>
       <ActiveKeyProvider initKey="ALL">
         <DragDropContext
-          onDragEnd={({ draggableId, destination }) => {
-            if (draggableId !== "CARD") return;
+          onDragEnd={({ destination }) => {
             if (destination?.index === 0) setLeft(true);
             if (destination?.index === 1) setLeft(false);
           }}
@@ -96,7 +88,7 @@ const PreviewCard: FC<{ left: boolean } & PreviewProps> = ({
   ...props
 }) => {
   const [activeKey] = useActiveKey();
-  const [asideOpen, setAsideOpen] = useAsideOpen();
+  const [, setAsideOpen] = useAsideOpen();
 
   const title = {
     ALL: "All Pages",
@@ -126,7 +118,6 @@ const PreviewCard: FC<{ left: boolean } & PreviewProps> = ({
             innerRef(e);
             swipeRef(e);
           }}
-          data-open={asideOpen}
           data-animating={isDropAnimating}
           {...draggableProps}
           {...swipeHandler}
@@ -240,7 +231,7 @@ const PagePreview: FC<
     <Draggable
       draggableId={uid}
       index={pageIndex}
-      isDragDisabled={activeKey !== "ALL"}
+      isDragDisabled={activeKey !== "ALL" || cardDragged}
     >
       {(
         { innerRef, draggableProps, dragHandleProps },
