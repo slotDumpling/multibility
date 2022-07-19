@@ -36,7 +36,6 @@ import { useMemoizedFn as useEvent } from "ahooks";
 import { useSwipeable } from "react-swipeable";
 import { NotePage } from "lib/note/note";
 import { TeamState } from "lib/draw/TeamState";
-import "./preview.sass";
 import { AddPageButton } from "../tools/AddButton";
 import { CSSTransition } from "react-transition-group";
 
