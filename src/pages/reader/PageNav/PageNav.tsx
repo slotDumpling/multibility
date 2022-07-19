@@ -38,6 +38,7 @@ import { NotePage } from "lib/note/note";
 import { TeamState } from "lib/draw/TeamState";
 import "./preview.sass";
 import { AddPageButton } from "../tools/AddButton";
+import { CSSTransition } from "react-transition-group";
 
 type PreviewProps = ReaderMethods & ReaderStates;
 export const PageNav: FC<PreviewProps> = (props) => {
@@ -58,32 +59,32 @@ export const PageNav: FC<PreviewProps> = (props) => {
   );
 
   return (
-    <ActiveKeyProvider initKey="ALL">
-      <DragDropContext
-        onDragEnd={({ draggableId, destination }) => {
-          if (draggableId !== "CARD") return;
-          if (destination?.index === 0) setLeft(true);
-          if (destination?.index === 1) setLeft(false);
-        }}
-      >
-        <Droppable droppableId="preview-drop" direction="horizontal">
-          {({ droppableProps, innerRef, placeholder }, { isDraggingOver }) => (
-            <aside
-              className="preview-drop"
-              data-left={left}
-              data-open={asideOpen}
-              data-dragged={isDraggingOver}
-              ref={innerRef}
-              {...droppableProps}
-            >
-              {opposite}
-              <PreviewCard left={left} {...props} />
-              {placeholder}
-            </aside>
-          )}
-        </Droppable>
-      </DragDropContext>
-    </ActiveKeyProvider>
+    <CSSTransition in={asideOpen} timeout={300} unmountOnExit>
+      <ActiveKeyProvider initKey="ALL">
+        <DragDropContext
+          onDragEnd={({ draggableId, destination }) => {
+            if (draggableId !== "CARD") return;
+            if (destination?.index === 0) setLeft(true);
+            if (destination?.index === 1) setLeft(false);
+          }}
+        >
+          <Droppable droppableId="preview-drop" direction="horizontal">
+            {({ droppableProps, innerRef, placeholder }) => (
+              <aside
+                className="preview-drop"
+                data-left={left}
+                ref={innerRef}
+                {...droppableProps}
+              >
+                {opposite}
+                <PreviewCard left={left} {...props} />
+                {placeholder}
+              </aside>
+            )}
+          </Droppable>
+        </DragDropContext>
+      </ActiveKeyProvider>
+    </CSSTransition>
   );
 };
 
@@ -123,7 +124,6 @@ const PreviewCard: FC<{ left: boolean } & PreviewProps> = ({
             swipeRef(e);
           }}
           data-open={asideOpen}
-          data-dragged={isDragging}
           data-animating={isDropAnimating}
           {...draggableProps}
           {...swipeHandler}
@@ -166,7 +166,7 @@ const PageList: FC<PreviewProps & { cardDragged: boolean }> = React.memo(
 
     return (
       <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="preview-list">
+        <Droppable droppableId="preview-list" isDropDisabled={cardDragged}>
           {({ droppableProps, innerRef, placeholder }) => (
             <div className="page-list" ref={innerRef} {...droppableProps}>
               {pageOrder?.map((uid, index) => (

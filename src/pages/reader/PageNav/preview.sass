@@ -1,6 +1,22 @@
 @import ../../../sass/_mixins
 @import ../../../sass/_var
 
+@mixin move-trans($trans-x)
+  &.enter
+    opacity: 0
+    transform: translateX($trans-x)
+  &.enter-active
+    opacity: 1
+    transform: translateX(0)
+    transition: opacity $fast-speed, transform $speed
+  &.exit
+    opacity: 1
+    transform: translateX(0)
+  &.exit-active
+    opacity: 0
+    transform: translateX($trans-x)
+    transition: opacity $fast-speed, transform $speed
+
 $card-width: 200px
 .preview-drop
   @include inset(0, 0, 0, 0)
@@ -9,22 +25,16 @@ $card-width: 200px
   display: flex
   justify-content: space-between
   pointer-events: none
-  transition: opacity $fast-speed, transform $speed
-  transform: translateZ(0)
   .opposite
     width: min($card-width, calc(100% - $card-width))
     margin: 0 0 0 auto
+  &[data-left=false]
+    @include move-trans(150px)
   &[data-left=true]
+    @include move-trans(-150px)
     flex-direction: row-reverse
     .opposite
       margin: 0 auto 0 0
-  &[data-open=false]
-    opacity: 0
-    transform: translateX(150px)
-    &[data-left=true]
-      transform: translateX(-150px)
-  &[data-dragged=true]
-    pointer-events: auto
   @include for-desktop
     padding: $header-low-height+20px 20px calc(20px + $safe-bottom) 20px
   @include for-phone
@@ -49,6 +59,7 @@ $card-width: 200px
     height: 20px
     position: relative
     cursor: pointer
+    pointer-events: auto
     touch-action: none
     &::before
       content: ""
@@ -61,9 +72,6 @@ $card-width: 200px
     &::after
       @include pseudo-el(-20px, 0, -20px, 0)
     &:hover::before
-      background-color: #ccc
-  &[data-dragged=true]
-    .drag-handle::before
       background-color: #ccc
 
   .tabs
