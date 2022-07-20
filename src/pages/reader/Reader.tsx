@@ -10,7 +10,7 @@ import { NoteInfo, NotePage, createPage, defaultNotePage } from "lib/note/note";
 import { DrawCtrlProvider } from "lib/draw/DrawCtrl";
 import { NewPageInfo, ReorderInfo, SyncInfo } from "lib/network/io";
 import { DarkModeProvider } from "lib/Dark";
-import { useMemoizedFn as useEvent, useSafeState } from "ahooks";
+import { useMemoizedFn as useEvent } from "ahooks";
 import { SetOperation, StateSet } from "lib/draw/StateSet";
 import { loadNote, editNoteData } from "lib/note/archive";
 import { showPageDelMsg } from "./tools/Messages";
@@ -54,7 +54,7 @@ export default function Reader() {
   const [noteInfo, setNoteInfo] = useState<NoteInfo>();
   const [stateSet, setStateSet] = useState<StateSet>();
   const [pageOrder, setPageOrder] = useState<string[]>();
-  const [saved, setSaved] = useSafeState(true);
+  const [saved, setSaved] = useState(true);
 
   const { io, teamOn, addTeamStatePage } = useContext(TeamCtx);
   const { setInviewRatios, scrollPage, sectionRef, currPageID, scrolling } =
