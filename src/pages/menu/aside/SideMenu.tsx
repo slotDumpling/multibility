@@ -26,6 +26,7 @@ const TagInput: FC<{
       onSelect={setTagColor}
       listHeight={150}
       virtual={false}
+      dropdownClassName="tag-color-drop"
     >
       {colors.map((c) => (
         <Select.Option value={c} key={c}>
