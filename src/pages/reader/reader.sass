@@ -1,18 +1,17 @@
 @import ../../sass/_var
 @import ../../sass/_mixins
 
-.reader.container
-  main
-    background-color: #fafafa
-    padding-bottom: $safe-bottom
-    .note-page
-      outline: $default-border
-      &:not(:first-of-type)
-        margin-top: 10px
-    .add-btn-wrapper
-      padding: 20px
-      &:first-child
-        display: none
+.reader.container main
+  background-color: #fafafa
+  padding-bottom: $safe-bottom
+  .note-page
+    outline: $default-border
+    &:not(:first-of-type)
+      margin-top: 10px
+  .add-btn-wrapper
+    padding: 20px
+    &:first-child
+      display: none
 
 html
   @include for-phone
