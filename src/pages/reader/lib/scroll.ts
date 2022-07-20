@@ -1,7 +1,16 @@
-import { useDebugValue, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useDebugValue,
+  useDeferredValue,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import localforage from "localforage";
 import { Map } from "immutable";
 import { debounce } from "lodash";
+import { useMemoizedFn as useEvent } from "ahooks";
 
 const scrollForage = localforage.createInstance({ name: "scroll" });
 const persistScroll = debounce((noteID: string, currPageID: string) => {
@@ -12,13 +21,6 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
   const [refMap, setRefMap] = useState(Map<string, HTMLElement>());
   const scrolled = useRef(false);
   const [prevPageID, setPrevPageID] = useState("");
-  const [inviewRatios, setInviewRatios] = useState(Map<string, number>());
-  const currPageID = useMemo(
-    () => largestKey(inviewRatios, pageOrder),
-    [inviewRatios, pageOrder]
-  );
-  useDebugValue(currPageID);
-
   useEffect(() => {
     (async () => {
       const stored = await scrollForage.getItem<string>(noteID);
@@ -26,6 +28,14 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
       setPrevPageID(stored);
     })();
   }, [noteID]);
+
+  const [inviewRatios, setInviewRatios] = useState(Map<string, number>());
+  const deferredRatios = useDeferredValue(inviewRatios);
+  const currPageID = useMemo(
+    () => largestKey(deferredRatios, pageOrder),
+    [deferredRatios, pageOrder]
+  );
+  useDebugValue(currPageID);
 
   useEffect(() => {
     if (scrolled.current || !refMap.has(prevPageID)) return;
@@ -39,6 +49,24 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
     if (!scrolled.current) return;
     persistScroll(noteID, currPageID);
   }, [noteID, currPageID]);
+
+  const calcScrollY = useEvent(() => {
+    const sectionEl = refMap.get(currPageID);
+    const header = sectionEl?.parentElement?.previousElementSibling;
+    if (!header) return 0;
+    const { top } = sectionEl.getBoundingClientRect();
+    const { height } = header.getBoundingClientRect();
+    return -top + height;
+  });
+  const scrollY = useMemo(calcScrollY, [pageOrder, calcScrollY]);
+
+  const scrollToCurr = useEvent(() => {
+    const sectionEl = refMap.get(currPageID);
+    if (!sectionEl) return;
+    sectionEl.scrollIntoView();
+    window.scrollBy(0, scrollY);
+  });
+  useLayoutEffect(scrollToCurr, [pageOrder, scrollToCurr]);
 
   const sectionRef = (pageID: string) => (el: HTMLElement | null) => {
     if (!el) return;

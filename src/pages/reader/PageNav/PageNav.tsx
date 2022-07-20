@@ -138,7 +138,7 @@ const PageList: FC<PreviewProps & { cardDragged: boolean }> = React.memo(
     const [activeKey] = useActiveKey();
     const [asideOpen] = useAsideOpen();
     const { pageOrder, currPageID } = props;
-    const { saveReorder, scrollPage, addFinalPage } = props;
+    const { saveReorder, addFinalPage } = props;
 
     const onDragEnd = ({ source, destination }: DropResult) => {
       if (!destination || !pageOrder) return;
@@ -148,7 +148,6 @@ const PageList: FC<PreviewProps & { cardDragged: boolean }> = React.memo(
       if (fromIndex === toIndex || !pageID) return;
       const newOrder = exchange(pageOrder, fromIndex, toIndex);
       saveReorder(newOrder, true);
-      requestAnimationFrame(() => scrollPage(pageID));
     };
 
     const initScroll = useEvent(() => {
