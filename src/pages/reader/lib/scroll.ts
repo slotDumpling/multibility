@@ -51,19 +51,19 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
   }, [noteID, currPageID]);
 
   const calcScrollY = useEvent(() => {
-    const sectionEl = refMap.get(currPageID);
-    const header = sectionEl?.parentElement?.previousElementSibling;
+    const section = refMap.get(currPageID);
+    const header = section?.parentElement?.previousElementSibling;
     if (!header) return 0;
-    const { top } = sectionEl.getBoundingClientRect();
+    const { top } = section.getBoundingClientRect();
     const { height } = header.getBoundingClientRect();
     return -top + height;
   });
   const scrollY = useMemo(calcScrollY, [pageOrder, calcScrollY]);
 
   const scrollToCurr = useEvent(() => {
-    const sectionEl = refMap.get(currPageID);
-    if (!sectionEl) return;
-    sectionEl.scrollIntoView();
+    const section = refMap.get(currPageID);
+    if (!section) return;
+    section.scrollIntoView();
     window.scrollBy(0, scrollY);
   });
   useLayoutEffect(scrollToCurr, [pageOrder, scrollToCurr]);
