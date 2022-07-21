@@ -95,14 +95,16 @@ $card-width: 200px
       &[data-curr=true]
         border-color: $blue-color
         box-shadow: 0 0 0 2px $blue-color
-      &[data-animating=true]
-        transition: transform $speed !important
       &::before
         @include pseudo-el
         box-shadow: $shadow-2-down
         transition: opacity $speed
       &[data-dragged=false]::before
         opacity: 0
+      &[data-animating=true]
+        transition: transform $speed !important
+        &::before
+          opacity: 0
       .bookmark
         position: absolute
         top: -10px
