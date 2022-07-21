@@ -418,6 +418,15 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       ...{ select: null, draw: null, erase: null },
     }[paperMode];
 
+    const handleKeyUp =
+      paperMode === "selected"
+        ? (e: paper.KeyEvent) => {
+            if (["delete", "backspace"].includes(e.key)) {
+              deleteSelected();
+            }
+          }
+        : null;
+
     const handleViewEvent = () => {
       if (readonly) return;
 
@@ -434,6 +443,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       view.onMouseUp = activate(handleUp);
       view.onMouseMove = activate(handleMove);
       tool.onMouseDrag = activate(handelToolDrag);
+      tool.onKeyUp = activate(handleKeyUp);
     };
     useEffect(handleViewEvent);
 
