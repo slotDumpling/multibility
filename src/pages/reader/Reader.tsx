@@ -187,7 +187,6 @@ export default function Reader() {
   };
 
   const readerStates = { noteID, pageRec, pageOrder, stateSet, currPageID };
-
   const renderResult = (
     <div className="reader container">
       <Header
