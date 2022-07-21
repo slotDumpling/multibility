@@ -1,11 +1,11 @@
 import {
-  useDebugValue,
-  useDeferredValue,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
   useRef,
+  useMemo,
   useState,
+  useEffect,
+  useDebugValue,
+  useLayoutEffect,
+  useDeferredValue,
 } from "react";
 import localforage from "localforage";
 import { Map } from "immutable";
@@ -15,7 +15,7 @@ import { useMemoizedFn as useEvent } from "ahooks";
 const scrollForage = localforage.createInstance({ name: "scroll" });
 const persistScroll = debounce((noteID: string, currPageID: string) => {
   scrollForage.setItem(noteID, currPageID);
-}, 5000);
+}, 2000);
 
 export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
   const [refMap, setRefMap] = useState(Map<string, HTMLElement>());
@@ -29,25 +29,23 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
     })();
   }, [noteID]);
 
-  const [inviewRatios, setInviewRatios] = useState(Map<string, number>());
-  const deferredRatios = useDeferredValue(inviewRatios);
-  const currPageID = useMemo(
-    () => largestKey(deferredRatios, pageOrder),
-    [deferredRatios, pageOrder]
-  );
-  useDebugValue(currPageID);
-
-  useEffect(() => {
-    if (scrolled.current || !refMap.has(prevPageID)) return;
-    requestAnimationFrame(() => {
-      refMap.get(prevPageID)?.scrollIntoView();
-      scrolled.current = true;
-    });
+  useLayoutEffect(() => {
+    const section = refMap.get(prevPageID);
+    if (scrolled.current || !section) return;
+    section.scrollIntoView();
+    scrolled.current = true;
   }, [prevPageID, refMap]);
 
+  const [inviewRatios, setInviewRatios] = useState(Map<string, number>());
+  const deferredRatios = useDeferredValue(inviewRatios);
+  const deferredOrder = useDeferredValue(pageOrder);
+  const currPageID = useMemo(
+    () => largestKey(deferredRatios, deferredOrder),
+    [deferredRatios, deferredOrder]
+  );
+
   useEffect(() => {
-    if (!scrolled.current) return;
-    persistScroll(noteID, currPageID);
+    if (scrolled.current) persistScroll(noteID, currPageID);
   }, [noteID, currPageID]);
 
   const calcScrollY = useEvent(() => {
@@ -76,6 +74,8 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
   const taskID = useRef(0);
   const [scrolling, setScrolling] = useState(false);
   const scrollPage = (pageID: string) => {
+    const section = refMap.get(pageID);
+    if (!section) return;
     const handleScroll = () => {
       cancelAnimationFrame(taskID.current);
       requestAnimationFrame(() => {
@@ -85,11 +85,12 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
         });
       });
     };
-    setScrolling(true);
     document.addEventListener("scroll", handleScroll);
-    refMap.get(pageID)?.scrollIntoView({ behavior: "smooth" });
+    section.scrollIntoView({ behavior: "smooth" });
+    setScrolling(true);
   };
 
+  useDebugValue(currPageID);
   return { scrollPage, setInviewRatios, sectionRef, currPageID, scrolling };
 }
 
