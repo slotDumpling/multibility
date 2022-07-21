@@ -11,9 +11,9 @@ import {
   FormOutlined,
   TeamOutlined,
   CopyOutlined,
+  LinkOutlined,
   CheckOutlined,
   ReloadOutlined,
-  ShareAltOutlined,
   DisconnectOutlined,
   EyeInvisibleOutlined,
   UsergroupAddOutlined,
@@ -158,12 +158,12 @@ const RoomInfo: FC = () => {
         plain
       />
       <Button
-        icon={<ShareAltOutlined />}
+        icon={<LinkOutlined />}
         className="share-btn"
         onClick={share}
         block
       >
-        Share
+        Copy link
       </Button>
       <Divider />
       <div className="user-list">
