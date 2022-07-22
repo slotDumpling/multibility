@@ -9,8 +9,7 @@ import { loadNote, saveTeamNote, updateTeamNote } from "lib/note/archive";
 import { getUserID } from "lib/user";
 import localforage from "localforage";
 
-export let BASE_URL = "https://api.slotdumpling.top/paint";
-// BASE_URL = "http://192.168.1.14:8090/paint";
+export const BASE_URL = process.env.REACT_APP_PUBLIC_SERVER_URL ?? "";
 axios.defaults.baseURL = BASE_URL;
 
 export async function getNoteID(roomCode: string) {
