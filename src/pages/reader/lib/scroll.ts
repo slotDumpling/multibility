@@ -77,13 +77,11 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
     const section = refMap.get(pageID);
     if (!section) return;
     const handleScroll = () => {
-      cancelAnimationFrame(taskID.current);
-      requestAnimationFrame(() => {
-        taskID.current = requestAnimationFrame(() => {
-          setScrolling(false);
-          document.removeEventListener("scroll", handleScroll);
-        });
-      });
+      window.clearTimeout(taskID.current);
+      taskID.current = window.setTimeout(() => {
+        setScrolling(false);
+        document.removeEventListener("scroll", handleScroll);
+      }, 50);
     };
     document.addEventListener("scroll", handleScroll);
     section.scrollIntoView({ behavior: "smooth" });
