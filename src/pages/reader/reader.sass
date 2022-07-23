@@ -2,22 +2,25 @@
 @import ../../sass/_mixins
 
 .reader.container main
-  background-color: #fafafa
   padding-bottom: $safe-bottom
   .note-page
     outline: $default-border
     &:not(:first-of-type)
       margin-top: 10px
+    @include for-phone
+      scroll-margin-top: $header-high-height
+    @include for-desktop
+      scroll-margin-top: $header-low-height
   .add-btn-wrapper
-    padding: 20px
+    @include flex-center
+    padding: 20px 0
+    button
+      max-width: calc(100vw - 50px)
     &:first-child
       display: none
 
-:root
-  @include for-phone
-    scroll-padding-top: $header-high-height
-  @include for-desktop
-    scroll-padding-top: $header-low-height
+body.reader
+  background-color: #fafafa
 
 .add-btn-wrapper
   width: 100%

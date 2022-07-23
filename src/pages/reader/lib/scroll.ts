@@ -17,7 +17,11 @@ const persistScroll = debounce((noteID: string, currPageID: string) => {
   scrollForage.setItem(noteID, currPageID);
 }, 2000);
 
-export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
+export function useScrollPage(
+  noteID: string,
+  pageOrder = [] as string[],
+  deps = [] as any[]
+) {
   const [refMap, setRefMap] = useState(Map<string, HTMLElement>());
   const scrolled = useRef(false);
   const [prevPageID, setPrevPageID] = useState("");
@@ -56,7 +60,7 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
     const { height } = header.getBoundingClientRect();
     return -top + height;
   });
-  const scrollY = useMemo(calcScrollY, [pageOrder, calcScrollY]);
+  const scrollY = useMemo(calcScrollY, [pageOrder, calcScrollY, ...deps]);
 
   const scrollToCurr = useEvent(() => {
     const section = refMap.get(currPageID);
@@ -64,7 +68,7 @@ export function useScrollPage(noteID: string, pageOrder = [] as string[]) {
     section.scrollIntoView();
     window.scrollBy(0, scrollY);
   });
-  useLayoutEffect(scrollToCurr, [pageOrder, scrollToCurr]);
+  useLayoutEffect(scrollToCurr, [pageOrder, scrollToCurr, ...deps]);
 
   const sectionRef = (pageID: string) => (el: HTMLElement | null) => {
     if (!el) return;

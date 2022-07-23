@@ -148,6 +148,26 @@ $card-width: 200px
           border-width: 3px
         &.chosen
           opacity: 0.5
+  footer
+    padding: 10px 10px
+    border-top: $default-border
+    display: flex
+    justify-content: space-between
+    button
+      font-size: 12px
+    .ant-pagination-item-after-jump-prev, .ant-pagination-item-before-jump-next
+      display: inline-block
+    .sizer
+      --height: 24px
+      --input-width: 40px
+      --button-width: 20px
+      --button-font-size: 12px
+      --input-font-size: 12px
+      --button-text-color: #000
+      button::after
+        @include pseudo-el(-50%, -50%, -50%, -50%)
+      input::after
+        content: "%"
 
 .preview-avatar
   box-sizing: content-box

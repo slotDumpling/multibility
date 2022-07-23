@@ -35,6 +35,7 @@ export interface ReaderStates {
   stateSet?: StateSet;
   pageRec?: Map<string, NotePage>;
   pageOrder?: string[];
+  size: number;
 }
 
 export interface ReaderMethods {
@@ -44,6 +45,7 @@ export interface ReaderMethods {
   addFinalPage: () => void;
   deletePage: (pageID: string) => void;
   saveReorder: (order: string[], push: boolean) => Promise<void>;
+  setSize: Setter<number>;
 }
 
 export default function Reader() {
@@ -57,8 +59,6 @@ export default function Reader() {
   const [saved, setSaved] = useState(true);
 
   const { io, teamOn, addTeamStatePage } = useContext(TeamCtx);
-  const { setInviewRatios, scrollPage, sectionRef, currPageID, scrolling } =
-    useScrollPage(noteID, pageOrder);
 
   useEffect(() => {
     (async () => {
@@ -79,6 +79,11 @@ export default function Reader() {
     if (!noteInfo) return;
     document.title = noteInfo.name + " - Multibility";
   }, [noteInfo]);
+
+  useEffect(() => {
+    document.body.classList.add("reader");
+    return () => document.body.classList.remove("reader");
+  }, []);
 
   const saver = useEvent(async () => {
     const pr = pageRec?.toObject();
@@ -186,7 +191,19 @@ export default function Reader() {
     newOrder?.length && saveReorder(newOrder, true);
   };
 
-  const readerStates = { noteID, pageRec, pageOrder, stateSet, currPageID };
+  const [size, setSize] = useState(100);
+  const padding = `${(100 - size) / 2}%`;
+  const { setInviewRatios, scrollPage, sectionRef, currPageID, scrolling } =
+    useScrollPage(noteID, pageOrder, [size]);
+
+  const readerStates = {
+    noteID,
+    pageRec,
+    pageOrder,
+    stateSet,
+    currPageID,
+    size,
+  };
   const renderResult = (
     <div className="reader container">
       <Header
@@ -197,7 +214,7 @@ export default function Reader() {
         undoable={stateSet?.isUndoable() ?? false}
         redoable={stateSet?.isRedoable() ?? false}
       />
-      <main>
+      <main style={{ paddingLeft: padding, paddingRight: padding }}>
         {pageOrder?.map((uid) => (
           <section key={uid} className="note-page" ref={sectionRef(uid)}>
             <PageContainer
@@ -218,6 +235,7 @@ export default function Reader() {
         deletePage={deletePage}
         saveReorder={saveReorder}
         switchPageMarked={switchPageMarked}
+        setSize={setSize}
         {...readerStates}
       />
     </div>

@@ -10,6 +10,7 @@ import {
   MoreOutlined,
   PlusOutlined,
   CopyOutlined,
+  ReadOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
 import {
@@ -18,12 +19,12 @@ import {
   DropResult,
   DragDropContext,
 } from "react-beautiful-dnd";
-import { Avatar, Menu, Popover, Tabs } from "antd";
+import { Avatar, Button, Menu, Pagination, Popover, Tabs } from "antd";
 import {
-  ActiveKeyProvider,
   Setter,
   useActiveKey,
   useAsideOpen,
+  ActiveKeyProvider,
 } from "lib/hooks";
 import { ReaderMethods, ReaderStates } from "../Reader";
 import PageWrapper from "component/PageWrapper";
@@ -38,6 +39,7 @@ import { NotePage } from "lib/note/note";
 import { TeamState } from "lib/draw/TeamState";
 import { AddPageButton } from "../tools/AddButton";
 import { CSSTransition } from "react-transition-group";
+import { Stepper } from "antd-mobile";
 
 type PreviewProps = ReaderMethods & ReaderStates;
 export const PageNav: FC<PreviewProps> = (props) => {
@@ -126,6 +128,7 @@ const PreviewCard: FC<{ left: boolean } & PreviewProps> = ({
           <h3>{title}</h3>
           <PreviewTabs />
           <PageList cardDragged={isDragging} {...props} />
+          <PreviewFooter {...props} />
         </div>
       )}
     </Draggable>
@@ -393,3 +396,56 @@ const PreviewTabs: FC = React.memo(() => {
   );
 });
 PreviewTabs.displayName = "PreviewTabs";
+
+const PreviewFooter: FC<PreviewProps> = ({
+  currPageID,
+  pageOrder,
+  scrollPage,
+  size,
+  setSize,
+}) => {
+  const pageIndex = useMemo(
+    () => (pageOrder?.indexOf(currPageID) ?? 0) + 1,
+    [currPageID, pageOrder]
+  );
+
+  const jumpMenu = pageOrder && (
+    <Pagination
+      pageSize={1}
+      total={pageOrder.length}
+      size="small"
+      current={pageIndex}
+      style={{ display: "flex" }}
+      showSizeChanger={false}
+      showLessItems
+      onChange={(index) => {
+        const pageID = pageOrder[index - 1];
+        pageID && scrollPage(pageID);
+      }}
+    />
+  );
+
+  return (
+    <footer>
+      <Popover
+        content={jumpMenu}
+        trigger="click"
+        getPopupContainer={(e) => e.parentElement!}
+        destroyTooltipOnHide
+      >
+        <Button type="text" size="small" icon={<ReadOutlined />}>
+          {pageIndex} / {pageOrder?.length}
+        </Button>
+      </Popover>
+      <Stepper
+        value={size}
+        step={10}
+        max={100}
+        min={20}
+        onChange={setSize}
+        inputReadOnly
+        className="sizer"
+      />
+    </footer>
+  );
+};
