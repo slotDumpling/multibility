@@ -71,21 +71,21 @@ export const NoteList: FC<MenuProps> = (props) => {
   }, [noteList, editing]);
 
   return (
-    <SwipeDeleteProvider>
-      <div className="note-list">
-        <header>
-          <NoteNav {...props} />
-          <ListTools
-            sortType={sortType}
-            setSortType={setSortType}
-            editing={editing}
-            setEditing={setEditing}
-            searchText={searchText}
-            setSearchText={setSearchText}
-            selectedNotes={selectedNotes}
-            {...props}
-          />
-        </header>
+    <div className="note-list">
+      <header>
+        <NoteNav {...props} />
+        <ListTools
+          sortType={sortType}
+          setSortType={setSortType}
+          editing={editing}
+          setEditing={setEditing}
+          searchText={searchText}
+          setSearchText={setSearchText}
+          selectedNotes={selectedNotes}
+          {...props}
+        />
+      </header>
+      <SwipeDeleteProvider>
         <TransitionGroup component={null}>
           {filterdList.map((noteInfo, index) => {
             const { uid } = noteInfo;
@@ -111,8 +111,8 @@ export const NoteList: FC<MenuProps> = (props) => {
             );
           })}
         </TransitionGroup>
-      </div>
-    </SwipeDeleteProvider>
+      </SwipeDeleteProvider>
+    </div>
   );
 };
 
