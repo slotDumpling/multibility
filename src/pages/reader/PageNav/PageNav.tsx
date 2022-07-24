@@ -460,7 +460,12 @@ const PreviewFooter: FC<PreviewProps> = ({
         trigger={["click"]}
         getPopupContainer={(e) => e.parentElement!}
       >
-        <Button type="text" size="small" icon={<ShrinkOutlined />}>
+        <Button
+          type="text"
+          size="small"
+          icon={<ShrinkOutlined />}
+          className="size-btn"
+        >
           {size}%
         </Button>
       </Dropdown>
