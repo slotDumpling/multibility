@@ -11,6 +11,7 @@ import {
   PlusOutlined,
   CopyOutlined,
   ReadOutlined,
+  ShrinkOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
 import {
@@ -19,7 +20,15 @@ import {
   DropResult,
   DragDropContext,
 } from "react-beautiful-dnd";
-import { Avatar, Button, Menu, Pagination, Popover, Tabs } from "antd";
+import {
+  Avatar,
+  Button,
+  Dropdown,
+  Menu,
+  Pagination,
+  Popover,
+  Tabs,
+} from "antd";
 import {
   Setter,
   useActiveKey,
@@ -39,7 +48,7 @@ import { NotePage } from "lib/note/note";
 import { TeamState } from "lib/draw/TeamState";
 import { AddPageButton } from "../tools/AddButton";
 import { CSSTransition } from "react-transition-group";
-import { Stepper } from "antd-mobile";
+import { range } from "lodash";
 
 type PreviewProps = ReaderMethods & ReaderStates;
 export const PageNav: FC<PreviewProps> = (props) => {
@@ -413,15 +422,23 @@ const PreviewFooter: FC<PreviewProps> = ({
     <Pagination
       pageSize={1}
       total={pageOrder.length}
-      size="small"
+      simple
       current={pageIndex}
-      style={{ display: "flex" }}
-      showSizeChanger={false}
-      showLessItems
       onChange={(index) => {
         const pageID = pageOrder[index - 1];
         pageID && scrollPage(pageID);
       }}
+    />
+  );
+
+  const sizeMenu = (
+    <Menu
+      items={range(40, 120, 20).map((s) => ({
+        key: s,
+        label: s + "%",
+        onClick: () => setSize(s),
+        className: "size-li",
+      }))}
     />
   );
 
@@ -437,15 +454,16 @@ const PreviewFooter: FC<PreviewProps> = ({
           {pageIndex} / {pageOrder?.length}
         </Button>
       </Popover>
-      <Stepper
-        value={size}
-        step={10}
-        max={100}
-        min={20}
-        onChange={setSize}
-        inputReadOnly
-        className="sizer"
-      />
+      <Dropdown
+        overlay={sizeMenu}
+        placement="topRight"
+        trigger={["click"]}
+        getPopupContainer={(e) => e.parentElement!}
+      >
+        <Button type="text" size="small" icon={<ShrinkOutlined />}>
+          {size}%
+        </Button>
+      </Dropdown>
     </footer>
   );
 };
