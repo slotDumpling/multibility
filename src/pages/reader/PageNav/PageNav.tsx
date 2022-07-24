@@ -436,8 +436,8 @@ const PreviewFooter: FC<PreviewProps> = ({
       items={range(40, 120, 20).map((s) => ({
         key: s,
         label: s + "%",
-        onClick: () => setSize(s),
         className: "size-li",
+        onClick: () => setSize(s),
       }))}
     />
   );
