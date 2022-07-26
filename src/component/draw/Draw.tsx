@@ -73,20 +73,25 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       scp.setup(cvs);
       scp.settings.handleSize = 10;
       scp.settings.hitTolerance = HIT_TOLERANCE;
-      [0, 1, 2].forEach(() => scp.project.addLayer(new Layer()));
-      scp.project.layers.forEach((l) => (l.visible = false));
+      [0, 1, 2].forEach(() => (new Layer().visible = false));
       scp.project.layers[2]?.activate();
       new scp.Tool();
 
       return () => {
-        scp.remove();
+        scp.view?.remove();
         releaseCanvas(cvs);
       };
     }, []);
 
     useEffect(() => {
-      const bgRect = paintBackground(scope.current, width, height);
-      return () => void bgRect.remove();
+      scope.current.activate();
+      const { layers } = scope.current.project;
+      const bgRect = paintBackground(layers, width, height);
+      const clipMasks = paintClipMasks(layers, width, height);
+      return () => {
+        bgRect.remove();
+        clipMasks.forEach((c) => c.remove());
+      };
     }, [width, height]);
 
     const [canvasWidth] = useSize(canvasEl);
@@ -138,7 +143,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       });
       setGroup(tempGroup);
 
-      return () => void layer.removeChildren();
+      return () => void layer.removeChildren(1);
     }, [mergedStrokes, drawState]);
 
     const hitRef = useRef<paper.HitResult>();
@@ -623,15 +628,30 @@ const paintStroke = (stroke: Stroke, layer: paper.Layer, readonly = false) => {
 };
 
 const paintBackground = (
-  scope: paper.PaperScope,
+  layers: paper.Layer[],
   width: number,
   height: number
 ) => {
-  scope.activate();
   const bgRect = new Path.Rectangle(new Point(0, 0), new Point(width, height));
   bgRect.fillColor = new Color("#fff");
-  scope.project.layers[0]?.addChild(bgRect);
+  layers[0]?.addChild(bgRect);
   return bgRect;
+};
+
+const paintClipMasks = (
+  layers: paper.Layer[],
+  width: number,
+  height: number
+) => {
+  const [, l1, l2] = layers;
+  if (!l1 || !l2) return [];
+  const clip1 = new Path.Rectangle(new Point(0, 0), new Point(width, height));
+  const clip2 = clip1.clone();
+  l1.addChild(clip1);
+  l2.addChild(clip2);
+  l1.clipped = true;
+  l2.clipped = true;
+  return [clip1, clip2];
 };
 
 const startRect = (point: paper.Point) => {
