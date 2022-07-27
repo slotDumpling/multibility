@@ -1,2 +1,2 @@
-import "./notes.sass";
+import "./note-list.sass";
 export { NoteList } from "./NoteList";
