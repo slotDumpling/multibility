@@ -86,12 +86,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     useEffect(() => {
       scope.current.activate();
       const { layers } = scope.current.project;
-      const bgRect = paintBackground(layers, width, height);
-      const clipMasks = paintClipMasks(layers, width, height);
-      return () => {
-        bgRect.remove();
-        clipMasks.forEach((c) => c.remove());
-      };
+      const rects = paintRects(layers, width, height);
+      return () => rects.forEach((r) => r.remove());
     }, [width, height]);
 
     const [canvasWidth] = useSize(canvasEl);
@@ -627,31 +623,19 @@ const paintStroke = (stroke: Stroke, layer: paper.Layer, readonly = false) => {
   }
 };
 
-const paintBackground = (
-  layers: paper.Layer[],
-  width: number,
-  height: number
-) => {
+const paintRects = (layers: paper.Layer[], width: number, height: number) => {
+  const [l0, l1, l2] = layers;
+  if (!l0 || !l1 || !l2) return [];
   const bgRect = new Path.Rectangle(new Point(0, 0), new Point(width, height));
-  bgRect.fillColor = new Color("#fff");
-  layers[0]?.addChild(bgRect);
-  return bgRect;
-};
-
-const paintClipMasks = (
-  layers: paper.Layer[],
-  width: number,
-  height: number
-) => {
-  const [, l1, l2] = layers;
-  if (!l1 || !l2) return [];
-  const clip1 = new Path.Rectangle(new Point(0, 0), new Point(width, height));
+  const clip1 = bgRect.clone();
   const clip2 = clip1.clone();
+  bgRect.fillColor = new Color("#fff");
+  l0.addChild(bgRect);
   l1.addChild(clip1);
   l2.addChild(clip2);
   l1.clipped = true;
   l2.clipped = true;
-  return [clip1, clip2];
+  return [bgRect, clip1, clip2];
 };
 
 const startRect = (point: paper.Point) => {
@@ -668,7 +652,7 @@ const startStroke = (drawCtrl: DrawCtrl) => {
     lineWidth = eraserWidth;
   }
   if (mode === "select") {
-    color = "#1890ff";
+    color = "#009dec";
     lineWidth = 5;
   }
   const strokeColor = new Color(color);
