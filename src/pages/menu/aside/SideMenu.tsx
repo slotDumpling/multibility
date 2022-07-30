@@ -222,8 +222,8 @@ export const SideMenu: FC<MenuProps> = (props) => {
   );
 
   return (
-    <>
-      <aside className="side-menu" data-open={asideOpen}>
+    <aside data-open={asideOpen} onClick={() => setAsideOpen(false)}>
+      <div className="side-menu" onClick={(e) => e.stopPropagation()}>
         {header}
         <div className="tag-list">
           {allNoteTag}
@@ -234,12 +234,7 @@ export const SideMenu: FC<MenuProps> = (props) => {
           </SwipeDeleteProvider>
           {adding && <NewTagItem setAdding={setAdding} {...props} />}
         </div>
-      </aside>
-      <div
-        className="aside-mask"
-        onClick={() => setAsideOpen(false)}
-        data-open={asideOpen}
-      />
-    </>
+      </div>
+    </aside>
   );
 };
