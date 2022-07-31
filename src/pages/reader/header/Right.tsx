@@ -4,7 +4,7 @@ import Search from "antd/lib/input/Search";
 import { useNavigate, useParams } from "react-router-dom";
 import { PasscodeInput } from "antd-mobile";
 import { TeamCtx } from "../Team";
-import { getUserID, saveUserName } from "lib/user";
+import { getUserID, saveUserName, UserInfo } from "lib/user";
 import {
   EyeOutlined,
   MenuOutlined,
@@ -23,6 +23,7 @@ import { UserAvatar } from "component/UserAvatar";
 import { putNote } from "lib/network/http";
 import copy from "clipboard-copy";
 import { useAsideOpen } from "lib/hooks";
+import { sortBy } from "lodash";
 
 export const HeaderRight: FC<{
   instantSave: () => Promise<void> | undefined;
@@ -47,14 +48,13 @@ const PageNavButton = () => {
   );
 };
 
-const UserCard: FC<{ userID: string }> = ({ userID }) => {
+const UserCard: FC<{ userInfo: UserInfo }> = ({ userInfo }) => {
   const [renaming, setRenaming] = useState(false);
-  const { ignores, setIgnores, resetIO, userRec } = useContext(TeamCtx);
-  const userInfo = userRec[userID];
+  const { ignores, setIgnores, resetIO } = useContext(TeamCtx);
   useEffect(() => setRenaming(false), [userInfo]);
   if (!userInfo) return null;
 
-  const { userName, online } = userInfo;
+  const { userName, online, userID } = userInfo;
   const self = userID === getUserID();
   const ignored = ignores.has(userID) && !self;
 
@@ -125,13 +125,9 @@ const RoomInfo: FC = () => {
   const userList = useMemo(() => {
     const selfID = getUserID();
     const { [selfID]: selfInfo, ...otherUsers } = userRec;
-    const list = selfInfo ? [selfInfo] : [];
+    if (!selfInfo) return [];
     const values = Object.values(otherUsers);
-    list.push(
-      ...values.filter(({ online }) => online),
-      ...values.filter(({ online }) => !online)
-    );
-    return list;
+    return [selfInfo, ...sortBy(values, "online").reverse()];
   }, [userRec]);
 
   const onlineNum = useMemo(
@@ -168,7 +164,7 @@ const RoomInfo: FC = () => {
       <Divider />
       <div className="user-list">
         {userList.map((u) => (
-          <UserCard key={u.userID} userID={u.userID} />
+          <UserCard key={u.userID} userInfo={u} />
         ))}
       </div>
     </div>
@@ -233,18 +229,16 @@ const JoinRoom: FC<{
     nav("/team/" + noteID);
   };
 
+  const showModal = () => {
+    Modal.confirm({
+      title: "Enable team editing",
+      content: "This will make your note public to anyone with the link.",
+      icon: <TeamOutlined style={{ color: "#555" }} />,
+      onOk: createRoom,
+    });
+  };
+
   return (
-    <Button
-      type="text"
-      icon={<UsergroupAddOutlined />}
-      onClick={() => {
-        Modal.confirm({
-          title: "Enable team editing",
-          content: "This will make your note public to anyone with the link.",
-          icon: <TeamOutlined style={{ color: "#555" }} />,
-          onOk: createRoom,
-        });
-      }}
-    />
+    <Button type="text" icon={<UsergroupAddOutlined />} onClick={showModal} />
   );
 };
