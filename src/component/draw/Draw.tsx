@@ -428,7 +428,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           }
         : null;
 
-    const handleViewEvent = () => {
+    useEffect(() => {
       if (readonly) return;
 
       type Handler<E> = ((e: E) => boolean | void) | null;
@@ -445,8 +445,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       view.onMouseMove = activate(handleMove);
       tool.onMouseDrag = activate(handelToolDrag);
       tool.onKeyUp = activate(handleKeyUp);
-    };
-    useEffect(handleViewEvent);
+    });
 
     const updateMutation = () => {
       if (!chosenItems?.length) return;
