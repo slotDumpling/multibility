@@ -41,6 +41,10 @@ $card-width: 200px
   @include for-phone
     padding: $header-high-height+10px 10px calc(10px + $safe-bottom) 10px
 
+body.ant-scrolling-effect .preview-drop
+  @include for-desktop
+    margin-right: 10px
+
 .preview-card
   display: flex
   flex-direction: column
