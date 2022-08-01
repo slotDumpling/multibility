@@ -165,7 +165,7 @@ const NewTagItem: FC<{ setAdding: Setter<boolean> } & MenuProps> = ({
 
   return (
     <div className="tag-wrapper">
-      <div className="tag-item" data-curr data-editing>
+      <div className="tag-item" data-editing>
         <TagInput
           tagName={tagName}
           setTagName={setTagName}
