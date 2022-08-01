@@ -9,7 +9,7 @@ import React, {
   SetStateAction,
   useImperativeHandle,
 } from "react";
-import paper from "paper";
+import paper from "paper/dist/paper-core";
 import { usePinch } from "@use-gesture/react";
 import useSize from "@react-hook/size";
 import { DrawState, Mutation, Splitter, Stroke } from "lib/draw/DrawState";
@@ -599,12 +599,9 @@ function usePaperItem<T extends paper.Item>() {
   const tuple = useState<T | undefined>();
   const [item] = tuple;
   useDebugValue(item);
-  useEffect(
-    () => () => {
-      if (!item?.name) item?.remove();
-    },
-    [item]
-  );
+  useEffect(() => {
+    if (!item?.name) return () => void item?.remove();
+  }, [item]);
   return tuple;
 }
 
