@@ -1,10 +1,10 @@
 {
   "files": {
     "main.css": "./static/css/main.00f0fd93.css",
-    "main.js": "./static/js/main.7c303487.js",
-    "static/css/751.00f4b6f7.chunk.css": "./static/css/751.00f4b6f7.chunk.css",
-    "static/js/751.7b77df30.chunk.js": "./static/js/751.7b77df30.chunk.js",
-    "static/css/794.0faaf4f8.chunk.css": "./static/css/794.0faaf4f8.chunk.css",
+    "main.js": "./static/js/main.269ad1ea.js",
+    "static/css/751.04f2085f.chunk.css": "./static/css/751.04f2085f.chunk.css",
+    "static/js/751.9dbb56fe.chunk.js": "./static/js/751.9dbb56fe.chunk.js",
+    "static/css/794.c7ab99f4.chunk.css": "./static/css/794.c7ab99f4.chunk.css",
     "static/js/794.1651acb5.chunk.js": "./static/js/794.1651acb5.chunk.js",
     "static/js/336.9caeca76.chunk.js": "./static/js/336.9caeca76.chunk.js",
     "static/js/701.98bc4f0d.chunk.js": "./static/js/701.98bc4f0d.chunk.js",
@@ -22,10 +22,10 @@
     "static/media/sofia.woff": "./static/media/sofia.1d8cd6317297d215f958.woff",
     "index.html": "./index.html",
     "main.00f0fd93.css.map": "./static/css/main.00f0fd93.css.map",
-    "main.7c303487.js.map": "./static/js/main.7c303487.js.map",
-    "751.00f4b6f7.chunk.css.map": "./static/css/751.00f4b6f7.chunk.css.map",
-    "751.7b77df30.chunk.js.map": "./static/js/751.7b77df30.chunk.js.map",
-    "794.0faaf4f8.chunk.css.map": "./static/css/794.0faaf4f8.chunk.css.map",
+    "main.269ad1ea.js.map": "./static/js/main.269ad1ea.js.map",
+    "751.04f2085f.chunk.css.map": "./static/css/751.04f2085f.chunk.css.map",
+    "751.9dbb56fe.chunk.js.map": "./static/js/751.9dbb56fe.chunk.js.map",
+    "794.c7ab99f4.chunk.css.map": "./static/css/794.c7ab99f4.chunk.css.map",
     "794.1651acb5.chunk.js.map": "./static/js/794.1651acb5.chunk.js.map",
     "336.9caeca76.chunk.js.map": "./static/js/336.9caeca76.chunk.js.map",
     "701.98bc4f0d.chunk.js.map": "./static/js/701.98bc4f0d.chunk.js.map",
@@ -42,6 +42,6 @@
   },
   "entrypoints": [
     "static/css/main.00f0fd93.css",
-    "static/js/main.7c303487.js"
+    "static/js/main.269ad1ea.js"
   ]
 }
