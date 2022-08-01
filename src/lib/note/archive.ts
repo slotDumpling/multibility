@@ -2,7 +2,7 @@ import { Note, NoteInfo, NotePage, TeamNoteInfo, TeamPageInfo } from "./note";
 import { getDefaultFlatState } from "lib/draw/DrawState";
 import localforage from "localforage";
 import { v4 as getUid } from "uuid";
-import { pickBy } from "lodash-es";
+import { pickBy } from "lodash";
 
 export interface NoteTag {
   uid: string;

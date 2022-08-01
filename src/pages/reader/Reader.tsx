@@ -18,7 +18,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import PageWrapper from "component/PageWrapper";
 import { DrawState } from "lib/draw/DrawState";
 import { useScrollPage } from "./lib/scroll";
-import { debounce, last } from "lodash-es";
+import { debounce, last } from "lodash";
 import { insertAfter } from "./lib/array";
 import { PageNav } from "./PageNav";
 import { AsideOpenProvider, Setter } from "lib/hooks";
