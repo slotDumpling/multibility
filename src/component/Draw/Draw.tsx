@@ -9,7 +9,15 @@ import React, {
   SetStateAction,
   useImperativeHandle,
 } from "react";
-import paper from "paper/dist/paper-core";
+import paper, {
+  Path,
+  Size,
+  Point,
+  Group,
+  Color,
+  Raster,
+  Layer,
+} from "paper/dist/paper-core";
 import { usePinch } from "@use-gesture/react";
 import useSize from "@react-hook/size";
 import { DrawState, Mutation, Splitter, Stroke } from "lib/draw/DrawState";
@@ -17,8 +25,6 @@ import { defaultDrawCtrl, DrawCtrl } from "lib/draw/DrawCtrl";
 import { releaseCanvas } from "lib/draw/canvas";
 import { getCircleCursor, getRotateCurcor } from "./cursor";
 import { usePreventTouch, usePreventGesture } from "./touch";
-
-const { Path, Size, Point, Group, Color, Raster, Layer } = paper;
 
 export type ActiveToolKey = "" | "select" | "text";
 export interface DrawRefType {
@@ -171,8 +177,34 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       };
     }, [selected, setActiveTool]);
 
-    const downPath = () => setPath(startStroke(drawCtrl));
-    const downRect = (e: paper.MouseEvent) => setRect(startRect(e.point));
+    const [raster, setRaster] = usePaperItem<paper.Raster>();
+    const rasterizeLayer = () => {
+      if (mergedStrokes.length < 2_000) return;
+      const [l0, l1] = scope.current.project.layers;
+      if (!l0 || !l1) return;
+      setRaster((r) => {
+        scope.current.activate();
+        const resolution = (canvasWidth / width) * 72 * devicePixelRatio;
+        r = l1.rasterize({ raster: r, resolution });
+        r.visible = true;
+        l0.addChild(r);
+        l1.visible = false;
+        return r;
+      });
+    };
+    const unrasterizeLayer = () => {
+      scope.current.project.layers[1]!.visible = true;
+      if (raster) raster.visible = false;
+    };
+
+    const downPath = (e: paper.MouseEvent) => {
+      rasterizeLayer();
+      setPath(startStroke(drawCtrl, e.point));
+    };
+    const downRect = (e: paper.MouseEvent) => {
+      rasterizeLayer();
+      setRect(startRect(e.point));
+    };
 
     const handleDown = {
       draw: downPath,
@@ -182,7 +214,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         if (lasso) {
           // if the point is outside of selection, reset selection
           if (path?.contains(e.point)) return;
-          downPath();
+          downPath(e);
           setSelected(false);
         } else {
           // check if the point hit the segment point.
@@ -288,11 +320,15 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const handelToolDrag = (e: paper.ToolEvent) => {
       if (paperMode !== "erase") return;
       const layer = scope.current.project.layers[1];
-      const hitRes = layer?.hitTestAll(e.point, {
+      if (!layer) return;
+      const prevVisible = layer.visible;
+      layer.visible = true;
+      const hitRes = layer.hitTestAll(e.point, {
         class: paper.Path,
         stroke: true,
         tolerance: eraserWidth / 2,
       });
+      layer.visible = prevVisible;
 
       hitRes?.forEach(({ item }) => {
         if (!(item instanceof paper.Path)) return;
@@ -305,8 +341,11 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
         if (drawCtrl.pixelEraser) {
           const radius = (eraserWidth + item.strokeWidth) / 2;
-          const circle = new Path.Circle(e.point, radius);
-          circle.remove();
+          const circle = new Path.Circle({
+            center: e.point,
+            radius,
+            insert: false,
+          });
 
           const sub = item.subtract(circle, { trace: false });
           item.replaceWith(sub);
@@ -322,13 +361,15 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const handleUp = {
       draw() {
-        if (!path || path.isEmpty()) return;
+        unrasterizeLayer();
+        if (!path || path.segments.length <= 1) return;
         path.simplify();
         const pathData = path.exportJSON();
         setPath(undefined);
         onChange((prev) => DrawState.addStroke(prev, pathData));
       },
       erase() {
+        unrasterizeLayer();
         setPath(undefined);
         if (drawCtrl.pixelEraser) {
           const items = Array.from(replaced.current);
@@ -347,6 +388,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         }
       },
       select() {
+        unrasterizeLayer();
         let selection: string[];
         if (lasso) {
           if (!path || Math.abs(path.area) < 1_000) return setPath(undefined);
@@ -605,19 +647,36 @@ function usePaperItem<T extends paper.Item>() {
   return tuple;
 }
 
-const paintStroke = (stroke: Stroke, layer: paper.Layer, readonly = false) => {
-  let { pathData, uid } = stroke;
-  try {
-    const item = layer.importJSON(pathData);
-    if (!item) return new paper.Item();
-    item.name = uid;
+const paintStroke = (() => {
+  const cacheMap = new WeakMap<
+    paper.Layer,
+    Map<string, { stroke: Stroke; item: paper.Item }>
+  >();
+
+  return (stroke: Stroke, layer: paper.Layer, readonly = false) => {
+    const { pathData, uid } = stroke;
+    const cache = cacheMap.get(layer) ?? new Map();
+    cacheMap.set(layer, cache);
+    const cached = cache.get(uid);
+    let item: paper.Item;
+    if (cached?.stroke === stroke) {
+      layer.addChild(cached.item);
+      item = cached.item;
+    } else {
+      try {
+        item = layer.importJSON(pathData);
+      } catch (e) {
+        console.error(e);
+        item = new paper.Item();
+      }
+      item.name = uid;
+      cache.set(uid, { item, stroke });
+    }
+    item.opacity = 1;
     item.guide = readonly;
     return item;
-  } catch (e) {
-    console.error(e);
-    return new paper.Item();
-  }
-};
+  };
+})();
 
 const paintRects = (layers: paper.Layer[], width: number, height: number) => {
   const [l0, l1, l2] = layers;
@@ -640,9 +699,10 @@ const startRect = (point: paper.Point) => {
   return rect;
 };
 
-const startStroke = (drawCtrl: DrawCtrl) => {
+const startStroke = (drawCtrl: DrawCtrl, point: paper.Point) => {
   let { mode, lineWidth, eraserWidth, color, highlight } = drawCtrl;
   const path = new Path();
+  path.add(point);
   if (mode === "erase") {
     color = "#ccc";
     lineWidth = eraserWidth;
@@ -709,7 +769,11 @@ const checkLasso = (items: paper.Item[], selection: paper.Path) => {
       if (!item.name) return false;
       if (!item.bounds.intersects(selection.bounds)) return false;
       if (item instanceof paper.Path) {
-        return isInside(item);
+        return (
+          (selection.segments.length === 4 &&
+            item.isInside(selection.bounds)) ||
+          isInside(item)
+        );
       } else {
         const checkedP = new Path.Rectangle(item.bounds);
         checkedP.remove();
