@@ -132,6 +132,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           : drawState.getStrokeList(),
       [drawState, otherStates]
     );
+
+    const renderSlow = useRef(false);
     useEffect(() => {
       const tempGroup: paper.Item[] = [];
       const layer = scope.current.project.layers[1];
@@ -144,6 +146,13 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         if (self) tempGroup.push(item);
       });
       setGroup(tempGroup);
+
+      const timeBeforeRender = Date.now();
+      scope.current.view.update();
+      requestAnimationFrame(() => {
+        const duration = Date.now() - timeBeforeRender;
+        renderSlow.current = duration > 16;
+      });
 
       return () => void layer.removeChildren(1);
     }, [mergedStrokes, drawState]);
@@ -178,9 +187,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     }, [selected, setActiveTool]);
 
     const [raster, setRaster] = usePaperItem<paper.Raster>();
-    const needRaster = mergedStrokes.length > 2_000;
     const rasterizeLayer = () => {
-      if (!needRaster) return;
+      if (!renderSlow.current) return;
       const [l0, l1] = scope.current.project.layers;
       const { view } = scope.current;
       if (!l0 || !l1) return;
