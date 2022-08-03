@@ -151,7 +151,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       scope.current.view.update();
       requestAnimationFrame(() => {
         const duration = Date.now() - timeBeforeRender;
-        renderSlow.current = duration > 16;
+        renderSlow.current = duration > 32;
       });
 
       return () => void layer.removeChildren(1);
@@ -187,34 +187,40 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     }, [selected, setActiveTool]);
 
     const [raster, setRaster] = usePaperItem<paper.Raster>();
-    const rasterizeLayer = () => {
+    const pinching = useRef(false);
+    const rasterizeLayer = (useClip = true) => {
       if (!renderSlow.current) return;
       const [l0, l1] = scope.current.project.layers;
       const { view } = scope.current;
       if (!l0 || !l1) return;
       setRaster((r) => {
         scope.current.activate();
-        const clipSize = Size.min(view.size, new Size(width, height));
+        l1.visible = true;
+        const projSize = new Size(width, height);
+        const clipSize = useClip ? Size.min(view.size, projSize) : projSize;
         const clip = new Path.Rectangle(clipSize);
         clip.position = view.center;
         clip.clipMask = true;
         const prevClip = l1.firstChild;
-        prevClip.replaceWith(clip);
+        if (useClip) prevClip.replaceWith(clip);
 
         const dpi = 72 * devicePixelRatio;
         const resolution = (canvasWidth / clipSize.width) * dpi;
         r = l1.rasterize({ raster: r, resolution });
-        r.visible = true;
 
-        clip.replaceWith(prevClip);
-        l0.addChild(r);
+        r.visible = true;
         l1.visible = false;
+        l0.addChild(r);
+        if (useClip) clip.replaceWith(prevClip);
+        clip.remove();
         return r;
       });
     };
     const unrasterizeLayer = () => {
-      scope.current.project.layers[1]!.visible = true;
-      if (raster) raster.visible = false;
+      const [, l1] = scope.current.project.layers;
+      if (pinching.current || !l1 || !raster) return;
+      l1.visible = true;
+      raster.visible = false;
     };
 
     const downPath = (e: paper.MouseEvent) => {
@@ -599,7 +605,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       ({ memo, offset: [scale], first, last, origin }) => {
         scope.current.activate();
         const { view } = scope.current;
-        const originRawP = new Point(origin);
+        const originRawP = new paper.Point(origin);
 
         let lastScale: number;
         let lastOrigin, elPos: paper.Point;
@@ -608,6 +614,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           lastScale = 1;
           elPos = new Point(x, y);
           lastOrigin = originRawP.subtract(elPos);
+          rasterizeLayer(false);
+          pinching.current = true;
         } else {
           [lastScale, lastOrigin, elPos] = memo;
         }
@@ -615,23 +623,23 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         const originViewP = originRawP.subtract(elPos);
         const originPorjP = view.viewToProject(originViewP);
 
-        if (Math.abs(1 - scale) < 0.05) scale = 1;
-        let dScale = first ? 1 : scale / lastScale;
-        let aniCount = last ? 10 : 1;
-        dScale = Math.pow(dScale, 1 / aniCount);
-        const scaleView = () => {
-          view.scale(dScale, originPorjP);
-          scope.current.settings.hitTolerance /= dScale;
-          if (--aniCount > 0) requestAnimationFrame(scaleView);
-          else if (last) putCenterBack(view, new Size(width, height));
-        };
-        scaleView();
-
         const deltaP = originViewP.subtract(lastOrigin);
         const transP = deltaP.divide(view.zoom);
         view.translate(transP);
 
-        if (!last) return [scale, originViewP, elPos];
+        if (Math.abs(1 - scale) < 0.05) scale = 1;
+        let dScale = first ? 1 : scale / lastScale;
+        scope.current.settings.hitTolerance /= dScale;
+
+        if (last) {
+          scaleView(view, originPorjP, dScale)
+            .then(() => putCenterBack(view, new Size(width, height)))
+            .then(() => (pinching.current = false))
+            .then(unrasterizeLayer);
+        } else {
+          view.scale(dScale, originPorjP);
+          return [scale, originViewP, elPos];
+        }
       },
       {
         scaleBounds: { max: 5, min: 0.3 },
@@ -750,6 +758,26 @@ const moveDash = (item: paper.Item) => {
   item.onFrame = () => (item.dashOffset += 3);
 };
 
+const scaleView = (
+  view: paper.View,
+  originPorjP: paper.Point,
+  dScale: number
+) =>
+  new Promise<void>((res) => {
+    if (Math.abs(dScale - 1) < 0.05) {
+      view.scale(dScale, originPorjP);
+      return res();
+    }
+    let aniCount = 10;
+    dScale = Math.pow(dScale, 1 / aniCount);
+    const scale = () => {
+      view.scale(dScale, originPorjP);
+      if (--aniCount > 0) requestAnimationFrame(scale);
+      else requestAnimationFrame(() => res());
+    };
+    scale();
+  });
+
 const getCenterTranslate = (
   view: paper.View,
   projSize: paper.Size
@@ -767,16 +795,19 @@ const getCenterTranslate = (
   return [deltaX, deltaY];
 };
 
-const putCenterBack = (view: paper.View, projSize: paper.Size) => {
-  const [deltaX, deltaY] = getCenterTranslate(view, projSize);
-  let aniCount = 10;
-  const dP = new Point(deltaX, deltaY).divide(-aniCount);
-  const move = () => {
-    view.translate(dP);
-    if (--aniCount > 0) requestAnimationFrame(move);
-  };
-  move();
-};
+const putCenterBack = (view: paper.View, projSize: paper.Size) =>
+  new Promise<void>((res) => {
+    const [deltaX, deltaY] = getCenterTranslate(view, projSize);
+    if (!deltaX && !deltaY) return res();
+    let aniCount = 10;
+    const dP = new Point(deltaX, deltaY).divide(-aniCount);
+    const move = () => {
+      view.translate(dP);
+      if (--aniCount > 0) requestAnimationFrame(move);
+      else requestAnimationFrame(() => res());
+    };
+    move();
+  });
 
 const checkLasso = (items: paper.Item[], selection: paper.Path) => {
   const isInside = (p: paper.Path) => {
