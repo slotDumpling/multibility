@@ -178,15 +178,27 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     }, [selected, setActiveTool]);
 
     const [raster, setRaster] = usePaperItem<paper.Raster>();
+    const needRaster = mergedStrokes.length > 2_000;
     const rasterizeLayer = () => {
-      if (mergedStrokes.length < 2_000) return;
+      if (!needRaster) return;
       const [l0, l1] = scope.current.project.layers;
+      const { view } = scope.current;
       if (!l0 || !l1) return;
       setRaster((r) => {
         scope.current.activate();
-        const resolution = (canvasWidth / width) * 72 * devicePixelRatio;
+        const clipSize = Size.min(view.size, new Size(width, height));
+        const clip = new Path.Rectangle(clipSize);
+        clip.position = view.center;
+        clip.clipMask = true;
+        const prevClip = l1.firstChild;
+        prevClip.replaceWith(clip);
+
+        const dpi = 72 * devicePixelRatio;
+        const resolution = (canvasWidth / clipSize.width) * dpi;
         r = l1.rasterize({ raster: r, resolution });
         r.visible = true;
+
+        clip.replaceWith(prevClip);
         l0.addChild(r);
         l1.visible = false;
         return r;
@@ -614,7 +626,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         if (!last) return [scale, originViewP, elPos];
       },
       {
-        scaleBounds: { max: 10, min: 0.3 },
+        scaleBounds: { max: 5, min: 0.3 },
         rubberband: 0.5,
         target: canvasEl,
       }
@@ -683,7 +695,7 @@ const paintRects = (layers: paper.Layer[], width: number, height: number) => {
   if (!l0 || !l1 || !l2) return [];
   const bgRect = new Path.Rectangle(new Point(0, 0), new Point(width, height));
   const clip1 = bgRect.clone();
-  const clip2 = clip1.clone();
+  const clip2 = bgRect.clone();
   bgRect.fillColor = new Color("#fff");
   l0.addChild(bgRect);
   l1.addChild(clip1);
