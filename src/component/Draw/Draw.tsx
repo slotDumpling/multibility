@@ -695,8 +695,8 @@ const paintStroke = (() => {
         item = layer.importJSON(pathData);
       } catch (e) {
         console.error(e);
-        item = new paper.Item();
       }
+      item ??= new paper.Item();
       item.name = uid;
       cache.set(uid, { item, stroke });
     }
