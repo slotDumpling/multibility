@@ -13,7 +13,6 @@ import { Button, ButtonProps, Modal, Popover, Radio } from "antd";
 import { CSSTransition } from "react-transition-group";
 import { DrawCtrl } from "lib/draw/DrawCtrl";
 import { ColorSelect, PenPanel } from "./PenPanel";
-import { useForceLight } from "lib/Dark";
 import TextArea from "antd/lib/input/TextArea";
 import { allColors } from "lib/color";
 import { DrawRefType } from "component/Draw";
@@ -97,7 +96,6 @@ export const TextTool: FC<{
   const [text, setText] = useState("");
   const [color, setColor] = useState(allColors[0]!);
   const [align, setAlign] = useState("center");
-  const [forceLight] = useForceLight();
 
   useEffect(() => {
     const pointText = drawRef.current?.pointText;
@@ -155,7 +153,7 @@ export const TextTool: FC<{
       bodyStyle={{ paddingTop: 0 }}
       destroyOnClose
     >
-      <div className="insert-option" data-force-light={forceLight}>
+      <div className="insert-option">
         {fontColorBtn}
         {alignRadio}
       </div>

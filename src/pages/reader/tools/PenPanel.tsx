@@ -8,7 +8,6 @@ import { Setter } from "lib/hooks";
 import IconFont from "component/IconFont";
 import { List } from "immutable";
 import "./penPanel.sass";
-import { useForceLight } from "lib/Dark";
 
 export const PenPanel: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
@@ -66,8 +65,6 @@ export const WidthSelect: FC<{
       "--real-size": `calc(${100 / WIDTH}vw * ${width})`,
     } as CSSProperties);
 
-  const [forceLight] = useForceLight();
-
   const options = [
     { value: -1, label: null },
     ...widthList.map((width, index) => ({
@@ -97,11 +94,7 @@ export const WidthSelect: FC<{
             />
           }
         >
-          <div
-            className="circle-wrapper"
-            data-force-light={forceLight}
-            style={realSizeStyle(width)}
-          >
+          <div className="circle-wrapper" style={realSizeStyle(width)}>
             <ColorCirle className={"width-circle " + field} color={color} />
           </div>
         </Popover>
@@ -141,25 +134,22 @@ const HighlightSwitch: FC<{
 export const ColorSelect: FC<{
   color: string;
   setColor: (color: string) => void;
-}> = ({ setColor, color }) => {
-  const [forceLight] = useForceLight();
-  return (
-    <div className="color-select" data-force-light={forceLight}>
-      {allColors.map((c) => (
-        <label key={c}>
-          <input
-            checked={color === c}
-            type="radio"
-            name="color"
-            onChange={(e) => e.target.checked && setColor(c)}
-          />
-          <div
-            data-color={c}
-            className="circle"
-            style={{ backgroundColor: c, borderColor: c }}
-          />
-        </label>
-      ))}
-    </div>
-  );
-};
+}> = ({ setColor, color }) => (
+  <div className="color-select">
+    {allColors.map((c) => (
+      <label key={c}>
+        <input
+          checked={color === c}
+          type="radio"
+          name="color"
+          onChange={(e) => e.target.checked && setColor(c)}
+        />
+        <div
+          data-color={c}
+          className="circle"
+          style={{ backgroundColor: c, borderColor: c }}
+        />
+      </label>
+    ))}
+  </div>
+);

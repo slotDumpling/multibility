@@ -7,7 +7,6 @@ import React, {
   useCallback,
 } from "react";
 import { useDrawCtrl } from "lib/draw/DrawCtrl";
-import { useForceLight } from "lib/Dark";
 import { useMemoizedFn as useEvent } from "ahooks";
 import { Draw, ActiveToolKey, DrawRefType } from "component/Draw";
 import { SelectTool, TextTool } from "pages/reader/tools/DrawTools";
@@ -75,10 +74,9 @@ const PageWrapperRaw: FC<{
 
   const { height, width } = drawState;
   const ratio = height / width;
-  const [forceLight] = useForceLight();
 
   return (
-    <div ref={ref} className="page-wrapper" data-force-light={forceLight}>
+    <div ref={ref} className="page-wrapper">
       <svg viewBox={`0 0 100 ${ratio * 100}`} />
       {drawShow && (
         <DrawWrapper

@@ -4,6 +4,7 @@ import {
   PropsWithChildren,
   useContext,
   useDebugValue,
+  useEffect,
   useState,
 } from "react";
 import { Setter } from "./hooks";
@@ -25,7 +26,7 @@ export const loadDarkMode = async () => {
         ".width-circle.lineWidth",
         ".font-icon",
         ".pen-icon",
-      ].map((selector) => `[data-force-light=false] ${selector}`),
+      ].map((selector) => `body:not([data-force-light=true]) ${selector}`),
       css: "",
       ignoreImageAnalysis: [],
       disableStyleSheetsProxy: false,
@@ -42,5 +43,12 @@ export function useForceLight() {
 
 export const DarkModeProvider: FC<PropsWithChildren> = ({ children }) => {
   const tuple = useState(false);
+  const [forceLight] = tuple;
+  useEffect(() => {
+    document.body.dataset.forceLight = String(forceLight);
+    return () => {
+      delete document.body.dataset.forceLight;
+    };
+  }, [forceLight]);
   return <DarkCtx.Provider value={tuple}>{children}</DarkCtx.Provider>;
 };
