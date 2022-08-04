@@ -574,7 +574,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     };
 
     const rasterizeSelected = () => {
-      rasterizeLayer(rect?.clone(), true);
+      const bounds = (rect ?? path)?.bounds;
+      if (!bounds) return "";
+      const clip = new Path.Rectangle(bounds);
+      rasterizeLayer(clip, true);
       unrasterizeLayer();
       return layerRaster.current?.toDataURL() ?? "";
     };
