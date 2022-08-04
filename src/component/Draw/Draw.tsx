@@ -356,7 +356,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       return grid;
     }, [group, width, height, paperMode]);
 
-    const handelToolDrag = (e: paper.ToolEvent) => {
+    const handleToolDrag = (e: paper.ToolEvent) => {
       if (paperMode !== "erase") return;
       const layer = scope.current.project.layers[1];
       if (!layer) return;
@@ -528,7 +528,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       view.onMouseDrag = activate(handleDrag);
       view.onMouseUp = activate(handleUp);
       view.onMouseMove = activate(handleMove);
-      tool.onMouseDrag = activate(handelToolDrag);
+      tool.onMouseDrag = activate(handleToolDrag);
       tool.onKeyUp = activate(handleKeyUp);
     });
 
