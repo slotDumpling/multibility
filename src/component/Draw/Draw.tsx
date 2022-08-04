@@ -13,7 +13,6 @@ import paper, {
   Path,
   Size,
   Point,
-  Group,
   Color,
   Raster,
   Layer,
@@ -30,8 +29,8 @@ export type ActiveToolKey = "" | "select" | "text";
 export interface DrawRefType {
   deleteSelected: () => void;
   duplicateSelected: () => void;
+  rasterizeSelected: () => string;
   mutateStyle: (updated: Partial<DrawCtrl>) => void;
-  rasterize: () => string;
   submitText: (text: string, color?: string, justification?: string) => void;
   cancelText: () => void;
   pointText?: paper.PointText;
@@ -47,6 +46,7 @@ interface DrawPropType {
 }
 
 const HIT_TOLERANCE = 20;
+const P_ZERO = new Point(0, 0);
 
 const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
   (
@@ -62,6 +62,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     ref
   ) => {
     const { width, height } = drawState;
+    const projSize = useMemo(() => new Size(width, height), [width, height]);
     const { mode, finger, lasso, eraserWidth } = drawCtrl;
 
     const canvasEl = useRef<HTMLCanvasElement>(null);
@@ -92,24 +93,24 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     useEffect(() => {
       scope.current.activate();
       const { layers } = scope.current.project;
-      const rects = paintRects(layers, width, height);
+      const rects = paintRects(layers, projSize);
       return () => rects.forEach((r) => r.remove());
-    }, [width, height]);
+    }, [projSize]);
 
     const [canvasWidth] = useSize(canvasEl);
     const ratio = canvasWidth / width;
     useEffect(() => {
       if (!ratio) return;
       const scp = scope.current;
-      const zero = new Point(0, 0);
-      scp.view.viewSize = new Size(width, height).multiply(ratio);
-      scp.view.scale(ratio, zero);
+      scp.view.viewSize = projSize.multiply(ratio);
+      scp.view.scale(ratio, P_ZERO);
       scp.project.layers.forEach((l) => (l.visible = true));
       scp.view.update();
 
-      return () => scp.view?.scale(1 / ratio, zero);
-    }, [width, height, ratio]);
+      return () => scp.view?.scale(1 / ratio, P_ZERO);
+    }, [ratio, projSize]);
 
+    const [imgRaster, setImgRaster] = usePaperItem();
     useEffect(() => {
       if (!imgSrc) return;
       scope.current.activate();
@@ -121,9 +122,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         raster.fitBounds(new paper.Rectangle(0, 0, width, height));
         raster.bringToFront();
       };
-
-      return () => void raster?.remove();
-    }, [imgSrc, width, height]);
+      setImgRaster(raster);
+    }, [imgSrc, width, height, setImgRaster]);
 
     const mergedStrokes = useMemo(
       () =>
@@ -186,41 +186,43 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       };
     }, [selected, setActiveTool]);
 
-    const [raster, setRaster] = usePaperItem<paper.Raster>();
+    const layerRaster = useRef<paper.Raster>();
     const pinching = useRef(false);
-    const rasterizeLayer = (useClip = true) => {
-      if (!renderSlow.current) return;
+    const rasterizeLayer = (clip?: paper.Path.Rectangle, force = false) => {
+      if (!renderSlow.current && !force) return;
       const [l0, l1] = scope.current.project.layers;
       const { view } = scope.current;
       if (!l0 || !l1) return;
-      setRaster((r) => {
-        scope.current.activate();
-        l1.visible = true;
-        const projSize = new Size(width, height);
-        const clipSize = useClip ? Size.min(view.size, projSize) : projSize;
-        const clip = new Path.Rectangle(clipSize);
+      scope.current.activate();
+      l1.visible = true;
+      if (!clip) {
+        clip = new Path.Rectangle(Size.min(view.size, projSize));
         clip.position = view.center;
-        clip.clipMask = true;
-        const prevClip = l1.firstChild;
-        if (useClip) prevClip.replaceWith(clip);
+      }
+      clip.clipMask = true;
+      const prevClip = l1.firstChild;
+      prevClip.replaceWith(clip);
+      if (imgRaster) l1.insertChild(1, imgRaster);
 
-        const dpi = 72 * devicePixelRatio;
-        const resolution = (canvasWidth / clipSize.width) * dpi;
-        r = l1.rasterize({ raster: r, resolution });
+      const dpi = 72 * devicePixelRatio;
+      const resolution = (canvasWidth / clip.bounds.width) * dpi;
+      let raster = layerRaster.current;
+      raster = l1.rasterize({ raster, resolution });
+      layerRaster.current = raster;
+      l0.addChild(raster);
+      raster.visible = true;
 
-        r.visible = true;
-        l1.visible = false;
-        l0.addChild(r);
-        if (useClip) clip.replaceWith(prevClip);
-        clip.remove();
-        return r;
-      });
+      l1.visible = false;
+      if (imgRaster) l0.insertChild(1, imgRaster);
+      clip.replaceWith(prevClip);
+      clip.remove();
     };
     const unrasterizeLayer = () => {
       const [, l1] = scope.current.project.layers;
-      if (pinching.current || !l1 || !raster) return;
+      const lr = layerRaster.current;
+      if (pinching.current || !l1 || !lr) return;
       l1.visible = true;
-      raster.visible = false;
+      lr.visible = false;
     };
 
     const downPath = (e: paper.MouseEvent) => {
@@ -571,12 +573,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       setChosenIDs(mutations.map(([uid]) => uid));
     };
 
-    const rasterize = () => {
-      const g = new Group(chosenItems);
-      const layer = scope.current.project.layers[1];
-      if (!layer) return "";
-      g.addTo(layer);
-      return g.rasterize({ insert: false }).toDataURL();
+    const rasterizeSelected = () => {
+      rasterizeLayer(rect?.clone(), true);
+      unrasterizeLayer();
+      return layerRaster.current?.toDataURL() ?? "";
     };
 
     const [pointText, setPointText] = usePaperItem<paper.PointText>();
@@ -608,10 +608,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     useImperativeHandle(ref, () => ({
       deleteSelected,
       duplicateSelected,
+      rasterizeSelected,
+      mutateStyle,
       cancelText,
       submitText,
-      mutateStyle,
-      rasterize,
       pointText,
     }));
 
@@ -629,7 +629,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           lastScale = 1;
           elPos = new Point(x, y);
           lastOrigin = originRawP.subtract(elPos);
-          rasterizeLayer(false);
+          rasterizeLayer(new Path.Rectangle(P_ZERO, projSize));
           pinching.current = true;
         } else {
           [lastScale, lastOrigin, elPos] = memo;
@@ -648,7 +648,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
         if (last) {
           scaleView(view, originPorjP, dScale)
-            .then(() => putCenterBack(view, new Size(width, height)))
+            .then(() => putCenterBack(view, projSize))
             .then(() => (pinching.current = false))
             .then(unrasterizeLayer);
         } else {
@@ -721,10 +721,10 @@ const paintStroke = (() => {
   };
 })();
 
-const paintRects = (layers: paper.Layer[], width: number, height: number) => {
+const paintRects = (layers: paper.Layer[], projSize: paper.Size) => {
   const [l0, l1, l2] = layers;
   if (!l0 || !l1 || !l2) return [];
-  const bgRect = new Path.Rectangle(new Point(0, 0), new Point(width, height));
+  const bgRect = new Path.Rectangle(P_ZERO, projSize);
   const clip1 = bgRect.clone();
   const clip2 = bgRect.clone();
   bgRect.fillColor = new Color("#fff");

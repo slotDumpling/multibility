@@ -42,7 +42,7 @@ export const SelectToolContent: FC<{
 
   const getRaster = () => {
     if (!drawRef.current) return;
-    const imageData = drawRef.current.rasterize();
+    const imageData = drawRef.current.rasterizeSelected();
     Modal.confirm({
       title: "Screenshot",
       content: <img className="raster" src={imageData} alt="raster" />,
