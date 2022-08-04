@@ -188,7 +188,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const layerRaster = useRef<paper.Raster>();
     const pinching = useRef(false);
-    const rasterizeLayer = (clip?: paper.Path.Rectangle, force = false) => {
+    const rasterizeLayer = (clip?: paper.Path, force = false) => {
       if (!renderSlow.current && !force) return;
       const [l0, l1] = scope.current.project.layers;
       const { view } = scope.current;
@@ -565,11 +565,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     };
 
     const rasterizeSelected = () => {
-      const bounds = (rect ?? path)?.bounds;
-      if (!bounds) return "";
-      const clip = new Path.Rectangle(bounds);
       scope.current.activate();
-      rasterizeLayer(clip, true);
+      rasterizeLayer((rect ?? path)?.clone(), true);
       unrasterizeLayer();
       return layerRaster.current?.toDataURL() ?? "";
     };
