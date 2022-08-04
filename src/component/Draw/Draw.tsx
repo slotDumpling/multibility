@@ -139,6 +139,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const layer = scope.current.project.layers[1];
       if (!layer) return;
 
+      const timeBeforeRender = Date.now();
       scope.current.activate();
       mergedStrokes.forEach((stroke) => {
         const self = drawState.hasStroke(stroke.uid);
@@ -147,7 +148,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       });
       setGroup(tempGroup);
 
-      const timeBeforeRender = Date.now();
       scope.current.view.update();
       requestAnimationFrame(() => {
         const duration = Date.now() - timeBeforeRender;
@@ -343,45 +343,61 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const erased = useRef(new Set<string>());
     const replaced = useRef(new Map<string, paper.Item>());
 
+    const itemGrid = useMemo(() => {
+      if (paperMode !== "erase") return [];
+      const wnum = Math.ceil(width / 100);
+      const hnum = Math.ceil(height / 100);
+      const grid = Array.from({ length: wnum }, () =>
+        Array.from({ length: hnum }, () => new Set<paper.Item>())
+      );
+
+      group.forEach((item) => addGridItem(item, grid));
+      return grid;
+    }, [group, width, height, paperMode]);
+
     const handelToolDrag = (e: paper.ToolEvent) => {
       if (paperMode !== "erase") return;
       const layer = scope.current.project.layers[1];
       if (!layer) return;
-      const prevVisible = layer.visible;
-      layer.visible = true;
-      const hitRes = layer.hitTestAll(e.point, {
+
+      const hitOption = {
         class: paper.Path,
         stroke: true,
         tolerance: eraserWidth / 2,
-      });
-      layer.visible = prevVisible;
+      };
 
-      hitRes?.forEach(({ item }) => {
-        if (!(item instanceof paper.Path)) return;
-        let topItem: paper.PathItem = item;
-        while (topItem.parent !== layer) {
-          if (!(topItem.parent instanceof paper.PathItem)) break;
-          topItem = topItem.parent;
-        }
-        const { name } = topItem;
+      const set = getGridItems(e.point, eraserWidth, itemGrid);
+      console.log(set);
+      set.forEach((item) => {
+        item.hitTestAll(e.point, hitOption)?.forEach(({ item }) => {
+          if (!(item instanceof paper.Path)) return;
+          let topItem: paper.PathItem = item;
+          while (topItem.parent !== layer) {
+            if (!(topItem.parent instanceof paper.PathItem)) break;
+            topItem = topItem.parent;
+          }
+          const { name } = topItem;
 
-        if (drawCtrl.pixelEraser) {
-          const radius = (eraserWidth + item.strokeWidth) / 2;
-          const circle = new Path.Circle({
-            center: e.point,
-            radius,
-            insert: false,
-          });
+          if (drawCtrl.pixelEraser) {
+            const radius = (eraserWidth + item.strokeWidth) / 2;
+            const circle = new Path.Circle({
+              center: e.point,
+              radius,
+              insert: false,
+            });
 
-          const sub = item.subtract(circle, { trace: false });
-          item.replaceWith(sub);
-          if (topItem === item) topItem = sub;
-          replaced.current.set(name, topItem);
-        } else {
-          topItem.opacity = 0.5;
-          topItem.guide = true;
-          erased.current.add(name);
-        }
+            const sub = item.subtract(circle, { trace: false });
+            item.replaceWith(sub);
+            console.log(item === topItem);
+            addGridItem(sub, itemGrid, item);
+            if (topItem === item) topItem = sub;
+            replaced.current.set(name, topItem);
+          } else {
+            topItem.opacity = 0.5;
+            topItem.guide = true;
+            erased.current.add(name);
+          }
+        });
       });
     };
 
@@ -884,4 +900,45 @@ const flattenCP = (cp: paper.Item): paper.Path[] => {
     return cp.children.map(flattenCP).flat();
   }
   return [];
+};
+
+const addGridItem = (
+  item: paper.Item,
+  grid: Set<paper.Item>[][],
+  replaced?: paper.Item
+) => {
+  const bounds = (replaced ?? item).strokeBounds;
+  const { topLeft, bottomRight } = bounds;
+  const [xmin, xmax, ymin, ymax] = [
+    Math.floor(topLeft.x / 100),
+    Math.ceil(bottomRight.x / 100),
+    Math.floor(topLeft.y / 100),
+    Math.ceil(bottomRight.y / 100),
+  ];
+  for (let x = xmin; x <= xmax; x += 1) {
+    for (let y = ymin; y <= ymax; y += 1) {
+      replaced && grid[x]?.[y]?.delete(replaced);
+      grid[x]?.[y]?.add(item);
+    }
+  }
+};
+
+const getGridItems = (
+  point: paper.Point,
+  width: number,
+  grid: Set<paper.Item>[][]
+) => {
+  const itemSet = new Set<paper.Item>();
+  const [xmin, xmax, ymin, ymax] = [
+    Math.floor((point.x - width / 2) / 100),
+    Math.ceil((point.x + width / 2) / 100),
+    Math.floor((point.y - width / 2) / 100),
+    Math.ceil((point.y + width / 2) / 100),
+  ];
+  for (let x = xmin; x <= xmax; x += 1) {
+    for (let y = ymin; y <= ymax; y += 1) {
+      grid[x]?.[y]?.forEach((item) => itemSet.add(item));
+    }
+  }
+  return itemSet;
 };
