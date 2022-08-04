@@ -637,7 +637,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         const transP = deltaP.divide(view.zoom);
         view.translate(transP);
 
-        if (Math.abs(1 - scale) < 0.05) scale = 1;
         let dScale = first ? 1 : scale / lastScale;
         scope.current.settings.hitTolerance /= dScale;
 
@@ -652,7 +651,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         }
       },
       {
-        scaleBounds: { max: 5, min: 0.3 },
+        scaleBounds: { max: 5, min: 1 },
         rubberband: 0.5,
         target: canvasEl,
       }
