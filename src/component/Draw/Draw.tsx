@@ -193,7 +193,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const [l0, l1] = scope.current.project.layers;
       const { view } = scope.current;
       if (!l0 || !l1) return;
-      scope.current.activate();
       l1.visible = true;
       if (!clip) {
         clip = new Path.Rectangle(Size.min(view.size, projSize));
@@ -202,20 +201,17 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       clip.clipMask = true;
       const prevClip = l1.firstChild;
       prevClip.replaceWith(clip);
-      if (imgRaster) l1.insertChild(1, imgRaster);
+      imgRaster?.insertAbove(clip);
 
       const dpi = 72 * devicePixelRatio;
       const resolution = (canvasWidth / clip.bounds.width) * dpi;
       let raster = layerRaster.current;
-      raster = l1.rasterize({ raster, resolution });
-      layerRaster.current = raster;
-      l0.addChild(raster);
-      raster.visible = true;
+      raster = layerRaster.current = l1.rasterize({ raster, resolution });
+      l0.addChild(raster).visible = true;
 
       l1.visible = false;
-      if (imgRaster) l0.insertChild(1, imgRaster);
       clip.replaceWith(prevClip);
-      clip.remove();
+      imgRaster?.insertBelow(raster);
     };
     const unrasterizeLayer = () => {
       const [, l1] = scope.current.project.layers;
@@ -503,14 +499,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       ...{ select: null, draw: null, erase: null },
     }[paperMode];
 
-    const handleKeyUp =
-      paperMode === "selected"
-        ? (e: paper.KeyEvent) => {
-            if (["delete", "backspace"].includes(e.key)) {
-              deleteSelected();
-            }
-          }
-        : null;
+    const handleKeyUp = (e: paper.KeyEvent) => {
+      if (paperMode !== "selected") return;
+      if (/^(delete|backspace)$/.test(e.key)) deleteSelected();
+    };
 
     useEffect(() => {
       if (readonly) return;
@@ -576,6 +568,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const bounds = (rect ?? path)?.bounds;
       if (!bounds) return "";
       const clip = new Path.Rectangle(bounds);
+      scope.current.activate();
       rasterizeLayer(clip, true);
       unrasterizeLayer();
       return layerRaster.current?.toDataURL() ?? "";
@@ -683,7 +676,7 @@ DrawRaw.displayName = "Draw";
 export const Draw = React.memo(DrawRaw);
 
 function usePaperItem<T extends paper.Item>() {
-  const tuple = useState<T | undefined>();
+  const tuple = useState<T>();
   const [item] = tuple;
   useDebugValue(item);
   useEffect(() => {
