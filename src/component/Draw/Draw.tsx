@@ -357,9 +357,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     }, [group, width, height, paperMode]);
 
     const handleToolDrag = (e: paper.ToolEvent) => {
-      if (paperMode !== "erase") return;
       const layer = scope.current.project.layers[1];
-      if (!layer) return;
+      if (paperMode !== "erase" || !layer) return;
 
       const hitOption = {
         class: paper.Path,
