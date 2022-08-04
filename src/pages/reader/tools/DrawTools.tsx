@@ -2,6 +2,7 @@ import { FC, RefObject, useEffect, useState } from "react";
 import {
   CopyOutlined,
   DeleteOutlined,
+  PictureTwoTone,
   PictureOutlined,
   BgColorsOutlined,
   AlignLeftOutlined,
@@ -47,9 +48,9 @@ export const SelectToolContent: FC<{
       title: "Screenshot",
       content: <img className="raster" src={imageData} alt="raster" />,
       className: "raster-modal",
-      icon: <PictureOutlined />,
+      icon: <PictureTwoTone />,
       okText: "Save",
-      onOk: () => saveAs(imageData, "screenshot"),
+      onOk: () => saveAs(imageData, document.title.split("-")[0] + ".png"),
     });
   };
 
