@@ -350,8 +350,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const grid = Array.from({ length: wnum }, () =>
         Array.from({ length: hnum }, () => new Set<paper.Item>())
       );
-
-      group.forEach((item) => addGridItem(item, grid));
+      group.forEach((item) => setGridItem(grid, item));
       return grid;
     }, [group, width, height, paperMode]);
 
@@ -366,7 +365,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         tolerance: eraserWidth / 2,
       };
 
-      getGridItems(e.point, eraserWidth, itemGrid).forEach((item) => {
+      getGridItems(itemGrid, e.point, eraserWidth).forEach((item) => {
+        if (erased.current.has(item.name)) return;
         item.hitTestAll(e.point, hitOption)?.forEach(({ item }) => {
           if (!(item instanceof paper.Path)) return;
           let topItem: paper.PathItem = item;
@@ -387,7 +387,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
             const sub = item.subtract(circle, { trace: false });
             item.replaceWith(sub);
             if (topItem === item) {
-              addGridItem(sub, itemGrid, item);
+              setGridItem(itemGrid, sub, item);
               topItem = sub;
             }
             replaced.current.set(name, topItem);
@@ -901,19 +901,23 @@ const flattenCP = (cp: paper.Item): paper.Path[] => {
   return [];
 };
 
-const addGridItem = (
-  item: paper.Item,
-  grid: Set<paper.Item>[][],
-  replaced?: paper.Item
-) => {
-  const bounds = (replaced ?? item).strokeBounds;
-  const { topLeft, bottomRight } = bounds;
-  const [xmin, xmax, ymin, ymax] = [
+const getGridRange = (topLeft: paper.Point, bottomRight: paper.Point) => {
+  return [
     Math.floor(topLeft.x / 100),
     Math.ceil(bottomRight.x / 100),
     Math.floor(topLeft.y / 100),
     Math.ceil(bottomRight.y / 100),
-  ];
+  ] as [number, number, number, number];
+};
+
+const setGridItem = (
+  grid: Set<paper.Item>[][],
+  item: paper.Item,
+  replaced?: paper.Item
+) => {
+  const bounds = (replaced ?? item).strokeBounds;
+  const { topLeft, bottomRight } = bounds;
+  const [xmin, xmax, ymin, ymax] = getGridRange(topLeft, bottomRight);
   for (let x = xmin; x <= xmax; x += 1) {
     for (let y = ymin; y <= ymax; y += 1) {
       replaced && grid[x]?.[y]?.delete(replaced);
@@ -923,17 +927,15 @@ const addGridItem = (
 };
 
 const getGridItems = (
+  grid: Set<paper.Item>[][],
   point: paper.Point,
-  width: number,
-  grid: Set<paper.Item>[][]
+  width: number
 ) => {
   const itemSet = new Set<paper.Item>();
-  const [xmin, xmax, ymin, ymax] = [
-    Math.floor((point.x - width / 2) / 100),
-    Math.ceil((point.x + width / 2) / 100),
-    Math.floor((point.y - width / 2) / 100),
-    Math.ceil((point.y + width / 2) / 100),
-  ];
+  const [xmin, xmax, ymin, ymax] = getGridRange(
+    point.subtract(width / 2),
+    point.add(width / 2)
+  );
   for (let x = xmin; x <= xmax; x += 1) {
     for (let y = ymin; y <= ymax; y += 1) {
       grid[x]?.[y]?.forEach((item) => itemSet.add(item));
