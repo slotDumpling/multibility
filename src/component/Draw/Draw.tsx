@@ -223,7 +223,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const downPath = (e: paper.MouseEvent) => {
       rasterizeLayer();
-      setPath(startStroke(drawCtrl, e.point));
+      setPath(startStroke(drawCtrl, e.point, renderSlow.current));
     };
     const downRect = (e: paper.MouseEvent) => {
       rasterizeLayer();
@@ -736,7 +736,7 @@ const startRect = (point: paper.Point) => {
   return rect;
 };
 
-const startStroke = (drawCtrl: DrawCtrl, point: paper.Point) => {
+const startStroke = (drawCtrl: DrawCtrl, point: paper.Point, slow = false) => {
   let { mode, lineWidth, eraserWidth, color, highlight } = drawCtrl;
   const path = new Path();
   path.add(point);
@@ -749,7 +749,7 @@ const startStroke = (drawCtrl: DrawCtrl, point: paper.Point) => {
     lineWidth = 5;
   }
   const strokeColor = new Color(color);
-  if (highlight || mode === "erase") {
+  if (highlight || (mode === "erase" && !slow)) {
     strokeColor.alpha = 0.5;
     path.blendMode = "multiply";
   }
