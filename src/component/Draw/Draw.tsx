@@ -366,9 +366,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         tolerance: eraserWidth / 2,
       };
 
-      const set = getGridItems(e.point, eraserWidth, itemGrid);
-      console.log(set);
-      set.forEach((item) => {
+      getGridItems(e.point, eraserWidth, itemGrid).forEach((item) => {
         item.hitTestAll(e.point, hitOption)?.forEach(({ item }) => {
           if (!(item instanceof paper.Path)) return;
           let topItem: paper.PathItem = item;
@@ -388,9 +386,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
             const sub = item.subtract(circle, { trace: false });
             item.replaceWith(sub);
-            console.log(item === topItem);
-            addGridItem(sub, itemGrid, item);
-            if (topItem === item) topItem = sub;
+            if (topItem === item) {
+              addGridItem(sub, itemGrid, item);
+              topItem = sub;
+            }
             replaced.current.set(name, topItem);
           } else {
             topItem.opacity = 0.5;
