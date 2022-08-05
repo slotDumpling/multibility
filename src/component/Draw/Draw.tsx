@@ -195,7 +195,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       if (!l0 || !l1) return;
       l1.visible = true;
       if (!clip) {
-        clip = new Path.Rectangle(Size.min(view.size, projSize));
+        clip = new Path.Rectangle(view.size);
         clip.position = view.center;
       }
       clip.clipMask = true;
@@ -207,7 +207,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const resolution = (canvasWidth / clip.bounds.width) * dpi;
       let raster = layerRaster.current;
       raster = layerRaster.current = l1.rasterize({ raster, resolution });
-      l0.addChild(raster).visible = true;
+      raster.visible = true;
 
       l1.visible = false;
       clip.replaceWith(prevClip);
@@ -399,12 +399,18 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const handleUp = {
       draw() {
-        unrasterizeLayer();
         if (!path || path.segments.length <= 1) return;
         path.simplify();
-        const pathData = path.exportJSON();
-        setPath(undefined);
-        onChange((prev) => DrawState.addStroke(prev, pathData));
+        scope.current.view.update();
+        const task = () => {
+          unrasterizeLayer();
+          const pathData = path.exportJSON();
+          setPath(undefined);
+          onChange((prev) => DrawState.addStroke(prev, pathData));
+        };
+        if (renderSlow.current) {
+          requestAnimationFrame(() => requestAnimationFrame(task));
+        } else task();
       },
       erase() {
         unrasterizeLayer();
