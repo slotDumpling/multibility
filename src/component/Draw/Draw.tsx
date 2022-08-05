@@ -814,20 +814,17 @@ const putCenterBack = (view: paper.View, projSize: paper.Size) =>
 
 const checkLasso = (items: paper.Item[], selection: paper.Path) => {
   const isInside = (p: paper.Path) => {
-    const res = p.subtract(selection, { insert: false, trace: false });
-    res.remove();
-    return !res.compare(p);
+    if (selection.segments.length === 4 && p.isInside(selection.bounds)) {
+      return true;
+    }
+    return !p.subtract(selection, { insert: false, trace: false }).compare(p);
   };
   return items
     .filter((item) => {
       if (!item.name) return false;
       if (!item.bounds.intersects(selection.bounds)) return false;
       if (item instanceof paper.Path) {
-        return (
-          (selection.segments.length === 4 &&
-            item.isInside(selection.bounds)) ||
-          isInside(item)
-        );
+        return isInside(item);
       } else {
         const checkedP = new Path.Rectangle(item.bounds);
         checkedP.remove();
