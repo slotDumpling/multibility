@@ -16,6 +16,7 @@ import paper, {
   Color,
   Raster,
   Layer,
+  Rectangle,
 } from "paper/dist/paper-core";
 import { usePinch } from "@use-gesture/react";
 import useSize from "@react-hook/size";
@@ -187,17 +188,11 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     }, [selected, setActiveTool]);
 
     const layerRaster = useRef<paper.Raster>();
-    const pinching = useRef(false);
-    const rasterizeLayer = (clip?: paper.Path, force = false) => {
+    const rasterizeLayer = (clip: paper.Path, force = false) => {
       if (!renderSlow.current && !force) return;
       const [l0, l1] = scope.current.project.layers;
-      const { view } = scope.current;
       if (!l0 || !l1) return;
       l1.visible = true;
-      if (!clip) {
-        clip = new Path.Rectangle(view.size);
-        clip.position = view.center;
-      }
       clip.clipMask = true;
       const prevClip = l1.firstChild;
       prevClip.replaceWith(clip);
@@ -216,17 +211,47 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const unrasterizeLayer = () => {
       const [, l1] = scope.current.project.layers;
       const lr = layerRaster.current;
-      if (pinching.current || !l1 || !lr) return;
+      if (!l1 || !lr) return;
       l1.visible = true;
       lr.visible = false;
     };
 
+    const canvasRaster = useRef<paper.Raster>();
+    useEffect(() => {
+      canvasRaster.current?.remove();
+      canvasRaster.current = undefined;
+    }, [canvasWidth]);
+    const rasterizeCanvas = () => {
+      if (!renderSlow.current) return;
+      scope.current.activate();
+      const { view } = scope.current;
+      const raster = (canvasRaster.current ??= new Raster(
+        view.viewSize.multiply(devicePixelRatio)
+      ));
+      raster.drawImage(view.element, P_ZERO);
+
+      const topLeft = view.center.subtract(new Point(view.size).divide(2));
+      const bounds = new Rectangle(topLeft, view.size);
+      raster.fitBounds(bounds);
+      canvasRaster.current = raster;
+      raster.visible = true;
+      const [, l1] = scope.current.project.layers;
+      l1 && (l1.visible = false);
+    };
+    const unrasterizeCanvas = () => {
+      const [, l1] = scope.current.project.layers;
+      const cr = canvasRaster.current;
+      if (!l1 || !cr) return;
+      cr.visible = false;
+      if (layerRaster.current?.visible !== true) l1.visible = true;
+    };
+
     const downPath = (e: paper.MouseEvent) => {
-      rasterizeLayer();
+      rasterizeCanvas();
       setPath(startStroke(drawCtrl, e.point, renderSlow.current));
     };
     const downRect = (e: paper.MouseEvent) => {
-      rasterizeLayer();
+      rasterizeCanvas();
       setRect(startRect(e.point));
     };
 
@@ -238,8 +263,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         if (lasso) {
           // if the point is outside of selection, reset selection
           if (path?.contains(e.point)) return;
-          downPath(e);
           setSelected(false);
+          downPath(e);
         } else {
           // check if the point hit the segment point.
           let hitRes =
@@ -250,9 +275,9 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
           // if the point is outside of selection, reset selection
           if (rect?.contains(e.point)) return;
-          downRect(e);
           setRotateHandle(undefined);
           setSelected(false);
+          downRect(e);
         }
       },
       text(e: paper.MouseEvent) {
@@ -403,7 +428,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         path.simplify();
         scope.current.view.update();
         const task = () => {
-          unrasterizeLayer();
+          unrasterizeCanvas();
           const pathData = path.exportJSON();
           setPath(undefined);
           onChange((prev) => DrawState.addStroke(prev, pathData));
@@ -413,7 +438,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         } else task();
       },
       erase() {
-        unrasterizeLayer();
+        unrasterizeCanvas();
         setPath(undefined);
         if (drawCtrl.pixelEraser) {
           const items = Array.from(replaced.current);
@@ -432,7 +457,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         }
       },
       select() {
-        unrasterizeLayer();
+        unrasterizeCanvas();
         let selection: string[];
         if (lasso) {
           if (!path || Math.abs(path.area) < 1_000) return setPath(undefined);
@@ -572,7 +597,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const rasterizeSelected = () => {
       scope.current.activate();
-      rasterizeLayer((rect ?? path)?.clone(), true);
+      const clip = (rect ?? path)?.clone();
+      clip && rasterizeLayer(clip, true);
       unrasterizeLayer();
       return layerRaster.current?.toDataURL() ?? "";
     };
@@ -628,7 +654,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           elPos = new Point(x, y);
           lastOrigin = originRawP.subtract(elPos);
           rasterizeLayer(new Path.Rectangle(P_ZERO, projSize));
-          pinching.current = true;
         } else {
           [lastScale, lastOrigin, elPos] = memo;
         }
@@ -648,9 +673,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           Promise.all([
             putCenterBack(view, projSize),
             scaleView(view, originPorjP, dScale),
-          ])
-            .then(() => (pinching.current = false))
-            .then(unrasterizeLayer);
+          ]).then(unrasterizeLayer);
           view.scale(1 / dScale, originPorjP);
         } else {
           return [scale, originViewP, elPos];
