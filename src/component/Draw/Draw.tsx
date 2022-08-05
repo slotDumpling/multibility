@@ -636,14 +636,17 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
         let dScale = first ? 1 : scale / lastScale;
         scope.current.settings.hitTolerance /= dScale;
+        view.scale(dScale, originPorjP);
 
         if (last) {
-          scaleView(view, originPorjP, dScale)
-            .then(() => putCenterBack(view, projSize))
+          Promise.all([
+            putCenterBack(view, projSize),
+            scaleView(view, originPorjP, dScale),
+          ])
             .then(() => (pinching.current = false))
             .then(unrasterizeLayer);
+          view.scale(1 / dScale, originPorjP);
         } else {
-          view.scale(dScale, originPorjP);
           return [scale, originViewP, elPos];
         }
       },
@@ -769,50 +772,44 @@ const scaleView = (
   originPorjP: paper.Point,
   dScale: number
 ) =>
-  new Promise<void>((res) => {
+  new Promise<void>((resolve) => {
     if (Math.abs(dScale - 1) < 0.05) {
       view.scale(dScale, originPorjP);
-      return res();
+      return resolve();
     }
     let aniCount = 10;
     dScale = Math.pow(dScale, 1 / aniCount);
     const scale = () => {
       view.scale(dScale, originPorjP);
       if (--aniCount > 0) requestAnimationFrame(scale);
-      else requestAnimationFrame(() => res());
+      else requestAnimationFrame(() => resolve());
     };
     scale();
   });
 
-const getCenterTranslate = (
-  view: paper.View,
-  projSize: paper.Size
-): [number, number] => {
+const getTargetCenter = (view: paper.View, projSize: paper.Size) => {
   const { x, y } = view.center;
-  const { width: viewW, height: viewH } = view.size;
-  const { width: projW, height: projH } = projSize;
+  const minSize = Size.min(view.size, projSize).divide(2);
+  const { width: minX, height: minY } = minSize;
+  const { width: maxX, height: maxY } = projSize.subtract(minSize);
 
-  const [minX, minY] = [Math.min(viewW, projW) / 2, Math.min(viewH, projH) / 2];
-  const [maxX, maxY] = [projW - minX, projH - minY];
-
-  const deltaX = x < minX ? minX - x : x > maxX ? maxX - x : 0;
-  const deltaY = y < minY ? minY - y : y > maxY ? maxY - y : 0;
-
-  return [deltaX, deltaY];
+  const targetX = x < minX ? minX : x > maxX ? maxX : x;
+  const targetY = y < minY ? minY : y > maxY ? maxY : y;
+  return new Point(targetX, targetY);
 };
 
 const putCenterBack = (view: paper.View, projSize: paper.Size) =>
-  new Promise<void>((res) => {
-    const [deltaX, deltaY] = getCenterTranslate(view, projSize);
-    if (!deltaX && !deltaY) return res();
+  new Promise<void>((resolve) => {
+    const targetCenter = getTargetCenter(view, projSize);
+    if (view.center.equals(targetCenter)) return resolve();
     let aniCount = 10;
-    const dP = new Point(deltaX, deltaY).divide(-aniCount);
     const move = () => {
-      view.translate(dP);
+      const delta = view.center.subtract(targetCenter);
+      view.translate(delta.divide(aniCount));
       if (--aniCount > 0) requestAnimationFrame(move);
-      else requestAnimationFrame(() => res());
+      else requestAnimationFrame(() => resolve());
     };
-    move();
+    requestAnimationFrame(move);
   });
 
 const checkLasso = (items: paper.Item[], selection: paper.Path) => {
