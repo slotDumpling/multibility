@@ -755,7 +755,7 @@ const startStroke = (drawCtrl: DrawCtrl, point: paper.Point, slow = false) => {
     lineWidth = 5;
   }
   const strokeColor = new Color(color);
-  if (highlight || (mode === "erase" && !slow)) {
+  if ((mode === "draw" && highlight) || (mode === "erase" && !slow)) {
     strokeColor.alpha = 0.5;
     path.blendMode = "multiply";
   }
