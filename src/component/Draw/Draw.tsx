@@ -16,7 +16,6 @@ import paper, {
   Color,
   Raster,
   Layer,
-  Rectangle,
 } from "paper/dist/paper-core";
 import { usePinch } from "@use-gesture/react";
 import useSize from "@react-hook/size";
@@ -135,31 +134,44 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     );
 
     const renderSlow = useRef(false);
-    const taskOnUpdate = useRef(() => {});
+    const deferRender = useRef(false);
+    const deferTimerID = useRef(0);
+
     useEffect(() => {
-      const tempGroup: paper.Item[] = [];
       const layer = scope.current.project.layers[1];
       if (!layer) return;
+      const render = () => {
+        const tempGroup: paper.Item[] = [];
+        const timeBeforeRender = Date.now();
+        scope.current.activate();
+        mergedStrokes.forEach((stroke) => {
+          const self = drawState.hasStroke(stroke.uid);
+          const item = paintStroke(stroke, layer, !self);
+          if (self) tempGroup.push(item);
+        });
+        setGroup(tempGroup);
 
-      const timeBeforeRender = Date.now();
-      scope.current.activate();
-      mergedStrokes.forEach((stroke) => {
-        const self = drawState.hasStroke(stroke.uid);
-        const item = paintStroke(stroke, layer, !self);
-        if (self) tempGroup.push(item);
-      });
-      setGroup(tempGroup);
-      taskOnUpdate.current();
-      taskOnUpdate.current = () => {};
+        unrasterizeCanvas();
+        pathClones.current.forEach((c) => c.remove());
+        pathClones.current = [];
 
-      scope.current.view.update();
-      requestAnimationFrame(() => {
-        const duration = Date.now() - timeBeforeRender;
-        renderSlow.current = duration > 32;
-      });
+        scope.current.view.update();
+        requestAnimationFrame(() => {
+          const duration = Date.now() - timeBeforeRender;
+          renderSlow.current = duration > 32;
+        });
+      };
 
-      return () => void layer.removeChildren(1);
+      if (deferRender.current) {
+        deferTimerID.current = window.setTimeout(render, 1000);
+      } else render();
+
+      return () => {
+        window.clearTimeout(deferTimerID.current);
+        layer.removeChildren(1);
+      };
     }, [mergedStrokes, drawState]);
+    useEffect(() => void (deferRender.current = false), [drawState]);
 
     const hitRef = useRef<paper.HitResult>();
     const [selected, setSelected] = useState(false);
@@ -221,23 +233,23 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     };
 
     const canvasRaster = useRef<paper.Raster>();
-    useEffect(() => {
-      canvasRaster.current?.remove();
-      canvasRaster.current = undefined;
-    }, [canvasWidth]);
+    // raster changes with the size of canvas element
+    useEffect(
+      () => () => {
+        canvasRaster.current?.remove();
+        canvasRaster.current = undefined;
+      },
+      [canvasWidth]
+    );
     const rasterizeCanvas = () => {
       if (!renderSlow.current) return;
       scope.current.activate();
       const { view } = scope.current;
       const raster = (canvasRaster.current ??= new Raster(
-        view.viewSize.multiply(devicePixelRatio)
+        view.viewSize.multiply(window.devicePixelRatio)
       ));
       raster.drawImage(view.element, P_ZERO);
-
-      const topLeft = view.center.subtract(new Point(view.size).divide(2));
-      const bounds = new Rectangle(topLeft, view.size);
-      raster.fitBounds(bounds);
-      canvasRaster.current = raster;
+      raster.fitBounds(view.bounds);
       raster.visible = true;
       const [, l1] = scope.current.project.layers;
       l1 && (l1.visible = false);
@@ -246,14 +258,16 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       scope.current.activate();
       const [, l1] = scope.current.project.layers;
       const cr = canvasRaster.current;
+      const lr = layerRaster.current;
       if (!l1 || !cr) return;
       cr.visible = false;
-      if (layerRaster.current?.visible !== true) l1.visible = true;
+      if (lr?.visible !== true) l1.visible = true;
     };
 
     const downPath = (e: paper.MouseEvent) => {
-      if (canvasRaster.current?.visible !== true) rasterizeCanvas();
-      window.clearTimeout(taskID.current);
+      // rasterize canvas only on the first path.
+      const cr = canvasRaster.current;
+      if (cr?.visible !== true) rasterizeCanvas();
       setPath(startStroke(drawCtrl, e.point, renderSlow.current));
     };
     const downRect = (e: paper.MouseEvent) => {
@@ -262,7 +276,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     };
 
     const handleDown = {
-      draw: downPath,
+      draw(e: paper.MouseEvent) {
+        deferRender.current = renderSlow.current;
+        downPath(e);
+      },
       erase: downPath,
       select: lasso ? downPath : downRect,
       selected(e: paper.MouseEvent) {
@@ -295,6 +312,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     }[paperMode];
 
     const dragPath = (e: paper.MouseEvent) => {
+      window.clearTimeout(deferTimerID.current);
       path?.add(e.point);
       path?.smooth();
     };
@@ -428,32 +446,18 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       });
     };
 
-    const pathQueue = useRef<string[]>([]);
     const pathClones = useRef<paper.Path[]>([]);
-    const taskID = useRef(0);
     const handleUp = {
       draw() {
-        if (!path || path.segments.length <= 1) return;
-        path.simplify();
-        const pathData = path.exportJSON();
-        if (renderSlow.current) {
-          const queue = pathQueue.current;
-          queue.push(pathData);
-          pathClones.current.push(path.clone());
-
-          taskID.current = window.setTimeout(() => {
-            onChange((prev) => DrawState.addStrokes(prev, queue));
-            pathQueue.current = [];
-            taskOnUpdate.current = () => {
-              unrasterizeCanvas();
-              pathClones.current.forEach((c) => c.remove());
-              pathClones.current = [];
-            };
-          }, 1000);
-        } else {
-          unrasterizeCanvas();
-          onChange((prev) => DrawState.addStroke(prev, pathData));
+        if (!path || path.segments.length <= 1) {
+          // if canvas is clicked without any path in queue.
+          if (!pathClones.current.length) unrasterizeCanvas();
+          return;
         }
+        path.simplify();
+        if (renderSlow.current) pathClones.current.push(path.clone());
+        const pathData = path.exportJSON();
+        onChange((prev) => DrawState.addStroke(prev, pathData));
         setPath(undefined);
       },
       erase() {
