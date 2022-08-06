@@ -88,7 +88,6 @@ export default function Reader() {
   const saver = useEvent(async (withState = false) => {
     let currPageRec = pageRec;
     if (withState) {
-      console.log("save");
       stateSet?.getStates().forEach((ds, pageID) => {
         currPageRec = currPageRec?.update(pageID, defaultNotePage, (page) => ({
           ...page,
