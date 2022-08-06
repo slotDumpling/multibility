@@ -85,14 +85,25 @@ export default function Reader() {
     return () => document.body.classList.remove("reader");
   }, []);
 
-  const saver = useEvent(async () => {
-    const pr = pageRec?.toObject();
+  const saver = useEvent(async (withState = false) => {
+    let currPageRec = pageRec;
+    if (withState) {
+      console.log("save");
+      stateSet?.getStates().forEach((ds, pageID) => {
+        currPageRec = currPageRec?.update(pageID, defaultNotePage, (page) => ({
+          ...page,
+          state: DrawState.flaten(ds),
+        }));
+      });
+      setPageRec(currPageRec);
+    }
+    const pr = currPageRec?.toObject();
     await editNoteData(noteID, { pageRec: pr });
     setSaved(true);
   });
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncedSave = useCallback(debounce(saver, 2000), [saver]);
+  const debouncedSave = useCallback(debounce(saver, 5000), [saver]);
   const instantSave = debouncedSave.flush;
 
   const savePageRec = (pageID: string, cb: (prev: NotePage) => NotePage) => {
@@ -150,21 +161,15 @@ export default function Reader() {
     addTeamStatePage(pageID, newPage);
   };
 
-  const updatePageRec = (pageID: string, ds: DrawState) => {
-    const state = DrawState.flaten(ds);
-    savePageRec(pageID, (prev) => ({ ...prev, state }));
-  };
-
   const updateStateSet = (cb: (prevSS: StateSet) => StateSet) => {
     if (!stateSet) return;
     const newSS = cb(stateSet);
     if (newSS === stateSet) return;
     setStateSet(newSS);
-    const lastDS = newSS.getLastDS();
+    setSaved(false);
+    debouncedSave(true);
     const lastOp = newSS.lastOp;
-    if (!lastDS || !lastOp) return;
-    updatePageRec(...lastDS);
-    pushOperation(lastOp);
+    lastOp && pushOperation(lastOp);
   };
 
   const switchPageMarked = (pageID: string) =>
