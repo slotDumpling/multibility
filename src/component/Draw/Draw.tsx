@@ -135,6 +135,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     );
 
     const renderSlow = useRef(false);
+    const taskOnUpdate = useRef(() => {});
     useEffect(() => {
       const tempGroup: paper.Item[] = [];
       const layer = scope.current.project.layers[1];
@@ -148,6 +149,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         if (self) tempGroup.push(item);
       });
       setGroup(tempGroup);
+      taskOnUpdate.current();
+      taskOnUpdate.current = () => {};
 
       scope.current.view.update();
       requestAnimationFrame(() => {
@@ -250,6 +253,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const downPath = (e: paper.MouseEvent) => {
       if (canvasRaster.current?.visible !== true) rasterizeCanvas();
+      window.clearTimeout(taskID.current);
       setPath(startStroke(drawCtrl, e.point, renderSlow.current));
     };
     const downRect = (e: paper.MouseEvent) => {
@@ -424,7 +428,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       });
     };
 
-    const pathQueue = useRef<Mutation[]>([]);
+    const pathQueue = useRef<string[]>([]);
     const pathClones = useRef<paper.Path[]>([]);
     const taskID = useRef(0);
     const handleUp = {
@@ -434,16 +438,17 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         const pathData = path.exportJSON();
         if (renderSlow.current) {
           const queue = pathQueue.current;
-          queue.push([DrawState.getUid(), pathData]);
+          queue.push(pathData);
           pathClones.current.push(path.clone());
 
-          window.clearTimeout(taskID.current);
           taskID.current = window.setTimeout(() => {
-            onChange((prev) => DrawState.mutateStrokes(prev, queue));
+            onChange((prev) => DrawState.addStrokes(prev, queue));
             pathQueue.current = [];
-            unrasterizeCanvas();
-            pathClones.current.forEach((c) => c.remove());
-            pathClones.current = [];
+            taskOnUpdate.current = () => {
+              unrasterizeCanvas();
+              pathClones.current.forEach((c) => c.remove());
+              pathClones.current = [];
+            };
           }, 1000);
         } else {
           unrasterizeCanvas();
@@ -601,12 +606,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       path?.translate(transP);
       rotateHandle?.translate(transP);
 
-      const mutations: Mutation[] = copies.map((item) => [
-        DrawState.getUid(),
-        item.exportJSON(),
-      ]);
-      onChange((prev) => DrawState.mutateStrokes(prev, mutations));
-      setChosenIDs(mutations.map(([uid]) => uid));
+      const pathDataList = copies.map((item) => item.exportJSON());
+      const IDs: string[] = [];
+      onChange((prev) => DrawState.addStrokes(prev, pathDataList, IDs));
+      setChosenIDs(IDs);
     };
 
     const rasterizeSelected = () => {
@@ -668,6 +671,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           elPos = new Point(x, y);
           lastOrigin = originRawP.subtract(elPos);
           rasterizeLayer(new Path.Rectangle(P_ZERO, projSize));
+          unrasterizeCanvas();
         } else {
           [lastScale, lastOrigin, elPos] = memo;
         }
