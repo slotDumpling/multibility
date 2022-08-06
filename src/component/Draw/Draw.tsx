@@ -209,6 +209,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       imgRaster?.insertBelow(raster);
     };
     const unrasterizeLayer = () => {
+      scope.current.activate();
       const [, l1] = scope.current.project.layers;
       const lr = layerRaster.current;
       if (!l1 || !lr) return;
@@ -239,6 +240,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       l1 && (l1.visible = false);
     };
     const unrasterizeCanvas = () => {
+      scope.current.activate();
       const [, l1] = scope.current.project.layers;
       const cr = canvasRaster.current;
       if (!l1 || !cr) return;
@@ -247,7 +249,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     };
 
     const downPath = (e: paper.MouseEvent) => {
-      rasterizeCanvas();
+      if (canvasRaster.current?.visible !== true) rasterizeCanvas();
       setPath(startStroke(drawCtrl, e.point, renderSlow.current));
     };
     const downRect = (e: paper.MouseEvent) => {
@@ -422,20 +424,32 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       });
     };
 
+    const pathQueue = useRef<Mutation[]>([]);
+    const pathClones = useRef<paper.Path[]>([]);
+    const taskID = useRef(0);
     const handleUp = {
       draw() {
         if (!path || path.segments.length <= 1) return;
         path.simplify();
-        scope.current.view.update();
-        const task = () => {
-          unrasterizeCanvas();
-          const pathData = path.exportJSON();
-          setPath(undefined);
-          onChange((prev) => DrawState.addStroke(prev, pathData));
-        };
+        const pathData = path.exportJSON();
         if (renderSlow.current) {
-          requestAnimationFrame(() => requestAnimationFrame(task));
-        } else task();
+          const queue = pathQueue.current;
+          queue.push([DrawState.getUid(), pathData]);
+          pathClones.current.push(path.clone());
+
+          window.clearTimeout(taskID.current);
+          taskID.current = window.setTimeout(() => {
+            onChange((prev) => DrawState.mutateStrokes(prev, queue));
+            pathQueue.current = [];
+            unrasterizeCanvas();
+            pathClones.current.forEach((c) => c.remove());
+            pathClones.current = [];
+          }, 1000);
+        } else {
+          unrasterizeCanvas();
+          onChange((prev) => DrawState.addStroke(prev, pathData));
+        }
+        setPath(undefined);
       },
       erase() {
         unrasterizeCanvas();
