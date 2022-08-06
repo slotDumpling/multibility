@@ -133,10 +133,25 @@ export class DrawState {
   }
 
   static addStroke(drawState: DrawState, pathData: string) {
-    const uid = DrawState.getUid();
+    const uid = v4();
     const timestamp = Date.now();
     const stroke = { pathData, uid, timestamp };
     return DrawState.pushStroke(drawState, stroke);
+  }
+
+  static addStrokes(
+    drawState: DrawState,
+    pathDataList: string[],
+    IDs?: string[]
+  ) {
+    return DrawState.mutateStrokes(
+      drawState,
+      pathDataList.map((pathData) => {
+        const uid = v4();
+        IDs?.push(uid);
+        return [uid, pathData];
+      })
+    );
   }
 
   static pushStroke(drawState: DrawState, stroke: Stroke) {
@@ -286,9 +301,5 @@ export class DrawState {
       done || heap.push([value, index]);
     }
     return mergedStrokes;
-  }
-
-  static getUid() {
-    return v4();
   }
 }
