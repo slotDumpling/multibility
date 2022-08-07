@@ -145,7 +145,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         const tempGroup: paper.Item[] = [];
         const timeBeforeRender = performance.now();
         scope.current.activate();
-        // clean-up layer1 except the clip mask.
+        // clean-up layer_1 except the clip mask.
         layer.removeChildren(1);
         mergedStrokes.forEach((stroke) => {
           const self = drawState.hasStroke(stroke.uid);
@@ -265,7 +265,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const lr = layerRaster.current;
       if (!l1 || !cr) return;
       cr.visible = false;
-      // keep layer1 hidden unless all 2 raster is hidden.
+      // keep layer_1 hidden unless all 2 raster is hidden.
       if (lr?.visible !== true) l1.visible = true;
     };
 
