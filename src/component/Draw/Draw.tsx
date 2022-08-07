@@ -256,6 +256,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     };
     const unrasterizeCanvas = () => {
       scope.current.activate();
+      deferRender.current = false;
       const [, l1] = scope.current.project.layers;
       const cr = canvasRaster.current;
       const lr = layerRaster.current;
