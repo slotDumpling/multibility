@@ -156,10 +156,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         pathClones.current = [];
 
         scope.current.view.update();
-        requestAnimationFrame(() => {
-          const duration = Date.now() - timeBeforeRender;
-          renderSlow.current = duration > 32;
-        });
+        const duration = Date.now() - timeBeforeRender;
+        renderSlow.current = duration > 32;
       };
 
       if (deferRender.current) {
@@ -218,6 +216,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       let raster = layerRaster.current;
       raster = layerRaster.current = l1.rasterize({ raster, resolution });
       raster.visible = true;
+      // raster.bringToFront();
 
       l1.visible = false;
       clip.replaceWith(prevClip);
@@ -243,6 +242,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     );
     const rasterizeCanvas = () => {
       if (!renderSlow.current) return;
+      if (canvasRaster.current?.visible === true) return;
       scope.current.activate();
       const { view } = scope.current;
       const raster = (canvasRaster.current ??= new Raster(
@@ -266,9 +266,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     };
 
     const downPath = (e: paper.MouseEvent) => {
-      // rasterize canvas only on the first path.
-      const cr = canvasRaster.current;
-      if (cr?.visible !== true) rasterizeCanvas();
+      rasterizeCanvas();
       setPath(startStroke(drawCtrl, e.point, renderSlow.current));
     };
     const downRect = (e: paper.MouseEvent) => {
