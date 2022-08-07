@@ -120,11 +120,11 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       raster.sendToBack();
       raster.onLoad = () => {
         raster.view.update();
-        raster.fitBounds(new paper.Rectangle(0, 0, width, height));
+        raster.fitBounds(new Rectangle(projSize));
         raster.bringToFront();
       };
       setImgRaster(raster);
-    }, [imgSrc, width, height, setImgRaster]);
+    }, [imgSrc, projSize, setImgRaster]);
 
     const mergedStrokes = useMemo(
       () =>
@@ -309,6 +309,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       text(e: paper.MouseEvent) {
         const layer = scope.current.project.layers[1];
         if (!layer) return;
+        rasterizeCanvas();
         const t = getClickedText(layer, e.point) ?? startText(e.point);
         setPointText(t);
       },
@@ -510,6 +511,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         handleSelectedCursor(e);
       },
       text() {
+        unrasterizeCanvas();
         setActiveTool("text");
       },
     }[paperMode];
