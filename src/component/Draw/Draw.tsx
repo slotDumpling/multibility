@@ -16,6 +16,7 @@ import paper, {
   Color,
   Raster,
   Layer,
+  Rectangle,
 } from "paper/dist/paper-core";
 import { usePinch } from "@use-gesture/react";
 import useSize from "@react-hook/size";
@@ -142,8 +143,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       if (!layer) return;
       const render = () => {
         const tempGroup: paper.Item[] = [];
-        const timeBeforeRender = Date.now();
+        const timeBeforeRender = performance.now();
         scope.current.activate();
+        // clean-up layer1 except the clip mask.
+        layer.removeChildren(1);
         mergedStrokes.forEach((stroke) => {
           const self = drawState.hasStroke(stroke.uid);
           const item = paintStroke(stroke, layer, !self);
@@ -156,18 +159,16 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         pathClones.current = [];
 
         scope.current.view.update();
-        const duration = Date.now() - timeBeforeRender;
-        renderSlow.current = duration > 32;
+        const duration = performance.now() - timeBeforeRender;
+        renderSlow.current = duration > 50;
       };
 
       if (deferRender.current) {
         deferTimerID.current = window.setTimeout(render, 1000);
       } else render();
 
-      return () => {
-        window.clearTimeout(deferTimerID.current);
-        layer.removeChildren(1);
-      };
+      // cancel previous render timer.
+      return () => window.clearTimeout(deferTimerID.current);
     }, [mergedStrokes, drawState]);
     useEffect(() => void (deferRender.current = false), [drawState]);
 
@@ -216,7 +217,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       let raster = layerRaster.current;
       raster = layerRaster.current = l1.rasterize({ raster, resolution });
       raster.visible = true;
-      // raster.bringToFront();
 
       l1.visible = false;
       clip.replaceWith(prevClip);
@@ -242,15 +242,18 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     );
     const rasterizeCanvas = () => {
       if (!renderSlow.current) return;
+      // rasterize the canvas only once
       if (canvasRaster.current?.visible === true) return;
       scope.current.activate();
       const { view } = scope.current;
+      // create a raster of the canvas element's size only once.
       const raster = (canvasRaster.current ??= new Raster(
         view.viewSize.multiply(window.devicePixelRatio)
       ));
       raster.drawImage(view.element, P_ZERO);
       raster.fitBounds(view.bounds);
       raster.visible = true;
+      raster.opacity = process.env.NODE_ENV === "production" ? 1 : 0.8;
       const [, l1] = scope.current.project.layers;
       l1 && (l1.visible = false);
     };
@@ -262,6 +265,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const lr = layerRaster.current;
       if (!l1 || !cr) return;
       cr.visible = false;
+      // keep layer1 hidden unless all 2 raster is hidden.
       if (lr?.visible !== true) l1.visible = true;
     };
 
@@ -311,6 +315,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     }[paperMode];
 
     const dragPath = (e: paper.MouseEvent) => {
+      // cancel previous render timer.
       window.clearTimeout(deferTimerID.current);
       path?.add(e.point);
       path?.smooth();
@@ -390,7 +395,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const replaced = useRef(new Map<string, paper.Item>());
 
     const itemGrid = useMemo(() => {
-      if (paperMode !== "erase") return [];
+      if (!/^(erase|select)$/.test(mode)) return [];
       const wnum = Math.ceil(width / 100);
       const hnum = Math.ceil(height / 100);
       const grid = Array.from({ length: wnum }, () =>
@@ -398,19 +403,17 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       );
       group.forEach((item) => setGridItem(grid, item));
       return grid;
-    }, [group, width, height, paperMode]);
+    }, [group, width, height, mode]);
 
     const handleToolDrag = (e: paper.ToolEvent) => {
       const layer = scope.current.project.layers[1];
       if (paperMode !== "erase" || !layer) return;
+      const ew = eraserWidth;
 
-      const hitOption = {
-        class: paper.Path,
-        stroke: true,
-        tolerance: eraserWidth / 2,
-      };
+      const hitOption = { class: paper.Path, stroke: true, tolerance: ew / 2 };
+      const bounds = new Rectangle(e.point.subtract(ew), new Size(ew, ew));
 
-      getGridItems(itemGrid, e.point, eraserWidth).forEach((item) => {
+      getGridItems(itemGrid, bounds).forEach((item) => {
         if (erased.current.has(item.name)) return;
         item.hitTestAll(e.point, hitOption)?.forEach(({ item }) => {
           if (!(item instanceof paper.Path)) return;
@@ -422,7 +425,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           const { name } = topItem;
 
           if (drawCtrl.pixelEraser) {
-            const radius = (eraserWidth + item.strokeWidth) / 2;
+            const radius = (ew + item.strokeWidth) / 2;
             const circle = new Path.Circle({
               center: e.point,
               radius,
@@ -485,11 +488,13 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           if (!path || Math.abs(path.area) < 1_000) return setPath(undefined);
           path.closePath();
           path.simplify();
-          moveDash(path);
-          selection = checkLasso(group, path);
+          if (!renderSlow.current) moveDash(path);
+          const items = getGridItems(itemGrid, path.bounds);
+          selection = checkLasso(items, path);
         } else {
           if (!rect || Math.abs(rect.area) < 1_000) return setRect(undefined);
-          selection = checkLasso(group, rect);
+          const items = getGridItems(itemGrid, rect.bounds);
+          selection = checkLasso(items, rect);
           const link = new Path();
           const { topCenter } = rect.bounds;
           link.add(topCenter, topCenter.subtract(new Point(0, 100)));
@@ -936,7 +941,8 @@ const flattenCP = (cp: paper.Item): paper.Path[] => {
   return [];
 };
 
-const getGridRange = (topLeft: paper.Point, bottomRight: paper.Point) => {
+const getGridRange = (bounds: paper.Rectangle) => {
+  const { topLeft, bottomRight } = bounds;
   return [
     Math.floor(topLeft.x / 100),
     Math.ceil(bottomRight.x / 100),
@@ -951,8 +957,7 @@ const setGridItem = (
   replaced?: paper.Item
 ) => {
   const bounds = (replaced ?? item).strokeBounds;
-  const { topLeft, bottomRight } = bounds;
-  const [xmin, xmax, ymin, ymax] = getGridRange(topLeft, bottomRight);
+  const [xmin, xmax, ymin, ymax] = getGridRange(bounds);
   for (let x = xmin; x <= xmax; x += 1) {
     for (let y = ymin; y <= ymax; y += 1) {
       replaced && grid[x]?.[y]?.delete(replaced);
@@ -961,20 +966,13 @@ const setGridItem = (
   }
 };
 
-const getGridItems = (
-  grid: Set<paper.Item>[][],
-  point: paper.Point,
-  width: number
-) => {
+const getGridItems = (grid: Set<paper.Item>[][], bounds: paper.Rectangle) => {
   const itemSet = new Set<paper.Item>();
-  const [xmin, xmax, ymin, ymax] = getGridRange(
-    point.subtract(width / 2),
-    point.add(width / 2)
-  );
+  const [xmin, xmax, ymin, ymax] = getGridRange(bounds);
   for (let x = xmin; x <= xmax; x += 1) {
     for (let y = ymin; y <= ymax; y += 1) {
       grid[x]?.[y]?.forEach((item) => itemSet.add(item));
     }
   }
-  return itemSet;
+  return Array.from(itemSet);
 };
