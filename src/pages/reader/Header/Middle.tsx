@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { Button, message, Popover, Segmented } from "antd";
+import { Button, ButtonProps, message, Popover, Segmented } from "antd";
 import {
   BulbFilled,
   BulbOutlined,
@@ -14,6 +14,8 @@ import { PenPanel, WidthSelect } from "../tools/PenPanel";
 import { useForceLight } from "lib/Dark";
 import { useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
 
+const btnProps: ButtonProps = { type: "text", shape: "circle" };
+
 export const HeaderMiddle: FC<{
   handleUndo: () => void;
   handleRedo: () => void;
@@ -27,18 +29,19 @@ export const HeaderMiddle: FC<{
   return (
     <div className="middle" data-force-light={forceLight}>
       <Button
-        type="text"
+        {...btnProps}
         icon={<UndoOutlined />}
         onClick={handleUndo}
         disabled={!undoable}
       />
       <Button
-        type="text"
+        {...btnProps}
         icon={<RedoOutlined />}
         onClick={handleRedo}
         disabled={!redoable}
       />
       <Button
+        shape="circle"
         type={finger ? "link" : "text"}
         onClick={() => {
           updateDrawCtrl({ finger: !finger });
@@ -52,13 +55,14 @@ export const HeaderMiddle: FC<{
       />
       <Button
         className="force-light-btn"
-        type="text"
+        {...btnProps}
         icon={forceLight ? <BulbFilled /> : <BulbOutlined />}
         onClick={() => setForceLight((prev) => !prev)}
       />
       <PenButton />
       <EraserButton />
       <Button
+        shape="circle"
         type={mode === "text" ? "link" : "text"}
         onClick={() => updateDrawCtrl({ mode: "text" })}
         icon={<IconFont type="icon-text1" />}
@@ -88,7 +92,7 @@ const PenButton = () => {
     </Popover>
   ) : (
     <Button
-      type="text"
+      {...btnProps}
       onClick={() => updateDrawCtrl({ mode: "draw" })}
       icon={<HighlightOutlined />}
     />
@@ -131,7 +135,7 @@ const EraserButton = () => {
     </Popover>
   ) : (
     <Button
-      type="text"
+      {...btnProps}
       onClick={() => updateDrawCtrl({ mode: "erase" })}
       icon={<IconFont type="icon-eraser" />}
     />
@@ -152,7 +156,7 @@ const SelectButton = () => {
     />
   ) : (
     <Button
-      type="text"
+      {...btnProps}
       icon={icon}
       onClick={() => updateDrawCtrl({ mode: "select" })}
     />
