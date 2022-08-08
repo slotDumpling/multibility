@@ -220,7 +220,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
       l1.visible = false;
       clip.replaceWith(prevClip);
-      imgRaster?.insertBelow(raster);
+      imgRaster?.addTo(l0);
     };
     const unrasterizeLayer = () => {
       scope.current.activate();
