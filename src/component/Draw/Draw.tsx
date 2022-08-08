@@ -278,6 +278,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       rasterizeCanvas();
       setRect(startRect(e.point));
     };
+    const pointBeforeDrag = useRef(P_ZERO);
 
     const handleDown = {
       draw(e: paper.MouseEvent) {
@@ -288,6 +289,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       select: lasso ? downPath : downRect,
       selected(e: paper.MouseEvent) {
         setSelectShow(false);
+        pointBeforeDrag.current = e.point;
         if (lasso) {
           // if the point is outside of selection, reset selection
           if (path?.contains(e.point)) return;
@@ -509,9 +511,9 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         setChosenIDs(selection);
       },
       selected(e: paper.MouseEvent) {
-        updateMutation();
-        console.log(e);
         handleSelectedCursor(e);
+        if (pointBeforeDrag.current.equals(e.point)) return;
+        updateMutation();
       },
       text() {
         unrasterizeCanvas();
@@ -634,6 +636,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const IDs: string[] = [];
       onChange((prev) => DrawState.addStrokes(prev, pathDataList, IDs));
       setChosenIDs(IDs);
+      setSelectShow(false);
     };
 
     const rasterizeSelected = () => {
@@ -695,6 +698,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           lastScale = 1;
           elPos = new Point(x, y);
           lastOrigin = originRawP.subtract(elPos);
+          setSelectShow(false);
           rasterizeLayer(new Path.Rectangle(P_ZERO, projSize));
           unrasterizeCanvas();
         } else {
