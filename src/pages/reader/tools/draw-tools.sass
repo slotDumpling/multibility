@@ -4,6 +4,8 @@
 .select-tool
   $tf: translate(-50%, -120%)
   @include back-blur
+  left: min(calc(100% - 100px), max(var(--pos-x), 100px))
+  top: max(50px, var(--pos-y))
   position: absolute
   padding: 5px
   transform: $tf
@@ -16,18 +18,22 @@
 
   &.enter
     transform: $tf scale(0)
+    opacity: 0
     .style-pop
       display: none
   &.enter-active
     transform: $tf
-    transition: transform $speed
+    opacity: 1
+    transition: transform $speed, opacity $speed
   &.exit
     transform: $tf
+    opacity: 1
     .style-pop
       display: none
   &.exit-active
     transform: $tf scale(0)
-    transition: transform $speed
+    opacity: 0
+    transition: transform $speed, opacity $speed
 
 .insert-option
   margin: 15px 0

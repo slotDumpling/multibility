@@ -14,6 +14,7 @@ import { once, range } from "lodash";
 import { useInView } from "react-intersection-observer";
 import { DrawState } from "lib/draw/DrawState";
 import { Map, Set } from "immutable";
+import { P_ZERO } from "component/Draw/Draw";
 
 const PageWrapperRaw: FC<{
   drawState: DrawState;
@@ -104,6 +105,8 @@ const DrawWrapper: FC<{
   const drawRef = useRef<DrawRefType>(null);
   const [textShow, setTextShow] = useState(false);
   const [selectShow, setSelectShow] = useState(false);
+  const [pointText, setPointText] = useState<paper.PointText>();
+  const [clickPoint, setClickPoint] = useState<paper.Point>(P_ZERO);
 
   const handleChange = useEvent(
     (arg: ((s: DrawState) => DrawState) | DrawState) => {
@@ -112,6 +115,21 @@ const DrawWrapper: FC<{
       if (newDS === drawState) return;
       updateState(newDS);
     }
+  );
+
+  const toggleSelectTool = useCallback(
+    (active: boolean, clickPoint?: paper.Point) => {
+      setClickPoint((p) => clickPoint ?? p);
+      setSelectShow(active);
+    },
+    []
+  );
+  const toggleTextTool = useCallback(
+    (active: boolean, pointText?: paper.PointText) => {
+      setPointText(pointText);
+      setTextShow(active);
+    },
+    []
   );
 
   return preview ? (
@@ -127,14 +145,18 @@ const DrawWrapper: FC<{
         drawState={drawState}
         otherStates={otherStates}
         onChange={handleChange}
-        setTextShow={setTextShow}
-        setSelectShow={setSelectShow}
         imgSrc={imgSrc}
         drawCtrl={drawCtrl}
         ref={drawRef}
+        toggleTextTool={toggleTextTool}
+        toggleSelectTool={toggleSelectTool}
       />
-      <SelectTool drawRef={drawRef} visible={selectShow} />
-      <TextTool drawRef={drawRef} visible={textShow} />
+      <SelectTool
+        drawRef={drawRef}
+        visible={selectShow}
+        clickPoint={clickPoint}
+      />
+      <TextTool drawRef={drawRef} visible={textShow} pointText={pointText} />
     </>
   );
 };

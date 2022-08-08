@@ -1,4 +1,4 @@
-import { FC, RefObject, useEffect, useState } from "react";
+import { CSSProperties, FC, RefObject, useEffect, useState } from "react";
 import {
   CopyOutlined,
   DeleteOutlined,
@@ -18,27 +18,19 @@ import TextArea from "antd/lib/input/TextArea";
 import { allColors } from "lib/color";
 import { DrawRefType } from "component/Draw";
 import { saveAs } from "file-saver";
-import "./drawTools.sass";
-
-export const SelectTool: FC<{
-  drawRef: RefObject<DrawRefType>;
-  visible: boolean;
-}> = ({ drawRef, visible }) => (
-  <CSSTransition timeout={300} in={visible} unmountOnExit>
-    <SelectToolContent drawRef={drawRef} />
-  </CSSTransition>
-);
+import "./draw-tools.sass";
 
 const btnProps: ButtonProps = {
   type: "text",
   shape: "round",
   size: "small",
 };
-export const SelectToolContent: FC<{
+export const SelectTool: FC<{
   drawRef: RefObject<DrawRefType>;
-}> = ({ drawRef }) => {
+  visible: boolean;
+  clickPoint: paper.Point;
+}> = ({ drawRef, visible, clickPoint }) => {
   const [currDrawCtrl, setCurrDrawCtrl] = useState<Partial<DrawCtrl>>({});
-  if (!drawRef.current) return null;
 
   const getRaster = () => {
     if (!drawRef.current) return;
@@ -53,53 +45,58 @@ export const SelectToolContent: FC<{
     });
   };
 
-  const { x, y } = drawRef.current.clickPoint;
+  const { x, y } = clickPoint;
   return (
-    <div className="select-tool" style={{ left: x, top: y }}>
-      <Popover
-        trigger="click"
-        placement="bottom"
-        overlayClassName="style-pop"
-        getPopupContainer={(e) => e.parentElement!}
-        destroyTooltipOnHide
-        content={
-          <PenPanel
-            updateDrawCtrl={(updated) => {
-              setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
-              drawRef.current?.mutateStyle(updated);
-            }}
-            drawCtrl={currDrawCtrl}
-          />
-        }
+    <CSSTransition timeout={300} in={visible} unmountOnExit>
+      <div
+        className="select-tool"
+        style={{ "--pos-x": x + "px", "--pos-y": y + "px" } as CSSProperties}
       >
-        <Button icon={<BgColorsOutlined />} {...btnProps} />
-      </Popover>
-      <Button
-        icon={<CopyOutlined />}
-        onClick={() => drawRef.current?.duplicateSelected()}
-        {...btnProps}
-      />
-      <Button icon={<PictureOutlined />} onClick={getRaster} {...btnProps} />
-      <Button
-        danger
-        icon={<DeleteOutlined />}
-        onClick={() => drawRef.current?.deleteSelected()}
-        {...btnProps}
-      />
-    </div>
+        <Popover
+          trigger="click"
+          placement="bottom"
+          overlayClassName="style-pop"
+          getPopupContainer={(e) => e.parentElement!}
+          destroyTooltipOnHide
+          content={
+            <PenPanel
+              updateDrawCtrl={(updated) => {
+                setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
+                drawRef.current?.mutateStyle(updated);
+              }}
+              drawCtrl={currDrawCtrl}
+            />
+          }
+        >
+          <Button icon={<BgColorsOutlined />} {...btnProps} />
+        </Popover>
+        <Button
+          icon={<CopyOutlined />}
+          onClick={() => drawRef.current?.duplicateSelected()}
+          {...btnProps}
+        />
+        <Button icon={<PictureOutlined />} onClick={getRaster} {...btnProps} />
+        <Button
+          danger
+          icon={<DeleteOutlined />}
+          onClick={() => drawRef.current?.deleteSelected()}
+          {...btnProps}
+        />
+      </div>
+    </CSSTransition>
   );
 };
 
 export const TextTool: FC<{
   drawRef: RefObject<DrawRefType>;
   visible: boolean;
-}> = ({ visible, drawRef }) => {
+  pointText?: paper.PointText;
+}> = ({ visible, drawRef, pointText }) => {
   const [text, setText] = useState("");
   const [color, setColor] = useState(allColors[0]!);
   const [align, setAlign] = useState("center");
 
   useEffect(() => {
-    const pointText = drawRef.current?.pointText;
     if (!pointText || !visible) return;
     const { name, content, justification, fillColor } = pointText;
     setAlign(justification);
@@ -110,7 +107,7 @@ export const TextTool: FC<{
       setText("");
       setColor(allColors[0]!);
     }
-  }, [visible, drawRef]);
+  }, [visible, pointText]);
 
   const fontColorBtn = (
     <Popover

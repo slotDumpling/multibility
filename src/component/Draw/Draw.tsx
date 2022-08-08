@@ -32,22 +32,20 @@ export interface DrawRefType {
   mutateStyle: (updated: Partial<DrawCtrl>) => void;
   submitText: (text: string, color?: string, justification?: string) => void;
   cancelText: () => void;
-  pointText?: paper.PointText;
-  clickPoint: paper.Point;
 }
 interface DrawPropType {
   drawState: DrawState;
   otherStates?: DrawState[];
   onChange?: Setter<DrawState>;
-  setSelectShow?: Setter<boolean>;
-  setTextShow?: Setter<boolean>;
+  toggleSelectTool?: (active: boolean, clickPoint?: paper.Point) => void;
+  toggleTextTool?: (active: boolean, pointText?: paper.PointText) => void;
   drawCtrl?: DrawCtrl;
   readonly?: boolean;
   imgSrc?: string;
 }
 
 const HIT_TOLERANCE = 20;
-const P_ZERO = new Point(0, 0);
+export const P_ZERO = new Point(0, 0);
 
 const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
   (
@@ -58,8 +56,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       drawCtrl = defaultDrawCtrl,
       readonly = false,
       imgSrc,
-      setSelectShow = () => {},
-      setTextShow = () => {},
+      toggleSelectTool = () => {},
+      toggleTextTool = () => {},
     },
     ref
   ) => {
@@ -198,9 +196,9 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       if (!selected) return;
       return () => {
         setChosenIDs([]);
-        setSelectShow(false);
+        toggleSelectTool(false);
       };
-    }, [selected, setSelectShow]);
+    }, [selected, toggleSelectTool]);
 
     const layerRaster = useRef<paper.Raster>();
     const rasterizeLayer = (clip: paper.Path, force = false) => {
@@ -288,7 +286,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       erase: downPath,
       select: lasso ? downPath : downRect,
       selected(e: paper.MouseEvent) {
-        setSelectShow(false);
+        toggleSelectTool(false);
         pointBeforeDrag.current = e.point;
         if (lasso) {
           // if the point is outside of selection, reset selection
@@ -454,7 +452,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     };
 
     const pathClones = useRef<paper.Path[]>([]);
-    const [clickPoint, setClickPoint] = useState(P_ZERO);
     const handleUp = {
       draw() {
         if (!path || path.segments.length <= 1) {
@@ -517,7 +514,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       },
       text() {
         unrasterizeCanvas();
-        setTextShow(true);
+        toggleTextTool(true, pointText);
       },
     }[paperMode];
 
@@ -574,9 +571,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       if (!(rect ?? path)?.contains(e.point)) return;
       if (e.delta.subtract(P_ZERO).length > 10) return;
       const { view } = scope.current;
-      const cp = view.projectToView(e.point);
-      setClickPoint(cp);
-      setSelectShow(true);
+      const clickPoint = view.projectToView(e.point);
+      toggleSelectTool(true, clickPoint);
     };
 
     useEffect(() => {
@@ -636,7 +632,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const IDs: string[] = [];
       onChange((prev) => DrawState.addStrokes(prev, pathDataList, IDs));
       setChosenIDs(IDs);
-      setSelectShow(false);
+      toggleSelectTool(false);
     };
 
     const rasterizeSelected = () => {
@@ -649,9 +645,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const [pointText, setPointText] = usePaperItem<paper.PointText>();
     const cancelText = useCallback(() => {
+      console.trace("cancel");
       setPointText(undefined);
-      setTextShow(false);
-    }, [setPointText, setTextShow]);
+      toggleTextTool(false);
+    }, [setPointText, toggleTextTool]);
 
     useEffect(() => {
       if (mode === "text") return cancelText;
@@ -680,8 +677,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       mutateStyle,
       cancelText,
       submitText,
-      pointText,
-      clickPoint,
     }));
 
     usePreventGesture();
@@ -698,7 +693,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           lastScale = 1;
           elPos = new Point(x, y);
           lastOrigin = originRawP.subtract(elPos);
-          setSelectShow(false);
+          toggleSelectTool(false);
           rasterizeLayer(new Path.Rectangle(P_ZERO, projSize));
           unrasterizeCanvas();
         } else {

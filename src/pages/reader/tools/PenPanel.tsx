@@ -7,7 +7,7 @@ import { allColors } from "lib/color";
 import { Setter } from "lib/hooks";
 import IconFont from "component/IconFont";
 import { List } from "immutable";
-import "./penPanel.sass";
+import "./pen-panel.sass";
 
 export const PenPanel: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
