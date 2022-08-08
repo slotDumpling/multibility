@@ -160,7 +160,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
         scope.current.view.update();
         const duration = performance.now() - timeBeforeRender;
-        renderSlow.current = duration > 50;
+        renderSlow.current = duration > 16;
       };
 
       if (deferRender.current) {
