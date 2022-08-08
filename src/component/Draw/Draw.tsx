@@ -2,11 +2,9 @@ import React, {
   useRef,
   useMemo,
   useState,
-  Dispatch,
   useEffect,
   useCallback,
   useDebugValue,
-  SetStateAction,
   useImperativeHandle,
 } from "react";
 import paper, {
@@ -25,8 +23,8 @@ import { defaultDrawCtrl, DrawCtrl } from "lib/draw/DrawCtrl";
 import { releaseCanvas } from "lib/draw/canvas";
 import { getCircleCursor, getRotateCurcor } from "./cursor";
 import { usePreventTouch, usePreventGesture } from "./touch";
+import { Setter } from "lib/hooks";
 
-export type ActiveToolKey = "" | "select" | "text";
 export interface DrawRefType {
   deleteSelected: () => void;
   duplicateSelected: () => void;
@@ -35,12 +33,14 @@ export interface DrawRefType {
   submitText: (text: string, color?: string, justification?: string) => void;
   cancelText: () => void;
   pointText?: paper.PointText;
+  clickPoint: paper.Point;
 }
 interface DrawPropType {
   drawState: DrawState;
   otherStates?: DrawState[];
-  onChange?: Dispatch<SetStateAction<DrawState>>;
-  setActiveTool?: Dispatch<SetStateAction<ActiveToolKey>>;
+  onChange?: Setter<DrawState>;
+  setSelectShow?: Setter<boolean>;
+  setTextShow?: Setter<boolean>;
   drawCtrl?: DrawCtrl;
   readonly?: boolean;
   imgSrc?: string;
@@ -58,7 +58,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       drawCtrl = defaultDrawCtrl,
       readonly = false,
       imgSrc,
-      setActiveTool = () => {},
+      setSelectShow = () => {},
+      setTextShow = () => {},
     },
     ref
   ) => {
@@ -197,9 +198,9 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       if (!selected) return;
       return () => {
         setChosenIDs([]);
-        setActiveTool("");
+        setSelectShow(false);
       };
-    }, [selected, setActiveTool]);
+    }, [selected, setSelectShow]);
 
     const layerRaster = useRef<paper.Raster>();
     const rasterizeLayer = (clip: paper.Path, force = false) => {
@@ -286,6 +287,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       erase: downPath,
       select: lasso ? downPath : downRect,
       selected(e: paper.MouseEvent) {
+        setSelectShow(false);
         if (lasso) {
           // if the point is outside of selection, reset selection
           if (path?.contains(e.point)) return;
@@ -450,6 +452,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     };
 
     const pathClones = useRef<paper.Path[]>([]);
+    const [clickPoint, setClickPoint] = useState(P_ZERO);
     const handleUp = {
       draw() {
         if (!path || path.segments.length <= 1) {
@@ -504,15 +507,15 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         }
         setSelected(true);
         setChosenIDs(selection);
-        setActiveTool("select");
       },
       selected(e: paper.MouseEvent) {
         updateMutation();
+        console.log(e);
         handleSelectedCursor(e);
       },
       text() {
         unrasterizeCanvas();
-        setActiveTool("text");
+        setTextShow(true);
       },
     }[paperMode];
 
@@ -544,7 +547,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         const { x, y } = diagonal;
         return setCursor(x * y < 0 ? "nesw-resize" : "nwse-resize");
       }
-      if ((rect ?? path)?.contains(e.point)) return setCursor("move");
+      if ((rect ?? path)?.contains(e.point)) return setCursor("pointer");
       setCursor("crosshair");
     };
 
@@ -564,6 +567,16 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       if (/^(delete|backspace)$/.test(e.key)) deleteSelected();
     };
 
+    const handleClick = (e: paper.MouseEvent) => {
+      if (paperMode !== "selected") return;
+      if (!(rect ?? path)?.contains(e.point)) return;
+      if (e.delta.subtract(P_ZERO).length > 10) return;
+      const { view } = scope.current;
+      const cp = view.projectToView(e.point);
+      setClickPoint(cp);
+      setSelectShow(true);
+    };
+
     useEffect(() => {
       if (readonly) return;
 
@@ -579,6 +592,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       view.onMouseDrag = activate(handleDrag);
       view.onMouseUp = activate(handleUp);
       view.onMouseMove = activate(handleMove);
+      view.onClick = activate(handleClick);
       tool.onMouseDrag = activate(handleToolDrag);
       tool.onKeyUp = activate(handleKeyUp);
     });
@@ -633,8 +647,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const [pointText, setPointText] = usePaperItem<paper.PointText>();
     const cancelText = useCallback(() => {
       setPointText(undefined);
-      setActiveTool("");
-    }, [setPointText, setActiveTool]);
+      setTextShow(false);
+    }, [setPointText, setTextShow]);
 
     useEffect(() => {
       if (mode === "text") return cancelText;
@@ -664,6 +678,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       cancelText,
       submitText,
       pointText,
+      clickPoint,
     }));
 
     usePreventGesture();
@@ -676,7 +691,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         let lastScale: number;
         let lastOrigin, elPos: paper.Point;
         if (first || !memo) {
-          const { x, y } = canvasEl.current!.getBoundingClientRect();
+          const { x, y } = view.element.getBoundingClientRect();
           lastScale = 1;
           elPos = new Point(x, y);
           lastOrigin = originRawP.subtract(elPos);

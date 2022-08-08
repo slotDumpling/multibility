@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { useDrawCtrl } from "lib/draw/DrawCtrl";
 import { useMemoizedFn as useEvent } from "ahooks";
-import { Draw, ActiveToolKey, DrawRefType } from "component/Draw";
+import { Draw, DrawRefType } from "component/Draw";
 import { SelectTool, TextTool } from "pages/reader/tools/DrawTools";
 import { once, range } from "lodash";
 import { useInView } from "react-intersection-observer";
@@ -77,7 +77,7 @@ const PageWrapperRaw: FC<{
 
   return (
     <div ref={ref} className="page-wrapper">
-      <svg viewBox={`0 0 100 ${ratio * 100}`} />
+      <svg className="size-holder" viewBox={`0 0 100 ${ratio * 100}`} />
       {drawShow && (
         <DrawWrapper
           drawState={drawState}
@@ -101,8 +101,9 @@ const DrawWrapper: FC<{
   imgSrc?: string;
 }> = ({ drawState, updateState, otherStates, preview = false, imgSrc }) => {
   const drawCtrl = useDrawCtrl();
-  const [activeTool, setActiveTool] = useState<ActiveToolKey>("");
   const drawRef = useRef<DrawRefType>(null);
+  const [textShow, setTextShow] = useState(false);
+  const [selectShow, setSelectShow] = useState(false);
 
   const handleChange = useEvent(
     (arg: ((s: DrawState) => DrawState) | DrawState) => {
@@ -126,13 +127,14 @@ const DrawWrapper: FC<{
         drawState={drawState}
         otherStates={otherStates}
         onChange={handleChange}
+        setTextShow={setTextShow}
+        setSelectShow={setSelectShow}
         imgSrc={imgSrc}
         drawCtrl={drawCtrl}
         ref={drawRef}
-        setActiveTool={setActiveTool}
       />
-      <SelectTool drawRef={drawRef} visible={activeTool === "select"} />
-      <TextTool drawRef={drawRef} visible={activeTool === "text"} />
+      <SelectTool drawRef={drawRef} visible={selectShow} />
+      <TextTool drawRef={drawRef} visible={textShow} />
     </>
   );
 };

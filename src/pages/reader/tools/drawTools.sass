@@ -2,38 +2,32 @@
 @import ../../../sass/_var
 
 .select-tool
+  $tf: translate(-50%, -120%)
   @include back-blur
   position: absolute
-  left: 50%
   padding: 5px
-  transform: translateX(-50%)
+  transform: $tf
+  box-shadow: $shadow-1
   border-radius: 50px
   border: $dark-border
   display: flex
-  @include for-desktop
-    top: $header-low-height+10px
-  @include for-phone
-    top: $header-high-height+10px
   > * + *
     margin-left: 5px
 
-.select-tool.enter
-  transform: translate(-50%, -10px)
-  opacity: 0
-.select-tool.enter-active
-  transform: translateX(-50%)
-  opacity: 1
-  transition: opacity $speed, transform $speed
-.select-tool.exit
-  transform: translateX(-50%)
-  opacity: 1
-.select-tool.exit-active
-  transform: translate(-50%, -10px)
-  opacity: 0
-  transition: opacity $speed, transform $speed
-
-.select-tool ~ .select-tool
-  display: none
+  &.enter
+    transform: $tf scale(0)
+    .style-pop
+      display: none
+  &.enter-active
+    transform: $tf
+    transition: transform $speed
+  &.exit
+    transform: $tf
+    .style-pop
+      display: none
+  &.exit-active
+    transform: $tf scale(0)
+    transition: transform $speed
 
 .insert-option
   margin: 15px 0

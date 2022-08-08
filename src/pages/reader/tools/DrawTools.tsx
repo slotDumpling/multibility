@@ -17,7 +17,6 @@ import { ColorSelect, PenPanel } from "./PenPanel";
 import TextArea from "antd/lib/input/TextArea";
 import { allColors } from "lib/color";
 import { DrawRefType } from "component/Draw";
-import { createPortal } from "react-dom";
 import { saveAs } from "file-saver";
 import "./drawTools.sass";
 
@@ -30,16 +29,16 @@ export const SelectTool: FC<{
   </CSSTransition>
 );
 
+const btnProps: ButtonProps = {
+  type: "text",
+  shape: "round",
+  size: "small",
+};
 export const SelectToolContent: FC<{
   drawRef: RefObject<DrawRefType>;
 }> = ({ drawRef }) => {
-  const btnProps: ButtonProps = {
-    type: "text",
-    shape: "round",
-    size: "small",
-  };
-
   const [currDrawCtrl, setCurrDrawCtrl] = useState<Partial<DrawCtrl>>({});
+  if (!drawRef.current) return null;
 
   const getRaster = () => {
     if (!drawRef.current) return;
@@ -54,11 +53,13 @@ export const SelectToolContent: FC<{
     });
   };
 
-  return createPortal(
-    <div className="select-tool">
+  const { x, y } = drawRef.current.clickPoint;
+  return (
+    <div className="select-tool" style={{ left: x, top: y }}>
       <Popover
         trigger="click"
         placement="bottom"
+        overlayClassName="style-pop"
         getPopupContainer={(e) => e.parentElement!}
         destroyTooltipOnHide
         content={
@@ -85,8 +86,7 @@ export const SelectToolContent: FC<{
         onClick={() => drawRef.current?.deleteSelected()}
         {...btnProps}
       />
-    </div>,
-    document.querySelector(".reader.container > header")!
+    </div>
   );
 };
 
