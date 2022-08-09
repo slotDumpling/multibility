@@ -199,6 +199,9 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         toggleSelectTool(false);
       };
     }, [selected, toggleSelectTool]);
+    useEffect(() => {
+      toggleSelectTool(false);
+    }, [canvasWidth, toggleSelectTool]);
 
     const layerRaster = useRef<paper.Raster>();
     const rasterizeLayer = (clip: paper.Path, force = false) => {
@@ -495,7 +498,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           if (!renderSlow.current) moveDash(path);
           const items = getGridItems(itemGrid, path.bounds);
           selection = checkLasso(items, path);
-          toggleSelectTool(true, view.projectToView(path.bounds.topCenter));
         } else {
           if (!rect || Math.abs(rect.area) < 1_000) return setRect(undefined);
           const items = getGridItems(itemGrid, rect.bounds);
@@ -505,10 +507,11 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           link.add(topCenter, topCenter.subtract(new Point(0, 100)));
           link.lastSegment.selected = true;
           setRotateHandle(link);
-          toggleSelectTool(true, view.projectToView(rect.bounds.bottomCenter));
         }
         setSelected(true);
         setChosenIDs(selection);
+        const bc = (rect ?? path)?.bounds.bottomCenter;
+        bc && toggleSelectTool(true, view.projectToView(bc));
       },
       selected(e: paper.MouseEvent) {
         handleSelectedCursor(e);
