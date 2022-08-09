@@ -505,7 +505,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           link.add(topCenter, topCenter.subtract(new Point(0, 100)));
           link.lastSegment.selected = true;
           setRotateHandle(link);
-          toggleSelectTool(true, view.projectToView(rect.bounds.topCenter));
+          toggleSelectTool(true, view.projectToView(rect.bounds.bottomCenter));
         }
         setSelected(true);
         setChosenIDs(selection);
@@ -648,7 +648,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const [pointText, setPointText] = usePaperItem<paper.PointText>();
     const cancelText = useCallback(() => {
-      console.trace("cancel");
       setPointText(undefined);
       toggleTextTool(false);
     }, [setPointText, toggleTextTool]);
