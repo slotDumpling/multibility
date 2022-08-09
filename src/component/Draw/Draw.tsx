@@ -487,6 +487,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       select() {
         unrasterizeCanvas();
         let selection: string[];
+        const { view } = scope.current;
         if (lasso) {
           if (!path || Math.abs(path.area) < 1_000) return setPath(undefined);
           path.closePath();
@@ -494,6 +495,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           if (!renderSlow.current) moveDash(path);
           const items = getGridItems(itemGrid, path.bounds);
           selection = checkLasso(items, path);
+          toggleSelectTool(true, view.projectToView(path.bounds.topCenter));
         } else {
           if (!rect || Math.abs(rect.area) < 1_000) return setRect(undefined);
           const items = getGridItems(itemGrid, rect.bounds);
@@ -503,6 +505,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           link.add(topCenter, topCenter.subtract(new Point(0, 100)));
           link.lastSegment.selected = true;
           setRotateHandle(link);
+          toggleSelectTool(true, view.projectToView(rect.bounds.topCenter));
         }
         setSelected(true);
         setChosenIDs(selection);
