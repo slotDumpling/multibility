@@ -11,7 +11,6 @@ import {
   AlignCenterOutlined,
 } from "@ant-design/icons";
 import { Button, ButtonProps, Modal, Popover, Radio } from "antd";
-import { CSSTransition } from "react-transition-group";
 import { DrawCtrl } from "lib/draw/DrawCtrl";
 import { ColorSelect, PenPanel } from "./PenPanel";
 import TextArea from "antd/lib/input/TextArea";
@@ -47,43 +46,42 @@ export const SelectTool: FC<{
 
   const { x, y } = clickPoint;
   return (
-    <CSSTransition timeout={300} in={visible} unmountOnExit>
-      <div
-        className="select-tool"
-        style={{ "--pos-x": x + "px", "--pos-y": y + "px" } as CSSProperties}
+    <div
+      className="select-tool"
+      data-visible={visible}
+      style={{ "--pos-x": x + "px", "--pos-y": y + "px" } as CSSProperties}
+    >
+      <Popover
+        trigger="click"
+        placement="bottom"
+        overlayClassName="style-pop"
+        getPopupContainer={(e) => e.parentElement!}
+        destroyTooltipOnHide
+        content={
+          <PenPanel
+            updateDrawCtrl={(updated) => {
+              setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
+              drawRef.current?.mutateStyle(updated);
+            }}
+            drawCtrl={currDrawCtrl}
+          />
+        }
       >
-        <Popover
-          trigger="click"
-          placement="bottom"
-          overlayClassName="style-pop"
-          getPopupContainer={(e) => e.parentElement!}
-          destroyTooltipOnHide
-          content={
-            <PenPanel
-              updateDrawCtrl={(updated) => {
-                setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
-                drawRef.current?.mutateStyle(updated);
-              }}
-              drawCtrl={currDrawCtrl}
-            />
-          }
-        >
-          <Button icon={<BgColorsOutlined />} {...btnProps} />
-        </Popover>
-        <Button
-          icon={<CopyOutlined />}
-          onClick={() => drawRef.current?.duplicateSelected()}
-          {...btnProps}
-        />
-        <Button icon={<PictureOutlined />} onClick={getRaster} {...btnProps} />
-        <Button
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => drawRef.current?.deleteSelected()}
-          {...btnProps}
-        />
-      </div>
-    </CSSTransition>
+        <Button icon={<BgColorsOutlined />} {...btnProps} />
+      </Popover>
+      <Button
+        icon={<CopyOutlined />}
+        onClick={() => drawRef.current?.duplicateSelected()}
+        {...btnProps}
+      />
+      <Button icon={<PictureOutlined />} onClick={getRaster} {...btnProps} />
+      <Button
+        danger
+        icon={<DeleteOutlined />}
+        onClick={() => drawRef.current?.deleteSelected()}
+        {...btnProps}
+      />
+    </div>
   );
 };
 
@@ -97,7 +95,7 @@ export const TextTool: FC<{
   const [align, setAlign] = useState("center");
 
   useEffect(() => {
-    if (!pointText || !visible) return;
+    if (!pointText) return;
     const { name, content, justification, fillColor } = pointText;
     setAlign(justification);
     if (name) {
@@ -107,7 +105,7 @@ export const TextTool: FC<{
       setText("");
       setColor(allColors[0]!);
     }
-  }, [visible, pointText]);
+  }, [pointText]);
 
   const fontColorBtn = (
     <Popover

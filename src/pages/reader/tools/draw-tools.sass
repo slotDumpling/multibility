@@ -2,10 +2,10 @@
 @import ../../../sass/_var
 
 .select-tool
-  $tf: translate(-50%, -120%)
+  $tf: translate(-50%, -50%)
   @include back-blur
   left: min(calc(100% - 100px), max(var(--pos-x), 100px))
-  top: max(50px, var(--pos-y))
+  top: min(calc(100% - 25px), max(var(--pos-y), 25px))
   position: absolute
   padding: 5px
   transform: $tf
@@ -13,27 +13,15 @@
   border-radius: 50px
   border: $dark-border
   display: flex
-  > * + *
-    margin-left: 5px
+  transition-property: transform, opacity, visibility
+  transition-duration: $speed
 
-  &.enter
+  &[data-visible=false]
     transform: $tf scale(0)
     opacity: 0
+    visibility: hidden
     .style-pop
       display: none
-  &.enter-active
-    transform: $tf
-    opacity: 1
-    transition: transform $speed, opacity $speed
-  &.exit
-    transform: $tf
-    opacity: 1
-    .style-pop
-      display: none
-  &.exit-active
-    transform: $tf scale(0)
-    opacity: 0
-    transition: transform $speed, opacity $speed
 
 .insert-option
   margin: 15px 0
