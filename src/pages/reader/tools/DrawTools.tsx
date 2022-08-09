@@ -40,7 +40,7 @@ export const SelectTool: FC<{
       className: "raster-modal",
       icon: <PictureTwoTone />,
       okText: "Save",
-      onOk: () => saveAs(imageData, document.title.split("-")[0] + ".png"),
+      onOk: () => saveAs(imageData, document.title.split(" - ")[0] + ".png"),
     });
   };
 
