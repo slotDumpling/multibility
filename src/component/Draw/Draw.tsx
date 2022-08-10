@@ -24,6 +24,7 @@ import { releaseCanvas } from "lib/draw/canvas";
 import { getCircleCursor, getRotateCurcor } from "./cursor";
 import { usePreventTouch, usePreventGesture } from "./touch";
 import { Setter } from "lib/hooks";
+import { setGridItem, getGridItems, gernerateGrid } from "./grid";
 
 export interface DrawRefType {
   deleteSelected: () => void;
@@ -402,13 +403,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const itemGrid = useMemo(() => {
       if (!/^(erase|select)$/.test(mode)) return [];
-      const wnum = Math.ceil(width / 100);
-      const hnum = Math.ceil(height / 100);
-      const grid = Array.from({ length: wnum }, () =>
-        Array.from({ length: hnum }, () => new Set<paper.Item>())
-      );
-      group.forEach((item) => setGridItem(grid, item));
-      return grid;
+      return gernerateGrid(group, width, height);
     }, [group, width, height, mode]);
 
     const handleToolDrag = (e: paper.ToolEvent) => {
@@ -935,10 +930,7 @@ const updateGroupStyle = (items: paper.Item[], updated: Partial<DrawCtrl>) => {
 };
 
 const getClickedText = (layer: paper.Layer, point: paper.Point) => {
-  const hitRes = layer.hitTest(point, {
-    class: paper.PointText,
-    fill: true,
-  });
+  const hitRes = layer.hitTest(point, { class: paper.PointText, fill: true });
   if (hitRes?.item instanceof paper.PointText) return hitRes?.item;
 };
 
@@ -960,40 +952,4 @@ const flattenCP = (cp: paper.Item): paper.Path[] => {
     return cp.children.map(flattenCP).flat();
   }
   return [];
-};
-
-const getGridRange = (bounds: paper.Rectangle) => {
-  const { topLeft, bottomRight } = bounds;
-  return [
-    Math.floor(topLeft.x / 100),
-    Math.ceil(bottomRight.x / 100),
-    Math.floor(topLeft.y / 100),
-    Math.ceil(bottomRight.y / 100),
-  ] as [number, number, number, number];
-};
-
-const setGridItem = (
-  grid: Set<paper.Item>[][],
-  item: paper.Item,
-  replaced?: paper.Item
-) => {
-  const bounds = (replaced ?? item).strokeBounds;
-  const [xmin, xmax, ymin, ymax] = getGridRange(bounds);
-  for (let x = xmin; x <= xmax; x += 1) {
-    for (let y = ymin; y <= ymax; y += 1) {
-      replaced && grid[x]?.[y]?.delete(replaced);
-      grid[x]?.[y]?.add(item);
-    }
-  }
-};
-
-const getGridItems = (grid: Set<paper.Item>[][], bounds: paper.Rectangle) => {
-  const itemSet = new Set<paper.Item>();
-  const [xmin, xmax, ymin, ymax] = getGridRange(bounds);
-  for (let x = xmin; x <= xmax; x += 1) {
-    for (let y = ymin; y <= ymax; y += 1) {
-      grid[x]?.[y]?.forEach((item) => itemSet.add(item));
-    }
-  }
-  return Array.from(itemSet);
 };
