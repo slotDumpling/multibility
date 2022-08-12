@@ -25,7 +25,7 @@ export const SwipeDelete: FC<
     disable?: boolean;
     className?: string;
   }>
-> = ({ children, onDelete, disable = false, className }) => {
+> = ({ children, onDelete, disable = false, className, ...data }) => {
   const [uid] = useState(getUid);
 
   const [nowSwiped, setNowSwiped] = useContext(SwipeCtx);
@@ -85,6 +85,7 @@ export const SwipeDelete: FC<
       {...swipeHandler}
       style={{ height }}
       onTransitionEnd={handler}
+      {...data}
     >
       <div className="content" ref={wrapper}>
         {children}

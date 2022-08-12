@@ -12,7 +12,6 @@ import { Input } from "antd";
 import { getCachedTeamState } from "lib/network/http";
 import { TeamState } from "lib/draw/TeamState";
 import { getColorPalette } from "lib/color";
-import classNames from "classnames";
 import { NoteNav, ListTools } from "../Header";
 import dayjs from "dayjs";
 import calender from "dayjs/plugin/calendar";
@@ -95,9 +94,11 @@ export const NoteList: FC<MenuProps> = (props) => {
             return (
               <CSSTransition key={uid} timeout={300}>
                 <SwipeDelete
-                  className={classNames("note-wrapper", { selected, last })}
+                  className="note-wrapper"
                   onDelete={() => removeNote(uid)}
                   disable={editing}
+                  data-last={last}
+                  data-selected={selected}
                 >
                   <NoteItem
                     noteInfo={noteInfo}
@@ -123,12 +124,19 @@ const NoteItem: FC<
     editing: boolean;
     setSelectNotes: Setter<Set<string>>;
   } & MenuProps
-> = ({ noteInfo, selected, editing, setSelectNotes, ...props }) => {
+> = ({
+  noteInfo,
+  selected,
+  editing,
+  setSelectNotes,
+  setAllNotes,
+  allTags,
+  currTagID,
+}) => {
   const { team, uid, name, lastTime, tagID } = noteInfo;
   const date = useMemo(() => dayjs(lastTime).calendar(), [lastTime]);
   const href = `${team ? "team" : "reader"}/${uid}`;
 
-  const { setAllNotes } = props;
   const [noteName, setNoteName] = useState(name);
   const nav = useNavigate();
 
@@ -147,7 +155,6 @@ const NoteItem: FC<
     });
   };
 
-  const { allTags, currTagID } = props;
   const tag = allTags[tagID];
 
   return (

@@ -103,7 +103,7 @@ $note-item-height: 6em
       display: none
 
 .note-wrapper
-  &.selected
+  &[data-selected=true]
     .note-item::before
       @include pseudo-el(5px, -10px, 0, -10px)
       z-index: -1
@@ -113,11 +113,11 @@ $note-item-height: 6em
       top: 0
       border-top-left-radius: 0
       border-top-right-radius: 0
-    &.last .note-item::before
+    &[data-last=true] .note-item::before
       bottom: 6px
       border-bottom-left-radius: 1em
       border-bottom-right-radius: 1em
-  &.last .note-item
+  &[data-last=true] .note-item
     box-shadow: none
 
 .tag-drop ul
