@@ -74,20 +74,20 @@
   cursor: pointer
   transition: height $speed, background $speed
   --light-color: #E5E7EB
-  &[data-editing=true]
-    height: 8em
-    flex-direction: column
-    justify-content: space-evenly
-    background-color: #E5E7EB !important
-    .buttons
-      width: 100%
-      display: flex
-      justify-content: space-between
   &[data-curr=true]
     background-color: var(--light-color)
     color: var(--dark-color)
     > button
       color: var(--dark-color)
+  &[data-editing=true]
+    height: 8em
+    flex-direction: column
+    justify-content: space-evenly
+    background-color: #E5E7EB
+    .buttons
+      width: 100%
+      display: flex
+      justify-content: space-between
   > .tag-circle
     margin-right: 10px
   .all-note-icon
@@ -96,7 +96,7 @@
   .tag-name
     @include text-overflow
     flex: 1
-    margin: 0 10px 0 0 !important
+    margin: 0 10px 0 0
   .tag-num
     width: 24px
     text-align: center

@@ -55,6 +55,7 @@ body.ant-scrolling-effect .preview-drop
   box-shadow: $shadow-2-down
   pointer-events: auto
   &[data-animating=true]
+    // override dnd transition
     transition: transform $slow-speed cubic-bezier(0.2, 0, 0, 1) !important
 
   .drag-handle
@@ -105,6 +106,7 @@ body.ant-scrolling-effect .preview-drop
       &[data-dragged=false]::before
         opacity: 0
       &[data-animating=true]
+        // override dnd transition
         transition: transform $speed !important
         &::before
           opacity: 0
