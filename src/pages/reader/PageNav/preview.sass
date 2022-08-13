@@ -148,10 +148,11 @@ body.ant-scrolling-effect .preview-drop
         position: absolute
         top: 5px
         left: 5px
+        transition: opacity $fast-speed
         .ant-avatar
           box-sizing: content-box
           border-width: 3px
-        &.chosen
+        &.chosen:not(:hover)
           opacity: 0.5
   footer
     padding: 10px 10px
