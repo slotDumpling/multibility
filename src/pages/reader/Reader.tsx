@@ -196,7 +196,7 @@ export default function Reader() {
   };
 
   const [size, setSize] = useState(100);
-  const padding = `${size === 100 ? 0 : "10px"} ${(100 - size) / 2}%`;
+  const padding = (100 - size) / 2 + "%";
   const { setInviewRatios, scrollPage, sectionRef, currPageID, scrolling } =
     useScrollPage(noteID, pageOrder, [size]);
 
@@ -218,7 +218,7 @@ export default function Reader() {
         undoable={stateSet?.isUndoable() ?? false}
         redoable={stateSet?.isRedoable() ?? false}
       />
-      <main style={{ padding }}>
+      <main style={{ paddingLeft: padding, paddingRight: padding }}>
         {pageOrder?.map((uid) => (
           <section key={uid} className="note-page" ref={sectionRef(uid)}>
             <PageContainer
