@@ -2,14 +2,16 @@ import axios from "axios";
 import {
   removePageTimg,
   TeamNoteInfo,
-  TeamPage,
   TeamPageInfo,
+  TeamPageRec,
 } from "lib/note/note";
 import { loadNote, saveTeamNote, updateTeamNote } from "lib/note/archive";
 import { getUserID } from "lib/user";
 import localforage from "localforage";
+import md5 from "md5";
 
 export const BASE_URL = process.env.REACT_APP_PUBLIC_SERVER_URL ?? "";
+// export const BASE_URL = process.env.REACT_APP_LOCAL_SERVER_URL ?? "";
 axios.defaults.baseURL = BASE_URL;
 
 export async function getNoteID(roomCode: string) {
@@ -103,20 +105,24 @@ export async function putNote(noteID: string) {
   }
 }
 
+const hashForage = localforage.createInstance({ name: "updateHash" });
 export async function updatePages(noteID: string) {
   const note = await loadNote(noteID);
   if (!note) return null;
   const { uid, name, withImg, pageOrder, pageRec } = note;
   removePageTimg(pageRec);
+  const noteInfo = { uid, name, withImg, pageOrder };
+
+  const hash = md5(JSON.stringify([pageRec, noteInfo]));
+  const lastHash = await hashForage.getItem<string>(noteID);
+  if (hash === lastHash) return true;
 
   try {
-    const { data } = await axios.put(`update/${noteID}`, {
-      userID: getUserID(),
-      pageRec,
-      noteInfo: { uid, name, withImg, pageOrder },
-    });
-    if (data.statusCode === 201) return true;
-    else return false;
+    const body = { userID: getUserID(), pageRec, noteInfo };
+    const { data } = await axios.put(`update/${noteID}`, body);
+    if (data.statusCode !== 201) return false;
+    await hashForage.setItem(noteID, hash);
+    return true;
   } catch (e) {
     console.error(e);
     return false;
@@ -125,20 +131,27 @@ export async function updatePages(noteID: string) {
 
 const teamForage = localforage.createInstance({ name: "teamState" });
 export async function getTeamNoteState(noteID: string) {
+  const hashKey = "hash_" + noteID;
+  const hash = await teamForage.getItem<string>(hashKey);
   try {
     const { data } = await axios.get(`state/${noteID}`, {
-      params: { userID: getUserID() },
+      params: { userID: getUserID(), hash },
     });
     if (data.statusCode !== 200) return null;
-    const { teamPages } = data;
-    teamForage.setItem(noteID, teamPages);
-    return teamPages as Record<string, TeamPage>;
+    if (data.modified) {
+      const { teamPages } = data;
+      await teamForage.setItem(noteID, teamPages);
+      await teamForage.setItem(hashKey, data.hash);
+      return teamPages as TeamPageRec;
+    } else {
+      return getCachedTeamState(noteID);
+    }
   } catch (e) {
     console.error(e);
     return null;
   }
 }
 
-export async function getCachedTeamState(noteID: string) {
-  return teamForage.getItem<Record<string, TeamPage>>(noteID);
+export function getCachedTeamState(noteID: string) {
+  return teamForage.getItem<TeamPageRec>(noteID);
 }

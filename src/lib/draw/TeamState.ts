@@ -1,4 +1,4 @@
-import { NotePage, TeamPage, TeamPageInfo } from "lib/note/note";
+import { NotePage, TeamPageInfo, TeamPageRec } from "lib/note/note";
 import { DrawState } from "./DrawState";
 import { SetOperation } from "./StateSet";
 import { Map, Record, Set } from "immutable";
@@ -57,7 +57,7 @@ export class TeamState {
     );
   }
 
-  static createFromTeamPages(teamPages: globalThis.Record<string, TeamPage>) {
+  static createFromTeamPages(teamPages: TeamPageRec) {
     let record = defaultFactory();
     Object.entries(teamPages).forEach(([pageID, teamPage]) => {
       const { states, ratio } = teamPage;

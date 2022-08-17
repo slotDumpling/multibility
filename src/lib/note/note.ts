@@ -25,10 +25,10 @@ export interface TeamPageInfo {
 }
 
 export type TeamPage = TeamPageInfo & TeamPageState;
-
+export type TeamPageRec = Record<string, TeamPage>;
 export interface TeamNote {
   uid: string;
-  pageRec: Record<string, TeamPage>;
+  pageRec: TeamPageRec;
 }
 
 export interface NoteInfo {
