@@ -131,24 +131,22 @@ export async function updatePages(noteID: string) {
 
 const teamForage = localforage.createInstance({ name: "teamState" });
 export async function getTeamNoteState(noteID: string) {
-  const hashKey = "hash_" + noteID;
-  const hash = await teamForage.getItem<string>(hashKey);
+  const cachedState = await getCachedTeamState(noteID);
+  const hash = md5(JSON.stringify(cachedState));
+
   try {
     const { data } = await axios.get(`state/${noteID}`, {
       params: { userID: getUserID(), hash },
     });
-    if (data.statusCode !== 200) return null;
-    if (data.modified) {
-      const { teamPages } = data;
+    const { statusCode, modified, teamPages } = data;
+    if (statusCode === 200 && modified) {
       await teamForage.setItem(noteID, teamPages);
-      await teamForage.setItem(hashKey, data.hash);
       return teamPages as TeamPageRec;
-    } else {
-      return getCachedTeamState(noteID);
     }
+    return cachedState;
   } catch (e) {
     console.error(e);
-    return null;
+    return cachedState;
   }
 }
 
