@@ -137,10 +137,4 @@ export class StateSet {
       lastSetOp
     );
   }
-
-  getLastDS(): [string, DrawState] | undefined {
-    const pageID = this.lastOp?.pageID;
-    const ds = pageID && this.getOneState(pageID);
-    if (ds) return [pageID, ds];
-  }
 }

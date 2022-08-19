@@ -117,19 +117,17 @@ const DrawWrapper: FC<{
     }
   );
 
-  const toggleSelectTool = useCallback(
+  const toggleSelectTool = useEvent(
     (active: boolean, clickPoint?: paper.Point) => {
       setClickPoint((p) => clickPoint ?? p);
       setSelectShow(active);
-    },
-    []
+    }
   );
-  const toggleTextTool = useCallback(
+  const toggleTextTool = useEvent(
     (active: boolean, pointText?: paper.PointText) => {
       setPointText(pointText);
       setTextShow(active);
-    },
-    []
+    }
   );
 
   return preview ? (
@@ -160,4 +158,3 @@ const DrawWrapper: FC<{
     </>
   );
 };
-DrawWrapper.displayName = "DrawWrapper";
