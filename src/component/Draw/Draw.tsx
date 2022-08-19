@@ -337,6 +337,12 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       s3.point.y = y;
       rect.selected = true;
     };
+    const moveSelected = (delta: paper.Point) => {
+      chosenItems.forEach((item) => item.translate(delta));
+      path?.translate(delta);
+      rect?.translate(delta);
+      rotateHandle?.translate(delta);
+    };
 
     const handleDrag = {
       draw: dragPath,
@@ -377,11 +383,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
             rotateHandle.scale(100 / rotateHandle.length, rBaseP);
           }
         } else {
-          // move selected items
-          chosenItems.forEach((item) => item.translate(e.delta));
-          path?.translate(e.delta);
-          rect?.translate(e.delta);
-          rotateHandle?.translate(e.delta);
+          moveSelected(e.delta);
         }
       },
       text(e: paper.MouseEvent) {
@@ -562,9 +564,24 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       ...{ select: null, draw: null, erase: null },
     }[paperMode];
 
+    const handleKeyDown = (e: paper.KeyEvent) => {
+      if (paperMode !== "selected") return;
+      const delta = {
+        up: new Point(0, -10),
+        down: new Point(0, 10),
+        left: new Point(-10, 0),
+        right: new Point(10, 0),
+      }[e.key];
+      if (!delta) return;
+      e.preventDefault();
+      delta && moveSelected(delta);
+      toggleSelectTool(false);
+    };
+
     const handleKeyUp = (e: paper.KeyEvent) => {
       if (paperMode !== "selected") return;
-      if (/^(delete|backspace)$/.test(e.key)) deleteSelected();
+      if (/^(delete|backspace)$/.test(e.key)) return deleteSelected();
+      updateMutation();
     };
 
     const handleClick = (e: paper.MouseEvent) => {
@@ -593,6 +610,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       view.onMouseMove = activate(handleMove);
       view.onClick = activate(handleClick);
       tool.onMouseDrag = activate(handleToolDrag);
+      tool.onKeyDown = activate(handleKeyDown);
       tool.onKeyUp = activate(handleKeyUp);
     });
 
