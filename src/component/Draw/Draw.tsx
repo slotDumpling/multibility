@@ -512,6 +512,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       },
       selected(e: paper.MouseEvent) {
         handleSelectedCursor(e);
+        if (paperMode !== "selected") return;
+        const { view } = scope.current;
+        const clickPoint = view.projectToView(e.point);
+        toggleSelectTool(true, clickPoint);
         if (pointBeforeDrag.current.equals(e.point)) return;
         updateMutation();
       },
@@ -580,17 +584,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const handleKeyUp = (e: paper.KeyEvent) => {
       if (paperMode !== "selected") return;
-      if (/^(delete|backspace)$/.test(e.key)) return deleteSelected();
-      updateMutation();
-    };
-
-    const handleClick = (e: paper.MouseEvent) => {
-      if (paperMode !== "selected") return;
-      if (!(rect ?? path)?.contains(e.point)) return;
-      if (e.delta.subtract(P_ZERO).length > 10) return;
-      const { view } = scope.current;
-      const clickPoint = view.projectToView(e.point);
-      toggleSelectTool(true, clickPoint);
+      if (/^(delete|backspace)$/.test(e.key)) deleteSelected();
+      if (/^(up|down|left|right)$/.test(e.key)) updateMutation();
     };
 
     useEffect(() => {
@@ -608,7 +603,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       view.onMouseDrag = activate(handleDrag);
       view.onMouseUp = activate(handleUp);
       view.onMouseMove = activate(handleMove);
-      view.onClick = activate(handleClick);
       tool.onMouseDrag = activate(handleToolDrag);
       tool.onKeyDown = activate(handleKeyDown);
       tool.onKeyUp = activate(handleKeyUp);
