@@ -31,8 +31,6 @@ export interface DrawRefType {
   duplicateSelected: () => void;
   rasterizeSelected: () => string;
   mutateStyle: (updated: Partial<DrawCtrl>) => void;
-  submitText: (text: string, color?: string, justification?: string) => void;
-  cancelText: () => void;
 }
 interface DrawPropType {
   drawState: DrawState;
@@ -139,17 +137,17 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const deferTimerID = useRef(0);
 
     useEffect(() => {
-      const layer = scope.current.project.layers[1];
-      if (!layer) return;
+      const [, l1] = scope.current.project.layers;
+      if (!l1) return;
       const render = () => {
         const tempGroup: paper.Item[] = [];
         const timeBeforeRender = performance.now();
         scope.current.activate();
         // clean-up layer_1 except the clip mask.
-        layer.removeChildren(1);
+        l1.removeChildren(1);
         mergedStrokes.forEach((stroke) => {
           const self = drawState.hasStroke(stroke.uid);
-          const item = paintStroke(stroke, layer, !self);
+          const item = paintStroke(stroke, l1, !self);
           if (self) tempGroup.push(item);
         });
         setGroup(tempGroup);
@@ -312,13 +310,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           downRect(e);
         }
       },
-      text(e: paper.MouseEvent) {
-        const layer = scope.current.project.layers[1];
-        if (!layer) return;
-        rasterizeCanvas();
-        const t = getClickedText(layer, e.point) ?? startText(e.point);
-        setPointText(t);
-      },
+      text(e: paper.MouseEvent) {},
     }[paperMode];
 
     const dragPath = (e: paper.MouseEvent) => {
@@ -386,15 +378,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           moveSelected(e.delta);
         }
       },
-      text(e: paper.MouseEvent) {
-        if (!pointText || pointText.name) return;
-        const { topCenter, bottomRight } = pointText.bounds;
-        const diagonal = bottomRight.subtract(topCenter);
-        const projection = e.point.subtract(topCenter).project(diagonal);
-        const scale = projection.x / diagonal.x;
-        if (scale < 0) return;
-        pointText.scale(scale, topCenter);
-      },
+      text: null,
     }[paperMode];
 
     useEffect(() => {
@@ -519,9 +503,15 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         if (pointBeforeDrag.current.equals(e.point)) return;
         updateMutation();
       },
-      text() {
-        unrasterizeCanvas();
-        toggleTextTool(true, pointText);
+      text(e: paper.MouseEvent) {
+        if (pointText.current) return submitText();
+        const [, l1] = scope.current.project.layers;
+        if (!l1) return;
+        const t = getClickedText(l1, e.point) ?? startText(e.point);
+        t.justification = "left";
+        t.visible = false;
+        pointText.current = t;
+        toggleTextTool(true, t);
       },
     }[paperMode];
 
@@ -556,15 +546,17 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       if ((rect ?? path)?.contains(e.point)) return setCursor("pointer");
       setCursor("crosshair");
     };
+    const handleTextCursor = (e: paper.MouseEvent) => {
+      if (pointText.current) return setCursor("auto");
+      const layer = scope.current.project.layers[1];
+      if (!layer) return;
+      if (getClickedText(layer, e.point)) setCursor("text");
+      else setCursor("crosshair");
+    };
 
     const handleMove = {
       selected: handleSelectedCursor,
-      text(e: paper.MouseEvent) {
-        const layer = scope.current.project.layers[1];
-        if (!layer) return;
-        if (getClickedText(layer, e.point)) setCursor("text");
-        else setCursor("crosshair");
-      },
+      text: handleTextCursor,
       ...{ select: null, draw: null, erase: null },
     }[paperMode];
 
@@ -656,39 +648,41 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       return layerRaster.current?.toDataURL() ?? "";
     };
 
-    const [pointText, setPointText] = usePaperItem<paper.PointText>();
+    const pointText = useRef<paper.PointText>();
     const cancelText = useCallback(() => {
-      setPointText(undefined);
+      if (!pointText.current) return;
+      pointText.current.visible = true;
+      if (!pointText.current.name) {
+        pointText.current?.remove();
+      }
+      pointText.current = undefined;
       toggleTextTool(false);
-    }, [setPointText, toggleTextTool]);
+    }, [toggleTextTool]);
+    const submitText = useCallback(() => {
+      const t = pointText.current;
+      if (!t) return;
+      cancelText();
+      const pathData = t.exportJSON();
+      if (!t.content) {
+        if (!t.name) return;
+        return onChange((prev) => DrawState.eraseStrokes(prev, [t.name]));
+      }
+      if (!t.name) {
+        onChange((prev) => DrawState.addStroke(prev, pathData));
+      } else {
+        onChange((prev) => DrawState.mutateStrokes(prev, [[t.name, pathData]]));
+      }
+    }, [cancelText, onChange]);
 
     useEffect(() => {
-      if (mode === "text") return cancelText;
-    }, [mode, cancelText]);
-
-    const submitText = (
-      text: string,
-      color = "#000",
-      justification = "center"
-    ) => {
-      if (!pointText) return;
-      pointText.content = text;
-      pointText.fillColor = new Color(color);
-      pointText.justification = justification;
-      const pathData = pointText.exportJSON();
-      const { name } = pointText;
-      cancelText();
-      if (!name) return onChange((prev) => DrawState.addStroke(prev, pathData));
-      onChange((prev) => DrawState.mutateStrokes(prev, [[name, pathData]]));
-    };
+      if (mode === "text") return submitText;
+    }, [mode, submitText]);
 
     useImperativeHandle(ref, () => ({
       deleteSelected,
       duplicateSelected,
       rasterizeSelected,
       mutateStyle,
-      cancelText,
-      submitText,
     }));
 
     usePreventGesture();
@@ -706,6 +700,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           elPos = new Point(x, y);
           lastOrigin = originRawP.subtract(elPos);
           toggleSelectTool(false);
+          cancelText();
           rasterizeLayer(new Path.Rectangle(P_ZERO, projSize));
           unrasterizeCanvas();
         } else {
@@ -761,9 +756,7 @@ function usePaperItem<T extends paper.Item>() {
   const tuple = useState<T>();
   const [item] = tuple;
   useDebugValue(item);
-  useEffect(() => {
-    if (!item?.name) return () => void item?.remove();
-  }, [item]);
+  useEffect(() => () => void item?.remove(), [item]);
   return tuple;
 }
 
@@ -949,10 +942,8 @@ const getClickedText = (layer: paper.Layer, point: paper.Point) => {
 const startText = (point: paper.Point) => {
   return new paper.PointText({
     point: point.add(new Point(0, 50)),
-    content: "Insert text...",
+    content: "",
     fontSize: 50,
-    justification: "center",
-    fillColor: "#1890ff55",
   });
 };
 

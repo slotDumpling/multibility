@@ -1,23 +1,19 @@
-import { CSSProperties, FC, RefObject, useEffect, useState } from "react";
+import { CSSProperties, FC, RefObject, useMemo, useState } from "react";
 import {
   CopyOutlined,
   DeleteOutlined,
   PictureTwoTone,
   PictureOutlined,
   BgColorsOutlined,
-  AlignLeftOutlined,
-  FontColorsOutlined,
-  AlignRightOutlined,
-  AlignCenterOutlined,
 } from "@ant-design/icons";
-import { Button, ButtonProps, Modal, Popover, Radio } from "antd";
+import { Button, ButtonProps, Modal, Popover } from "antd";
 import { DrawCtrl } from "lib/draw/DrawCtrl";
 import { ColorSelect, PenPanel } from "./PenPanel";
-import TextArea from "antd/lib/input/TextArea";
 import { allColors } from "lib/color";
 import { DrawRefType } from "component/Draw";
 import { saveAs } from "file-saver";
 import "./draw-tools.sass";
+import { Color } from "paper/dist/paper-core";
 
 const btnProps: ButtonProps = {
   type: "text",
@@ -47,7 +43,7 @@ export const SelectTool: FC<{
   const { x, y } = clickPoint;
   return (
     <div
-      className="select-tool"
+      className="select-tool tool-options"
       data-visible={visible}
       style={{ "--pos-x": x + "px", "--pos-y": y + "px" } as CSSProperties}
     >
@@ -86,80 +82,67 @@ export const SelectTool: FC<{
 };
 
 export const TextTool: FC<{
+  pointText: paper.PointText;
   drawRef: RefObject<DrawRefType>;
-  visible: boolean;
-  pointText?: paper.PointText;
-}> = ({ visible, drawRef, pointText }) => {
-  const [text, setText] = useState("");
-  const [color, setColor] = useState(allColors[0]!);
-  const [align, setAlign] = useState("center");
+}> = ({ pointText, drawRef }) => {
+  const [text, setText] = useState(pointText.content);
+  const [color, setColor] = useState(
+    pointText.fillColor?.toCSS(true) ?? allColors[0]!
+  );
 
-  useEffect(() => {
-    if (!pointText) return;
-    const { name, content, justification, fillColor } = pointText;
-    setAlign(justification);
-    if (name) {
-      setText(content);
-      setColor(fillColor?.toCSS(true) ?? allColors[0]!);
-    } else {
-      setText("");
-      setColor(allColors[0]!);
-    }
+  const { x: left, y: top } = useMemo(() => {
+    const { topLeft } = pointText.bounds;
+    return pointText.view.projectToView(topLeft);
   }, [pointText]);
+
+  const ratio = pointText.viewMatrix.a;
+  const fontSize = +pointText.fontSize * ratio;
+  const size = pointText.bounds.size.multiply(ratio);
+  const width = pointText.content ? `calc(${size.width}px + 1em)` : "8em";
+  const height = `calc(${size.height}px + 0.2em)`;
 
   const fontColorBtn = (
     <Popover
-      content={<ColorSelect color={color} setColor={setColor} />}
+      content={
+        <ColorSelect
+          color={color}
+          setColor={(c) => {
+            pointText.fillColor = new Color(c);
+            setColor(c);
+          }}
+        />
+      }
+      trigger="click"
       overlayStyle={{ width: 200 }}
       placement="bottom"
       getPopupContainer={(e) => e.parentElement!}
     >
-      <Button
-        size="small"
-        icon={<FontColorsOutlined className="font-icon" style={{ color }} />}
-      />
+      <Button {...btnProps} icon={<BgColorsOutlined />} />
     </Popover>
   );
 
-  const alignRadio = (
-    <Radio.Group
-      size="small"
-      optionType="button"
-      value={align}
-      buttonStyle="solid"
-      onChange={(e) => setAlign(e.target.value)}
-      options={[
-        { label: <AlignLeftOutlined />, value: "left" },
-        { label: <AlignCenterOutlined />, value: "center" },
-        { label: <AlignRightOutlined />, value: "right" },
-      ]}
-    />
-  );
-
   return (
-    <Modal
-      visible={visible}
-      title="Insert text"
-      onCancel={() => drawRef.current?.cancelText()}
-      onOk={() => {
-        const content = text.trim();
-        if (!content) return drawRef.current?.cancelText();
-        drawRef.current?.submitText(content, color, align);
-      }}
-      bodyStyle={{ paddingTop: 0 }}
-      destroyOnClose
-    >
-      <div className="insert-option">
-        {fontColorBtn}
-        {alignRadio}
+    // text-wrapper must be the child of draw-wrapper.
+    <>
+      <div
+        className="text-wrapper"
+        style={{ left, top, maxWidth: `calc(100% - ${left}px)` }}
+      >
+        <textarea
+          autoFocus
+          placeholder="Insert Text..."
+          style={{ fontSize, color, width, height }}
+          value={text}
+          onChange={(e) => {
+            const t = e.target.value;
+            setText(t);
+            pointText.content = t;
+          }}
+        />
       </div>
-      <TextArea
-        size="large"
-        rows={3}
-        autoFocus
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
-    </Modal>
+      <div className="text-options tool-options" style={{ left, top }}>
+        {fontColorBtn}
+      </div>
+    </>
   );
 };

@@ -17,15 +17,15 @@ export const loadDarkMode = async () => {
       ignoreInlineStyle: [
         "label .circle",
         ".color-circle",
-        ".font-icon",
         ".pen-icon path",
+        ".text-wrapper textarea",
       ],
       invert: [
         ".draw-canvas",
         "label .circle",
         ".width-circle.lineWidth",
-        ".font-icon",
         ".pen-icon",
+        ".text-wrapper textarea",
       ].map((selector) => `body:not([data-force-light=true]) ${selector}`),
       css: "",
       ignoreImageAnalysis: [],

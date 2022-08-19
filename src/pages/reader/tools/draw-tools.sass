@@ -1,18 +1,20 @@
 @import ../../../sass/_mixins
 @import ../../../sass/_var
 
-.select-tool
-  $tf: translate(-50%, -120%)
+.tool-options
   @include back-blur
-  left: min(calc(100% - 100px), max(var(--pos-x), 100px))
-  top: min(calc(100%), max(var(--pos-y), 50px))
   padding: 5px
   position: absolute
-  transform: $tf
   box-shadow: $shadow-1
   border-radius: 50px
   border: $dark-border
   display: flex
+
+.select-tool
+  $tf: translate(-50%, -120%)
+  left: min(calc(100% - 100px), max(var(--pos-x), 100px))
+  top: min(calc(100%), max(var(--pos-y), 50px))
+  transform: $tf
   transition-property: transform, opacity, visibility
   transition-duration: $fast-speed
 
@@ -23,10 +25,22 @@
     .style-pop
       display: none
 
-.insert-option
-  margin: 15px 0
-  > * + *
-    margin-left: 10px
+.text-wrapper
+  position: absolute
+  overflow: hidden
+  textarea
+    padding: 0
+    transform: translateY(-0.1em)
+    font-family: sans-serif
+    font-size: 10em
+    line-height: 1.2
+    background-color: #0000
+    border: none
+    resize: none
+    outline: none
+.text-options
+  position: absolute
+  transform: translateY(-120%)
 
 .font-color-drop
   width: 200px
