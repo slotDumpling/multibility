@@ -154,9 +154,7 @@ const DrawWrapper: FC<{
         visible={selectShow}
         clickPoint={clickPoint}
       />
-      {textShow && pointText && (
-        <TextTool drawRef={drawRef} pointText={pointText} />
-      )}
+      {textShow && pointText && <TextTool pointText={pointText} />}
     </>
   );
 };
