@@ -26,25 +26,32 @@
       display: none
 
 .text-wrapper
+  // transform scale on absolute element blurs text on safari.
   position: absolute
   overflow: hidden
   left: var(--pos-x)
   top: var(--pos-y)
-  max-width: calc(100% - var(--pos-x))
-  max-height: calc(100% - var(--pos-y))
+  width: calc(var(--width) * var(--scale))
+  height: calc(var(--height) * var(--scale))
+  max-width: calc((100% - var(--pos-x)))
+  max-height: calc((100% - var(--pos-y)))
   textarea
+    width: var(--width)
+    height: var(--height)
+    transform-origin: top left
     padding: 0
-    transform: translateY(-0.1em)
     font-family: sans-serif
-    font-size: 10em
     line-height: 1.2
     background-color: #0000
     border: none
     resize: none
     outline: none
+    transform: scale(var(--scale)) translateY(-0.1em)
+    @supports (-webkit-touch-callout: none)
+      transform: scale(var(--scale)) translateY(-0.05em)
 .text-options
   position: absolute
-  left: var(--pos-x)
+  left: min(calc(100% - 180px), var(--pos-x))
   top: var(--pos-y)
   transform: translateY(-120%)
 
