@@ -310,7 +310,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           downRect(e);
         }
       },
-      text(e: paper.MouseEvent) {},
+      text: null,
     }[paperMode];
 
     const dragPath = (e: paper.MouseEvent) => {
@@ -581,6 +581,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       if (paperMode !== "selected") return;
       if (/^(delete|backspace)$/.test(e.key)) deleteSelected();
       if (/^(up|down|left|right)$/.test(e.key)) updateMutation();
+      if (e.key === "escape") resetSelect();
     };
 
     useEffect(() => {
