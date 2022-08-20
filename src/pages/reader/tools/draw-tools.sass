@@ -28,6 +28,10 @@
 .text-wrapper
   position: absolute
   overflow: hidden
+  left: var(--pos-x)
+  top: var(--pos-y)
+  max-width: calc(100% - var(--pos-x))
+  max-height: calc(100% - var(--pos-y))
   textarea
     padding: 0
     transform: translateY(-0.1em)
@@ -40,6 +44,8 @@
     outline: none
 .text-options
   position: absolute
+  left: var(--pos-x)
+  top: var(--pos-y)
   transform: translateY(-120%)
 
 .font-color-drop

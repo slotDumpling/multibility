@@ -20,6 +20,11 @@ const btnProps: ButtonProps = {
   shape: "round",
   size: "small",
 };
+
+const getPosVars = (x: number, y: number) => {
+  return { "--pos-x": x + "px", "--pos-y": y + "px" } as CSSProperties;
+};
+
 export const SelectTool: FC<{
   drawRef: RefObject<DrawRefType>;
   visible: boolean;
@@ -45,7 +50,7 @@ export const SelectTool: FC<{
     <div
       className="select-tool tool-options"
       data-visible={visible}
-      style={{ "--pos-x": x + "px", "--pos-y": y + "px" } as CSSProperties}
+      style={getPosVars(x, y)}
     >
       <Popover
         trigger="click"
@@ -90,7 +95,7 @@ export const TextTool: FC<{
     pointText.fillColor?.toCSS(true) ?? allColors[0]!
   );
 
-  const { x: left, y: top } = useMemo(() => {
+  const { x, y } = useMemo(() => {
     const { topLeft } = pointText.bounds;
     return pointText.view.projectToView(topLeft);
   }, [pointText]);
@@ -124,10 +129,7 @@ export const TextTool: FC<{
   return (
     // text-wrapper must be the child of draw-wrapper.
     <>
-      <div
-        className="text-wrapper"
-        style={{ left, top, maxWidth: `calc(100% - ${left}px)` }}
-      >
+      <div className="text-wrapper" style={getPosVars(x, y)}>
         <textarea
           autoFocus
           placeholder="Insert Text..."
@@ -140,7 +142,7 @@ export const TextTool: FC<{
           }}
         />
       </div>
-      <div className="text-options tool-options" style={{ left, top }}>
+      <div className="text-options tool-options" style={getPosVars(x, y)}>
         {fontColorBtn}
       </div>
     </>
