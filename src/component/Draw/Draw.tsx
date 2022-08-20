@@ -504,7 +504,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         updateMutation();
       },
       text(e: paper.MouseEvent) {
-        if (pointText.current) return submitText();
+        if (pointText.current) {
+          submitText();
+          return handleTextCursor(e);
+        }
         const [, l1] = scope.current.project.layers;
         if (!l1) return;
         const t = getClickedText(l1, e.point) ?? startText(e.point);
@@ -658,20 +661,20 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       pointText.current = undefined;
       toggleTextTool(false);
     }, [toggleTextTool]);
+
     const submitText = useCallback(() => {
       const t = pointText.current;
       if (!t) return;
       cancelText();
-      const pathData = t.exportJSON();
       if (!t.content) {
         if (!t.name) return;
         return onChange((prev) => DrawState.eraseStrokes(prev, [t.name]));
       }
+      const pathData = t.exportJSON();
       if (!t.name) {
-        onChange((prev) => DrawState.addStroke(prev, pathData));
-      } else {
-        onChange((prev) => DrawState.mutateStrokes(prev, [[t.name, pathData]]));
+        return onChange((prev) => DrawState.addStroke(prev, pathData));
       }
+      onChange((prev) => DrawState.mutateStrokes(prev, [[t.name, pathData]]));
     }, [cancelText, onChange]);
 
     useEffect(() => {
