@@ -1,5 +1,5 @@
-import { Skeleton } from "antd";
 import { FC, PropsWithChildren } from "react";
+import { LoadingOutlined } from "@ant-design/icons";
 
 export const Loading: FC<PropsWithChildren<{ loading?: boolean }>> = ({
   children,
@@ -7,8 +7,8 @@ export const Loading: FC<PropsWithChildren<{ loading?: boolean }>> = ({
 }) => {
   return loading ? (
     <div className="load-wrapper">
+      <LoadingOutlined className="loading-icon" />
       <h1 className="loading">Multibility</h1>
-      <Skeleton className="skeleton" active />
     </div>
   ) : (
     <>{children}</>
