@@ -577,12 +577,17 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       toggleSelectTool(false);
     };
 
-    const handleKeyUp = (e: paper.KeyEvent) => {
-      if (paperMode !== "selected") return;
-      if (/^(delete|backspace)$/.test(e.key)) deleteSelected();
-      if (/^(up|down|left|right)$/.test(e.key)) updateMutation();
-      if (e.key === "escape") resetSelect();
-    };
+    const handleKeyUp = {
+      selected(e: paper.KeyEvent) {
+        if (/^(delete|backspace)$/.test(e.key)) deleteSelected();
+        if (/^(up|down|left|right)$/.test(e.key)) updateMutation();
+        if (e.key === "escape") resetSelect();
+      },
+      text(e: paper.KeyEvent) {
+        if (e.key === "escape") submitText();
+      },
+      ...{ select: null, draw: null, erase: null },
+    }[paperMode];
 
     useEffect(() => {
       if (readonly) return;
