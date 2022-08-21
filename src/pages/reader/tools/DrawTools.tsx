@@ -15,8 +15,8 @@ import { ColorSelect, PenPanel } from "./PenPanel";
 import { allColors } from "lib/color";
 import { DrawRefType } from "component/Draw";
 import { saveAs } from "file-saver";
-import "./draw-tools.sass";
 import { Color } from "paper/dist/paper-core";
+import "./draw-tools.sass";
 
 const btnProps: ButtonProps = {
   type: "text",
@@ -103,8 +103,8 @@ export const TextTool: FC<{
   const scale = pointText.viewMatrix.a;
   const fontSize = +pointText.fontSize;
   const size = pointText.bounds.size.divide(pointText.matrix.a);
-  const width = pointText.content ? `calc(${size.width}px + 1em)` : "8em";
-  const height = `calc(${size.height}px + 0.2em)`;
+  const width = pointText.content ? size.width + "px" : "7em";
+  const height = size.height + "px";
 
   const fontColorBtn = (
     <Popover
@@ -129,27 +129,57 @@ export const TextTool: FC<{
   const [bold, setBold] = useState(pointText.fontWeight === "bold");
   const fontWeight = bold ? "bold" : "normal";
   const [, setSize] = useState(0);
+  const vars = {
+    "--scale": scale,
+    "--width": width,
+    "--height": height,
+    ...getPosVars(x, y),
+  } as CSSProperties;
+
+  const popContent = (
+    <div className="tool-options">
+      {fontColorBtn}
+      <Button
+        onClick={() => {
+          pointText.fontWeight = bold ? "normal" : "bold";
+          setBold((prev) => !prev);
+        }}
+        {...btnProps}
+        type={bold ? "link" : "text"}
+        icon={<BoldOutlined />}
+      />
+      <Button
+        {...btnProps}
+        icon={<ZoomOutOutlined />}
+        onClick={() => {
+          pointText.scale(0.9, topLeft);
+          setSize((prev) => prev - 1);
+        }}
+      />
+      <Button
+        {...btnProps}
+        icon={<ZoomInOutlined />}
+        onClick={() => {
+          pointText.scale(1.1, topLeft);
+          setSize((prev) => prev + 1);
+        }}
+      />
+    </div>
+  );
 
   return (
-    // text-wrapper must be the child of draw-wrapper.
-    <>
-      <div
-        className="text-wrapper"
-        style={
-          {
-            fontSize,
-            "--scale": scale,
-            "--width": width,
-            "--height": height,
-            ...getPosVars(x, y),
-          } as CSSProperties
-        }
-      >
+    <Popover
+      overlayClassName="textarea-pop"
+      content={popContent}
+      getPopupContainer={(e) => e.parentElement!}
+      placement="topLeft"
+      visible
+    >
+      <div className="textarea-wrapper" style={{ fontSize, ...vars }}>
         <textarea
-          autoFocus
           placeholder="Insert Text..."
           value={text}
-          style={{ color, fontWeight }}
+          style={{ fontSize, color, fontWeight }}
           onChange={(e) => {
             const t = e.target.value;
             setText(t);
@@ -157,36 +187,6 @@ export const TextTool: FC<{
           }}
         />
       </div>
-      <div className="text-options tool-options" style={getPosVars(x, y)}>
-        {fontColorBtn}
-        <Button
-          onClick={() => {
-            setBold((prev) => {
-              pointText.fontWeight = prev ? "normal" : "bold";
-              return !prev;
-            });
-          }}
-          {...btnProps}
-          type={bold ? "link" : "text"}
-          icon={<BoldOutlined />}
-        />
-        <Button
-          {...btnProps}
-          icon={<ZoomOutOutlined />}
-          onClick={() => {
-            pointText.scale(0.9, topLeft);
-            setSize((prev) => prev - 1);
-          }}
-        />
-        <Button
-          {...btnProps}
-          icon={<ZoomInOutlined />}
-          onClick={() => {
-            pointText.scale(1.1, topLeft);
-            setSize((prev) => prev + 1);
-          }}
-        />
-      </div>
-    </>
+    </Popover>
   );
 };

@@ -4,13 +4,13 @@
 .tool-options
   @include back-blur
   padding: 5px
-  position: absolute
   box-shadow: $shadow-1
   border-radius: 50px
   border: $dark-border
   display: flex
 
 .select-tool
+  position: absolute
   $tf: translate(-50%, -120%)
   left: min(calc(100% - 100px), max(var(--pos-x), 100px))
   top: min(calc(100%), max(var(--pos-y), 50px))
@@ -25,42 +25,6 @@
     .style-pop
       display: none
 
-.text-wrapper
-  // transform scale on absolute element blurs text on safari.
-  position: absolute
-  overflow: hidden
-  left: var(--pos-x)
-  top: var(--pos-y)
-  width: calc(var(--width) * var(--scale))
-  height: calc(var(--height) * var(--scale))
-  max-width: calc((100% - var(--pos-x)))
-  max-height: calc((100% - var(--pos-y)))
-  textarea
-    width: var(--width)
-    height: var(--height)
-    transform-origin: top left
-    padding: 0
-    font-family: sans-serif
-    line-height: 1.2
-    background-color: #0000
-    border: none
-    resize: none
-    outline: none
-    transform: scale(var(--scale)) translateY(-0.1em)
-    @supports (-webkit-touch-callout: none)
-      transform: scale(var(--scale)) translateY(-0.05em)
-.text-options
-  position: absolute
-  left: min(calc(100% - 180px), var(--pos-x))
-  top: var(--pos-y)
-  transform: translateY(-120%)
-
-.font-color-drop
-  width: 200px
-  padding: 10px
-  background-color: white
-  border-radius: 5px
-
 .raster-modal
   .ant-modal-confirm-content
     @include flex-center
@@ -70,3 +34,42 @@
     max-height: 50vh
     max-width: 100%
     border: $default-border
+
+.textarea-wrapper
+  // scaled text of absolutely positioned or filtered element blurs on safari.
+  position: absolute
+  overflow: hidden
+  left: var(--pos-x)
+  top: var(--pos-y)
+  width: calc(var(--width) * var(--scale) + 1px)
+  height: calc(var(--height) * var(--scale))
+  max-width: calc((100% - var(--pos-x)))
+  max-height: calc((100% - var(--pos-y)))
+  background-color: transparentize($blue-color, 0.9)
+  textarea
+    width: calc(var(--width) + 1em)
+    height: calc(var(--height) + 1em)
+    font-family: sans-serif
+    line-height: 1.2
+    padding: 0
+    border: none
+    resize: none
+    outline: none
+    background-color: #0000
+    transform-origin: top left
+    transform: scale(var(--scale)) translateY(-0.1em)
+    @supports (-webkit-touch-callout: none)
+      transform: scale(var(--scale)) translateY(-0.04em)
+
+.textarea-pop > .ant-popover-content
+  >.ant-popover-inner
+    border: none
+    border-radius: 50px
+    > .ant-popover-inner-content
+      padding: 0
+
+.font-color-drop
+  width: 200px
+  padding: 10px
+  background-color: white
+  border-radius: 5px
