@@ -27,6 +27,13 @@ const btnProps: ButtonProps = {
 const getPosVars = (x: number, y: number) => {
   return { "--pos-x": x + "px", "--pos-y": y + "px" } as CSSProperties;
 };
+const getObjVars = (obj: Record<string, string | number>) => {
+  const result: Record<string, string | number> = {};
+  Object.entries(obj).forEach(([key, value]) => {
+    result["--" + key] = value;
+  });
+  return result as CSSProperties;
+};
 
 export const SelectTool: FC<{
   drawRef: RefObject<DrawRefType>;
@@ -91,30 +98,31 @@ export const SelectTool: FC<{
 
 export const TextTool: FC<{
   pointText: paper.PointText;
-}> = ({ pointText }) => {
-  const [text, setText] = useState(pointText.content);
-  const [color, setColor] = useState(
-    pointText.fillColor?.toCSS(true) ?? allColors[0]!
-  );
-
+  drawRef: RefObject<DrawRefType>;
+}> = ({ pointText, drawRef }) => {
   const { topLeft } = pointText.bounds;
   const { x, y } = pointText.view.projectToView(topLeft);
 
   const scale = pointText.viewMatrix.a;
   const fontSize = +pointText.fontSize;
   const size = pointText.bounds.size.divide(pointText.matrix.a);
-  const width = pointText.content ? size.width + "px" : "7em";
+  const width = pointText.content ? size.width + "px" : "4em";
   const height = size.height + "px";
 
+  const text = pointText.content;
+  const { fontWeight } = pointText;
+
+  const color = pointText.fillColor?.toCSS(true) ?? allColors[0]!;
   const fontColorBtn = (
     <Popover
       content={
         <ColorSelect
           color={color}
-          setColor={(c) => {
-            pointText.fillColor = new Color(c);
-            setColor(c);
-          }}
+          setColor={(c) =>
+            drawRef.current?.mutatePointText((prev) => {
+              prev.fillColor = new Color(c);
+            })
+          }
         />
       }
       trigger="click"
@@ -126,67 +134,60 @@ export const TextTool: FC<{
     </Popover>
   );
 
-  const [bold, setBold] = useState(pointText.fontWeight === "bold");
-  const fontWeight = bold ? "bold" : "normal";
-  const [, setSize] = useState(0);
-  const vars = {
-    "--scale": scale,
-    "--width": width,
-    "--height": height,
-    ...getPosVars(x, y),
-  } as CSSProperties;
-
-  const popContent = (
-    <div className="tool-options">
-      {fontColorBtn}
-      <Button
-        onClick={() => {
-          pointText.fontWeight = bold ? "normal" : "bold";
-          setBold((prev) => !prev);
-        }}
-        {...btnProps}
-        type={bold ? "link" : "text"}
-        icon={<BoldOutlined />}
-      />
-      <Button
-        {...btnProps}
-        icon={<ZoomOutOutlined />}
-        onClick={() => {
-          pointText.scale(0.9, topLeft);
-          setSize((prev) => prev - 1);
-        }}
-      />
-      <Button
-        {...btnProps}
-        icon={<ZoomInOutlined />}
-        onClick={() => {
-          pointText.scale(1.1, topLeft);
-          setSize((prev) => prev + 1);
-        }}
-      />
-    </div>
-  );
-
   return (
-    <Popover
-      overlayClassName="textarea-pop"
-      content={popContent}
-      getPopupContainer={(e) => e.parentElement!}
-      placement="topLeft"
-      visible
+    <div
+      className="text-tool"
+      style={{
+        ...getObjVars({ scale, width, height, color }),
+        ...getPosVars(x, y),
+      }}
     >
-      <div className="textarea-wrapper" style={{ fontSize, ...vars }}>
+      <div className="textarea-wrapper" style={{ fontSize, fontWeight }}>
         <textarea
-          placeholder="Insert Text..."
+          autoFocus={!text}
+          placeholder="Text..."
           value={text}
-          style={{ fontSize, color, fontWeight }}
           onChange={(e) => {
-            const t = e.target.value;
-            setText(t);
-            pointText.content = t;
+            drawRef.current?.mutatePointText((prev) => {
+              prev.content = e.target.value;
+            });
           }}
         />
       </div>
-    </Popover>
+      <div className="tool-options text-options" data-bottom={y < 60}>
+        {fontColorBtn}
+        <Button
+          onClick={() => {
+            drawRef.current?.mutatePointText((prev) => {
+              const bold = prev.fontWeight === "bold";
+              prev.fontWeight = bold ? "normal" : "bold";
+            });
+          }}
+          {...btnProps}
+          type={fontWeight === "bold" ? "link" : "text"}
+          icon={<BoldOutlined />}
+        />
+        <Button
+          {...btnProps}
+          icon={<ZoomOutOutlined />}
+          onClick={() => {
+            drawRef.current?.mutatePointText((prev) => {
+              const { topLeft } = prev.bounds;
+              prev.scale(0.9, topLeft);
+            });
+          }}
+        />
+        <Button
+          {...btnProps}
+          icon={<ZoomInOutlined />}
+          onClick={() => {
+            drawRef.current?.mutatePointText((prev) => {
+              const { topLeft } = prev.bounds;
+              prev.scale(1.1, topLeft);
+            });
+          }}
+        />
+      </div>
+    </div>
   );
 };

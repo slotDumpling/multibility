@@ -31,6 +31,7 @@ export interface DrawRefType {
   duplicateSelected: () => void;
   rasterizeSelected: () => string;
   mutateStyle: (updated: Partial<DrawCtrl>) => void;
+  mutatePointText: (cb: (prev: paper.PointText) => void) => void;
 }
 interface DrawPropType {
   drawState: DrawState;
@@ -200,7 +201,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     }, [selected, toggleSelectTool]);
     useEffect(() => {
       toggleSelectTool(false);
-    }, [canvasWidth, toggleSelectTool]);
+      if (pointText.current) {
+        toggleTextTool(true, new Proxy(pointText.current, {}));
+      }
+    }, [canvasWidth, toggleSelectTool, toggleTextTool]);
 
     const layerRaster = useRef<paper.Raster>();
     const rasterizeLayer = (clip: paper.Path, force = false) => {
@@ -512,7 +516,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         if (!l1) return;
         const t = getClickedText(l1, e.point) ?? startText(e.point);
         t.justification = "left";
-        t.visible = false;
         pointText.current = t;
         toggleTextTool(true, t);
       },
@@ -659,9 +662,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const pointText = useRef<paper.PointText>();
     const cancelText = useCallback(() => {
-      if (!pointText.current) return;
-      pointText.current.visible = true;
-      if (!pointText.current.name) {
+      if (!pointText.current?.name) {
         pointText.current?.remove();
       }
       pointText.current = undefined;
@@ -682,6 +683,13 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       }
       onChange((prev) => DrawState.mutateStrokes(prev, [[t.name, pathData]]));
     }, [cancelText, onChange]);
+    const mutatePointText = (cb: (prev: paper.PointText) => void) => {
+      const pt = pointText.current;
+      if (!pt) return;
+      scope.current.activate();
+      cb(pt);
+      toggleTextTool(true, new Proxy(pt, {}));
+    };
 
     useEffect(() => {
       if (mode === "text") return submitText;
@@ -692,6 +700,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       duplicateSelected,
       rasterizeSelected,
       mutateStyle,
+      mutatePointText,
     }));
 
     usePreventGesture();

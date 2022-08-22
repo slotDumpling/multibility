@@ -35,39 +35,44 @@
     max-width: 100%
     border: $default-border
 
-.textarea-wrapper
-  // scaled text of absolutely positioned or filtered element blurs on safari.
-  position: absolute
-  overflow: hidden
-  left: var(--pos-x)
-  top: var(--pos-y)
-  width: calc(var(--width) * var(--scale) + 1px)
-  height: calc(var(--height) * var(--scale))
-  max-width: calc((100% - var(--pos-x)))
-  max-height: calc((100% - var(--pos-y)))
-  background-color: transparentize($blue-color, 0.9)
-  textarea
-    width: calc(var(--width) + 1em)
-    height: calc(var(--height) + 1em)
-    font-family: sans-serif
-    line-height: 1.2
-    padding: 0
-    border: none
-    resize: none
-    outline: none
-    background-color: #0000
-    transform-origin: top left
-    transform: scale(var(--scale)) translateY(-0.1em)
-    @supports (-webkit-touch-callout: none)
-      transform: scale(var(--scale)) translateY(-0.04em)
+.text-tool
+  --real-width: calc(var(--width) * var(--scale))
+  --real-height: calc(var(--height) * var(--scale))
+  .textarea-wrapper
+    position: absolute
+    left: var(--pos-x)
+    top: var(--pos-y)
+    width: var(--real-width)
+    height: var(--real-height)
+    outline: 2px dashed $blue-color
+    outline-offset: 5px
+    &:focus-within
+      outline-style: solid
 
-.textarea-pop
-  z-index: 800
-  > .ant-popover-content >.ant-popover-inner
-    border: none
-    border-radius: 50px
-    > .ant-popover-inner-content
+    textarea
+      width: calc(var(--width) + 1em)
+      height: calc(var(--height) + 1em)
+      transform-origin: top left
+      transform: scale(var(--scale)) translateY(-0.1em)
+      font-family: sans-serif
+      font-weight: inherit
+      line-height: 1.2
+      color: #0000
+      caret-color: var(--color)
       padding: 0
+      border: none
+      resize: none
+      outline: none
+      background: none
+
+  .text-options
+    position: absolute
+    left: min(calc(100% - 180px), var(--pos-x))
+    top: var(--pos-y)
+    transform: translateY(-150%)
+    &[data-bottom=true]
+      top: calc(var(--pos-y) + var(--real-height))
+      transform: translateY(50%)
 
 .font-color-drop
   width: 200px
