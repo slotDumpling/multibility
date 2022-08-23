@@ -517,6 +517,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         const t = getClickedText(l1, e.point) ?? startText(e.point);
         t.justification = "left";
         pointText.current = t;
+        prevTextData.current = t.exportJSON();
         toggleTextTool(true, t);
       },
     }[paperMode];
@@ -661,6 +662,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     };
 
     const pointText = useRef<paper.PointText>();
+    const prevTextData = useRef("");
     const cancelText = useCallback(() => {
       if (!pointText.current?.name) {
         pointText.current?.remove();
@@ -681,6 +683,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       if (!t.name) {
         return onChange((prev) => DrawState.addStroke(prev, pathData));
       }
+      if (pathData === prevTextData.current) return;
       onChange((prev) => DrawState.mutateStrokes(prev, [[t.name, pathData]]));
     }, [cancelText, onChange]);
     const mutatePointText = (cb: (prev: paper.PointText) => void) => {
