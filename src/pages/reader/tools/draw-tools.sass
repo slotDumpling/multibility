@@ -44,19 +44,25 @@
     top: var(--pos-y)
     width: var(--real-width)
     height: var(--real-height)
-    outline: 2px dashed $blue-color
-    outline-offset: 5px
-    &:focus-within
+    transform: translate(-50%, -50%) rotate(var(--rotation))
+    &::before
+      @include pseudo-el
+      min-width: calc(3em * var(--scale))
+      z-index: -1
+      outline: 2px dashed $blue-color
+      outline-offset: 5px
+    &:focus-within::before
       outline-style: solid
 
     textarea
       width: calc(var(--width) + 1em)
-      height: calc(var(--height) + 1em)
+      min-width: 4em
+      height: calc(var(--height) + 0.2em)
       transform-origin: top left
       transform: scale(var(--scale)) translateY(-0.1em)
       font-family: sans-serif
       font-weight: inherit
-      line-height: 1.2
+      line-height: inherit
       color: #0000
       caret-color: var(--color)
       padding: 0
@@ -71,7 +77,6 @@
     top: var(--pos-y)
     transform: translateY(-150%)
     &[data-bottom=true]
-      top: calc(var(--pos-y) + var(--real-height))
       transform: translateY(50%)
 
 .font-color-drop

@@ -27,9 +27,10 @@ const btnProps: ButtonProps = {
 const getPosVars = (x: number, y: number) => {
   return { "--pos-x": x + "px", "--pos-y": y + "px" } as CSSProperties;
 };
-const getObjVars = (obj: Record<string, string | number>) => {
+const getObjVars = (obj: Record<string, string | number>, unit?: string) => {
   const result: Record<string, string | number> = {};
   Object.entries(obj).forEach(([key, value]) => {
+    if (unit) value += unit;
     result["--" + key] = value;
   });
   return result as CSSProperties;
@@ -100,17 +101,18 @@ export const TextTool: FC<{
   pointText: paper.PointText;
   drawRef: RefObject<DrawRefType>;
 }> = ({ pointText, drawRef }) => {
-  const { topLeft } = pointText.bounds;
-  const { x, y } = pointText.view.projectToView(topLeft);
+  const { view, position, fontSize, fontWeight, leading, content, rotation } =
+    pointText;
+  const { x, y } = view.projectToView(position);
+  const { topLeft, bottomLeft } = pointText.bounds;
+  const { x: bx, y: by } = view.projectToView(topLeft);
+  const { x: bbx, y: bby } = view.projectToView(bottomLeft);
+  const optionAtBottom = by < 60;
 
-  const scale = pointText.viewMatrix.a;
-  const fontSize = +pointText.fontSize;
-  const size = pointText.bounds.size.divide(pointText.matrix.a);
-  const width = pointText.content ? size.width + "px" : "4em";
-  const height = size.height + "px";
+  const scale = pointText.viewMatrix.scaling.x;
+  const { width, height } = pointText.internalBounds;
 
-  const text = pointText.content;
-  const { fontWeight } = pointText;
+  const lineHeight = +leading / +fontSize ?? 1.2;
 
   const color = pointText.fillColor?.toCSS(true) ?? allColors[0]!;
   const fontColorBtn = (
@@ -138,15 +140,20 @@ export const TextTool: FC<{
     <div
       className="text-tool"
       style={{
-        ...getObjVars({ scale, width, height, color }),
+        ...getObjVars({ scale, color }),
+        ...getObjVars({ rotation }, "deg"),
+        ...getObjVars({ width, height }, "px"),
         ...getPosVars(x, y),
       }}
     >
-      <div className="textarea-wrapper" style={{ fontSize, fontWeight }}>
+      <div
+        className="textarea-wrapper"
+        style={{ fontSize, fontWeight, lineHeight }}
+      >
         <textarea
-          autoFocus={!text}
+          autoFocus={!content}
           placeholder="Text..."
-          value={text}
+          value={content}
           onChange={(e) => {
             drawRef.current?.mutatePointText((prev) => {
               prev.content = e.target.value;
@@ -154,7 +161,13 @@ export const TextTool: FC<{
           }}
         />
       </div>
-      <div className="tool-options text-options" data-bottom={y < 60}>
+      <div
+        className="tool-options text-options"
+        style={{
+          ...(optionAtBottom ? getPosVars(bbx, bby) : getPosVars(bx, by)),
+        }}
+        data-bottom={optionAtBottom}
+      >
         {fontColorBtn}
         <Button
           onClick={() => {
