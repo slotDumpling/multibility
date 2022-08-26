@@ -29,9 +29,13 @@
   content: ""
   @include inset($top, $right, $bottom, $left)
 
+@mixin for-safari
+  @supports (-webkit-touch-callout: none)
+    @content
+
 @mixin back-blur($color: #fff)
   background-color: $color
-  @supports (backdrop-filter: none) and (-webkit-touch-callout: none)
+  @include for-safari
     background-color: transparentize($color, 0.2)
     backdrop-filter: blur(20px) saturate(180%)
 
