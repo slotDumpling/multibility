@@ -163,10 +163,10 @@ export const TextTool: FC<{
       </div>
       <div
         className="tool-options text-options"
+        data-bottom={optionAtBottom}
         style={{
           ...(optionAtBottom ? getPosVars(bbx, bby) : getPosVars(bx, by)),
         }}
-        data-bottom={optionAtBottom}
       >
         {fontColorBtn}
         <Button
