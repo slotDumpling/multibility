@@ -199,6 +199,10 @@ const PageWrapper = React.lazy(() => import("component/PageWrapper"));
 const NoteTimg: FC<{ uid: string }> = ({ uid }) => {
   const [note, setNote] = useState<Note>();
   const [teamNote, setTeamNote] = useState<TeamPageRec>();
+  useEffect(() => {
+    loadNote(uid).then(setNote);
+    getCachedTeamState(uid).then(setTeamNote);
+  }, [uid]);
 
   const firstID = note?.pageOrder[0] ?? "";
   const firstPage = note?.pageRec[firstID];
@@ -213,19 +217,15 @@ const NoteTimg: FC<{ uid: string }> = ({ uid }) => {
     return TeamState.createFromTeamPages(teamNote).getOnePageStateMap(firstID);
   }, [teamNote, firstID]);
 
-  useEffect(() => {
-    loadNote(uid).then(setNote);
-    getCachedTeamState(uid).then(setTeamNote);
-  }, [uid]);
-
   if (!firstPage || !drawState) return null;
+  const { ratio, image } = firstPage;
   return (
-    <div className="timg-wrapper" data-landscape={(firstPage.ratio ?? 1.5) < 1}>
+    <div className="timg-wrapper" data-landscape={ratio < 1}>
       <Suspense fallback={null}>
         <PageWrapper
           drawState={drawState}
           teamStateMap={teamStateMap}
-          thumbnail={firstPage.image}
+          thumbnail={image}
           preview
         />
       </Suspense>
