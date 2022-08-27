@@ -150,6 +150,6 @@ export async function getTeamNoteState(noteID: string) {
   }
 }
 
-export function getCachedTeamState(noteID: string) {
-  return teamForage.getItem<TeamPageRec>(noteID);
+export async function getCachedTeamState(noteID: string) {
+  return (await teamForage.getItem<TeamPageRec>(noteID)) ?? undefined;
 }

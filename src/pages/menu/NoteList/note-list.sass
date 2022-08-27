@@ -35,22 +35,23 @@ $note-item-height: 6em
   cursor: pointer
   position: relative
   box-shadow: 0 -1px #eee8 inset
-  .timg-wrapper
+  .timg
     @include flex-center
     $timg-size: 4em
     width: $timg-size
     height: $timg-size
     position: relative
     margin-right: 1em
-    .page-wrapper
-      border: $light-border
-      background-color: white
-      @media (prefers-color-scheme: dark)
-        border: none
-    &[data-landscape=true] .page-wrapper svg
-      width: $timg-size
-    &[data-landscape=false] .page-wrapper svg
-      height: $timg-size
+    .timg-wrapper
+      .page-wrapper
+        border: $light-border
+        background-color: white
+        @media (prefers-color-scheme: dark)
+          border: none
+      &[data-landscape=true] .page-wrapper svg
+        width: $timg-size
+      &[data-landscape=false] .page-wrapper svg
+        height: $timg-size
     .cloud-icon
       position: absolute
       bottom: 0

@@ -3,11 +3,11 @@ import { deleteNote, editNoteData, loadNote } from "lib/note/archive";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 import { CloudTwoTone, CheckCircleFilled } from "@ant-design/icons";
 import { SwipeDelete, SwipeDeleteProvider } from "component/SwipeDelete";
-import { NoteInfo, NotePage } from "lib/note/note";
+import { Note, NoteInfo, TeamPageRec } from "lib/note/note";
 import { DrawState } from "lib/draw/DrawState";
 import { useNavigate } from "react-router-dom";
 import { Setter } from "lib/hooks";
-import { List, Map, Set } from "immutable";
+import { List, Set } from "immutable";
 import { Input } from "antd";
 import { getCachedTeamState } from "lib/network/http";
 import { TeamState } from "lib/draw/TeamState";
@@ -93,21 +93,24 @@ export const NoteList: FC<MenuProps> = (props) => {
             const last = (nextUid && selectedNotes.has(nextUid)) !== selected;
             return (
               <CSSTransition key={uid} timeout={300}>
-                <SwipeDelete
-                  className="note-wrapper"
-                  onDelete={() => removeNote(uid)}
-                  disable={editing}
-                  data-last={last}
-                  data-selected={selected}
-                >
-                  <NoteItem
-                    noteInfo={noteInfo}
-                    selected={selected}
-                    editing={editing}
-                    setSelectNotes={setSelectNotes}
-                    {...props}
-                  />
-                </SwipeDelete>
+                {(state) => (
+                  <SwipeDelete
+                    className="note-wrapper"
+                    onDelete={() => removeNote(uid)}
+                    disable={editing}
+                    data-last={last}
+                    data-selected={selected}
+                  >
+                    <NoteItem
+                      timgShow={/^(entered|exiting)$/.test(state)}
+                      noteInfo={noteInfo}
+                      selected={selected}
+                      editing={editing}
+                      setSelectNotes={setSelectNotes}
+                      {...props}
+                    />
+                  </SwipeDelete>
+                )}
               </CSSTransition>
             );
           })}
@@ -123,6 +126,7 @@ const NoteItem: FC<
     selected: boolean;
     editing: boolean;
     setSelectNotes: Setter<Set<string>>;
+    timgShow: boolean;
   } & MenuProps
 > = ({
   noteInfo,
@@ -132,6 +136,7 @@ const NoteItem: FC<
   setAllNotes,
   allTags,
   currTagID,
+  timgShow,
 }) => {
   const { team, uid, name, lastTime, tagID } = noteInfo;
   const date = useMemo(() => dayjs(lastTime).calendar(), [lastTime]);
@@ -159,7 +164,11 @@ const NoteItem: FC<
 
   return (
     <div className="note-item" data-selected={selected} onClick={handleClick}>
-      <NoteTimg uid={uid} team={team} />
+      <div className="timg">
+        {timgShow && <NoteTimg uid={uid} />}
+        {team && <CloudTwoTone className="cloud-icon" />}
+        <CheckCircleFilled className="checked-icon" />
+      </div>
       <div className="content">
         {editing && !selected ? (
           <Input
@@ -187,48 +196,39 @@ const NoteItem: FC<
 
 const PageWrapper = React.lazy(() => import("component/PageWrapper"));
 
-const NoteTimg: FC<{ uid: string; team: boolean }> = ({ uid, team }) => {
-  const [firstPage, setFirstPage] = useState<NotePage>();
+const NoteTimg: FC<{ uid: string }> = ({ uid }) => {
+  const [note, setNote] = useState<Note>();
+  const [teamNote, setTeamNote] = useState<TeamPageRec>();
+
+  const firstID = note?.pageOrder[0] ?? "";
+  const firstPage = note?.pageRec[firstID];
+
   const drawState = useMemo(() => {
     if (!firstPage) return;
     const { state, ratio } = firstPage;
     return DrawState.loadFromFlat(state, ratio);
   }, [firstPage]);
-  const [teamStateMap, setTeamStateMap] = useState<Map<string, DrawState>>();
+  const teamStateMap = useMemo(() => {
+    if (!teamNote || !firstID) return;
+    return TeamState.createFromTeamPages(teamNote).getOnePageStateMap(firstID);
+  }, [teamNote, firstID]);
 
   useEffect(() => {
-    (async () => {
-      const stored = await loadNote(uid);
-      if (!stored) return;
-      const { pageRec, pageOrder } = stored;
-      const firstID = pageOrder[0];
-      if (!firstID) return;
-      setFirstPage(pageRec[firstID]);
-      const teamNote = await getCachedTeamState(uid);
-      if (!teamNote) return;
-      setTeamStateMap(
-        TeamState.createFromTeamPages(teamNote).getOnePageStateMap(firstID)
-      );
-    })();
+    loadNote(uid).then(setNote);
+    getCachedTeamState(uid).then(setTeamNote);
   }, [uid]);
 
+  if (!firstPage || !drawState) return null;
   return (
-    <div
-      className="timg-wrapper"
-      data-landscape={(firstPage?.ratio ?? 1.5) < 1}
-    >
-      {firstPage && drawState && (
-        <Suspense fallback={null}>
-          <PageWrapper
-            drawState={drawState}
-            teamStateMap={teamStateMap}
-            thumbnail={firstPage.image}
-            preview
-          />
-        </Suspense>
-      )}
-      {team && <CloudTwoTone className="cloud-icon" />}
-      <CheckCircleFilled className="checked-icon" />
+    <div className="timg-wrapper" data-landscape={(firstPage.ratio ?? 1.5) < 1}>
+      <Suspense fallback={null}>
+        <PageWrapper
+          drawState={drawState}
+          teamStateMap={teamStateMap}
+          thumbnail={firstPage.image}
+          preview
+        />
+      </Suspense>
     </div>
   );
 };
