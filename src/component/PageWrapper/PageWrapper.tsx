@@ -103,10 +103,10 @@ const DrawWrapper: FC<{
 }> = ({ drawState, updateState, otherStates, preview = false, imgSrc }) => {
   const drawCtrl = useDrawCtrl();
   const drawRef = useRef<DrawRefType>(null);
-  const [textShow, setTextShow] = useState(false);
   const [selectShow, setSelectShow] = useState(false);
-  const [pointText, setPointText] = useState<paper.PointText>();
   const [clickPoint, setClickPoint] = useState<paper.Point>(P_ZERO);
+  const [pointText, setPointText] = useState<paper.PointText>();
+  const [renderSlow, setRenderSlow] = useState(false);
 
   const handleChange = useEvent(
     (arg: ((s: DrawState) => DrawState) | DrawState) => {
@@ -124,9 +124,9 @@ const DrawWrapper: FC<{
     }
   );
   const toggleTextTool = useEvent(
-    (active: boolean, pointText?: paper.PointText) => {
+    (pointText: paper.PointText | undefined, slow: boolean) => {
       setPointText(pointText);
-      setTextShow(active);
+      setRenderSlow(slow);
     }
   );
 
@@ -154,8 +154,12 @@ const DrawWrapper: FC<{
         visible={selectShow}
         clickPoint={clickPoint}
       />
-      {textShow && pointText && (
-        <TextTool drawRef={drawRef} pointText={pointText} />
+      {pointText && (
+        <TextTool
+          drawRef={drawRef}
+          pointText={pointText}
+          renderSlow={renderSlow}
+        />
       )}
     </>
   );

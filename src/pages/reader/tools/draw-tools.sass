@@ -74,13 +74,20 @@
       @include for-safari
         --text-offset-y: -0.05em
 
+    &[data-slow=true]
+      &::before
+        background-color: #fff
+        box-shadow: 0 0 0 5px #fff
+      textarea
+        color: var(--color)
+
   .text-options
     position: absolute
     left: min(calc(100% - 180px), var(--pos-x))
     top: var(--pos-y)
-    transform: translateY(-150%)
+    transform: translate(-7px, -150%)
     &[data-bottom=true]
-      transform: translateY(50%)
+      transform: translate(-7px, 50%)
 
 .font-color-drop
   width: 200px

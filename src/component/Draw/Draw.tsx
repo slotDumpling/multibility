@@ -38,7 +38,7 @@ interface DrawPropType {
   otherStates?: DrawState[];
   onChange?: Setter<DrawState>;
   toggleSelectTool?: (active: boolean, clickPoint?: paper.Point) => void;
-  toggleTextTool?: (active: boolean, pointText?: paper.PointText) => void;
+  toggleTextTool?: (pt: paper.PointText | undefined, slow: boolean) => void;
   drawCtrl?: DrawCtrl;
   readonly?: boolean;
   imgSrc?: string;
@@ -202,7 +202,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     useEffect(() => {
       toggleSelectTool(false);
       if (pointText.current) {
-        toggleTextTool(true, new Proxy(pointText.current, {}));
+        const ptProxy = new Proxy(pointText.current, {});
+        toggleTextTool(ptProxy, renderSlow.current);
       }
     }, [canvasWidth, toggleSelectTool, toggleTextTool]);
 
@@ -518,7 +519,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         t.justification = "left";
         pointText.current = t;
         prevTextData.current = t.exportJSON();
-        toggleTextTool(true, t);
+        rasterizeCanvas();
+        toggleTextTool(t, renderSlow.current);
       },
     }[paperMode];
 
@@ -664,11 +666,12 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const pointText = useRef<paper.PointText>();
     const prevTextData = useRef("");
     const cancelText = useCallback(() => {
+      unrasterizeCanvas();
       if (!pointText.current?.name) {
         pointText.current?.remove();
       }
       pointText.current = undefined;
-      toggleTextTool(false);
+      toggleTextTool(undefined, renderSlow.current);
     }, [toggleTextTool]);
 
     const submitText = useCallback(() => {
@@ -691,7 +694,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       if (!pt) return;
       scope.current.activate();
       cb(pt);
-      toggleTextTool(true, new Proxy(pt, {}));
+      toggleTextTool(new Proxy(pt, {}), renderSlow.current);
     };
 
     useEffect(() => {

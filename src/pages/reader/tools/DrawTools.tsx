@@ -100,7 +100,8 @@ export const SelectTool: FC<{
 export const TextTool: FC<{
   pointText: paper.PointText;
   drawRef: RefObject<DrawRefType>;
-}> = ({ pointText, drawRef }) => {
+  renderSlow: boolean;
+}> = ({ pointText, drawRef, renderSlow }) => {
   const { view, position, fontSize, fontWeight, leading, content, rotation } =
     pointText;
   const { x, y } = view.projectToView(position);
@@ -148,6 +149,7 @@ export const TextTool: FC<{
     >
       <div
         className="textarea-wrapper"
+        data-slow={renderSlow}
         style={{ fontSize, fontWeight, lineHeight }}
       >
         <textarea
