@@ -131,7 +131,7 @@ export async function updatePages(noteID: string) {
 
 const teamForage = localforage.createInstance({ name: "teamState" });
 export async function getTeamNoteState(noteID: string) {
-  const cachedState = await getCachedTeamState(noteID);
+  const cachedState = await loadCachedTeamState(noteID);
   const hash = md5(JSON.stringify(cachedState));
 
   try {
@@ -150,6 +150,6 @@ export async function getTeamNoteState(noteID: string) {
   }
 }
 
-export async function getCachedTeamState(noteID: string) {
+export async function loadCachedTeamState(noteID: string) {
   return (await teamForage.getItem<TeamPageRec>(noteID)) ?? undefined;
 }

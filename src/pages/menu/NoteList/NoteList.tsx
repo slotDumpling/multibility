@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { Setter } from "lib/hooks";
 import { List, Set } from "immutable";
 import { Input } from "antd";
-import { getCachedTeamState } from "lib/network/http";
+import { loadCachedTeamState } from "lib/network/http";
 import { TeamState } from "lib/draw/TeamState";
 import { getColorPalette } from "lib/color";
 import { NoteNav, ListTools } from "../Header";
@@ -201,7 +201,7 @@ const NoteTimg: FC<{ uid: string }> = ({ uid }) => {
   const [teamNote, setTeamNote] = useState<TeamPageRec>();
   useEffect(() => {
     loadNote(uid).then(setNote);
-    getCachedTeamState(uid).then(setTeamNote);
+    loadCachedTeamState(uid).then(setTeamNote);
   }, [uid]);
 
   const firstID = note?.pageOrder[0] ?? "";
