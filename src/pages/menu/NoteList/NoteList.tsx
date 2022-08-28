@@ -164,7 +164,7 @@ const NoteItem: FC<
 
   return (
     <div className="note-item" data-selected={selected} onClick={handleClick}>
-      <div className="timg">
+      <div className="left">
         {timgShow && <NoteTimg uid={uid} />}
         {team && <CloudTwoTone className="cloud-icon" />}
         <CheckCircleFilled className="checked-icon" />

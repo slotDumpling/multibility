@@ -35,7 +35,7 @@ $note-item-height: 6em
   cursor: pointer
   position: relative
   box-shadow: 0 -1px #eee8 inset
-  .timg
+  > .left
     @include flex-center
     $timg-size: 4em
     width: $timg-size
@@ -53,9 +53,7 @@ $note-item-height: 6em
       &[data-landscape=false] .page-wrapper svg
         height: $timg-size
     .cloud-icon
-      position: absolute
-      bottom: 0
-      left: 0
+      @include absolute(auto, auto, 0, 0)
       font-size: 20px
     .checked-icon
       @include absolute-center
@@ -63,7 +61,7 @@ $note-item-height: 6em
       border-radius: 10px
       color: $blue-color
       background: #fff
-  .content
+  > .content
     flex: 1
     padding: 5px
     overflow: hidden
@@ -95,10 +93,6 @@ $note-item-height: 6em
     .page-wrapper, .cloud-icon
       filter: blur(2px)
       opacity: 0.5
-    .checked-icon
-      opacity: 1
-    .name-input
-      border-color: #0000
   &[data-selected=false]
     .checked-icon
       display: none
