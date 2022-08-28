@@ -462,7 +462,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           replaced.current.clear();
           const splitters: Splitter[] = items.map(([uid, item]) => {
             const paths = flattenCP(item);
-            return [uid, paths.map((i) => i.exportJSON())];
+            paths.forEach((p) => (p.name = ""));
+            return [uid, paths.map((p) => p.exportJSON())];
           });
           if (!splitters.length) return;
           onChange((prev) => DrawState.splitStrokes(prev, splitters));
@@ -617,10 +618,11 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const updateMutation = () => {
       if (!chosenItems?.length) return;
-      const mutations: Mutation[] = chosenItems.map((p) => [
-        p.name,
-        p.exportJSON(),
-      ]);
+      const mutations: Mutation[] = chosenItems.map((p) => {
+        const { name } = p;
+        p.name = "";
+        return [name, p.exportJSON()];
+      });
       onChange((prev) => DrawState.mutateStrokes(prev, mutations));
     };
 
@@ -648,6 +650,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       path?.translate(transP);
       rotateHandle?.translate(transP);
 
+      copies.forEach((p) => (p.name = ""));
       const pathDataList = copies.map((item) => item.exportJSON());
       const IDs: string[] = [];
       onChange((prev) => DrawState.addStrokes(prev, pathDataList, IDs));
@@ -678,16 +681,19 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const t = pointText.current;
       if (!t) return;
       cancelText();
-      if (!t.content) {
-        if (!t.name) return;
-        return onChange((prev) => DrawState.eraseStrokes(prev, [t.name]));
+      if (t.exportJSON() === prevTextData.current) return;
+      const { content, name } = t;
+      if (!content) {
+        if (name) return;
+        return onChange((prev) => DrawState.eraseStrokes(prev, [name]));
       }
+      t.name = "";
       const pathData = t.exportJSON();
-      if (!t.name) {
-        return onChange((prev) => DrawState.addStroke(prev, pathData));
+      if (!name) {
+        onChange((prev) => DrawState.addStroke(prev, pathData));
+      } else {
+        onChange((prev) => DrawState.mutateStrokes(prev, [[name, pathData]]));
       }
-      if (pathData === prevTextData.current) return;
-      onChange((prev) => DrawState.mutateStrokes(prev, [[t.name, pathData]]));
     }, [cancelText, onChange]);
     const mutatePointText = (cb: (prev: paper.PointText) => void) => {
       const pt = pointText.current;
