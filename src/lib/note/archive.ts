@@ -191,7 +191,6 @@ export async function updateTeamNote(
   let note = await loadNote(noteID);
   if (!note) return false;
   const { pageOrder } = noteInfo;
-  if (pageOrder.length < note.pageOrder.length) return true;
   const { pageRec, pdf } = note;
   const { getOneImage } = await import("./pdfImage");
 
@@ -201,9 +200,10 @@ export async function updateTeamNote(
     const { pdfIndex } = teamPage;
     const state = getDefaultFlatState();
     const notePage: NotePage = { ...teamPage, state };
-    if (!pdf || !pdfIndex) continue;
-    notePage.image = await getOneImage(pdf, pdfIndex, 0.5);
     pageRec[pageID] = notePage;
+    if (pdf && pdfIndex) {
+      notePage.image = await getOneImage(pdf, pdfIndex, 0.5);
+    }
   }
   await editNoteData(noteID, { pageOrder, pageRec });
   return true;

@@ -132,7 +132,7 @@ export async function updatePages(noteID: string) {
 const teamForage = localforage.createInstance({ name: "teamState" });
 export async function getTeamNoteState(noteID: string) {
   const cachedState = await loadCachedTeamState(noteID);
-  const hash = md5(JSON.stringify(cachedState));
+  const hash = cachedState && md5(JSON.stringify(cachedState));
 
   try {
     const { data } = await axios.get(`state/${noteID}`, {
