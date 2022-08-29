@@ -1,10 +1,9 @@
 import { io } from "socket.io-client";
-import { Stroke } from "lib/draw/DrawState";
 import { NotePage } from "lib/note/note";
 import { getUserID, getUserName } from "lib/user";
 import { BASE_URL } from "./http";
 
-export const IoFactory = (noteID: string) => () =>
+export const IoFactory = (noteID: string) =>
   io(BASE_URL, {
     query: {
       userID: getUserID(),
@@ -25,7 +24,8 @@ export interface NewPageInfo {
   newPage: NotePage;
 }
 
-export interface SyncInfo {
-  stroke: Stroke;
-  pageID: string;
+export interface pushAck {
+  timestamp: number;
+  prevID: string;
+  currID: string;
 }

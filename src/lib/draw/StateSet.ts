@@ -1,4 +1,4 @@
-import { DrawState, Operation, Stroke } from "./DrawState";
+import { DrawState, Operation } from "./DrawState";
 import { List, Map, Record } from "immutable";
 import { NotePage } from "lib/note/note";
 
@@ -71,9 +71,9 @@ export class StateSet {
   }
 
   // sync with mutation.
-  syncStrokeTime(pageID: string, stroke: Stroke) {
+  syncStrokeTime(pageID: string, uid: string, timestamp: number) {
     const prevDS = this.getOneState(pageID);
-    prevDS && DrawState.syncStrokeTime(prevDS, stroke);
+    prevDS && DrawState.syncStrokeTime(prevDS, uid, timestamp);
     return this;
   }
 

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useMemoizedFn as useEvent } from "ahooks";
 import {
   getTeamNoteState,
   loadTeamNoteInfo,
@@ -16,6 +17,7 @@ import { Loading } from "component/Loading";
 import { message } from "antd";
 import { Set } from "immutable";
 import Reader from "./Reader";
+import { DebouncedFunc, throttle } from "lodash";
 
 export const TeamCtx = React.createContext({
   io: undefined as Socket | undefined,
@@ -27,9 +29,10 @@ export const TeamCtx = React.createContext({
   teamState: undefined as TeamState | undefined,
   resetIO: () => {},
   loadInfo: async () => false,
-  loadState: async () => false,
+  loadState: (() => {}) as DebouncedFunc<() => Promise<boolean>>,
   setIgnores: (() => {}) as Setter<Set<string>>,
   addTeamStatePage: (pageID: string, newPage: NotePage) => {},
+  checkOpID: (prevID: string, currID: string) => {},
 });
 
 export default function Team() {
@@ -38,12 +41,12 @@ export default function Team() {
   const [code, setCode] = useState(-2);
   const [userRec, setUserRec] = useState<Record<string, UserInfo>>({});
   const [ignores, setIgnores] = useState(Set<string>());
-  const [io, setIO] = useState(IoFactory(noteID));
+  const [io, setIO] = useState<Socket>();
   const [loaded, setLoaded] = useState(false);
   const [connected, setConnected] = useState(false);
   const nav = useNavigate();
 
-  const loadInfo = useCallback(async () => {
+  const loadInfo = useEvent(async () => {
     const info = await loadTeamNoteInfo(noteID);
     if (!info) {
       message.error("Failed loading the team note info");
@@ -51,21 +54,24 @@ export default function Team() {
     }
     setCode(info.code);
     return true;
-  }, [noteID]);
+  });
 
-  const loadState = useCallback(async () => {
-    const teamNote = await getTeamNoteState(noteID);
-    if (!teamNote) {
-      message.error("Failed loading the team note state");
-      return false;
-    }
-    setTeamState(TeamState.createFromTeamPages(teamNote));
-    return true;
-  }, [noteID]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const loadState = useCallback(
+    throttle(async () => {
+      const teamNote = await getTeamNoteState(noteID);
+      if (!teamNote) {
+        message.error("Failed loading the team note state");
+        return false;
+      }
+      setTeamState(TeamState.createFromTeamPages(teamNote));
+      return true;
+    }, 10_000),
+    [noteID]
+  );
 
-  const updateSelfState = useCallback(() => {
-    updatePages(noteID);
-  }, [noteID]);
+  const resetIO = useEvent(() => setIO(IoFactory(noteID)));
+  const updateSelfState = useEvent(() => void updatePages(noteID));
 
   useEffect(() => {
     const roomInit = async () => {
@@ -73,15 +79,25 @@ export default function Team() {
       const stateLoaded = await loadState();
       if (!infoLoaded || !stateLoaded) return nav("/");
       setLoaded(true);
+      resetIO();
       updateSelfState();
     };
     roomInit();
     return updateSelfState;
-  }, [loadInfo, loadState, nav, updateSelfState]);
+  }, [loadInfo, loadState, nav, resetIO, updateSelfState]);
+
+  const opID = useRef("");
+  const checkOpID = useEvent((prevID: string, currID: string) => {
+    const lost = prevID && opID.current && prevID !== opID.current;
+    opID.current = currID;
+    if (lost) loadState();
+  });
 
   useEffect(() => {
-    io.on("push", ({ operation, userID }) => {
+    if (!io) return;
+    io.on("push", ({ operation, userID, prevID, currID }) => {
       setTeamState((prev) => prev?.pushOperation(operation, userID));
+      checkOpID(prevID, currID);
     });
 
     io.on("join", ({ joined, members }) => {
@@ -116,13 +132,11 @@ export default function Team() {
       io.removeAllListeners();
       io.close();
     };
-  }, [io]);
+  }, [checkOpID, io]);
 
   const addTeamStatePage = (pageID: string, newPage: NotePage) => {
     setTeamState((prev) => prev?.addPage(pageID, newPage));
   };
-
-  const resetIO = () => setIO(IoFactory(noteID));
 
   return (
     <Loading loading={!loaded}>
@@ -140,6 +154,7 @@ export default function Team() {
           loadState,
           setIgnores,
           addTeamStatePage,
+          checkOpID,
         }}
       >
         <Reader />

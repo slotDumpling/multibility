@@ -233,8 +233,7 @@ export class DrawState {
   }
 
   // sync with mutation.
-  static syncStrokeTime(drawState: DrawState, stroke: Stroke) {
-    const { uid, timestamp } = stroke;
+  static syncStrokeTime(drawState: DrawState, uid: string, timestamp: number) {
     const prevStroke = drawState.getStrokeMap().get(uid);
     if (!prevStroke) return;
     prevStroke.timestamp = timestamp;

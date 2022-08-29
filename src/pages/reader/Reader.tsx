@@ -8,7 +8,7 @@ import {
 } from "react";
 import { NoteInfo, NotePage, createPage, defaultNotePage } from "lib/note/note";
 import { DrawCtrlProvider } from "lib/draw/DrawCtrl";
-import { NewPageInfo, ReorderInfo, SyncInfo } from "lib/network/io";
+import { NewPageInfo, pushAck, ReorderInfo } from "lib/network/io";
 import { DarkModeProvider } from "lib/Dark";
 import { useMemoizedFn as useEvent } from "ahooks";
 import { SetOperation, StateSet } from "lib/draw/StateSet";
@@ -58,7 +58,7 @@ export default function Reader() {
   const [pageOrder, setPageOrder] = useState<string[]>();
   const [saved, setSaved] = useState(true);
 
-  const { io, teamOn, addTeamStatePage } = useContext(TeamCtx);
+  const { io, teamOn, addTeamStatePage, checkOpID } = useContext(TeamCtx);
 
   useEffect(() => {
     (async () => {
@@ -144,10 +144,21 @@ export default function Reader() {
   }, [io, handleReorder, handleNewPage]);
 
   const pushOperation = (operation: SetOperation) => {
-    const handleSync = ({ pageID, stroke }: SyncInfo) =>
-      setStateSet((prev) => prev?.syncStrokeTime(pageID, stroke));
+    const handleSync = (t: number) => {
+      if (operation.type !== "add") return;
+      const { pageID, stroke } = operation;
+      const { uid } = stroke;
+      setStateSet((prev) => prev?.syncStrokeTime(pageID, uid, t));
+    };
 
-    io?.emit("push", { operation }, handleSync);
+    io?.emit(
+      "push",
+      { operation },
+      ({ timestamp, prevID, currID }: pushAck) => {
+        handleSync(timestamp);
+        checkOpID(prevID, currID);
+      }
+    );
   };
 
   const pushNewPage = (
