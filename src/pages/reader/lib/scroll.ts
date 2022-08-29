@@ -70,10 +70,10 @@ export function useScrollPage(
   });
   useLayoutEffect(scrollToCurr, [pageOrder, scrollToCurr, ...deps]);
 
-  const sectionRef = (pageID: string) => (el: HTMLElement | null) => {
+  const sectionRef = useEvent((pageID: string) => (el: HTMLElement | null) => {
     if (!el) return;
     setRefMap((prev) => prev.set(pageID, el));
-  };
+  });
 
   const taskID = useRef(0);
   const [scrolling, setScrolling] = useState(false);
