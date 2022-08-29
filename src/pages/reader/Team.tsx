@@ -90,7 +90,12 @@ export default function Team() {
   const checkOpID = useEvent((prevID: string, currID: string) => {
     const lost = prevID && opID.current && prevID !== opID.current;
     opID.current = currID;
-    if (lost) loadState();
+    if (lost) {
+      const p = loadState();
+      if (!p) return;
+      const hide = message.loading("Reloading team note...");
+      p.then(hide);
+    }
   });
 
   useEffect(() => {
