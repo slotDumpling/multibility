@@ -1,14 +1,14 @@
 import { FC, PropsWithChildren } from "react";
 import { LoadingOutlined } from "@ant-design/icons";
 
-export const Loading: FC<PropsWithChildren<{ loading?: boolean }>> = ({
-  children,
-  loading = true,
-}) => {
+export const Loading: FC<
+  PropsWithChildren<{ loading?: boolean; text?: string }>
+> = ({ children, loading = true, text = "" }) => {
   return loading ? (
     <div className="load-wrapper">
       <LoadingOutlined className="loading-icon" />
-      <h1 className="loading">Multibility</h1>
+      <h1 className="logo">Multibility</h1>
+      <p className="text">{text}</p>
     </div>
   ) : (
     <>{children}</>

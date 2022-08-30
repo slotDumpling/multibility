@@ -18,6 +18,7 @@ import { message } from "antd";
 import { Set } from "immutable";
 import Reader from "./Reader";
 import { DebouncedFunc, throttle } from "lodash";
+import bytes from "bytes";
 
 export const TeamCtx = React.createContext({
   io: undefined as Socket | undefined,
@@ -45,9 +46,13 @@ export default function Team() {
   const [loaded, setLoaded] = useState(false);
   const [connected, setConnected] = useState(false);
   const nav = useNavigate();
+  const [loadingText, setLoadingText] = useState("");
 
   const loadInfo = useEvent(async () => {
-    const info = await loadTeamNoteInfo(noteID);
+    setLoadingText("Loading note info...");
+    const info = await loadTeamNoteInfo(noteID, (len) => {
+      setLoadingText("Downloading PDF: " + bytes(len));
+    });
     if (!info) {
       message.error("Failed loading the team note info");
       return false;
@@ -58,8 +63,13 @@ export default function Team() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const loadState = useCallback(
-    throttle(async () => {
-      const teamNote = await getTeamNoteState(noteID);
+    throttle(async (cb?: (len: number) => void) => {
+      setLoadingText("Loading team note...");
+      const teamNote = await getTeamNoteState(noteID, (len) => {
+        if (len < 1024) return;
+        setLoadingText("Loading team note: " + bytes(len));
+        cb?.(len);
+      });
       if (!teamNote) {
         message.error("Failed loading the team note state");
         return false;
@@ -69,9 +79,28 @@ export default function Team() {
     }, 10_000),
     [noteID]
   );
+  const reloadState = () => {
+    const key = "SYNC";
+    const hide = message.loading({ content: "Syncing...", key });
+    loadState((len) => {
+      message.loading({ content: "Syncing: " + bytes(len), key });
+    })?.then(hide);
+  };
 
   const resetIO = useEvent(() => setIO(IoFactory(noteID)));
   const updateSelfState = useEvent(() => void updatePages(noteID));
+
+  const opID = useRef("");
+  const checkOpID = useEvent((prevID: string, currID: string) => {
+    const lost = prevID && opID.current && prevID !== opID.current;
+    opID.current = currID;
+    if (lost) reloadState();
+  });
+  const resetOpID = useEvent((currID: string) => {
+    const lost = opID.current && opID.current !== currID;
+    opID.current = currID;
+    if (lost) reloadState();
+  });
 
   useEffect(() => {
     const roomInit = async () => {
@@ -85,18 +114,6 @@ export default function Team() {
     roomInit();
     return updateSelfState;
   }, [loadInfo, loadState, nav, resetIO, updateSelfState]);
-
-  const opID = useRef("");
-  const checkOpID = useEvent((prevID: string, currID: string) => {
-    const lost = prevID && opID.current && prevID !== opID.current;
-    opID.current = currID;
-    if (lost) {
-      const p = loadState();
-      if (!p) return;
-      const hide = message.loading("Reloading team note...");
-      p.then(hide);
-    }
-  });
 
   useEffect(() => {
     if (!io) return;
@@ -115,7 +132,10 @@ export default function Team() {
     io.on("leave", ({ leaved, members }) => {
       const { userID, userName } = leaved;
       setUserRec(members);
-      if (userID === getUserID()) return io.emit("join");
+      if (userID === getUserID()) {
+        console.log("join");
+        return io.emit("join");
+      }
       showLeaveMsg(userID, userName);
     });
 
@@ -133,18 +153,20 @@ export default function Team() {
     io.on("connect", () => setConnected(true));
     io.on("disconnect", () => setConnected(false));
 
+    io.on("connected", ({ currID }) => resetOpID(currID));
+
     return () => {
       io.removeAllListeners();
       io.close();
     };
-  }, [checkOpID, io]);
+  }, [io, checkOpID, resetOpID]);
 
   const addTeamStatePage = (pageID: string, newPage: NotePage) => {
     setTeamState((prev) => prev?.addPage(pageID, newPage));
   };
 
   return (
-    <Loading loading={!loaded}>
+    <Loading loading={!loaded} text={loadingText}>
       <TeamCtx.Provider
         value={{
           io,

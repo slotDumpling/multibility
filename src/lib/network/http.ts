@@ -17,7 +17,6 @@ axios.defaults.baseURL = BASE_URL;
 export async function getNoteID(roomCode: string) {
   try {
     const { data } = await axios.get(`code/${roomCode}`);
-    console.log({ data });
     if (data.statusCode !== 200) return null;
     return data.noteID as string;
   } catch (e) {
@@ -45,7 +44,10 @@ export async function getTeamNoteInfo(noteID: string) {
   }
 }
 
-export async function loadTeamNoteInfo(noteID: string) {
+export async function loadTeamNoteInfo(
+  noteID: string,
+  cb?: (len: number) => void
+) {
   try {
     const infoRes = await getTeamNoteInfo(noteID);
     if (!infoRes) return null;
@@ -58,6 +60,9 @@ export async function loadTeamNoteInfo(noteID: string) {
         method: "GET",
         url: noteID,
         responseType: "blob",
+        onDownloadProgress({ loaded }: ProgressEvent) {
+          cb?.(loaded);
+        },
       });
       const file = new Blob([data], { type: "application/pdf" });
       await saveTeamNote(noteID, noteInfo, pageInfos, file);
@@ -130,13 +135,19 @@ export async function updatePages(noteID: string) {
 }
 
 const teamForage = localforage.createInstance({ name: "teamState" });
-export async function getTeamNoteState(noteID: string) {
+export async function getTeamNoteState(
+  noteID: string,
+  cb?: (len: number) => void
+) {
   const cachedState = await loadCachedTeamState(noteID);
   const hash = cachedState && md5(JSON.stringify(cachedState));
 
   try {
     const { data } = await axios.get(`state/${noteID}`, {
       params: { userID: getUserID(), hash },
+      onDownloadProgress({ loaded }: ProgressEvent) {
+        cb?.(loaded);
+      },
     });
     const { statusCode, modified, teamPages } = data;
     if (statusCode === 200 && modified) {
