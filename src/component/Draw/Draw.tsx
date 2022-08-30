@@ -135,6 +135,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const renderSlow = useRef(false);
     const deferRender = useRef(false);
+    if (readonly) deferRender.current = renderSlow.current;
     const deferTimerID = useRef(0);
 
     useEffect(() => {
