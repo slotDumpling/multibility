@@ -147,9 +147,8 @@ export default function Team() {
     });
 
     io.on("connect_error", console.error);
-    io.on("connect", () => setConnected(true));
     io.on("disconnect", () => setConnected(false));
-
+    io.on("connect", () => setConnected(true));
     io.on("connected", ({ currID }) => resetOpID(currID));
 
     return () => {
