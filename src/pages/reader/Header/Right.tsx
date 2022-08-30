@@ -111,7 +111,6 @@ const RoomInfo: FC = () => {
   const share = async () => {
     try {
       await copy(`${document.title}\n${link}`);
-      message.destroy("copy");
       message.success({
         content: "Link copied!",
         icon: <CopyOutlined />,

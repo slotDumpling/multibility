@@ -45,7 +45,6 @@ export const HeaderMiddle: FC<{
         type={finger ? "link" : "text"}
         onClick={() => {
           updateDrawCtrl({ finger: !finger });
-          message.destroy("FINGER");
           message.open({
             content: finger ? "Pencil only" : "Draw with finger",
             key: "FINGER",

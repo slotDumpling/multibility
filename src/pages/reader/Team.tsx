@@ -132,10 +132,7 @@ export default function Team() {
     io.on("leave", ({ leaved, members }) => {
       const { userID, userName } = leaved;
       setUserRec(members);
-      if (userID === getUserID()) {
-        console.log("join");
-        return io.emit("join");
-      }
+      if (userID === getUserID()) return io.emit("join");
       showLeaveMsg(userID, userName);
     });
 

@@ -24,7 +24,6 @@ export const showPageDelMsg = (onUndo: () => void) => {
 };
 
 export const showJoinMsg = (userID: string, userName: string) => {
-  message.destroy(userID);
   message.success({
     content: `${userName} joined the room`,
     icon: <LoginOutlined />,
@@ -33,7 +32,6 @@ export const showJoinMsg = (userID: string, userName: string) => {
 };
 
 export const showLeaveMsg = (userID: string, userName: string) => {
-  message.destroy(userID);
   message.warning({
     content: `${userName} leaved the room`,
     icon: <LogoutOutlined />,
