@@ -134,9 +134,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     );
 
     const renderSlow = useRef(false);
-    const deferRender = useRef(false);
-    if (readonly) deferRender.current = renderSlow.current;
     const deferTimerID = useRef(0);
+    const deferRender = useRef(false);
+    const setDefer = () => (deferRender.current = renderSlow.current);
+    if (readonly) setDefer();
 
     useEffect(() => {
       const [, l1] = scope.current.project.layers;
@@ -155,6 +156,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         setGroup(tempGroup);
 
         unrasterizeCanvas();
+        deferRender.current = false;
         pathClones.current.forEach((c) => c.remove());
         pathClones.current = [];
 
@@ -170,7 +172,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       // cancel previous render timer.
       return () => window.clearTimeout(deferTimerID.current);
     }, [mergedStrokes, drawState]);
-    useEffect(() => void (deferRender.current = false), [drawState]);
 
     const hitRef = useRef<paper.HitResult>();
     const [selected, setSelected] = useState(false);
@@ -266,7 +267,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     };
     const unrasterizeCanvas = () => {
       scope.current.activate();
-      deferRender.current = false;
       const [, l1] = scope.current.project.layers;
       const cr = canvasRaster.current;
       const lr = layerRaster.current;
@@ -288,7 +288,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const handleDown = {
       draw(e: paper.MouseEvent) {
-        deferRender.current = renderSlow.current;
+        setDefer();
         downPath(e);
       },
       erase: downPath,
