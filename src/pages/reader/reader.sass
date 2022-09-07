@@ -14,7 +14,8 @@
       scroll-margin-top: $header-low-height
   .add-btn-wrapper
     @include flex-center
-    padding: 20px 0
+    height: 80px
+    // padding: 20px 0
     button
       max-width: calc(100vw - 50px)
     &:first-child
@@ -24,7 +25,8 @@
     padding-left: 0 !important
     padding-right: 0 !important
   &::after
-    @include pseudo-el(0, 0, 0, auto)
+    @include pseudo-el(0, 0, auto, auto)
+    bottom: calc($safe-bottom + 80px)
     width: 30px
     background-color: #5552
     border-left: #0001 solid 2px
