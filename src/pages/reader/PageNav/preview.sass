@@ -24,6 +24,7 @@ $card-width: 200px
   z-index: 800
   display: flex
   pointer-events: none
+  transition: right $speed
   .opposite
     width: min($card-width, calc(100% - $card-width))
     margin: 0 0 0 auto
@@ -40,6 +41,10 @@ $card-width: 200px
     padding: $header-low-height+20px 20px calc(20px + $safe-bottom) 20px
   @include for-phone
     padding: $header-high-height+10px 10px calc(10px + $safe-bottom) 10px
+
+@media (hover: none)
+  main[data-finger=true] + .preview-drop
+    right: 30px
 
 body.ant-scrolling-effect .preview-drop
   @include for-desktop

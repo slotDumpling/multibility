@@ -2,6 +2,7 @@
 @import ../../sass/_mixins
 
 .reader.container main
+  position: relative
   padding-bottom: $safe-bottom
   .note-page
     outline: $default-border
@@ -20,7 +21,20 @@
       display: none
   @include for-phone
     // disable padding on phone
-    padding: 0 !important
+    padding-left: 0 !important
+    padding-right: 0 !important
+  &::after
+    @include pseudo-el(0, 0, 0, auto)
+    width: 30px
+    background-color: #5552
+    border-left: #0001 solid 2px
+    transition-duration: $speed
+    transition-property: transform visibility
+    @media (hover: hover)
+      display: none
+  &[data-finger=false]::after
+    transform: translateX(30px)
+    visibility: hidden
 
 body.reader
   background-color: #fafafa

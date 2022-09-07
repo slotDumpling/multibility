@@ -7,7 +7,7 @@ import {
   useCallback,
 } from "react";
 import { NoteInfo, NotePage, createPage, defaultNotePage } from "lib/note/note";
-import { DrawCtrlProvider } from "lib/draw/DrawCtrl";
+import { DrawCtrlProvider, useDrawCtrl } from "lib/draw/DrawCtrl";
 import { NewPageInfo, pushAck, ReorderInfo } from "lib/network/io";
 import { DarkModeProvider } from "lib/Dark";
 import { useMemoizedFn as useEvent } from "ahooks";
@@ -49,6 +49,18 @@ export interface ReaderMethods {
 }
 
 export default function Reader() {
+  return (
+    <AsideOpenProvider>
+      <DarkModeProvider>
+        <DrawCtrlProvider>
+          <ReaderContent />
+        </DrawCtrlProvider>
+      </DarkModeProvider>
+    </AsideOpenProvider>
+  );
+}
+
+const ReaderContent: FC = () => {
   const noteID = useParams().noteID ?? "";
   const nav = useNavigate();
 
@@ -219,7 +231,9 @@ export default function Reader() {
     currPageID,
     size,
   };
-  const renderResult = (
+  const { finger } = useDrawCtrl();
+
+  return (
     <div className="reader container">
       <Header
         saved={saved}
@@ -229,7 +243,10 @@ export default function Reader() {
         undoable={stateSet?.isUndoable() ?? false}
         redoable={stateSet?.isRedoable() ?? false}
       />
-      <main style={{ paddingLeft: padding, paddingRight: padding }}>
+      <main
+        data-finger={finger}
+        style={{ paddingLeft: padding, paddingRight: padding }}
+      >
         {pageOrder?.map((uid) => (
           <section key={uid} className="note-page" ref={sectionRef(uid)}>
             <PageContainer
@@ -255,15 +272,7 @@ export default function Reader() {
       />
     </div>
   );
-
-  return (
-    <AsideOpenProvider>
-      <DarkModeProvider>
-        <DrawCtrlProvider>{renderResult}</DrawCtrlProvider>
-      </DarkModeProvider>
-    </AsideOpenProvider>
-  );
-}
+};
 
 const PageContainer: FC<
   {
