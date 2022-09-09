@@ -13,7 +13,7 @@ import { DarkModeProvider } from "lib/Dark";
 import { useMemoizedFn as useEvent } from "ahooks";
 import { SetOperation, StateSet } from "lib/draw/StateSet";
 import { loadNote, editNoteData } from "lib/note/archive";
-import { showPageDelMsg } from "./tools/Messages";
+import { showPageDelMsg, showReopenMsg } from "./tools/Messages";
 import { useParams, useNavigate } from "react-router-dom";
 import PageWrapper from "component/PageWrapper";
 import { DrawState } from "lib/draw/DrawState";
@@ -32,9 +32,9 @@ import "./reader.sass";
 export interface ReaderStates {
   noteID: string;
   currPageID: string;
-  stateSet?: StateSet;
-  pageRec?: Map<string, NotePage>;
-  pageOrder?: string[];
+  stateSet: StateSet;
+  pageRec: Map<string, NotePage>;
+  pageOrder: string[];
   size: number;
 }
 
@@ -70,7 +70,7 @@ const ReaderContent: FC = () => {
   const [pageOrder, setPageOrder] = useState<string[]>();
   const [saved, setSaved] = useState(true);
 
-  const { io, teamOn, addTeamStatePage, checkOpID } = useContext(TeamCtx);
+  const { io, addTeamStatePage, checkOpID } = useContext(TeamCtx);
 
   useEffect(() => {
     (async () => {
@@ -85,7 +85,7 @@ const ReaderContent: FC = () => {
       setNoteInfo(noteInfo);
       setStateSet(StateSet.createFromPages(pageRec));
     })();
-  }, [nav, noteID, teamOn]);
+  }, [nav, noteID]);
 
   useEffect(() => {
     if (!noteInfo) return;
@@ -226,7 +226,21 @@ const ReaderContent: FC = () => {
   const { setInviewRatios, scrollPage, sectionRef, currPageID, scrolling } =
     useScrollPage(noteID, pageOrder, [size]);
 
-  const readerStates = {
+  const { finger } = useDrawCtrl();
+
+  useEffect(() => {
+    const bc = new BroadcastChannel("open note");
+    bc.postMessage(noteID);
+    bc.onmessage = (e) => {
+      if (e.data !== noteID) return;
+      debouncedSave.cancel();
+      showReopenMsg(() => nav("/"));
+    };
+    return () => bc.close();
+  }, [nav, noteID, debouncedSave]);
+
+  if (!stateSet || !pageOrder || !pageRec) return null;
+  const readerStates: ReaderStates = {
     noteID,
     pageRec,
     pageOrder,
@@ -234,7 +248,15 @@ const ReaderContent: FC = () => {
     currPageID,
     size,
   };
-  const { finger } = useDrawCtrl();
+  const readerMethods: ReaderMethods = {
+    scrollPage,
+    switchPageMarked,
+    addFinalPage,
+    addPage,
+    deletePage,
+    saveReorder,
+    setSize,
+  };
 
   return (
     <div className="reader container">
@@ -243,11 +265,11 @@ const ReaderContent: FC = () => {
         instantSave={instantSave}
         handleUndo={() => updateStateSet((prev) => prev.undo())}
         handleRedo={() => updateStateSet((prev) => prev.redo())}
-        undoable={stateSet?.isUndoable() ?? false}
-        redoable={stateSet?.isRedoable() ?? false}
+        undoable={stateSet.isUndoable()}
+        redoable={stateSet.isRedoable()}
       />
       <main data-finger={finger} data-full={isFull} style={mainStyle}>
-        {pageOrder?.map((uid) => (
+        {pageOrder.map((uid) => (
           <section key={uid} className="note-page" ref={sectionRef(uid)}>
             <PageContainer
               uid={uid}
@@ -262,16 +284,7 @@ const ReaderContent: FC = () => {
       <footer>
         <AddPageButton addFinalPage={addFinalPage} />
       </footer>
-      <PageNav
-        addPage={addPage}
-        addFinalPage={addFinalPage}
-        scrollPage={scrollPage}
-        deletePage={deletePage}
-        saveReorder={saveReorder}
-        switchPageMarked={switchPageMarked}
-        setSize={setSize}
-        {...readerStates}
-      />
+      <PageNav {...readerStates} {...readerMethods} />
     </div>
   );
 };
@@ -296,8 +309,8 @@ const PageContainer: FC<
 }) => {
   const { teamState, ignores } = useContext(TeamCtx);
 
-  const page = pageRec?.get(uid);
-  const drawState = stateSet?.getOneState(uid);
+  const page = pageRec.get(uid);
+  const drawState = stateSet.getOneState(uid);
   const teamStateMap = teamState?.getOnePageStateMap(uid);
   const updateState = useEvent((ds: DrawState) => {
     updateStateSet((prev) => prev.setState(uid, ds));

@@ -1,5 +1,5 @@
-import { Button, message } from "antd";
-import { LoginOutlined, LogoutOutlined } from "@ant-design/icons";
+import { Button, message, Modal } from "antd";
+import { LoginOutlined, LogoutOutlined, HomeFilled } from "@ant-design/icons";
 
 export const showPageDelMsg = (onUndo: () => void) => {
   message.warning({
@@ -36,5 +36,14 @@ export const showLeaveMsg = (userID: string, userName: string) => {
     content: `${userName} leaved the room`,
     icon: <LogoutOutlined />,
     key: userID,
+  });
+};
+
+export const showReopenMsg = (onOk: () => void) => {
+  Modal.error({
+    title: "This note is opened in another tab.",
+    okText: "Back",
+    okButtonProps: { icon: <HomeFilled /> },
+    onOk,
   });
 };

@@ -174,7 +174,7 @@ const PageList: FC<PreviewProps & { cardDragged: boolean }> = React.memo(
         <Droppable droppableId="preview-list" isDropDisabled={cardDragged}>
           {({ droppableProps, innerRef, placeholder }) => (
             <div className="page-list" ref={innerRef} {...droppableProps}>
-              {pageOrder?.map((uid, index) => (
+              {pageOrder.map((uid, index) => (
                 <PagePreview
                   key={uid}
                   uid={uid}
@@ -210,8 +210,8 @@ const PagePreview: FC<
   const [activeKey] = useActiveKey();
   const [chosen, setChosen] = useState("");
 
-  const page = pageRec?.get(uid);
-  const drawState = stateSet?.getOneState(uid);
+  const page = pageRec.get(uid);
+  const drawState = stateSet.getOneState(uid);
   const teamStateMap = teamState?.getOnePageStateMap(uid);
 
   const marked = useRef(false);
@@ -414,7 +414,7 @@ const PreviewFooter: FC<PreviewProps> = ({
   setSize,
 }) => {
   const pageIndex = useMemo(
-    () => (pageOrder?.indexOf(currPageID) ?? 0) + 1,
+    () => (pageOrder.indexOf(currPageID) ?? 0) + 1,
     [currPageID, pageOrder]
   );
 
@@ -451,7 +451,7 @@ const PreviewFooter: FC<PreviewProps> = ({
         destroyTooltipOnHide
       >
         <Button type="text" size="small" icon={<ReadOutlined />}>
-          {pageIndex} / {pageOrder?.length}
+          {pageIndex} / {pageOrder.length}
         </Button>
       </Popover>
       <Dropdown
