@@ -1,45 +1,42 @@
 @import ../../sass/_var
 @import ../../sass/_mixins
 
-.reader.container main
-  position: relative
+.reader.container
   padding-bottom: $safe-bottom
-  .note-page
-    outline: $default-border
-    &:not(:first-of-type)
-      margin-top: 10px
+  > main
+    position: relative
+    overflow: hidden
+    .note-page
+      outline: $default-border
+      &:not(:first-of-type)
+        margin-top: 10px
+      @include for-phone
+        scroll-margin-top: $header-high-height
+      @include for-desktop
+        scroll-margin-top: $header-low-height
     @include for-phone
-      scroll-margin-top: $header-high-height
-    @include for-desktop
-      scroll-margin-top: $header-low-height
-  .add-btn-wrapper
+      // disable padding on phone
+      padding-left: 0 !important
+      padding-right: 0 !important
+    &::after
+      @include pseudo-el(0, 0, 0, auto)
+      width: 30px
+      background-color: #5552
+      border-left: #0001 solid 2px
+      transition-duration: $speed
+      transition-property: transform visibility
+      @media (hover: hover)
+        display: none
+    &[data-finger=false]::after
+      transform: translateX(30px)
+      visibility: hidden
+    &[data-full=false]::after
+      display: none
+  > footer
     @include flex-center
-    height: 80px
-    // padding: 20px 0
+    padding: 20px 0
     button
       max-width: calc(100vw - 50px)
-    &:first-child
-      display: none
-  @include for-phone
-    // disable padding on phone
-    padding-left: 0 !important
-    padding-right: 0 !important
-  &::after
-    @include pseudo-el(0, 0, auto, auto)
-    bottom: calc($safe-bottom + 80px)
-    width: 30px
-    background-color: #5552
-    border-left: #0001 solid 2px
-    transition-duration: $speed
-    transition-property: transform visibility
-    @media (hover: hover)
-      display: none
-  &[data-finger=false]::after
-    transform: translateX(30px)
-    visibility: hidden
 
 body.reader
   background-color: #fafafa
-
-.add-btn-wrapper
-  width: 100%

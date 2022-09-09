@@ -219,7 +219,10 @@ const ReaderContent: FC = () => {
   };
 
   const [size, setSize] = useState(100);
-  const padding = (100 - size) / 2 + "%";
+  const isFull = size === 100;
+  const pd = (100 - size) / 2 + "%";
+  const mainStyle = { paddingLeft: pd, paddingRight: pd };
+
   const { setInviewRatios, scrollPage, sectionRef, currPageID, scrolling } =
     useScrollPage(noteID, pageOrder, [size]);
 
@@ -243,10 +246,7 @@ const ReaderContent: FC = () => {
         undoable={stateSet?.isUndoable() ?? false}
         redoable={stateSet?.isRedoable() ?? false}
       />
-      <main
-        data-finger={finger}
-        style={{ paddingLeft: padding, paddingRight: padding }}
-      >
+      <main data-finger={finger} data-full={isFull} style={mainStyle}>
         {pageOrder?.map((uid) => (
           <section key={uid} className="note-page" ref={sectionRef(uid)}>
             <PageContainer
@@ -258,8 +258,10 @@ const ReaderContent: FC = () => {
             />
           </section>
         ))}
-        <AddPageButton addFinalPage={addFinalPage} />
       </main>
+      <footer>
+        <AddPageButton addFinalPage={addFinalPage} />
+      </footer>
       <PageNav
         addPage={addPage}
         addFinalPage={addFinalPage}
