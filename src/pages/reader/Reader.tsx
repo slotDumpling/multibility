@@ -27,6 +27,7 @@ import { Header } from "./Header";
 import { TeamCtx } from "./Team";
 import { Map } from "immutable";
 import { message } from "antd";
+import { InfoNav } from "./Info";
 import "./reader.sass";
 
 export interface ReaderStates {
@@ -239,7 +240,18 @@ const ReaderContent: FC = () => {
     return () => bc.close();
   }, [nav, noteID, debouncedSave]);
 
-  if (!stateSet || !pageOrder || !pageRec) return null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+
+  const renameNote = async (name: string) => {
+    if (name === noteInfo?.name) return;
+    await editNoteData(noteID, { name });
+    const storedNote = await loadNote(noteID);
+    if (!storedNote) return;
+    const { pageRec, pdf, pageOrder, ...info } = storedNote;
+    setNoteInfo(info);
+  };
+
+  if (!stateSet || !pageOrder || !pageRec || !noteInfo) return null;
   const readerStates: ReaderStates = {
     noteID,
     pageRec,
@@ -268,6 +280,7 @@ const ReaderContent: FC = () => {
         undoable={stateSet.isUndoable()}
         redoable={stateSet.isRedoable()}
       />
+      <InfoNav noteInfo={noteInfo} renameNote={renameNote} />
       <main data-finger={finger} data-full={isFull} style={mainStyle}>
         {pageOrder.map((uid) => (
           <section key={uid} className="note-page" ref={sectionRef(uid)}>

@@ -6,6 +6,8 @@
   > main
     position: relative
     overflow: hidden
+    border-top: $default-border
+    border-bottom: $default-border
     .note-page
       outline: $default-border
       &:not(:first-of-type)
@@ -21,14 +23,18 @@
     &::after
       @include pseudo-el(0, 0, 0, auto)
       width: 30px
-      background-color: #5552
+      box-sizing: content-box
+      background-color: #7771
+      background-image: radial-gradient(#9992 20%, #0000 0)
+      background-size: 10px 10px
       border-left: #0001 solid 2px
       transition-duration: $speed
-      transition-property: transform visibility
+      transition-property: transform visibility opacity
       @media (hover: hover)
         display: none
     &[data-finger=false]::after
-      transform: translateX(30px)
+      transform: translateX(100%)
+      opacity: 0
       visibility: hidden
     &[data-full=false]::after
       display: none
