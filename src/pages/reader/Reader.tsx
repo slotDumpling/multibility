@@ -240,8 +240,6 @@ const ReaderContent: FC = () => {
     return () => bc.close();
   }, [nav, noteID, debouncedSave]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-
   const renameNote = async (name: string) => {
     if (name === noteInfo?.name) return;
     await editNoteData(noteID, { name });
