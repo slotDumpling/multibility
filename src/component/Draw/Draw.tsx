@@ -506,7 +506,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         if (paperMode !== "selected") return;
         const { view } = scope.current;
         const clickPoint = view.projectToView(e.point);
-        toggleSelectTool(true, clickPoint);
+        const rotating = hitRef.current?.segment.selected;
+        if (!rotating) toggleSelectTool(true, clickPoint);
         if (pointBeforeDrag.current.equals(e.point)) return;
         updateMutation();
       },
@@ -684,15 +685,19 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       cancelText();
       if (t.exportJSON() === prevTextData.current) return;
       const { content, name } = t;
-      if (!content) {
-        if (name) return;
-        return onChange((prev) => DrawState.eraseStrokes(prev, [name]));
-      }
       t.name = "";
+      // if text content empty
+      if (!content) {
+        // erase existing text item
+        if (name) onChange((prev) => DrawState.eraseStrokes(prev, [name]));
+        return;
+      }
       const pathData = t.exportJSON();
       if (!name) {
+        // add new text item
         onChange((prev) => DrawState.addStroke(prev, pathData));
       } else {
+        // mutate existing text item
         onChange((prev) => DrawState.mutateStrokes(prev, [[name, pathData]]));
       }
     }, [cancelText, onChange]);
