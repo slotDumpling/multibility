@@ -3,7 +3,6 @@ import React, {
   useMemo,
   useState,
   useEffect,
-  useCallback,
   useDebugValue,
   useImperativeHandle,
 } from "react";
@@ -18,6 +17,7 @@ import paper, {
 } from "paper/dist/paper-core";
 import { usePinch } from "@use-gesture/react";
 import useSize from "@react-hook/size";
+import { useMemoizedFn as useEvent } from "ahooks";
 import { DrawState, Mutation, Splitter, Stroke } from "lib/draw/DrawState";
 import { defaultDrawCtrl, DrawCtrl } from "lib/draw/DrawCtrl";
 import { releaseCanvas } from "lib/draw/canvas";
@@ -72,6 +72,9 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const [path, setPath] = usePaperItem<paper.Path>();
     const [rect, setRect] = usePaperItem<paper.Path.Rectangle>();
     const [rotateHandle, setRotateHandle] = usePaperItem<paper.Path>();
+
+    toggleSelectTool = useEvent(toggleSelectTool);
+    toggleTextTool = useEvent(toggleTextTool);
 
     useEffect(() => {
       const cvs = canvasEl.current;
@@ -183,14 +186,14 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       return group.filter((item) => IDSet.has(item.name));
     }, [group, chosenIDs]);
 
-    const resetSelect = useCallback(() => {
+    const resetSelect = useEvent(() => {
       setSelected(false);
       setPath(undefined);
       setRect(undefined);
       setRotateHandle(undefined);
       setChosenIDs([]);
       toggleSelectTool(false);
-    }, [setPath, setRect, setRotateHandle, toggleSelectTool]);
+    });
 
     useEffect(() => {
       if (mode === "select") return resetSelect;
@@ -666,16 +669,16 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const pointText = useRef<paper.PointText>();
     const prevTextData = useRef("");
-    const cancelText = useCallback(() => {
+    const cancelText = useEvent(() => {
       unrasterizeCanvas();
       if (!pointText.current?.name) {
         pointText.current?.remove();
       }
       pointText.current = undefined;
       toggleTextTool(undefined, renderSlow.current);
-    }, [toggleTextTool]);
+    });
 
-    const submitText = useCallback(() => {
+    const submitText = useEvent(() => {
       const t = pointText.current;
       if (!t) return;
       cancelText();
@@ -696,7 +699,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         // mutate existing text item
         onChange((prev) => DrawState.mutateStrokes(prev, [[name, pathData]]));
       }
-    }, [cancelText, onChange]);
+    });
     const mutatePointText = (cb: (prev: paper.PointText) => void) => {
       const pt = pointText.current;
       if (!pt) return;

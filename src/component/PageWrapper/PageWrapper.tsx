@@ -117,18 +117,18 @@ const DrawWrapper: FC<{
     }
   );
 
-  const toggleSelectTool = useEvent(
-    (active: boolean, clickPoint?: paper.Point) => {
-      setClickPoint((p) => clickPoint ?? p);
-      setSelectShow(active);
-    }
-  );
-  const toggleTextTool = useEvent(
-    (pointText: paper.PointText | undefined, slow: boolean) => {
-      setPointText(pointText);
-      setRenderSlow(slow);
-    }
-  );
+  const toggleSelectTool = (active: boolean, clickPoint?: paper.Point) => {
+    setClickPoint((p) => clickPoint ?? p);
+    setSelectShow(active);
+  };
+
+  const toggleTextTool = (
+    pointText: paper.PointText | undefined,
+    slow: boolean
+  ) => {
+    setPointText(pointText);
+    setRenderSlow(slow);
+  };
 
   return preview ? (
     <Draw
