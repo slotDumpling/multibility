@@ -32,6 +32,7 @@ export interface DrawRefType {
   rasterizeSelected: () => string;
   mutateStyle: (updated: Partial<DrawCtrl>) => void;
   mutatePointText: (cb: (prev: paper.PointText) => void) => void;
+  resetSelect: () => void;
 }
 interface DrawPropType {
   drawState: DrawState;
@@ -187,20 +188,15 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       setPath(undefined);
       setRect(undefined);
       setRotateHandle(undefined);
-    }, [setPath, setRect, setRotateHandle]);
+      setChosenIDs([]);
+      toggleSelectTool(false);
+    }, [setPath, setRect, setRotateHandle, toggleSelectTool]);
 
     useEffect(() => {
       if (mode === "select") return resetSelect;
     }, [mode, resetSelect]);
     useEffect(() => resetSelect, [lasso, resetSelect]);
 
-    useEffect(() => {
-      if (!selected) return;
-      return () => {
-        setChosenIDs([]);
-        toggleSelectTool(false);
-      };
-    }, [selected, toggleSelectTool]);
     useEffect(() => {
       toggleSelectTool(false);
       if (pointText.current) {
@@ -299,7 +295,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         if (lasso) {
           // if the point is outside of selection, reset selection
           if (path?.contains(e.point)) return;
-          setSelected(false);
+          resetSelect();
           downPath(e);
         } else {
           // check if the point hit the segment point.
@@ -312,7 +308,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           // if the point is outside of selection, reset selection
           if (rect?.contains(e.point)) return;
           setRotateHandle(undefined);
-          setSelected(false);
+          resetSelect();
           downRect(e);
         }
       },
@@ -719,6 +715,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       rasterizeSelected,
       mutateStyle,
       mutatePointText,
+      resetSelect,
     }));
 
     usePreventGesture();
