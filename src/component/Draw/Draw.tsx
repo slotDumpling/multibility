@@ -32,7 +32,6 @@ export interface DrawRefType {
   rasterizeSelected: () => string;
   mutateStyle: (updated: Partial<DrawCtrl>) => void;
   mutatePointText: (cb: (prev: paper.PointText) => void) => void;
-  resetSelect: () => void;
 }
 interface DrawPropType {
   drawState: DrawState;
@@ -199,6 +198,12 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       if (mode === "select") return resetSelect;
     }, [mode, resetSelect]);
     useEffect(() => resetSelect, [lasso, resetSelect]);
+
+    // reset selection after redo/undo
+    useEffect(() => {
+      const type = drawState.lastOp?.type ?? "";
+      if (/^redo|undo$/.test(type)) resetSelect();
+    }, [drawState, resetSelect]);
 
     useEffect(() => {
       toggleSelectTool(false);
@@ -718,7 +723,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       rasterizeSelected,
       mutateStyle,
       mutatePointText,
-      resetSelect,
     }));
 
     usePreventGesture();
