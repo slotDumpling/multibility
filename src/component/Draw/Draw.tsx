@@ -97,6 +97,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       scope.current.activate();
       const { layers } = scope.current.project;
       const rects = paintRects(layers, projSize);
+
       return () => rects.forEach((r) => r.remove());
     }, [projSize]);
 
@@ -594,10 +595,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       selected(e: paper.KeyEvent) {
         if (/^(delete|backspace)$/.test(e.key)) deleteSelected();
         if (/^(up|down|left|right)$/.test(e.key)) updateMutation();
-        if (e.key === "escape") resetSelect();
+        if (/escape/.test(e.key)) resetSelect();
       },
       text(e: paper.KeyEvent) {
-        if (e.key === "escape") submitText();
+        if (/escape/.test(e.key)) submitText();
       },
       ...{ select: null, draw: null, erase: null },
     }[paperMode];
