@@ -259,7 +259,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const { view } = scope.current;
       // create a raster of the canvas element's size only once.
       const raster = (canvasRaster.current ??= new Raster(
-        view.viewSize.multiply(window.devicePixelRatio)
+        view.viewSize.multiply(devicePixelRatio)
       ));
       raster.drawImage(view.element, P_ZERO);
       raster.fitBounds(view.bounds);
