@@ -69,7 +69,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const scope = useRef(new paper.PaperScope());
     const [group, setGroup] = useState<paper.Item[]>([]);
     const [path, setPath] = usePaperItem<paper.Path>();
-    const [rect, setRect] = usePaperItem<paper.Path.Rectangle>();
     const [rotateHandle, setRotateHandle] = usePaperItem<paper.Path>();
 
     toggleSelectTool = useEvent(toggleSelectTool);
@@ -189,7 +188,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const resetSelect = useEvent(() => {
       setSelected(false);
       setPath(undefined);
-      setRect(undefined);
       setRotateHandle(undefined);
       setChosenIDs([]);
       toggleSelectTool(false);
@@ -287,7 +285,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     };
     const downRect = (e: paper.MouseEvent) => {
       rasterizeCanvas();
-      setRect(startRect(e.point));
+      setPath(startRect(e.point));
     };
     const pointBeforeDrag = useRef(P_ZERO);
 
@@ -301,24 +299,21 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       selected(e: paper.MouseEvent) {
         toggleSelectTool(false);
         pointBeforeDrag.current = e.point;
-        if (lasso) {
-          // if the point is outside of selection, reset selection
-          if (path?.contains(e.point)) return;
-          resetSelect();
-          downPath(e);
-        } else {
+        if (!path) return;
+        if (!lasso) {
           // check if the point hit the segment point.
           let hitRes =
-            rect?.hitTest(e.point, { segments: true }) ??
+            path.hitTest(e.point, { segments: true }) ??
             rotateHandle?.hitTest(e.point, { segments: true, selected: true });
           hitRef.current = hitRes;
           if (hitRes) return;
+        }
 
-          // if the point is outside of selection, reset selection
-          if (rect?.contains(e.point)) return;
-          setRotateHandle(undefined);
+        // if click outside, reset the selection.
+        if (!path.contains(e.point)) {
           resetSelect();
-          downRect(e);
+          setRotateHandle(undefined);
+          lasso ? downPath(e) : downRect(e);
         }
       },
       text: null,
@@ -331,19 +326,18 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       path?.smooth();
     };
     const resizeRect = (e: paper.MouseEvent) => {
-      if (!rect) return;
+      if (!path) return;
       const { x, y } = e.point;
-      const [, s1, s2, s3] = rect.segments;
+      const [, s1, s2, s3] = path.segments;
       if (!s1 || !s2 || !s3) return;
       s1.point.x = x;
       s2.point = e.point;
       s3.point.y = y;
-      rect.selected = true;
+      path.selected = true;
     };
     const moveSelected = (delta: paper.Point) => {
       chosenItems.forEach((item) => item.translate(delta));
       path?.translate(delta);
-      rect?.translate(delta);
       rotateHandle?.translate(delta);
     };
 
@@ -353,18 +347,19 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       select: lasso ? dragPath : resizeRect,
       selected(e: paper.MouseEvent) {
         const hitRes = hitRef.current;
-        if (hitRes?.segment && rect && rotateHandle) {
+        if (!path) return;
+        if (hitRes?.segment) {
           const segment = hitRes.segment;
           const rotating = segment.selected;
           if (rotating) {
             // rotate select items
-            const { center } = rect.bounds;
+            const { center } = path.bounds;
             const axis = segment.point.subtract(center);
             const line = e.point.subtract(center);
             setCursor(getRotateCurcor(line.angle));
             const angle = line.angle - axis.angle;
-            rect.rotate(angle, center);
-            rotateHandle.rotate(angle, center);
+            path.rotate(angle, center);
+            rotateHandle?.rotate(angle, center);
             chosenItems.forEach((item) => item?.rotate(angle, center));
           } else {
             // resize selected items
@@ -375,11 +370,14 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
             const scale = projection.x / diagonal.x;
             if (scale < 0) return;
 
-            rect.scale(scale, baseP);
+            path.scale(scale, baseP);
             chosenItems.forEach((item) => {
               item.scale(scale, baseP);
               item.strokeWidth *= scale;
             });
+
+            // reposition the rotate handle.
+            if (!rotateHandle) return;
             rotateHandle.scale(scale, baseP);
             const rBaseP = rotateHandle.segments[0]?.point;
             if (!rBaseP) return;
@@ -482,28 +480,29 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       },
       select() {
         unrasterizeCanvas();
+        if (!path) return;
+        if (Math.abs(path.area) < 1_000) return setPath(undefined);
+
         let selection: string[];
         const { view } = scope.current;
         if (lasso) {
-          if (!path || Math.abs(path.area) < 1_000) return setPath(undefined);
           path.closePath();
           path.simplify();
           if (!renderSlow.current) moveDash(path);
           const items = getGridItems(itemGrid, path.bounds);
           selection = checkLasso(items, path);
         } else {
-          if (!rect || Math.abs(rect.area) < 1_000) return setRect(undefined);
-          const items = getGridItems(itemGrid, rect.bounds);
-          selection = checkLasso(items, rect);
+          const items = getGridItems(itemGrid, path.bounds);
+          selection = checkLasso(items, path);
           const link = new Path();
-          const { topCenter } = rect.bounds;
+          const { topCenter } = path.bounds;
           link.add(topCenter, topCenter.subtract(new Point(0, 100)));
           link.lastSegment.selected = true;
           setRotateHandle(link);
         }
         setSelected(true);
         setChosenIDs(selection);
-        const bc = (rect ?? path)?.bounds.bottomCenter;
+        const bc = path.bounds.bottomCenter;
         bc && toggleSelectTool(true, view.projectToView(bc));
       },
       selected(e: paper.MouseEvent) {
@@ -544,12 +543,13 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     }, [paperMode, lasso, drawCtrl, ratio]);
 
     const handleSelectedCursor = (e: paper.MouseEvent) => {
+      if (!path) return;
       const hitRes =
-        rect?.hitTest(e.point, { segments: true }) ??
+        path.hitTest(e.point, { segments: true }) ??
         rotateHandle?.hitTest(e.point, { segments: true, selected: true });
       if (hitRes?.segment) {
         if (hitRes.segment.selected) {
-          const center = rect?.bounds.center;
+          const center = path.bounds.center;
           if (!center) return;
           const line = hitRes.segment.point.subtract(center);
           return setCursor(getRotateCurcor(line.angle));
@@ -560,7 +560,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         const { x, y } = diagonal;
         return setCursor(x * y < 0 ? "nesw-resize" : "nwse-resize");
       }
-      if ((rect ?? path)?.contains(e.point)) return setCursor("pointer");
+      if (path.contains(e.point)) return setCursor("pointer");
       setCursor("crosshair");
     };
     const handleTextCursor = (e: paper.MouseEvent) => {
@@ -647,14 +647,13 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const duplicateSelected = () => {
       scope.current.activate();
-      const size = (rect || path)?.bounds.size;
-      if (!size || !chosenItems.length) return;
+      if (!path || !chosenItems.length) return;
+      const size = path.bounds.size;
       const { width, height } = size;
       const transP = new Point(width, height).divide(10);
       const copies = chosenItems.map((item) => item.clone());
       copies.forEach((item) => item.translate(transP));
-      rect?.translate(transP);
-      path?.translate(transP);
+      path.translate(transP);
       rotateHandle?.translate(transP);
 
       copies.forEach((p) => (p.name = ""));
@@ -667,7 +666,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const rasterizeSelected = () => {
       scope.current.activate();
-      const clip = (rect ?? path)?.clone();
+      const clip = path?.clone();
       clip && rasterizeLayer(clip, true);
       unrasterizeLayer();
       return layerRaster.current?.toDataURL() ?? "";
