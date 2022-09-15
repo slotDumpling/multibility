@@ -10,10 +10,10 @@ import {
   MenuOutlined,
   FormOutlined,
   TeamOutlined,
-  CopyOutlined,
   LinkOutlined,
   CheckOutlined,
   ReloadOutlined,
+  CheckCircleFilled,
   DisconnectOutlined,
   EyeInvisibleOutlined,
   UsergroupAddOutlined,
@@ -104,22 +104,34 @@ const UserCard: FC<{ userInfo: UserInfo }> = ({ userInfo }) => {
   );
 };
 
-const RoomInfo: FC = () => {
-  const { code, userRec, connected, loadInfo, loadState, resetIO } =
-    useContext(TeamCtx);
+const ShareButton: FC = () => {
+  const [copied, setCopied] = useState(false);
   const link = window.location.href;
   const share = async () => {
     try {
       await copy(`${document.title}\n${link}`);
-      message.success({
-        content: "Link copied!",
-        icon: <CopyOutlined />,
-        key: "copy",
-      });
+      setCopied(true);
     } catch (e) {
       console.log(e);
     }
   };
+  return (
+    <Button
+      data-copied={copied}
+      icon={copied ? <CheckCircleFilled /> : <LinkOutlined />}
+      type={copied ? "primary" : "default"}
+      className="share-btn"
+      onClick={share}
+      block
+    >
+      {copied ? "Copied" : "Copy link"}
+    </Button>
+  );
+};
+
+const RoomInfo: FC = () => {
+  const { code, userRec, connected, loadInfo, loadState, resetIO } =
+    useContext(TeamCtx);
 
   const userList = useMemo(() => {
     const selfID = getUserID();
@@ -152,14 +164,7 @@ const RoomInfo: FC = () => {
         length={4}
         plain
       />
-      <Button
-        icon={<LinkOutlined />}
-        className="share-btn"
-        onClick={share}
-        block
-      >
-        Copy link
-      </Button>
+      <ShareButton />
       <Divider />
       <div className="user-list">
         {userList.map((u) => (
@@ -197,6 +202,7 @@ const RoomInfo: FC = () => {
       placement="bottomRight"
       title={title}
       getPopupContainer={(e) => e.parentElement!}
+      destroyTooltipOnHide
     >
       <Button
         type="text"
