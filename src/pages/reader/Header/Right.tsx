@@ -117,7 +117,6 @@ const ShareButton: FC = () => {
   };
   return (
     <Button
-      data-copied={copied}
       icon={copied ? <CheckCircleFilled /> : <LinkOutlined />}
       type={copied ? "primary" : "default"}
       className="share-btn"
