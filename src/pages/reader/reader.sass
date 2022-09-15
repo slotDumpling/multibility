@@ -5,9 +5,8 @@
   padding-bottom: $safe-bottom
   > main
     position: relative
-    overflow: hidden
-    border-top: $default-border
-    border-bottom: $default-border
+    margin-left: $safe-left
+    margin-right: $safe-right
     .note-page
       outline: $default-border
       &:not(:first-of-type)
@@ -27,13 +26,12 @@
       background-color: #7771
       background-image: radial-gradient(#9992 20%, #0000 0)
       background-size: 10px 10px
-      border-left: #9992 solid 2px
+      border-left: #9992 solid 1px
       transition-duration: $speed
-      transition-property: transform visibility opacity
+      transition-property: visibility opacity
       @media (hover: hover)
         display: none
     &[data-finger=false]::after
-      transform: translateX(100%)
       opacity: 0
       visibility: hidden
     &[data-full=false]::after
