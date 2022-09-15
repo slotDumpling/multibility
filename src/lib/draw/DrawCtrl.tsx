@@ -99,9 +99,11 @@ export const DrawCtrlProvider: FC<PropsWithChildren> = ({ children }) => {
 };
 
 const showPencilMsg = once(async (cb: () => void) => {
-  const hide = () => message.destroy("DETECT_PENCIL");
-  const dismissed = await localforage.getItem<boolean>("SKIP_PENCIL_MSG");
-  if (dismissed) return;
+  const hide = () => {
+    message.destroy("DETECT_PENCIL");
+    localforage.setItem("SKIP_PENCIL_MSG", true);
+  };
+  if (await localforage.getItem("SKIP_PENCIL_MSG")) return;
   message.info({
     content: (
       <>
@@ -122,10 +124,7 @@ const showPencilMsg = once(async (cb: () => void) => {
           type="text"
           shape="circle"
           icon={<EyeInvisibleOutlined style={{ color: "#999" }} />}
-          onClick={() => {
-            hide();
-            localforage.setItem("SKIP_PENCIL_MSG", true);
-          }}
+          onClick={hide}
         />
       </>
     ),
