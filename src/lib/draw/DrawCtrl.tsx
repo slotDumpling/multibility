@@ -80,16 +80,16 @@ export const DrawCtrlProvider: FC<PropsWithChildren> = ({ children }) => {
     });
   };
 
+  const { finger } = drawCtrl;
   useEffect(() => {
     const detectPen = (e: PointerEvent) => {
       const isPen = e.isPrimary && e.pointerType === "pen";
-      if (isPen && drawCtrl.finger) {
-        showPencilMsg(() => updateDrawCtrl({ finger: false }));
-      }
+      if (!isPen || !finger) return;
+      showPencilMsg(() => updateDrawCtrl({ finger: false }));
     };
     document.addEventListener("pointerup", detectPen);
     return () => document.removeEventListener("pointerup", detectPen);
-  }, [drawCtrl.finger]);
+  }, [finger]);
 
   return (
     <DrawCtrlContext.Provider value={{ drawCtrl, updateDrawCtrl }}>
