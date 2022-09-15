@@ -1,4 +1,3 @@
-import localforage from "localforage";
 import React, {
   FC,
   PropsWithChildren,
@@ -7,6 +6,12 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import { Button, message } from "antd";
+import { EditOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
+import localforage from "localforage";
+import { once } from "lodash";
+import "./draw-ctrl.sass";
+
 export interface DrawCtrl {
   mode: "draw" | "erase" | "select" | "text";
   finger: boolean;
@@ -74,9 +79,57 @@ export const DrawCtrlProvider: FC<PropsWithChildren> = ({ children }) => {
       return newCtrl;
     });
   };
+
+  useEffect(() => {
+    const detectPen = (e: PointerEvent) => {
+      const isPen = e.isPrimary && e.pointerType === "pen";
+      if (isPen && drawCtrl.finger) {
+        showPencilMsg(() => updateDrawCtrl({ finger: false }));
+      }
+    };
+    document.addEventListener("pointerup", detectPen);
+    return () => document.removeEventListener("pointerup", detectPen);
+  }, [drawCtrl.finger]);
+
   return (
     <DrawCtrlContext.Provider value={{ drawCtrl, updateDrawCtrl }}>
       {children}
     </DrawCtrlContext.Provider>
   );
 };
+
+const showPencilMsg = once(async (cb: () => void) => {
+  const hide = () => message.destroy("DETECT_PENCIL");
+  const dismissed = await localforage.getItem<boolean>("SKIP_PENCIL_MSG");
+  if (dismissed) return;
+  message.info({
+    content: (
+      <>
+        Your device supports
+        <Button
+          shape="round"
+          size="small"
+          icon={<EditOutlined />}
+          onClick={() => {
+            cb();
+            hide();
+          }}
+        >
+          Pencil only
+        </Button>
+        <Button
+          size="small"
+          type="text"
+          shape="circle"
+          icon={<EyeInvisibleOutlined style={{ color: "#999" }} />}
+          onClick={() => {
+            hide();
+            localforage.setItem("SKIP_PENCIL_MSG", true);
+          }}
+        />
+      </>
+    ),
+    key: "DETECT_PENCIL",
+    className: "pencil-msg",
+  });
+});
