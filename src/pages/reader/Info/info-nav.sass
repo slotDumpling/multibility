@@ -2,7 +2,6 @@
 
 .reader.container
   nav
-    padding: 10px 30px
     margin-left: $safe-left
     margin-right: $safe-right
     display: flex
@@ -11,8 +10,16 @@
     .info
       flex: 1
       input.title
-        padding-left: 0
-        padding-top: 0
+        padding: 10px 30px
+      p.title
+        padding: 10px 30px
+        font-size: 16px
+        margin: 0
+        cursor: text
       p.time
         margin: 0
+        padding: 0 30px 10px 30px
         color: #888
+        cursor: pointer
+        span.label
+          color: #aaa
