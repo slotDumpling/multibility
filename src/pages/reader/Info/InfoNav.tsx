@@ -38,12 +38,12 @@ export const InfoNav: FC<{
             {name}
           </p>
         )}
-        <p className="time" onClick={() => setCreateDateShow((p) => !p)}>
+        <span className="time" onClick={() => setCreateDateShow((p) => !p)}>
           {createDateShow ? createDate : lastDate}
           <span className="label">
             {createDateShow ? " Created" : " Last Edited"}
           </span>
-        </p>
+        </span>
       </div>
     </nav>
   );
