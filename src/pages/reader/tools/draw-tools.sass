@@ -60,7 +60,7 @@
       height: calc(var(--height) + 0.2em)
       transform-origin: top left
       transform: scale(var(--scale)) translateY(var(--text-offset-y))
-      font-family: sans-serif
+      vertical-align: text-top
       font-weight: inherit
       line-height: inherit
       color: #0000
@@ -84,7 +84,7 @@
 
   .text-options
     position: absolute
-    left: min(calc(100% - 180px), var(--pos-x))
+    left: min(calc(100% - 250px), var(--pos-x))
     top: var(--pos-y)
     transform: translate(-7px, -150%)
     &[data-bottom=true]

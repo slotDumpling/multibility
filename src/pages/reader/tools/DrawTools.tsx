@@ -9,7 +9,7 @@ import {
   ZoomOutOutlined,
   ZoomInOutlined,
 } from "@ant-design/icons";
-import { Button, ButtonProps, Modal, Popover } from "antd";
+import { Button, ButtonProps, Modal, Popover, Select } from "antd";
 import { DrawCtrl } from "lib/draw/DrawCtrl";
 import { ColorSelect, PenPanel } from "./PenPanel";
 import { allColors } from "lib/color";
@@ -102,8 +102,9 @@ export const TextTool: FC<{
   drawRef: RefObject<DrawRefType>;
   renderSlow: boolean;
 }> = ({ pointText, drawRef, renderSlow }) => {
-  const { view, position, fontSize, fontWeight, leading, content, rotation } =
-    pointText;
+  const { view, position, leading, content, rotation } = pointText;
+  const { fontFamily, fontWeight, fontSize } = pointText;
+
   const { x, y } = view.projectToView(position);
   const { topLeft, bottomLeft } = pointText.bounds;
   const { x: bx, y: by } = view.projectToView(topLeft);
@@ -137,6 +138,32 @@ export const TextTool: FC<{
     </Popover>
   );
 
+  const fontFamilyBtn = (
+    <Select
+      value={fontFamily}
+      size="small"
+      onChange={(v) => {
+        drawRef.current?.mutatePointText((prev) => {
+          prev.fontFamily = v;
+        });
+      }}
+      bordered={false}
+      virtual={false}
+      showArrow={false}
+      getPopupContainer={(e) => e.parentElement.parentElement!}
+      dropdownMatchSelectWidth={90}
+      options={[
+        { value: "sans-serif", name: "Default" },
+        { value: "'Times New Roman', serif", name: "Times" },
+        { value: "Georgia, serif", name: "Georgia" },
+        { value: "'Courier New', monospace", name: "Courier" },
+      ].map(({ value, name }) => ({
+        value,
+        label: <span style={{ fontFamily: value, fontWeight }}>{name}</span>,
+      }))}
+    />
+  );
+
   return (
     <div
       className="text-tool"
@@ -150,7 +177,7 @@ export const TextTool: FC<{
       <div
         className="textarea-wrapper"
         data-slow={renderSlow}
-        style={{ fontSize, fontWeight, lineHeight }}
+        style={{ fontSize, fontWeight, fontFamily, lineHeight }}
       >
         <textarea
           autoFocus={!content}
@@ -170,6 +197,7 @@ export const TextTool: FC<{
           ...(optionAtBottom ? getPosVars(bbx, bby) : getPosVars(bx, by)),
         }}
       >
+        {fontFamilyBtn}
         {fontColorBtn}
         <Button
           onClick={() => {
