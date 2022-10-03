@@ -8,6 +8,7 @@ import {
   BgColorsOutlined,
   ZoomOutOutlined,
   ZoomInOutlined,
+  ItalicOutlined,
 } from "@ant-design/icons";
 import { Button, ButtonProps, Modal, Popover, Select } from "antd";
 import { DrawCtrl } from "lib/draw/DrawCtrl";
@@ -109,7 +110,7 @@ export const TextTool: FC<{
   const { topLeft, bottomLeft } = pointText.bounds;
   const { x: bx, y: by } = view.projectToView(topLeft);
   const { x: bbx, y: bby } = view.projectToView(bottomLeft);
-  const optionAtBottom = by < 60;
+  const optionAtBottom = by < 90;
 
   const scale = pointText.viewMatrix.scaling.x;
   const { width, height } = pointText.internalBounds;
@@ -138,7 +139,13 @@ export const TextTool: FC<{
     </Popover>
   );
 
-  const fontFamilyBtn = (
+  const { isItalic, isBold } = parseFontStyle(fontWeight);
+  const fontStyleCSS = {
+    fontWeight: isBold ? "bold" : "normal",
+    fontStyle: isItalic ? "italic" : "normal",
+  };
+
+  const fontFamilySelect = (
     <Select
       value={fontFamily}
       size="small"
@@ -149,7 +156,6 @@ export const TextTool: FC<{
       }}
       bordered={false}
       virtual={false}
-      showArrow={false}
       getPopupContainer={(e) => e.parentElement.parentElement!}
       dropdownMatchSelectWidth={90}
       options={[
@@ -159,7 +165,9 @@ export const TextTool: FC<{
         { value: "'Courier New', monospace", name: "Courier" },
       ].map(({ value, name }) => ({
         value,
-        label: <span style={{ fontFamily: value, fontWeight }}>{name}</span>,
+        label: (
+          <span style={{ fontFamily: value, ...fontStyleCSS }}>{name}</span>
+        ),
       }))}
     />
   );
@@ -177,7 +185,7 @@ export const TextTool: FC<{
       <div
         className="textarea-wrapper"
         data-slow={renderSlow}
-        style={{ fontSize, fontWeight, fontFamily, lineHeight }}
+        style={{ fontSize, fontFamily, lineHeight, ...fontStyleCSS }}
       >
         <textarea
           autoFocus={!content}
@@ -197,40 +205,72 @@ export const TextTool: FC<{
           ...(optionAtBottom ? getPosVars(bbx, bby) : getPosVars(bx, by)),
         }}
       >
-        {fontFamilyBtn}
-        {fontColorBtn}
-        <Button
-          onClick={() => {
-            drawRef.current?.mutatePointText((prev) => {
-              const bold = prev.fontWeight === "bold";
-              prev.fontWeight = bold ? "normal" : "bold";
-            });
-          }}
-          {...btnProps}
-          type={fontWeight === "bold" ? "link" : "text"}
-          icon={<BoldOutlined />}
-        />
-        <Button
-          {...btnProps}
-          icon={<ZoomOutOutlined />}
-          onClick={() => {
-            drawRef.current?.mutatePointText((prev) => {
-              const { topLeft } = prev.bounds;
-              prev.scale(0.9, topLeft);
-            });
-          }}
-        />
-        <Button
-          {...btnProps}
-          icon={<ZoomInOutlined />}
-          onClick={() => {
-            drawRef.current?.mutatePointText((prev) => {
-              const { topLeft } = prev.bounds;
-              prev.scale(1.1, topLeft);
-            });
-          }}
-        />
+        <div className="row">
+          {fontFamilySelect}
+          {fontColorBtn}
+        </div>
+        <div className="row">
+          <Button
+            onClick={() => {
+              drawRef.current?.mutatePointText((prev) => {
+                prev.fontWeight = toggleBold(prev.fontWeight);
+              });
+            }}
+            {...btnProps}
+            type={isBold ? "link" : "text"}
+            icon={<BoldOutlined />}
+          />
+          <Button
+            onClick={() => {
+              drawRef.current?.mutatePointText((prev) => {
+                prev.fontWeight = toggleItalic(prev.fontWeight);
+              });
+            }}
+            {...btnProps}
+            type={isItalic ? "link" : "text"}
+            icon={<ItalicOutlined />}
+          />
+          <Button
+            {...btnProps}
+            icon={<ZoomOutOutlined />}
+            onClick={() => {
+              drawRef.current?.mutatePointText((prev) => {
+                const { topLeft } = prev.bounds;
+                prev.scale(0.9, topLeft);
+              });
+            }}
+          />
+          <Button
+            {...btnProps}
+            icon={<ZoomInOutlined />}
+            onClick={() => {
+              drawRef.current?.mutatePointText((prev) => {
+                const { topLeft } = prev.bounds;
+                prev.scale(1.1, topLeft);
+              });
+            }}
+          />
+        </div>
       </div>
     </div>
   );
+};
+
+const parseFontStyle = (fontStyle: string | number) => {
+  fontStyle = fontStyle + "";
+  const isItalic = /italic/g.test(fontStyle);
+  const isBold = /bold/g.test(fontStyle);
+  return { isItalic, isBold };
+};
+
+const toggleItalic = (fontStyle: string | number) => {
+  const { isItalic, isBold } = parseFontStyle(fontStyle);
+  const boldText = isBold ? "bold" : "normal";
+  return (isItalic ? "" : "italic ") + boldText;
+};
+
+const toggleBold = (fontStyle: string | number) => {
+  const { isItalic, isBold } = parseFontStyle(fontStyle);
+  const italicText = isItalic ? "italic " : "";
+  return italicText + (isBold ? "normal" : "bold");
 };
