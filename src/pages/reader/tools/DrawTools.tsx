@@ -135,7 +135,12 @@ export const TextTool: FC<{
       placement="bottom"
       getPopupContainer={(e) => e.parentElement!}
     >
-      <Button {...btnProps} icon={<BgColorsOutlined />} />
+      <Button
+        {...btnProps}
+        icon={
+          <BgColorsOutlined className="text-color-icon" style={{ color }} />
+        }
+      />
     </Popover>
   );
 
@@ -157,7 +162,7 @@ export const TextTool: FC<{
       bordered={false}
       virtual={false}
       getPopupContainer={(e) => e.parentElement.parentElement!}
-      dropdownMatchSelectWidth={90}
+      dropdownMatchSelectWidth={100}
       options={[
         { value: "sans-serif", name: "Default" },
         { value: "'Times New Roman', serif", name: "Times" },
