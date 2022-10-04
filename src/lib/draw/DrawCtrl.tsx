@@ -32,7 +32,7 @@ export const defaultDrawCtrl: Readonly<DrawCtrl> = {
   eraserWidth: 10,
   color: "#000000",
   highlight: false,
-  lasso: true,
+  lasso: false,
   pixelEraser: false,
   widthList: defaultWidthList,
 };
