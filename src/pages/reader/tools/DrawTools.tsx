@@ -170,9 +170,7 @@ export const TextTool: FC<{
         { value: "'Courier New', monospace", name: "Courier" },
       ].map(({ value, name }) => ({
         value,
-        label: (
-          <span style={{ fontFamily: value, ...fontStyleCSS }}>{name}</span>
-        ),
+        label: <span style={{ fontFamily: value }}>{name}</span>,
       }))}
     />
   );
