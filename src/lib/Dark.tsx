@@ -18,7 +18,6 @@ export const loadDarkMode = async () => {
         "label .circle",
         ".color-circle",
         ".pen-icon path",
-        ".textarea-wrapper textarea",
         ".text-color-icon",
       ],
       invert: [
@@ -26,7 +25,6 @@ export const loadDarkMode = async () => {
         "label .circle",
         ".width-circle.lineWidth",
         ".pen-icon",
-        ".textarea-wrapper",
         ".text-color-icon",
       ].map((selector) => `body:not([data-force-light=true]) ${selector}`),
       css: "",
