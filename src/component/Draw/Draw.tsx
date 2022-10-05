@@ -503,15 +503,15 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         setSelected(true);
         setChosenIDs(selection);
         const bc = path.bounds.bottomCenter;
-        bc && toggleSelectTool(true, view.projectToView(bc));
+        toggleSelectTool(true, view.projectToView(bc));
       },
       selected(e: paper.MouseEvent) {
         handleSelectedCursor(e);
-        if (paperMode !== "selected") return;
+        if (paperMode !== "selected" || !path) return;
         const { view } = scope.current;
-        const clickPoint = view.projectToView(e.point);
+        const bc = path.bounds.bottomCenter;
         const rotating = hitRef.current?.segment.selected;
-        if (!rotating) toggleSelectTool(true, clickPoint);
+        if (!rotating) toggleSelectTool(true, view.projectToView(bc));
         if (pointBeforeDrag.current.equals(e.point)) return;
         updateMutation();
       },
