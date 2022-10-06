@@ -560,7 +560,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         const { x, y } = diagonal;
         return setCursor(x * y < 0 ? "nesw-resize" : "nwse-resize");
       }
-      if (path.contains(e.point)) return setCursor("pointer");
+      if (path.contains(e.point)) return setCursor("move");
       setCursor("crosshair");
     };
     const handleTextCursor = (e: paper.MouseEvent) => {
