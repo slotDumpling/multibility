@@ -16,7 +16,7 @@ export const getCircleCursor = (drawCtrl: DrawCtrl, ratio: number) => {
   const img1x = getSvg(size);
   const img2x = getSvg(double);
 
-  return `-webkit-image-set(url('${img1x}')1x, url('${img2x}')2x) ${half} ${half}, auto`;
+  return `-webkit-image-set(url('${img1x}')1x, url('${img2x}')2x) ${half} ${half}, crosshair`;
 };
 
 const rotateCursorFactory = (src: string, size: number) => {
