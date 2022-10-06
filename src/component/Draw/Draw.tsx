@@ -287,8 +287,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       rasterizeCanvas();
       setPath(startRect(e.point));
     };
-    const pointBeforeDrag = useRef(P_ZERO);
 
+    const selectionDragged = useRef(false);
     const handleDown = {
       draw(e: paper.MouseEvent) {
         setDefer();
@@ -297,8 +297,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       erase: downPath,
       select: lasso ? downPath : downRect,
       selected(e: paper.MouseEvent) {
-        toggleSelectTool(false);
-        pointBeforeDrag.current = e.point;
+        selectionDragged.current = false;
         if (!path) return;
         if (!lasso) {
           // check if the point hit the segment point.
@@ -348,6 +347,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       selected(e: paper.MouseEvent) {
         const hitRes = hitRef.current;
         if (!path) return;
+        toggleSelectTool(false);
+        selectionDragged.current = true;
         if (hitRes?.segment) {
           const segment = hitRes.segment;
           const rotating = segment.selected;
@@ -507,12 +508,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       },
       selected(e: paper.MouseEvent) {
         handleSelectedCursor(e);
-        if (paperMode !== "selected" || !path) return;
+        if (!path || !selectionDragged.current) return;
         const { view } = scope.current;
         const bc = path.bounds.bottomCenter;
-        const rotating = hitRef.current?.segment.selected;
-        if (!rotating) toggleSelectTool(true, view.projectToView(bc));
-        if (pointBeforeDrag.current.equals(e.point)) return;
+        toggleSelectTool(true, view.projectToView(bc));
         updateMutation();
       },
       text(e: paper.MouseEvent) {
