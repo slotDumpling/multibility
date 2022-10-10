@@ -1,4 +1,4 @@
-import { CSSProperties, FC, RefObject, useState } from "react";
+import { CSSProperties, FC, RefObject, useMemo, useState } from "react";
 import {
   CopyOutlined,
   BoldOutlined,
@@ -175,6 +175,8 @@ export const TextTool: FC<{
     />
   );
 
+  const baseline = useMemo(() => 0.75 - getBaseline(fontFamily), [fontFamily]);
+
   return (
     <div
       className="text-tool"
@@ -182,6 +184,7 @@ export const TextTool: FC<{
         ...getObjVars({ scale, color }),
         ...getObjVars({ rotation }, "deg"),
         ...getObjVars({ width, height }, "px"),
+        ...getObjVars({ baseline }, "em"),
         ...getPosVars(x, y),
       }}
     >
@@ -276,4 +279,26 @@ const toggleBold = (fontStyle: string | number) => {
   const { isItalic, isBold } = parseFontStyle(fontStyle);
   const italicText = isItalic ? "italic " : "";
   return italicText + (isBold ? "normal" : "bold");
+};
+
+const getBaseline = (fontFamily: string) => {
+  const div = document.createElement("div");
+  div.innerText = "p";
+  div.style.fontSize = "100px";
+  div.style.lineHeight = "1";
+  div.style.fontFamily = fontFamily;
+  div.style.visibility = "hidden";
+  document.body.appendChild(div);
+
+  const span = document.createElement("span");
+  span.style.display = "inline-block";
+  div.appendChild(span);
+
+  const r0 = div.getBoundingClientRect();
+  const r1 = span.getBoundingClientRect();
+  const { top, height } = r0;
+  const { y } = r1;
+  const baseline = (y - top) / height;
+  document.body.removeChild(div);
+  return baseline;
 };
