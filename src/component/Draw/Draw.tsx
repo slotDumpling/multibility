@@ -983,6 +983,7 @@ const startText = (point: paper.Point) => {
     point: point.add(new Point(0, 50)),
     content: "",
     fontSize: 50,
+    fontFamily: "Arial, sans-serif",
   });
 };
 

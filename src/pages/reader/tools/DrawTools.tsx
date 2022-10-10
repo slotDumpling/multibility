@@ -164,7 +164,7 @@ export const TextTool: FC<{
       getPopupContainer={(e) => e.parentElement.parentElement!}
       dropdownMatchSelectWidth={100}
       options={[
-        { value: "sans-serif", name: "Default" },
+        { value: "Arial, sans-serif", name: "Arial" },
         { value: "'Times New Roman', serif", name: "Times" },
         { value: "Georgia, serif", name: "Georgia" },
         { value: "'Courier New', monospace", name: "Courier" },
