@@ -170,8 +170,13 @@ export const TextTool: FC<{
         { value: "'Courier New', monospace", name: "Courier" },
       ].map(({ value, name }) => ({
         value,
-        label: <span style={{ fontFamily: value }}>{name}</span>,
+        label: (
+          <span style={{ fontFamily: value, fontWeight: "normal" }}>
+            {name}
+          </span>
+        ),
       }))}
+      popupClassName="font-drop"
     />
   );
 
