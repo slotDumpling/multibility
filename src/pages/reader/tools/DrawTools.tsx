@@ -293,7 +293,7 @@ const toggleBold = (fontStyle: string | number) => {
 const getBaselineRatio = (fontFamily: string, lineHeight: number) => {
   const div = document.createElement("div");
   div.innerText = "p";
-  Object.assign(div.style, { fontFamily, lineHeight });
+  Object.assign(div.style, { fontSize: "100px", fontFamily, lineHeight });
   document.body.appendChild(div);
 
   const span = document.createElement("span");
