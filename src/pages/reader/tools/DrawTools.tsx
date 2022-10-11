@@ -288,11 +288,7 @@ const toggleBold = (fontStyle: string | number) => {
 const getBaselineRatio = (fontFamily: string, lineHeight: number) => {
   const div = document.createElement("div");
   div.innerText = "p";
-  div.style.fontSize = "100px";
-  div.style.lineHeight = "1";
-  div.style.fontFamily = fontFamily;
-  div.style.lineHeight = lineHeight + "";
-  div.style.visibility = "hidden";
+  Object.assign(div.style, { fontFamily, lineHeight });
   document.body.appendChild(div);
 
   const span = document.createElement("span");
@@ -301,9 +297,7 @@ const getBaselineRatio = (fontFamily: string, lineHeight: number) => {
 
   const r0 = div.getBoundingClientRect();
   const r1 = span.getBoundingClientRect();
-  const { top, height } = r0;
-  const { y } = r1;
-  const ratio = (y - top) / height;
+  const ratio = (r1.y - r0.y) / r0.height;
   document.body.removeChild(div);
   return Math.max(-1, Math.min(ratio, 1));
 };
