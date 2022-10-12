@@ -163,6 +163,7 @@ export const TextTool: FC<{
       virtual={false}
       getPopupContainer={(e) => e.parentElement.parentElement!}
       dropdownMatchSelectWidth={100}
+      showArrow={false}
       options={[
         { value: "Arial, sans-serif", name: "Arial" },
         { value: "'Times New Roman', serif", name: "Times" },
@@ -176,6 +177,7 @@ export const TextTool: FC<{
           </span>
         ),
       }))}
+      className="font-select"
       popupClassName="font-drop"
     />
   );
