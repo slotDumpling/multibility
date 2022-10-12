@@ -152,18 +152,19 @@ export const TextTool: FC<{
 
   const fontFamilySelect = (
     <Select
+      className="font-select"
+      popupClassName="font-drop"
       value={fontFamily}
-      size="small"
       onChange={(v) => {
         drawRef.current?.mutatePointText((prev) => {
           prev.fontFamily = v;
         });
       }}
+      size="small"
       bordered={false}
       virtual={false}
       getPopupContainer={(e) => e.parentElement.parentElement!}
       dropdownMatchSelectWidth={100}
-      showArrow={false}
       options={[
         { value: "Arial, sans-serif", name: "Arial" },
         { value: "'Times New Roman', serif", name: "Times" },
@@ -177,8 +178,6 @@ export const TextTool: FC<{
           </span>
         ),
       }))}
-      className="font-select"
-      popupClassName="font-drop"
     />
   );
 

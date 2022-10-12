@@ -11,7 +11,6 @@ import {
   PlusOutlined,
   CopyOutlined,
   ReadOutlined,
-  ShrinkOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
 import {
@@ -20,16 +19,7 @@ import {
   DropResult,
   DragDropContext,
 } from "react-beautiful-dnd";
-import {
-  Avatar,
-  Button,
-  Dropdown,
-  Menu,
-  Pagination,
-  Popover,
-  Select,
-  Tabs,
-} from "antd";
+import { Avatar, Button, Menu, Pagination, Popover, Select, Tabs } from "antd";
 import {
   Setter,
   useActiveKey,
