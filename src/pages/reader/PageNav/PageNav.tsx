@@ -27,6 +27,7 @@ import {
   Menu,
   Pagination,
   Popover,
+  Select,
   Tabs,
 } from "antd";
 import {
@@ -48,7 +49,6 @@ import { NotePage } from "lib/note/note";
 import { TeamState } from "lib/draw/TeamState";
 import { AddPageButton } from "../tools/AddButton";
 import { CSSTransition } from "react-transition-group";
-import { range } from "lodash";
 
 type PreviewProps = ReaderMethods & ReaderStates;
 export const PageNav: FC<PreviewProps> = (props) => {
@@ -431,17 +431,6 @@ const PreviewFooter: FC<PreviewProps> = ({
     />
   );
 
-  const sizeMenu = (
-    <Menu
-      items={range(40, 120, 20).map((s) => ({
-        key: s,
-        label: s + "%",
-        className: "size-li",
-        onClick: () => setSize(s),
-      }))}
-    />
-  );
-
   return (
     <footer>
       <Popover
@@ -454,21 +443,22 @@ const PreviewFooter: FC<PreviewProps> = ({
           {pageIndex} / {pageOrder.length}
         </Button>
       </Popover>
-      <Dropdown
-        overlay={sizeMenu}
+      <Select
+        className="size-select"
+        popupClassName="size-drop"
+        size="small"
+        bordered={false}
+        showArrow={false}
+        dropdownMatchSelectWidth={80}
+        options={[40, 60, 80, 100].map((value) => ({
+          value,
+          label: value + "%",
+        }))}
+        value={size}
+        onChange={setSize}
         placement="topRight"
-        trigger={["click"]}
         getPopupContainer={(e) => e.parentElement!}
-      >
-        <Button
-          type="text"
-          size="small"
-          icon={<ShrinkOutlined />}
-          className="size-btn"
-        >
-          {size}%
-        </Button>
-      </Dropdown>
+      />
     </footer>
   );
 };
