@@ -200,11 +200,12 @@ export const TextTool: FC<{
       <div
         className="textarea-wrapper"
         data-slow={renderSlow}
+        data-empty={!content}
         style={{ fontSize, fontFamily, lineHeight, ...fontStyleCSS }}
       >
         <textarea
           autoFocus={!content}
-          placeholder="Text..."
+          placeholder="Text"
           value={content}
           onChange={(e) => {
             drawRef.current?.mutatePointText((prev) => {
