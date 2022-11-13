@@ -72,7 +72,7 @@ export const WidthSelect: FC<{
       label: (
         <Popover
           visible={popShow.get(index)}
-          onVisibleChange={(v) => setPopShow((prev) => prev.set(index, v))}
+          onOpenChange={(v) => setPopShow((prev) => prev.set(index, v))}
           trigger={chosen === index ? ["click"] : []}
           placement="bottom"
           destroyTooltipOnHide

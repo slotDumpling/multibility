@@ -100,7 +100,7 @@ const JoinTeamButton = () => {
       trigger="click"
       title="Join a team note"
       destroyTooltipOnHide
-      onVisibleChange={() => setWrong(false)}
+      onOpenChange={() => setWrong(false)}
       content={
         <PasscodeInput
           plain
