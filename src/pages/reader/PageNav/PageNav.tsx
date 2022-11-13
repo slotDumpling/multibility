@@ -378,7 +378,6 @@ const PreviewOption: FC<{ uid: string } & ReaderMethods> = ({
 
 const PreviewTabs: FC = React.memo(() => {
   const [activeKey, setActiveKey] = useActiveKey();
-  const { TabPane } = Tabs;
   return (
     <Tabs
       className="tabs"
@@ -387,11 +386,12 @@ const PreviewTabs: FC = React.memo(() => {
       tabBarGutter={0}
       size="small"
       centered
-    >
-      <TabPane tab={<IconFont type="icon-uf_paper" />} key="ALL" />
-      <TabPane tab={<IconFont type="icon-bookmark2" />} key="MARKED" />
-      <TabPane tab={<IconFont type="icon-write" />} key="WRITTEN" />
-    </Tabs>
+      items={[
+        { key: "ALL", label: <IconFont type="icon-uf_paper" /> },
+        { key: "MARKED", label: <IconFont type="icon-bookmark2" /> },
+        { key: "WRITTEN", label: <IconFont type="icon-write" /> },
+      ]}
+    ></Tabs>
   );
 });
 PreviewTabs.displayName = "PreviewTabs";
