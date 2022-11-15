@@ -10,7 +10,7 @@ import {
   MoreOutlined,
   PlusOutlined,
   CopyOutlined,
-  ReadOutlined,
+  CaretUpOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
 import {
@@ -19,7 +19,16 @@ import {
   DropResult,
   DragDropContext,
 } from "react-beautiful-dnd";
-import { Avatar, Button, Menu, Pagination, Popover, Select, Tabs } from "antd";
+import {
+  Avatar,
+  Button,
+  Menu,
+  Pagination,
+  Popover,
+  Select,
+  Switch,
+  Tabs,
+} from "antd";
 import {
   Setter,
   useActiveKey,
@@ -39,6 +48,8 @@ import { NotePage } from "lib/note/note";
 import { TeamState } from "lib/draw/TeamState";
 import { AddPageButton } from "../tools/AddButton";
 import { CSSTransition } from "react-transition-group";
+import { useForceLight } from "lib/Dark";
+import { useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
 
 type PreviewProps = ReaderMethods & ReaderStates;
 export const PageNav: FC<PreviewProps> = (props) => {
@@ -429,10 +440,11 @@ const PreviewFooter: FC<PreviewProps> = ({
         getPopupContainer={(e) => e.parentElement!}
         destroyTooltipOnHide
       >
-        <Button type="text" size="small" icon={<ReadOutlined />}>
+        <Button type="text" size="small">
           {pageIndex} / {pageOrder.length}
         </Button>
       </Popover>
+      <FooterOptions />
       <Select
         className="size-select"
         popupClassName="size-drop"
@@ -450,5 +462,48 @@ const PreviewFooter: FC<PreviewProps> = ({
         getPopupContainer={(e) => e.parentElement!}
       />
     </footer>
+  );
+};
+
+const FooterOptions = () => {
+  const { finger } = useDrawCtrl();
+  const updateDrawCtrl = useUpdateDrawCtrl();
+  const [forceLight, setForceLight] = useForceLight();
+
+  const options = (
+    <>
+      <div className="footer-option">
+        <span>Pencil only</span>
+        <Switch
+          size="small"
+          checked={!finger}
+          onChange={(v) => updateDrawCtrl({ finger: !v })}
+        ></Switch>
+      </div>
+      <div className="footer-option">
+        <span>Light mode</span>
+        <Switch
+          size="small"
+          checked={forceLight}
+          onChange={setForceLight}
+        ></Switch>
+      </div>
+    </>
+  );
+
+  return (
+    <Popover
+      getPopupContainer={(e) => e.parentElement!}
+      trigger="click"
+      content={options}
+    >
+      <Button
+        className="option-btn"
+        size="small"
+        type="text"
+        shape="circle"
+        icon={<CaretUpOutlined />}
+      />
+    </Popover>
   );
 };

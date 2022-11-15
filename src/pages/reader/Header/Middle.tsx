@@ -1,8 +1,6 @@
 import { FC } from "react";
-import { Button, ButtonProps, message, Popover, Segmented } from "antd";
+import { Button, ButtonProps, Popover, Segmented } from "antd";
 import {
-  BulbFilled,
-  BulbOutlined,
   UndoOutlined,
   RedoOutlined,
   GatewayOutlined,
@@ -11,7 +9,6 @@ import {
 } from "@ant-design/icons";
 import IconFont from "component/IconFont";
 import { PenPanel, WidthSelect } from "../tools/PenPanel";
-import { useForceLight } from "lib/Dark";
 import { useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
 
 const btnProps: ButtonProps = { type: "text", shape: "circle" };
@@ -22,12 +19,11 @@ export const HeaderMiddle: FC<{
   undoable: boolean;
   redoable: boolean;
 }> = ({ handleUndo, handleRedo, undoable, redoable }) => {
-  const { mode, finger } = useDrawCtrl();
+  const { mode } = useDrawCtrl();
   const updateDrawCtrl = useUpdateDrawCtrl();
-  const [forceLight, setForceLight] = useForceLight();
 
   return (
-    <div className="middle" data-force-light={forceLight}>
+    <div className="middle">
       <Button
         {...btnProps}
         icon={<UndoOutlined />}
@@ -35,28 +31,11 @@ export const HeaderMiddle: FC<{
         disabled={!undoable}
       />
       <Button
+        className="redo-btn"
         {...btnProps}
         icon={<RedoOutlined />}
         onClick={handleRedo}
         disabled={!redoable}
-      />
-      <Button
-        shape="circle"
-        type={finger ? "link" : "text"}
-        onClick={() => {
-          updateDrawCtrl({ finger: !finger });
-          message.open({
-            content: finger ? "Pencil only" : "Draw with finger",
-            key: "FINGER",
-          });
-        }}
-        icon={<IconFont type="icon-finger" />}
-      />
-      <Button
-        className="force-light-btn"
-        {...btnProps}
-        icon={forceLight ? <BulbFilled /> : <BulbOutlined />}
-        onClick={() => setForceLight((prev) => !prev)}
       />
       <PenButton />
       <EraserButton />

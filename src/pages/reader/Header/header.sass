@@ -19,9 +19,6 @@
   > .left, > .middle, > .right
     display: grid
     gap: 10px
-  @include for-light
-    .force-light-btn
-      visibility: hidden
   @include for-phone
     height: $header-high-height
     > .middle
@@ -29,13 +26,15 @@
       border-left: $default-border
       border-right: $default-border
       padding: 0 20px
+      .redo-btn
+        grid-column: span 3
   @include for-desktop
     height: $header-low-height
     > .left, > .right
       grid-template-columns: repeat(2, 1fr)
     > .middle
-      grid-template-columns: repeat(9, 1fr)
-      .force-light-btn
+      grid-template-columns: repeat(7, 1fr)
+      .redo-btn
         grid-column: span 2
 
 .team-title
