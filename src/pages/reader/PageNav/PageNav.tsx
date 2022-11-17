@@ -50,6 +50,7 @@ import { AddPageButton } from "../tools/AddButton";
 import { CSSTransition } from "react-transition-group";
 import { useForceLight } from "lib/Dark";
 import { useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
+import { useMediaQuery } from "react-responsive";
 
 type PreviewProps = ReaderMethods & ReaderStates;
 export const PageNav: FC<PreviewProps> = (props) => {
@@ -469,6 +470,7 @@ const FooterOptions = () => {
   const { finger } = useDrawCtrl();
   const updateDrawCtrl = useUpdateDrawCtrl();
   const [forceLight, setForceLight] = useForceLight();
+  const isLight = useMediaQuery({ query: "(prefers-color-scheme: light)" });
 
   const options = (
     <>
@@ -484,7 +486,8 @@ const FooterOptions = () => {
         <span>Light mode</span>
         <Switch
           size="small"
-          checked={forceLight}
+          checked={forceLight || isLight}
+          disabled={isLight}
           onChange={setForceLight}
         ></Switch>
       </div>
@@ -502,7 +505,7 @@ const FooterOptions = () => {
         size="small"
         type="text"
         shape="circle"
-        icon={<CaretUpOutlined />}
+        icon={<CaretUpOutlined style={{ opacity: 0.5 }} />}
       />
     </Popover>
   );
