@@ -480,7 +480,7 @@ const FooterOptions = () => {
           size="small"
           checked={!finger}
           onChange={(v) => updateDrawCtrl({ finger: !v })}
-        ></Switch>
+        />
       </div>
       <div className="footer-option">
         <span>Light mode</span>
@@ -489,7 +489,7 @@ const FooterOptions = () => {
           checked={forceLight || isLight}
           disabled={isLight}
           onChange={setForceLight}
-        ></Switch>
+        />
       </div>
     </>
   );
