@@ -499,6 +499,7 @@ const FooterOptions = () => {
       getPopupContainer={(e) => e.parentElement!}
       trigger="click"
       content={options}
+      placement="topRight"
     >
       <Button
         className="option-btn"
