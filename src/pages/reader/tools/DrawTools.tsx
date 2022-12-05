@@ -6,8 +6,6 @@ import {
   PictureTwoTone,
   PictureOutlined,
   BgColorsOutlined,
-  ZoomOutOutlined,
-  ZoomInOutlined,
   ItalicOutlined,
 } from "@ant-design/icons";
 import { Button, ButtonProps, Modal, Popover, Select } from "antd";
@@ -18,6 +16,7 @@ import { DrawRefType } from "component/Draw";
 import { saveAs } from "file-saver";
 import { Color } from "paper/dist/paper-core";
 import "./draw-tools.sass";
+import IconFont from "component/IconFont";
 
 const btnProps: ButtonProps = {
   type: "text",
@@ -137,9 +136,7 @@ export const TextTool: FC<{
     >
       <Button
         {...btnProps}
-        icon={
-          <BgColorsOutlined className="text-color-icon" style={{ color }} />
-        }
+        icon={<IconFont type="icon-circle" style={{ color }} />}
       />
     </Popover>
   );
@@ -249,7 +246,7 @@ export const TextTool: FC<{
           />
           <Button
             {...btnProps}
-            icon={<ZoomOutOutlined />}
+            icon={<IconFont type="icon-font_size_down" />}
             onClick={() => {
               drawRef.current?.mutatePointText((prev) => {
                 const { topLeft } = prev.bounds;
@@ -259,7 +256,7 @@ export const TextTool: FC<{
           />
           <Button
             {...btnProps}
-            icon={<ZoomInOutlined />}
+            icon={<IconFont type="icon-font_size_up" />}
             onClick={() => {
               drawRef.current?.mutatePointText((prev) => {
                 const { topLeft } = prev.bounds;

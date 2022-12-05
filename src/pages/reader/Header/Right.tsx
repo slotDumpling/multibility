@@ -24,6 +24,7 @@ import { putNote } from "lib/network/http";
 import copy from "clipboard-copy";
 import { useAsideOpen } from "lib/hooks";
 import { sortBy } from "lodash";
+import IconFont from "component/IconFont";
 
 export const HeaderRight: FC<{
   instantSave: () => Promise<void> | undefined;
@@ -42,7 +43,7 @@ const PageNavButton = () => {
   return (
     <Button
       type={asideOpen ? "link" : "text"}
-      icon={<MenuOutlined />}
+      icon={<IconFont type="icon-cards" />}
       onClick={() => setAsideOpen((prev) => !prev)}
     />
   );
