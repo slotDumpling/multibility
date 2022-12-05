@@ -71,7 +71,7 @@ export const WidthSelect: FC<{
       value: index,
       label: (
         <Popover
-          visible={popShow.get(index)}
+          open={popShow.get(index)}
           onOpenChange={(v) => setPopShow((prev) => prev.set(index, v))}
           trigger={chosen === index ? ["click"] : []}
           placement="bottom"
