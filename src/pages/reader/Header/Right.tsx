@@ -7,7 +7,6 @@ import { TeamCtx } from "../Team";
 import { getUserID, saveUserName, UserInfo } from "lib/user";
 import {
   EyeOutlined,
-  MenuOutlined,
   FormOutlined,
   TeamOutlined,
   LinkOutlined,
