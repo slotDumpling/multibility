@@ -15,8 +15,8 @@ import { allColors } from "lib/color";
 import { DrawRefType } from "component/Draw";
 import { saveAs } from "file-saver";
 import { Color } from "paper/dist/paper-core";
-import "./draw-tools.sass";
 import IconFont from "component/IconFont";
+import "./draw-tools.sass";
 
 const btnProps: ButtonProps = {
   type: "text",
