@@ -136,7 +136,13 @@ export const TextTool: FC<{
     >
       <Button
         {...btnProps}
-        icon={<IconFont type="icon-circle" style={{ color }} />}
+        icon={
+          <IconFont
+            type="icon-circle"
+            className="text-color-icon"
+            style={{ color }}
+          />
+        }
       />
     </Popover>
   );
