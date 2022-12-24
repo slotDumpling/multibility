@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { Button, ButtonProps, Popover, Segmented } from "antd";
+import { Button, ButtonProps, Popover, Segmented, Switch } from "antd";
 import {
   UndoOutlined,
   RedoOutlined,
@@ -79,7 +79,7 @@ const PenButton = () => {
 
 const EraserButton = () => {
   const drawCtrl = useDrawCtrl();
-  const { mode, pixelEraser } = drawCtrl;
+  const { mode, pixelEraser, globalEraser } = drawCtrl;
   const updateDrawCtrl = useUpdateDrawCtrl();
 
   return mode === "erase" ? (
@@ -102,6 +102,16 @@ const EraserButton = () => {
             updateDrawCtrl={updateDrawCtrl}
             field="eraserWidth"
           />
+          {pixelEraser || (
+            <div className="global-switch">
+              <span>Global</span>
+              <Switch
+                size="small"
+                checked={globalEraser}
+                onChange={(v) => updateDrawCtrl({ globalEraser: v })}
+              />
+            </div>
+          )}
         </div>
       }
       trigger="click"
