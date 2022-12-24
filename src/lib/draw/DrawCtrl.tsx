@@ -21,6 +21,7 @@ export interface DrawCtrl {
   highlight: boolean;
   lasso: boolean;
   pixelEraser: boolean;
+  globalEraser: boolean;
   widthList: number[];
 }
 
@@ -34,6 +35,7 @@ export const defaultDrawCtrl: Readonly<DrawCtrl> = {
   highlight: false,
   lasso: false,
   pixelEraser: false,
+  globalEraser: false,
   widthList: defaultWidthList,
 };
 
