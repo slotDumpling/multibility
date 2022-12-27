@@ -63,11 +63,12 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
   ) => {
     const { width, height } = drawState;
     const projSize = useMemo(() => new Size(width, height), [width, height]);
-    const { mode, finger, lasso, eraserWidth } = drawCtrl;
+    const { mode, finger, lasso, eraserWidth, globalEraser } = drawCtrl;
 
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const scope = useRef(new paper.PaperScope());
     const [group, setGroup] = useState<paper.Item[]>([]);
+    const [teamGroup, setTeamGroup] = useState<paper.Item[]>([]);
     const [path, setPath] = usePaperItem<paper.Path>();
     const [rotateHandle, setRotateHandle] = usePaperItem<paper.Path>();
 
@@ -147,6 +148,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       if (!l1) return;
       const render = () => {
         const tempGroup: paper.Item[] = [];
+        const tempTeamGroup: paper.Item[] = [];
         const timeBeforeRender = performance.now();
         scope.current.activate();
         // clean-up layer_1 except the clip mask.
@@ -154,9 +156,11 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         mergedStrokes.forEach((stroke) => {
           const self = drawState.hasStroke(stroke.uid);
           const item = paintStroke(stroke, l1, !self);
-          if (self) tempGroup.push(item);
+          if (self && item) tempGroup.push(item);
+          if (item) tempTeamGroup.push(item);
         });
         setGroup(tempGroup);
+        setTeamGroup(tempTeamGroup);
 
         unrasterizeCanvas();
         deferRender.current = false;
@@ -399,8 +403,9 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const itemGrid = useMemo(() => {
       if (!/^(erase|select)$/.test(mode)) return [];
-      return gernerateGrid(group, width, height);
-    }, [group, width, height, mode]);
+      const items = globalEraser && mode === "erase" ? teamGroup : group;
+      return gernerateGrid(items, width, height);
+    }, [group, width, height, mode, teamGroup, globalEraser]);
 
     const handleToolDrag = (e: paper.ToolEvent) => {
       const layer = scope.current.project.layers[1];
@@ -412,36 +417,40 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
       getGridItems(itemGrid, bounds).forEach((item) => {
         if (erased.current.has(item.name)) return;
-        item.hitTestAll(e.point, hitOption)?.forEach(({ item }) => {
-          if (!(item instanceof paper.Path)) return;
-          let topItem: paper.PathItem = item;
-          while (topItem.parent !== layer) {
-            if (!(topItem.parent instanceof paper.PathItem)) break;
-            topItem = topItem.parent;
-          }
-          const { name } = topItem;
-
-          if (drawCtrl.pixelEraser) {
-            const radius = (ew + item.strokeWidth) / 2;
-            const circle = new Path.Circle({
-              center: e.point,
-              radius,
-              insert: false,
-            });
-
-            const sub = item.subtract(circle, { trace: false });
-            item.replaceWith(sub);
-            if (topItem === item) {
-              setGridItem(itemGrid, sub, item);
-              topItem = sub;
+        if (!item.parent) return;
+        const guides = globalEraser ? item.guide : undefined;
+        item
+          .hitTestAll(e.point, { ...hitOption, guides })
+          ?.forEach(({ item }) => {
+            if (!(item instanceof paper.Path)) return;
+            let topItem: paper.PathItem = item;
+            while (topItem.parent !== layer) {
+              if (!(topItem.parent instanceof paper.PathItem)) break;
+              topItem = topItem.parent;
             }
-            replaced.current.set(name, topItem);
-          } else {
-            topItem.opacity = 0.5;
-            topItem.guide = true;
-            erased.current.add(name);
-          }
-        });
+            const { name } = topItem;
+
+            if (drawCtrl.pixelEraser) {
+              const radius = (ew + item.strokeWidth) / 2;
+              const circle = new Path.Circle({
+                center: e.point,
+                radius,
+                insert: false,
+              });
+
+              const sub = item.subtract(circle, { trace: false });
+              item.replaceWith(sub);
+              if (topItem === item) {
+                setGridItem(itemGrid, sub, item);
+                topItem = sub;
+              }
+              replaced.current.set(name, topItem);
+            } else {
+              topItem.opacity = 0.5;
+              topItem.guide = true;
+              erased.current.add(name);
+            }
+          });
       });
     };
 
@@ -807,6 +816,13 @@ const paintStroke = (() => {
 
   return (stroke: Stroke, layer: paper.Layer, readonly = false) => {
     const { pathData, uid } = stroke;
+
+    if (/^HIDE_/.test(pathData)) {
+      const name = pathData.slice(5);
+      layer.getItem({ name })?.remove();
+      return;
+    }
+
     const cache = cacheMap.get(layer) ?? new Map();
     cacheMap.set(layer, cache);
     const cached = cache.get(uid);

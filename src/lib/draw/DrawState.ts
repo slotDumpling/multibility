@@ -170,8 +170,20 @@ export class DrawState {
   static eraseStrokes(drawState: DrawState, erased: string[]) {
     if (erased.length === 0) return drawState;
     const prevRecord = drawState.getImmutable();
+    let strokes = drawState.getStrokeMap();
+    strokes = strokes.deleteAll(erased);
+    const hidden = erased.filter((uid) => !strokes.has(uid));
+    hidden.forEach((hideID) => {
+      const uid = v4();
+      strokes = strokes.set(uid, {
+        uid,
+        timestamp: Date.now(),
+        pathData: "HIDE_" + hideID,
+      });
+    });
+
     const currRecord = prevRecord
-      .update("strokes", (m) => m.deleteAll(erased))
+      .set("strokes", strokes)
       .update("historyStack", (s) => s.push(prevRecord))
       .delete("undoStack");
 
