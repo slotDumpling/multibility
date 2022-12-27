@@ -155,7 +155,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         l1.removeChildren(1);
         mergedStrokes.forEach((stroke) => {
           const self = drawState.hasStroke(stroke.uid);
-          const item = paintStroke(stroke, l1, !self);
+          const item = paintStroke(stroke, l1);
           if (self && item) tempGroup.push(item);
           if (item) tempTeamGroup.push(item);
         });
@@ -418,39 +418,36 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       getGridItems(itemGrid, bounds).forEach((item) => {
         if (erased.current.has(item.name)) return;
         if (!item.parent) return;
-        const guides = globalEraser ? item.guide : undefined;
-        item
-          .hitTestAll(e.point, { ...hitOption, guides })
-          ?.forEach(({ item }) => {
-            if (!(item instanceof paper.Path)) return;
-            let topItem: paper.PathItem = item;
-            while (topItem.parent !== layer) {
-              if (!(topItem.parent instanceof paper.PathItem)) break;
-              topItem = topItem.parent;
-            }
-            const { name } = topItem;
+        item.hitTestAll(e.point, hitOption)?.forEach(({ item }) => {
+          if (!(item instanceof paper.Path)) return;
+          let topItem: paper.PathItem = item;
+          while (topItem.parent !== layer) {
+            if (!(topItem.parent instanceof paper.PathItem)) break;
+            topItem = topItem.parent;
+          }
+          const { name } = topItem;
 
-            if (drawCtrl.pixelEraser) {
-              const radius = (ew + item.strokeWidth) / 2;
-              const circle = new Path.Circle({
-                center: e.point,
-                radius,
-                insert: false,
-              });
+          if (drawCtrl.pixelEraser) {
+            const radius = (ew + item.strokeWidth) / 2;
+            const circle = new Path.Circle({
+              center: e.point,
+              radius,
+              insert: false,
+            });
 
-              const sub = item.subtract(circle, { trace: false });
-              item.replaceWith(sub);
-              if (topItem === item) {
-                setGridItem(itemGrid, sub, item);
-                topItem = sub;
-              }
-              replaced.current.set(name, topItem);
-            } else {
-              topItem.opacity = 0.5;
-              topItem.guide = true;
-              erased.current.add(name);
+            const sub = item.subtract(circle, { trace: false });
+            item.replaceWith(sub);
+            if (topItem === item) {
+              setGridItem(itemGrid, sub, item);
+              topItem = sub;
             }
-          });
+            replaced.current.set(name, topItem);
+          } else {
+            topItem.opacity = 0.5;
+            topItem.guide = true;
+            erased.current.add(name);
+          }
+        });
       });
     };
 
@@ -814,7 +811,7 @@ const paintStroke = (() => {
     Map<string, { stroke: Stroke; item: paper.Item }>
   >();
 
-  return (stroke: Stroke, layer: paper.Layer, readonly = false) => {
+  return (stroke: Stroke, layer: paper.Layer) => {
     const { pathData, uid } = stroke;
 
     if (/^HIDE_/.test(pathData)) {
@@ -841,7 +838,7 @@ const paintStroke = (() => {
       cache.set(uid, { item, stroke });
     }
     item.opacity = 1;
-    item.guide = readonly;
+    item.guide = false;
     return item;
   };
 })();
