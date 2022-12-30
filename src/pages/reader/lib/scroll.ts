@@ -54,7 +54,7 @@ export function useScrollPage(
 
   const calcScrollY = useEvent(() => {
     const section = refMap.get(currPageID);
-    const header = section?.parentElement?.previousElementSibling;
+    const header = section?.parentElement?.parentElement?.firstElementChild;
     if (!header) return 0;
     const { top } = section.getBoundingClientRect();
     const { height } = header.getBoundingClientRect();
@@ -63,6 +63,7 @@ export function useScrollPage(
   const scrollY = useMemo(calcScrollY, [pageOrder, calcScrollY, ...deps]);
 
   const scrollToCurr = useEvent(() => {
+    console.log({ scrollY });
     const section = refMap.get(currPageID);
     if (!section) return;
     section.scrollIntoView();
