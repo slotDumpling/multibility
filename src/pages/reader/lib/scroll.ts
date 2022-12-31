@@ -63,7 +63,6 @@ export function useScrollPage(
   const scrollY = useMemo(calcScrollY, [pageOrder, calcScrollY, ...deps]);
 
   const scrollToCurr = useEvent(() => {
-    console.log({ scrollY });
     const section = refMap.get(currPageID);
     if (!section) return;
     section.scrollIntoView();
