@@ -230,6 +230,7 @@ const ReaderContent: FC = () => {
   const { finger } = useDrawCtrl();
 
   useEffect(() => {
+    if (!BroadcastChannel) return;
     const bc = new BroadcastChannel("open note");
     bc.postMessage(noteID);
     bc.onmessage = (e) => {
