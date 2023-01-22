@@ -10,7 +10,6 @@ import {
 } from "antd";
 import {
   UserOutlined,
-  SyncOutlined,
   ClearOutlined,
   InboxOutlined,
   FilePdfOutlined,
@@ -18,7 +17,6 @@ import {
   CaretDownOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
-import * as serviceWorkerRegistration from "serviceWorkerRegistration";
 import { CSSTransitionProps } from "react-transition-group/CSSTransition";
 import { ActiveKeyProvider, useActiveKey } from "lib/hooks";
 import { getUserName, saveUserName } from "lib/user";
@@ -140,16 +138,8 @@ const SettingsPage: FC = () => {
     window.location.reload();
   };
 
-  const clearServiceWorker = async () => {
-    await serviceWorkerRegistration.unregister();
-    window.location.reload();
-  };
-
   return (
     <div className="setting-menu">
-      <Button icon={<SyncOutlined />} onClick={clearServiceWorker} block>
-        Update
-      </Button>
       <Popconfirm
         title="Everything will be deleted."
         onConfirm={clearAll}

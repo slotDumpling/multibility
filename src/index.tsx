@@ -1,7 +1,6 @@
 import React, { LazyExoticComponent, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
-import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import { Loading, Page404 } from "./component/Loading";
 import { loadDarkMode } from "./lib/Dark";
 import Test from "./pages/test";
@@ -35,5 +34,3 @@ root.render(
 );
 
 loadDarkMode();
-
-serviceWorkerRegistration.register();
