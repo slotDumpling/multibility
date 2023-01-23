@@ -33,7 +33,7 @@ export const showJoinMsg = (userID: string, userName: string) => {
 
 export const showLeaveMsg = (userID: string, userName: string) => {
   message.warning({
-    content: `${userName} leaved the room`,
+    content: `${userName} left the room`,
     icon: <LogoutOutlined />,
     key: userID,
   });
