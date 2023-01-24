@@ -730,6 +730,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       mutatePointText,
     }));
 
+    const prevScale = useRef(1);
     usePreventGesture();
     usePinch(
       ({ memo, offset: [scale], first, last, origin }) => {
@@ -737,11 +738,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         const { view } = scope.current;
         const originRawP = new paper.Point(origin);
 
-        let lastScale: number;
         let lastOrigin, elPos: paper.Point;
         if (first || !memo) {
           const { x, y } = view.element.getBoundingClientRect();
-          lastScale = 1;
+          // lastScale = prevScale.current;
           elPos = new Point(x, y);
           lastOrigin = originRawP.subtract(elPos);
           toggleSelectTool(false);
@@ -749,7 +749,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           rasterizeLayer(new Path.Rectangle(P_ZERO, projSize));
           unrasterizeCanvas();
         } else {
-          [lastScale, lastOrigin, elPos] = memo;
+          [lastOrigin, elPos] = memo;
         }
 
         const originViewP = originRawP.subtract(elPos);
@@ -759,7 +759,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         const transP = deltaP.divide(view.zoom);
         view.translate(transP);
 
-        let dScale = first ? 1 : scale / lastScale;
+        let dScale = scale / prevScale.current;
+        prevScale.current = scale;
         scope.current.settings.hitTolerance /= dScale;
         view.scale(dScale, originPorjP);
 
@@ -770,7 +771,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           ]).then(unrasterizeLayer);
           view.scale(1 / dScale, originPorjP);
         } else {
-          return [scale, originViewP, elPos];
+          return [originViewP, elPos];
         }
       },
       {
