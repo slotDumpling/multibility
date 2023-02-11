@@ -83,7 +83,8 @@ export default function Team() {
     const key = "SYNC";
     const hide = message.loading({ content: "Syncing...", key });
     loadState((len) => {
-      message.loading({ content: "Syncing: " + bytes(len), key });
+      const content = "Syncing: " + bytes(len);
+      message.loading({ content, key, duration: 0 });
     })?.then(hide);
   };
 
