@@ -1,0 +1,54 @@
+diff --git a/node_modules/paper/dist/paper-core.js b/node_modules/paper/dist/paper-core.js
+old mode 100644
+new mode 100755
+index 369315e..bec955f
+--- a/node_modules/paper/dist/paper-core.js
++++ b/node_modules/paper/dist/paper-core.js
+@@ -10378,7 +10378,7 @@ PathItem.inject(new function() {
+ 	function traceBoolean(path1, path2, operation, options) {
+ 		if (options && (options.trace == false || options.stroke) &&
+ 				/^(subtract|intersect)$/.test(operation))
+-			return splitBoolean(path1, path2, operation);
++			return splitBoolean(path1, path2, operation, options);
+ 		var _path1 = preparePath(path1, true),
+ 			_path2 = path2 && path1 !== path2 && preparePath(path2, true),
+ 			operator = operators[operation];
+@@ -10458,7 +10458,7 @@ PathItem.inject(new function() {
+ 		return createResult(paths, true, path1, path2, options);
+ 	}
+ 
+-	function splitBoolean(path1, path2, operation) {
++	function splitBoolean(path1, path2, operation, options) {
+ 		var _path1 = preparePath(path1),
+ 			_path2 = preparePath(path2),
+ 			crossings = _path1.getIntersections(_path2, filterIntersection),
+@@ -10485,7 +10485,7 @@ PathItem.inject(new function() {
+ 			}
+ 		}
+ 		addPath(_path1);
+-		return createResult(paths, false, path1, path2);
++		return createResult(paths, false, path1, path2, options);
+ 	}
+ 
+ 	function linkIntersections(from, to) {
+@@ -11072,7 +11072,7 @@ PathItem.inject(new function() {
+ 
+ 		divide: function(path, options) {
+ 			return options && (options.trace == false || options.stroke)
+-					? splitBoolean(this, path, 'divide')
++					? splitBoolean(this, path, 'divide', options)
+ 					: createResult([
+ 						this.subtract(path, options),
+ 						this.intersect(path, options)
+diff --git a/node_modules/paper/dist/paper.d.ts b/node_modules/paper/dist/paper.d.ts
+index 40a14ad..0d5415d 100644
+--- a/node_modules/paper/dist/paper.d.ts
++++ b/node_modules/paper/dist/paper.d.ts
+@@ -1374,6 +1374,7 @@ declare namespace paper {
+          * The opacity of the item as a value between `0` and `1`.
+          */
+         opacity: number
++        guide: boolean
+ 
+         /** 
+          * Specifies whether the item is selected. This will also return `true` for
