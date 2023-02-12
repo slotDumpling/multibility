@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { Loading, Page404 } from "./component/Loading";
 import { loadDarkMode } from "./lib/Dark";
+import { clearServiceWorker } from "temp/stopPWA";
 import Test from "./pages/test";
 import "./index.sass";
 
@@ -34,3 +35,4 @@ root.render(
 );
 
 loadDarkMode();
+clearServiceWorker();
