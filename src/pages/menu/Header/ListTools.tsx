@@ -1,4 +1,12 @@
-import { Button, ButtonProps, Dropdown, Input, Menu, Popconfirm } from "antd";
+import {
+  Button,
+  ButtonProps,
+  Dropdown,
+  Input,
+  Menu,
+  Popconfirm,
+  MenuProps as AntdMenuProps,
+} from "antd";
 import { FC } from "react";
 import {
   SwapOutlined,
@@ -40,28 +48,32 @@ export const ListTools: FC<
   setAllTags,
   allTags,
 }) => {
-  const sortMenu = (
-    <Menu
-      onClick={({ key }) => setSortType(key)}
-      selectedKeys={[sortType]}
-      items={[
-        {
-          type: "group",
-          label: "Sort by",
-          className: "sort-drop",
-          children: [
-            { icon: <FileOutlined />, key: "CREATE", label: "Date created" },
-            { icon: <FileTextOutlined />, key: "LAST", label: "Date modified" },
-            { icon: <SortAscendingOutlined />, key: "NAME", label: "Name" },
-          ],
-        },
-      ]}
-    />
-  );
+  const menu: AntdMenuProps = {
+    items: [
+      {
+        type: "group",
+        children: [
+          { icon: <FileOutlined />, key: "CREATE", label: "Date created" },
+          { icon: <FileTextOutlined />, key: "LAST", label: "Date modified" },
+          {
+            icon: <SortAscendingOutlined />,
+            key: "NAME",
+            label: "Name",
+          },
+        ],
+        label: "Sort by",
+        className: "sort-drop",
+      },
+    ],
+    onClick({ key }) {
+      setSortType(key);
+    },
+    selectedKeys: [sortType],
+  };
 
   const btnProps: ButtonProps = { type: "text", shape: "circle" };
   const sortButton = (
-    <Dropdown overlay={sortMenu} trigger={["click"]} placement="bottomRight">
+    <Dropdown menu={menu} trigger={["click"]} placement="bottomRight">
       <Button
         className="sort-btn"
         icon={<SwapOutlined rotate={90} />}
