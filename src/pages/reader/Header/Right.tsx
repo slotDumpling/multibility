@@ -12,6 +12,7 @@ import {
   LinkOutlined,
   CheckOutlined,
   ReloadOutlined,
+  ShareAltOutlined,
   CheckCircleFilled,
   DisconnectOutlined,
   EyeInvisibleOutlined,
@@ -157,6 +158,10 @@ const RoomInfo: FC = () => {
           banner
         />
       )}
+      <div className="team-info-title">
+        <ShareAltOutlined />
+        <span>Share</span>
+      </div>
       <PasscodeInput
         className="code-display"
         value={String(code)}
@@ -165,6 +170,10 @@ const RoomInfo: FC = () => {
       />
       <ShareButton />
       <Divider />
+      <div className="team-info-title">
+        <TeamOutlined />
+        <span>Members</span>
+      </div>
       <div className="user-list">
         {userList.map((u) => (
           <UserCard key={u.userID} userInfo={u} />
