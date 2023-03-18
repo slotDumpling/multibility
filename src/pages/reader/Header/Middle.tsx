@@ -1,11 +1,12 @@
 import { FC } from "react";
-import { Button, ButtonProps, Popover, Segmented, Switch } from "antd";
+import { Button, ButtonProps, Popover, Segmented, Switch, Tooltip } from "antd";
 import {
   UndoOutlined,
   RedoOutlined,
   GatewayOutlined,
   HighlightTwoTone,
   HighlightOutlined,
+  QuestionCircleOutlined,
 } from "@ant-design/icons";
 import IconFont from "component/IconFont";
 import { PenPanel, WidthSelect } from "../tools/PenPanel";
@@ -104,7 +105,15 @@ const EraserButton = () => {
           />
           {pixelEraser || (
             <div className="global-switch">
-              <span>Global</span>
+              <span>
+                Global
+                <Tooltip
+                  className="hint"
+                  title="Turn on to erase others' strokes."
+                >
+                  <QuestionCircleOutlined />
+                </Tooltip>
+              </span>
               <Switch
                 size="small"
                 checked={globalEraser}
