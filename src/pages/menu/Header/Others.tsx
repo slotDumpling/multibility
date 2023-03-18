@@ -24,8 +24,8 @@ import { clearImageCache } from "lib/note/imgCache";
 import { createNewNote } from "lib/note/archive";
 import { CSSTransition } from "react-transition-group";
 import localforage from "localforage";
-import "./others.sass";
 import { MenuProps } from "../Menu";
+import "./others.sass";
 
 const SeconaryMenu: FC<
   {
