@@ -83,44 +83,47 @@ const EraserButton = () => {
   const { mode, pixelEraser, globalEraser } = drawCtrl;
   const updateDrawCtrl = useUpdateDrawCtrl();
 
+  const pixelSeg = (
+    <Segmented
+      block
+      size="small"
+      className="pixel-seg"
+      options={["Pixel", "Object"]}
+      value={pixelEraser ? "Pixel" : "Object"}
+      onChange={(value) => {
+        if (value === "Pixel") updateDrawCtrl({ pixelEraser: true });
+        else updateDrawCtrl({ pixelEraser: false });
+      }}
+    />
+  );
+
+  const globalSwitch = (
+    <div className="global-switch">
+      <span>
+        Global
+        <Tooltip className="hint" title="Turn on to erase others' strokes.">
+          <QuestionCircleOutlined />
+        </Tooltip>
+      </span>
+      <Switch
+        size="small"
+        checked={globalEraser}
+        onChange={(v) => updateDrawCtrl({ globalEraser: v })}
+      />
+    </div>
+  );
+
   return mode === "erase" ? (
     <Popover
       content={
-        <div className="width-seg-wrapper">
-          <Segmented
-            block
-            size="small"
-            className="pixel-seg"
-            options={["Pixel", "Object"]}
-            value={pixelEraser ? "Pixel" : "Object"}
-            onChange={(value) => {
-              if (value === "Pixel") updateDrawCtrl({ pixelEraser: true });
-              else updateDrawCtrl({ pixelEraser: false });
-            }}
-          />
+        <div className="erase-panel" data-pixel-on={pixelEraser}>
+          {pixelSeg}
           <WidthSelect
             drawCtrl={drawCtrl}
             updateDrawCtrl={updateDrawCtrl}
             field="eraserWidth"
           />
-          {pixelEraser || (
-            <div className="global-switch">
-              <span>
-                Global
-                <Tooltip
-                  className="hint"
-                  title="Turn on to erase others' strokes."
-                >
-                  <QuestionCircleOutlined />
-                </Tooltip>
-              </span>
-              <Switch
-                size="small"
-                checked={globalEraser}
-                onChange={(v) => updateDrawCtrl({ globalEraser: v })}
-              />
-            </div>
-          )}
+          {pixelEraser || globalSwitch}
         </div>
       }
       trigger="click"

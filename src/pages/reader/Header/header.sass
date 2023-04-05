@@ -89,12 +89,18 @@
         input
           padding-left: 5px
 
-.width-seg-wrapper
+.erase-panel
   display: flex
   flex-direction: column
   margin: 4px 0
+  transition: height $speed
   > * + *
     margin-top: 15px
+  // specify height for animation
+  &[data-pixel-on=true]
+    height: 100px
+  &[data-pixel-on=false]
+    height: 140px
 
 .global-switch
   display: flex
