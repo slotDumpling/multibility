@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useDebugValue,
   useImperativeHandle,
+  useLayoutEffect,
 } from "react";
 import paper, {
   Path,
@@ -81,7 +82,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       toggleSelectTool(true, view.projectToView(bc));
     };
 
-    useEffect(() => {
+    useLayoutEffect(() => {
       const cvs = canvasEl.current;
       const scp = scope.current;
       if (!cvs) return;
