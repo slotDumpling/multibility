@@ -74,6 +74,12 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     toggleSelectTool = useEvent(toggleSelectTool);
     toggleTextTool = useEvent(toggleTextTool);
+    const showSelectTool = () => {
+      if (!path) return;
+      const bc = path.bounds.bottomCenter;
+      const { view } = scope.current;
+      toggleSelectTool(true, view.projectToView(bc));
+    };
 
     useEffect(() => {
       const cvs = canvasEl.current;
@@ -491,7 +497,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         if (Math.abs(path.area) < 1_000) return setPath(undefined);
 
         let selection: string[];
-        const { view } = scope.current;
         if (lasso) {
           path.closePath();
           path.simplify();
@@ -509,15 +514,12 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         }
         setSelected(true);
         setChosenIDs(selection);
-        const bc = path.bounds.bottomCenter;
-        toggleSelectTool(true, view.projectToView(bc));
+        showSelectTool();
       },
       selected(e: paper.MouseEvent) {
         handleSelectedCursor(e);
         if (!path || !selectionDragged.current) return;
-        const { view } = scope.current;
-        const bc = path.bounds.bottomCenter;
-        toggleSelectTool(true, view.projectToView(bc));
+        showSelectTool();
         updateMutation();
       },
       text(e: paper.MouseEvent) {
@@ -666,7 +668,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const IDs: string[] = [];
       onChange((prev) => DrawState.addStrokes(prev, pathDataList, IDs));
       setChosenIDs(IDs);
-      toggleSelectTool(false);
+      showSelectTool();
     };
 
     const rasterizeSelected = () => {
