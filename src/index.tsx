@@ -1,4 +1,4 @@
-import React, { LazyExoticComponent, Suspense } from "react";
+import React, { FC, LazyExoticComponent, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { Loading, Page404 } from "./component/Loading";
@@ -10,7 +10,7 @@ import "./index.sass";
 const MainMenu = React.lazy(() => import("pages/menu"));
 const Reader = React.lazy(() => import("pages/reader/Reader"));
 const Team = React.lazy(() => import("pages/reader/Team"));
-const SuspendLazy = (Component: LazyExoticComponent<() => JSX.Element>) => (
+const SuspendLazy = (Component: LazyExoticComponent<FC>) => (
   <Suspense fallback={<Loading />}>
     <Component />
   </Suspense>
