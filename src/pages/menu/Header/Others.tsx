@@ -86,7 +86,7 @@ const UploadPdfPage: FC<MenuProps> = ({
             <InboxOutlined className="inbox-icon" />
           )}
         </div>
-        <p className="hint">Click to upload a pdf file.</p>
+        <p className="hint">Click to import a pdf file.</p>
       </div>
       <input
         type="file"
