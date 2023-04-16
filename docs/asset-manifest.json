@@ -1,11 +1,11 @@
 {
   "files": {
     "main.css": "./static/css/main.7fa16cf4.css",
-    "main.js": "./static/js/main.a512868c.js",
+    "main.js": "./static/js/main.d3c5aac6.js",
     "static/css/751.9d1ab405.chunk.css": "./static/css/751.9d1ab405.chunk.css",
     "static/js/751.169240f2.chunk.js": "./static/js/751.169240f2.chunk.js",
-    "static/css/378.2901ca3f.chunk.css": "./static/css/378.2901ca3f.chunk.css",
-    "static/js/378.eefe0b5c.chunk.js": "./static/js/378.eefe0b5c.chunk.js",
+    "static/css/378.30ac2607.chunk.css": "./static/css/378.30ac2607.chunk.css",
+    "static/js/378.972cf89e.chunk.js": "./static/js/378.972cf89e.chunk.js",
     "static/js/336.a12ae578.chunk.js": "./static/js/336.a12ae578.chunk.js",
     "static/js/701.d5aed926.chunk.js": "./static/js/701.d5aed926.chunk.js",
     "static/css/560.d4b0661e.chunk.css": "./static/css/560.d4b0661e.chunk.css",
@@ -22,11 +22,11 @@
     "static/media/sofia.woff": "./static/media/sofia.1d8cd6317297d215f958.woff",
     "index.html": "./index.html",
     "main.7fa16cf4.css.map": "./static/css/main.7fa16cf4.css.map",
-    "main.a512868c.js.map": "./static/js/main.a512868c.js.map",
+    "main.d3c5aac6.js.map": "./static/js/main.d3c5aac6.js.map",
     "751.9d1ab405.chunk.css.map": "./static/css/751.9d1ab405.chunk.css.map",
     "751.169240f2.chunk.js.map": "./static/js/751.169240f2.chunk.js.map",
-    "378.2901ca3f.chunk.css.map": "./static/css/378.2901ca3f.chunk.css.map",
-    "378.eefe0b5c.chunk.js.map": "./static/js/378.eefe0b5c.chunk.js.map",
+    "378.30ac2607.chunk.css.map": "./static/css/378.30ac2607.chunk.css.map",
+    "378.972cf89e.chunk.js.map": "./static/js/378.972cf89e.chunk.js.map",
     "336.a12ae578.chunk.js.map": "./static/js/336.a12ae578.chunk.js.map",
     "701.d5aed926.chunk.js.map": "./static/js/701.d5aed926.chunk.js.map",
     "560.d4b0661e.chunk.css.map": "./static/css/560.d4b0661e.chunk.css.map",
@@ -43,6 +43,6 @@
   },
   "entrypoints": [
     "static/css/main.7fa16cf4.css",
-    "static/js/main.a512868c.js"
+    "static/js/main.d3c5aac6.js"
   ]
 }
