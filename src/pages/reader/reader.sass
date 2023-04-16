@@ -5,8 +5,6 @@
   padding-bottom: $safe-bottom
   > main
     position: relative
-    margin-left: $safe-left
-    margin-right: $safe-right
     .note-page
       outline: $default-border
       &:not(:first-of-type)
@@ -19,6 +17,15 @@
       // disable padding on phone
       padding-left: 0 !important
       padding-right: 0 !important
+      margin-left: $safe-left
+      margin-right: $safe-right
+
+    // prevent huge canvas
+    max-width: 2880px
+    margin: 0 auto
+    @media (min-resolution: 2dppx)
+      max-width: 1440px
+
     &::after
       @include pseudo-el(0, 0, 0, auto)
       width: 30px
