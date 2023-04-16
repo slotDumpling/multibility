@@ -532,7 +532,9 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         }
         const [, l1] = scope.current.project.layers;
         if (!l1) return;
-        const t = getClickedText(l1, e.point) ?? startText(e.point);
+
+        const item = getClickedText(l1, e.point);
+        const t = item && isSelfItem(item) ? item : startText(e.point);
         t.justification = "left";
         pointText.current = t;
         prevTextData.current = t.exportJSON();
@@ -573,11 +575,17 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       if (path.contains(e.point)) return setCursor("move");
       setCursor("crosshair");
     };
+
+    const isSelfItem = (item: paper.Item) => {
+      return drawState.getStrokeMap().has(item.name);
+    };
+
     const handleTextCursor = (e: paper.MouseEvent) => {
       if (pointText.current) return setCursor("auto");
       const layer = scope.current.project.layers[1];
       if (!layer) return;
-      if (getClickedText(layer, e.point)) setCursor("text");
+      const item = getClickedText(layer, e.point);
+      if (item && isSelfItem(item)) setCursor("text");
       else setCursor("crosshair");
     };
 
