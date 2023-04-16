@@ -93,14 +93,18 @@
   display: flex
   flex-direction: column
   margin: 4px 0
-  transition: height $speed
-  > * + *
-    margin-top: 15px
-  // specify height for animation
-  &[data-pixel-on=true]
-    height: 100px
-  &[data-pixel-on=false]
-    height: 140px
+  .pixel-seg
+    margin-bottom: 15px
+  // specify height & margin for animation
+  .global-switch
+    transition: height $speed
+    overflow: hidden
+    &[data-pixel-on=true]
+      height: 0
+    &[data-pixel-on=false]
+      height: 40px
+      > *
+        margin-top: 15px
 
 .global-switch
   display: flex

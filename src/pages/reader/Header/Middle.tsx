@@ -98,32 +98,36 @@ const EraserButton = () => {
   );
 
   const globalSwitch = (
-    <div className="global-switch">
-      <span>
-        Global
-        <Tooltip className="hint" title="Turn on to erase others' strokes.">
-          <QuestionCircleOutlined />
-        </Tooltip>
-      </span>
-      <Switch
-        size="small"
-        checked={globalEraser}
-        onChange={(v) => updateDrawCtrl({ globalEraser: v })}
-      />
+    <div className="global-switch" data-pixel-on={pixelEraser}>
+      {pixelEraser || (
+        <>
+          <span>
+            Global
+            <Tooltip className="hint" title="Turn on to erase others' strokes.">
+              <QuestionCircleOutlined />
+            </Tooltip>
+          </span>
+          <Switch
+            size="small"
+            checked={globalEraser}
+            onChange={(v) => updateDrawCtrl({ globalEraser: v })}
+          />
+        </>
+      )}
     </div>
   );
 
   return mode === "erase" ? (
     <Popover
       content={
-        <div className="erase-panel" data-pixel-on={pixelEraser}>
+        <div className="erase-panel">
           {pixelSeg}
           <WidthSelect
             drawCtrl={drawCtrl}
             updateDrawCtrl={updateDrawCtrl}
             field="eraserWidth"
           />
-          {pixelEraser || globalSwitch}
+          {globalSwitch}
         </div>
       }
       trigger="click"
