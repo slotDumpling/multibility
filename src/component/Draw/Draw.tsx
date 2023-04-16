@@ -64,7 +64,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
   ) => {
     const { width, height } = drawState;
     const projSize = useMemo(() => new Size(width, height), [width, height]);
-    const { mode, finger, lasso, eraserWidth, globalEraser } = drawCtrl;
+    const { mode, finger, lasso, eraserWidth } = drawCtrl;
 
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const scope = useRef(new paper.PaperScope());
@@ -408,11 +408,13 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const erased = useRef(new Set<string>());
     const replaced = useRef(new Map<string, paper.Item>());
 
+    const { globalEraser, pixelEraser } = drawCtrl;
     const itemGrid = useMemo(() => {
       if (!/^(erase|select)$/.test(mode)) return [];
-      const items = globalEraser && mode === "erase" ? teamGroup : group;
+      const items =
+        globalEraser && mode === "erase" && !pixelEraser ? teamGroup : group;
       return gernerateGrid(items, width, height);
-    }, [group, width, height, mode, teamGroup, globalEraser]);
+    }, [group, width, height, mode, teamGroup, globalEraser, pixelEraser]);
 
     const handleToolDrag = (e: paper.ToolEvent) => {
       const layer = scope.current.project.layers[1];
@@ -434,7 +436,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           }
           const { name } = topItem;
 
-          if (drawCtrl.pixelEraser) {
+          if (pixelEraser) {
             const radius = (ew + item.strokeWidth) / 2;
             const circle = new Path.Circle({
               center: e.point,
