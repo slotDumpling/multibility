@@ -827,17 +827,12 @@ const paintStroke = (() => {
 
   return (stroke: Stroke, layer: paper.Layer) => {
     const { pathData, uid } = stroke;
-
-    if (/^HIDE_/.test(pathData)) {
-      const name = pathData.slice(5);
-      layer.getItem({ name })?.remove();
-      return;
-    }
+    let item: paper.Item;
 
     const cache = cacheMap.get(layer) ?? new Map();
     cacheMap.set(layer, cache);
     const cached = cache.get(uid);
-    let item: paper.Item;
+
     if (cached?.stroke === stroke) {
       layer.addChild(cached.item);
       item = cached.item;

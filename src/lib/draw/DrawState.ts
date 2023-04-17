@@ -288,9 +288,9 @@ export class DrawState {
     return ds;
   }
 
-  static mergeStates(...states: DrawState[]): Stroke[] {
+  static mergeStates(...states: DrawState[]) {
     const iterators = states.map((ds) => ds.getStrokeMap().values());
-    const mergedStrokes = [];
+    let mergedStrokes = OrderedMap<string, Stroke>();
     const heap = new Heap<[Stroke, number]>(
       ([s0], [s1]) => s0.timestamp - s1.timestamp
     );
@@ -304,7 +304,14 @@ export class DrawState {
       const record = heap.pop();
       if (!record) break;
       const [stroke, index] = record;
-      mergedStrokes.push(stroke);
+      const { uid, pathData } = stroke;
+
+      if (/^HIDE_/.test(pathData)) {
+        const hideID = pathData.slice(5);
+        mergedStrokes = mergedStrokes.delete(hideID);
+      } else {
+        mergedStrokes = mergedStrokes.set(uid, stroke);
+      }
 
       const iterator = iterators[index];
       if (!iterator) break;
