@@ -292,10 +292,10 @@ const ReaderContent: FC = () => {
             />
           </section>
         ))}
+        <footer>
+          <AddPageButton addFinalPage={addFinalPage} />
+        </footer>
       </main>
-      <footer>
-        <AddPageButton addFinalPage={addFinalPage} />
-      </footer>
       <PageNav {...readerStates} {...readerMethods} />
     </div>
   );
