@@ -171,8 +171,8 @@ export class DrawState {
     if (erased.length === 0) return drawState;
     const prevRecord = drawState.getImmutable();
     let strokes = drawState.getStrokeMap();
-    strokes = strokes.deleteAll(erased);
     const hidden = erased.filter((uid) => !strokes.has(uid));
+    strokes = strokes.deleteAll(erased);
     hidden.forEach((hideID) => {
       const uid = v4();
       strokes = strokes.set(uid, {
