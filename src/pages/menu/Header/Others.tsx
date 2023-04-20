@@ -135,6 +135,7 @@ const SettingsPage: FC = () => {
   const clearAll = async () => {
     await localforage.clear();
     await clearImageCache();
+    localStorage.clear();
     window.location.reload();
   };
 
