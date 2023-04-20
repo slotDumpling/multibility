@@ -49,7 +49,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "analyze": "source-map-explorer 'docs/static/js/*.js'"
+    "analyze": "source-map-explorer 'docs/static/js/*.js'",
+    "postinstall": "patch-package"
   },
   "eslintConfig": {
     "extends": [
