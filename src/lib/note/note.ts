@@ -1,7 +1,8 @@
 import { getDefaultFlatState, FlatState } from "lib/draw/DrawState";
 import { v4 as getUid } from "uuid";
 import dayjs from "dayjs";
-
+import introState from "./introState.json";
+import { createNewNote } from "./archive";
 export interface NotePage {
   ratio: number;
   state: FlatState;
@@ -89,4 +90,16 @@ export function removePageTimg(pageRec: Record<string, NotePage>) {
     delete page.image;
     delete page.marked;
   });
+}
+
+export function createIntroNote() {
+  const key = "INTRO_CREATED";
+  if (localStorage.getItem(key)) return;
+  localStorage.setItem(key, "CREATED");
+  const note = createEmptyNote();
+  note.name = "Welcome to Multibility!";
+  const firstPageRec = Object.values(note.pageRec)[0];
+  if (!firstPageRec) return;
+  firstPageRec.state = JSON.parse(introState);
+  createNewNote(note);
 }
