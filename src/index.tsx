@@ -6,7 +6,7 @@ import { loadDarkMode } from "./lib/Dark";
 import { clearServiceWorker } from "temp/stopPWA";
 import Test from "./pages/test";
 import "./index.sass";
-import { createIntroNote } from "lib/note/note";
+import { createIntroNote } from "lib/note/intro";
 
 const MainMenu = React.lazy(() => import("pages/menu"));
 const Reader = React.lazy(() => import("pages/reader/Reader"));
