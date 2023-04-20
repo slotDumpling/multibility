@@ -13,5 +13,5 @@ export async function createIntroNote() {
   if (!firstPageRec) return;
   const { default: state } = await import("./introState.json");
   firstPageRec.state = JSON.parse(state);
-  createNewNote(note);
+  return await createNewNote(note);
 }

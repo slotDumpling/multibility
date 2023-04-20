@@ -4,6 +4,7 @@ import { NoteInfo } from "lib/note/note";
 import { AsideOpenProvider, Setter } from "lib/hooks";
 import { SideMenu } from "./Aside";
 import { NoteList } from "./NoteList";
+import { createIntroNote } from "lib/note/intro";
 
 export interface MenuProps {
   currTagID: string;
@@ -23,6 +24,15 @@ export default function MainMenu() {
     getAllNotes().then(setAllNotes);
     getAllTags().then(setAllTags);
     document.title = "Multibility";
+  }, []);
+
+  useEffect(() => {
+    createIntroNote().then((res) => {
+      if (!res) return;
+      const { tags, allNotes } = res;
+      setAllTags(tags);
+      setAllNotes(allNotes);
+    });
   }, []);
 
   const menuProps: MenuProps = {
