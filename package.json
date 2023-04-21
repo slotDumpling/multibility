@@ -20,7 +20,6 @@
     "darkreader": "^4.9.52",
     "dayjs": "^1.11.4",
     "file-saver": "^2.0.5",
-    "gh-pages": "^5.0.0",
     "heap": "^0.2.7",
     "immutable": "^4.1.0",
     "localforage": "^1.10.0",
@@ -87,6 +86,7 @@
     "@types/stats.js": "^0.17.0",
     "@types/string-hash": "^1.1.1",
     "@types/uuid": "^8.3.3",
+    "gh-pages": "^5.0.0",
     "patch-package": "^6.5.1",
     "sass": "^1.53.0",
     "typescript": "^4.7.4"
