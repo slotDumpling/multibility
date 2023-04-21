@@ -27,13 +27,6 @@ jobs:
           cache: "npm"
       - run: npm ci
 
-      - name: Create .env file
-        uses: SpicyPizza/create-envfile@v1.3.0
-        with:
-          envkey_REACT_APP_LOCAL_SERVER_URL: ${{ secrets.PUBLIC_SERVER_URL }}
-          envkey_REACT_APP_PUBLIC_SERVER_URL: ${{ secrets.PUBLIC_SERVER_URL }}
-          file_name: .env.production.local
-
       - name: Build
         run: npm run build
 
