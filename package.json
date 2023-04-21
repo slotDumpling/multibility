@@ -52,7 +52,6 @@
     "eject": "react-scripts eject",
     "analyze": "source-map-explorer 'docs/static/js/*.js'",
     "postinstall": "patch-package",
-    "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
