@@ -41,8 +41,7 @@
     "source-map-explorer": "^2.5.2",
     "stats.js": "^0.17.0",
     "string-hash": "^1.1.3",
-    "uuid": "^8.3.2",
-    "web-vitals": "^3.1.1"
+    "uuid": "^8.3.2"
   },
   "scripts": {
     "start": "react-scripts start",
