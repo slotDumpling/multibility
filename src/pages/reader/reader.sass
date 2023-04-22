@@ -26,8 +26,15 @@
     @media (min-resolution: 2dppx)
       max-width: 1440px
 
+    $footer-height: 80px
+    > footer
+      @include flex-center
+      height: $footer-height
+      button
+        max-width: calc(100vw - 50px)
+
     &::after
-      @include pseudo-el(0, 0, 0, auto)
+      @include pseudo-el(0, 0, $footer-height, auto)
       width: 30px
       box-sizing: content-box
       background-color: #7771
@@ -43,11 +50,6 @@
       visibility: hidden
     &[data-full=false]::after
       display: none
-    > footer
-      @include flex-center
-      padding: 20px 0
-      button
-        max-width: calc(100vw - 50px)
 
 body.reader
   background-color: #fafafa
