@@ -14,7 +14,7 @@
       @include for-desktop
         scroll-margin-top: $header-low-height
     @include for-phone
-      // disable padding on phone
+      // disable padding on phones
       padding-left: 0 !important
       padding-right: 0 !important
       margin-left: $safe-left
@@ -33,6 +33,7 @@
       button
         max-width: calc(100vw - 50px)
 
+    // scroll area for touch screen with stylus
     &::after
       @include pseudo-el(0, 0, $footer-height, auto)
       width: 30px
@@ -43,11 +44,14 @@
       border-left: #9992 solid 1px
       transition-duration: $speed
       transition-property: visibility opacity
+      // disable on desktop devices
       @media (hover: hover)
         display: none
+    // disable when pencil-only
     &[data-finger=false]::after
       opacity: 0
       visibility: hidden
+    // disable when page is not full-screen.
     &[data-full=false]::after
       display: none
 
