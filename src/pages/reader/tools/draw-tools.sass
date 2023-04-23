@@ -10,9 +10,9 @@
 
 .select-tool
   position: absolute
-  $tf: translate(-50%, -120%)
-  left: min(calc(100% - 100px), max(var(--pos-x), 100px))
-  top: min(calc(100%), max(var(--pos-y), 50px))
+  $tf: translate(-50%, 20%)
+  left: min(max(100px, var(--pos-x)), calc(100% - 100px))
+  top: min(max(0px, var(--pos-y)), calc(100% - 50px))
   border-radius: 50px
   transform: $tf
   transition-property: transform, opacity, visibility
