@@ -25,9 +25,8 @@
   align-items: center
 
 @mixin pseudo-el($top: 0, $right: 0, $bottom: 0, $left: 0)
-  position: absolute
   content: ""
-  @include inset($top, $right, $bottom, $left)
+  @include absolute($top, $right, $bottom, $left)
 
 @mixin for-safari
   @supports (-webkit-touch-callout: none)
