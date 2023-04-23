@@ -2,6 +2,7 @@
 
 .draw-wrapper
   @include absolute
+  overflow: hidden
   &[data-readonly=true]
     pointer-events: none
 
@@ -13,3 +14,9 @@
     height: 100% !important
     left: 0
     top: 0
+
+@include for-dark
+  body:not([data-force-light=true]) .draw-wrapper::after
+    @include pseudo-el(-1px, -1px, -1px, -1px)
+    backdrop-filter: invert(100%) hue-rotate(180deg) contrast(90%)
+    pointer-events: none
