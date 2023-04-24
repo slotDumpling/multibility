@@ -180,7 +180,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
         const duration = performance.now() - timeBeforeRender;
         // slow rendering for 3 times triggers the canvas opt.
-        if (duration > 30) {
+        if (duration > 16) {
           slowCount.current += 1;
           if (slowCount.current > 2) {
             slowCount.current = 0;
