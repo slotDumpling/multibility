@@ -182,7 +182,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         // slow rendering for 3 times triggers the canvas opt.
         if (duration > 16) {
           slowCount.current += 1;
-          if (slowCount.current > 2) {
+          if (slowCount.current > 2 || duration > 100) {
             slowCount.current = 0;
             renderSlow.current = true;
           }
@@ -288,7 +288,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       raster.drawImage(view.element, P_ZERO);
       raster.fitBounds(view.bounds);
       raster.visible = true;
-      raster.opacity = process.env.NODE_ENV === "production" ? 1 : 0.8;
+      raster.opacity = process.env.NODE_ENV === "production" ? 1 : 0.5;
       const [, l1] = scope.current.project.layers;
       l1 && (l1.visible = false);
     };
@@ -307,9 +307,14 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       rasterizeCanvas();
       setPath(startStroke(drawCtrl, e.point, renderSlow.current));
     };
+    const downLasso = (e: paper.MouseEvent) => {
+      setPath(startStroke(drawCtrl, e.point));
+      requestAnimationFrame(rasterizeCanvas);
+    };
     const downRect = (e: paper.MouseEvent) => {
-      rasterizeCanvas();
+      // reset rect path before rasterizing;
       setPath(startRect(e.point));
+      requestAnimationFrame(rasterizeCanvas);
     };
 
     const selectionDragged = useRef(false);
@@ -319,7 +324,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         downPath(e);
       },
       erase: downPath,
-      select: lasso ? downPath : downRect,
+      select: lasso ? downLasso : downRect,
       selected(e: paper.MouseEvent) {
         selectionDragged.current = false;
         if (!path) return;
@@ -336,7 +341,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         if (!path.contains(e.point)) {
           resetSelect();
           setRotateHandle(undefined);
-          lasso ? downPath(e) : downRect(e);
+          lasso ? downLasso(e) : downRect(e);
         }
       },
       text: null,
@@ -551,7 +556,14 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         t.justification = "left";
         pointText.current = t;
         prevTextData.current = t.exportJSON();
-        rasterizeCanvas();
+
+        // hide pointText before rasterizing;
+        if (renderSlow.current) t.visible = false;
+        requestAnimationFrame(() => {
+          rasterizeCanvas();
+          t.visible = true;
+        });
+
         toggleTextTool(t, renderSlow.current);
       },
     }[paperMode];
