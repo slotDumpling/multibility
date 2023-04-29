@@ -16,7 +16,7 @@ import paper, {
   Layer,
   Rectangle,
 } from "paper/dist/paper-core";
-import { usePinch } from "@use-gesture/react";
+import { usePinch, useWheel } from "@use-gesture/react";
 import useSize from "@react-hook/size";
 import { useMemoizedFn as useEvent } from "ahooks";
 import { DrawState, Mutation, Splitter, Stroke } from "lib/draw/DrawState";
@@ -772,7 +772,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         let lastOrigin, elPos: paper.Point;
         if (first || !memo) {
           const { x, y } = view.element.getBoundingClientRect();
-          // lastScale = prevScale.current;
           elPos = new Point(x, y);
           lastOrigin = originRawP.subtract(elPos);
           toggleSelectTool(false);
@@ -809,6 +808,23 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         scaleBounds: { max: 5, min: 1 },
         rubberband: 0.5,
         target: canvasEl,
+      }
+    );
+
+    useWheel(
+      ({ event, delta, ctrlKey, last }) => {
+        if (prevScale.current === 1 || ctrlKey) return;
+        const { view } = scope.current;
+        event.preventDefault();
+        const transP = P_ZERO.subtract(
+          new paper.Point(delta).divide(view.zoom)
+        );
+        view.translate(transP);
+        if (last) putCenterBack(view, projSize);
+      },
+      {
+        target: canvasEl,
+        eventOptions: { passive: false },
       }
     );
 
