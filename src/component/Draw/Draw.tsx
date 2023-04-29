@@ -761,8 +761,15 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       mutatePointText,
     }));
 
-    const prevScale = useRef(1);
     usePreventGesture();
+    const prevScale = useRef(1);
+
+    const beforeViewDragged = () => {
+      toggleSelectTool(false);
+      cancelText();
+      rasterizeLayer(new Path.Rectangle(P_ZERO, projSize));
+      unrasterizeCanvas();
+    };
     usePinch(
       ({ memo, offset: [scale], first, last, origin }) => {
         scope.current.activate();
@@ -774,10 +781,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
           const { x, y } = view.element.getBoundingClientRect();
           elPos = new Point(x, y);
           lastOrigin = originRawP.subtract(elPos);
-          toggleSelectTool(false);
-          cancelText();
-          rasterizeLayer(new Path.Rectangle(P_ZERO, projSize));
-          unrasterizeCanvas();
+          beforeViewDragged();
         } else {
           [lastOrigin, elPos] = memo;
         }
@@ -812,15 +816,21 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     );
 
     useWheel(
-      ({ event, delta, ctrlKey, last }) => {
+      ({ event, delta, ctrlKey, first, last }) => {
         if (prevScale.current === 1 || ctrlKey) return;
-        const { view } = scope.current;
         event.preventDefault();
-        const transP = P_ZERO.subtract(
-          new paper.Point(delta).divide(view.zoom)
-        );
+
+        if (first) beforeViewDragged();
+
+        const { view } = scope.current;
+        const deltaP = new paper.Point(delta);
+        const transP = P_ZERO.subtract(deltaP).divide(view.zoom);
         view.translate(transP);
-        if (last) putCenterBack(view, projSize);
+
+        if (last) {
+          putCenterBack(view, projSize);
+          unrasterizeLayer();
+        }
       },
       {
         target: canvasEl,
