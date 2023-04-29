@@ -177,12 +177,13 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         pathClones.current = [];
 
         const timeBeforeUpdate = performance.now();
-        scope.current.view.update();
-        const timeAfterUpdate = performance.now();
-
-        const updateDuration = timeAfterUpdate - timeBeforeUpdate;
-        if (updateDuration > 25) renderSlow.current = true;
-        if (updateDuration < 16) renderSlow.current = false;
+        scope.current.view.requestUpdate();
+        requestAnimationFrame(() => {
+          const timeAfterUpdate = performance.now();
+          const updateDuration = timeAfterUpdate - timeBeforeUpdate;
+          if (updateDuration > 20) renderSlow.current = true;
+          if (updateDuration < 16) renderSlow.current = false;
+        });
       };
 
       // render immediately。
