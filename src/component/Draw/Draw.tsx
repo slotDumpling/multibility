@@ -562,15 +562,16 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     }[paperMode];
 
     const [cursor, setCursor] = useState("auto");
+    const [currScale, setCurrScale] = useState(1);
     useEffect(() => {
       if (paperMode === "text" || paperMode === "select") {
         setCursor("crosshair");
       } else if (paperMode === "selected") {
         setCursor(lasso ? "crosshair" : "nwse-resize");
       } else if (paperMode === "draw" || paperMode === "erase") {
-        setCursor(getCircleCursor(drawCtrl, ratio));
+        setCursor(getCircleCursor(drawCtrl, ratio * currScale));
       }
-    }, [paperMode, lasso, drawCtrl, ratio]);
+    }, [paperMode, lasso, drawCtrl, ratio, currScale]);
 
     const handleSelectedCursor = (e: paper.MouseEvent) => {
       if (!path) return;
@@ -804,6 +805,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
             scaleView(view, originPorjP, dScale),
           ]).then(unrasterizeLayer);
           view.scale(1 / dScale, originPorjP);
+          setCurrScale(scale);
         } else {
           return [originViewP, elPos];
         }
