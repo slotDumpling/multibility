@@ -144,8 +144,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       [drawState, otherStates]
     );
 
-    const slowCount = useRef(0);
     const renderSlow = useRef(false);
+
     const deferTimerID = useRef(0);
     const deferRender = useRef(false);
     const setDefer = () => (deferRender.current = renderSlow.current);
@@ -155,13 +155,13 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const [, l1] = scope.current.project.layers;
       if (!l1) return;
       const render = () => {
+        scope.current.activate();
         const tempGroup: paper.Item[] = [];
         const tempTeamGroup: paper.Item[] = [];
-        const timeBeforeRender = performance.now();
 
-        scope.current.activate();
         // clean-up layer_1 except the clip mask.
         l1.removeChildren(1);
+
         mergedStrokes.forEach((stroke) => {
           const self = drawState.hasStroke(stroke.uid);
           const item = paintStroke(stroke, l1);
@@ -176,27 +176,20 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         pathClones.current.forEach((c) => c.remove());
         pathClones.current = [];
 
+        const timeBeforeUpdate = performance.now();
         scope.current.view.update();
+        const timeAfterUpdate = performance.now();
 
-        const duration = performance.now() - timeBeforeRender;
-        // slow rendering for 3 times triggers the canvas opt.
-        if (duration > 16) {
-          slowCount.current += 1;
-          if (slowCount.current > 2 || duration > 100) {
-            slowCount.current = 0;
-            renderSlow.current = true;
-          }
-        } else {
-          slowCount.current = 0;
-          renderSlow.current = false;
-        }
+        const updateDuration = timeAfterUpdate - timeBeforeUpdate;
+        if (updateDuration > 25) renderSlow.current = true;
+        if (updateDuration < 16) renderSlow.current = false;
       };
 
-      if (deferRender.current) {
-        deferTimerID.current = window.setTimeout(render, 1000);
-      } else render();
-
-      // cancel previous render timer.
+      // render immediately。
+      if (!deferRender.current) return void render();
+      // defer render for 1000ms
+      deferTimerID.current = window.setTimeout(render, 1000);
+      // clean-up previous render timer.
       return () => window.clearTimeout(deferTimerID.current);
     }, [mergedStrokes, drawState]);
 
