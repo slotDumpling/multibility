@@ -140,7 +140,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       () =>
         otherStates
           ? DrawState.mergeStates(drawState, ...otherStates)
-          : drawState.getStrokeList(),
+          : drawState.getStrokeMap(),
       [drawState, otherStates]
     );
 
@@ -181,12 +181,11 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         requestAnimationFrame(() => {
           const timeAfterUpdate = performance.now();
           const updateDuration = timeAfterUpdate - timeBeforeUpdate;
-          if (updateDuration > 20) renderSlow.current = true;
-          if (updateDuration < 16) renderSlow.current = false;
+          renderSlow.current = updateDuration > 20;
         });
       };
 
-      // render immediately。
+      // render immediately
       if (!deferRender.current) return void render();
       // defer render for 1000ms
       deferTimerID.current = window.setTimeout(render, 1000);
