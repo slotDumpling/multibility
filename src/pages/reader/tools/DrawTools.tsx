@@ -203,7 +203,6 @@ export const TextTool: FC<{
     >
       <div
         className="textarea-wrapper"
-        data-slow={renderSlow}
         data-empty={!content}
         style={{ fontSize, fontFamily, lineHeight, ...fontStyleCSS }}
       >
@@ -216,6 +215,7 @@ export const TextTool: FC<{
               prev.content = e.target.value;
             });
           }}
+          data-slow={renderSlow}
         />
       </div>
       <div
