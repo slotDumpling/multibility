@@ -9,9 +9,10 @@ export function createVirtualCanvas(width: number, height: number) {
   return { canvas, context };
 }
 
-export function releaseCanvas(canvas: HTMLCanvasElement) {
+export function releaseCanvas(canvas?: HTMLCanvasElement) {
+  if (!canvas) return;
   canvas.width = 1;
   canvas.height = 1;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   ctx?.clearRect(0, 0, 1, 1);
 }

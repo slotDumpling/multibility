@@ -229,24 +229,26 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     }, [canvasWidth, toggleSelectTool, toggleTextTool]);
 
     const layerRaster = useRef<paper.Raster>();
-    const rasterizeLayer = (clip: paper.Path, force = false) => {
-      if (!renderSlow.current && !force) return;
+    const lrReusable = useRef(false);
+    useEffect(() => void (lrReusable.current = false), [mergedStrokes]);
+
+    const rasterizeLayer = () => {
+      if (!renderSlow.current) return;
       const [l0, l1] = scope.current.project.layers;
       if (!l0 || !l1) return;
       l1.visible = true;
-      clip.clipMask = true;
-      const prevClip = l1.firstChild;
-      prevClip.replaceWith(clip);
-      imgRaster?.insertAbove(clip);
+      if (imgRaster) l1.insertChild(1, imgRaster);
 
       const dpi = 72 * devicePixelRatio;
-      const resolution = (canvasWidth / clip.bounds.width) * dpi;
+      const resolution = (canvasWidth / width) * dpi;
       let raster = layerRaster.current;
-      raster = layerRaster.current = l1.rasterize({ raster, resolution });
+      if (!raster || !lrReusable.current) {
+        raster = layerRaster.current = l1.rasterize({ raster, resolution });
+        lrReusable.current = true;
+      }
       raster.visible = true;
 
       l1.visible = false;
-      clip.replaceWith(prevClip);
       imgRaster?.addTo(l0);
     };
     const unrasterizeLayer = () => {
@@ -266,6 +268,13 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         canvasRaster.current = undefined;
       },
       [canvasWidth]
+    );
+    useLayoutEffect(
+      () => () => {
+        releaseCanvas(layerRaster.current?.canvas);
+        releaseCanvas(canvasRaster.current?.canvas);
+      },
+      []
     );
     const rasterizeCanvas = () => {
       if (!renderSlow.current) return;
@@ -758,7 +767,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const beforeViewDragged = () => {
       toggleSelectTool(false);
       cancelText();
-      rasterizeLayer(new Path.Rectangle(P_ZERO, projSize));
+      rasterizeLayer();
       unrasterizeCanvas();
     };
     usePinch(
@@ -820,8 +829,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         view.translate(transP);
 
         if (last) {
-          putCenterBack(view, projSize);
-          unrasterizeLayer();
+          putCenterBack(view, projSize).then(unrasterizeLayer);
         }
       },
       {
