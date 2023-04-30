@@ -230,6 +230,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const layerRaster = useRef<paper.Raster>();
     const lrReusable = useRef(false);
+    // layer raster is no longer reusable after state changes.
     useEffect(() => void (lrReusable.current = false), [mergedStrokes]);
 
     const rasterizeLayer = () => {
@@ -237,6 +238,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const [l0, l1] = scope.current.project.layers;
       if (!l0 || !l1) return;
       l1.visible = true;
+      // move pdf image above clip mask before rasterizing.
       if (imgRaster) l1.insertChild(1, imgRaster);
 
       const dpi = 72 * devicePixelRatio;
@@ -826,7 +828,14 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         const { view } = scope.current;
         const deltaP = new paper.Point(delta);
         const transP = P_ZERO.subtract(deltaP).divide(view.zoom);
-        view.translate(transP);
+        const { x: tx, y: ty } = transP;
+        const targetCenter = getTargetCenter(view, projSize);
+        const { x: dx, y: dy } = view.center.subtract(targetCenter);
+        const divisorP = new paper.Point(
+          tx * dx < 0 ? Math.pow(Math.E, 0.02 * Math.abs(dx)) : 1,
+          ty * dy < 0 ? Math.pow(Math.E, 0.02 * Math.abs(dy)) : 1
+        );
+        view.translate(transP.divide(divisorP));
 
         if (last) {
           putCenterBack(view, projSize).then(unrasterizeLayer);
