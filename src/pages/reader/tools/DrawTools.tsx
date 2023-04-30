@@ -3,17 +3,14 @@ import {
   CopyOutlined,
   BoldOutlined,
   DeleteOutlined,
-  PictureTwoTone,
-  PictureOutlined,
   BgColorsOutlined,
   ItalicOutlined,
 } from "@ant-design/icons";
-import { Button, ButtonProps, Modal, Popover, Select } from "antd";
+import { Button, ButtonProps, Popover, Select } from "antd";
 import { DrawCtrl } from "lib/draw/DrawCtrl";
 import { ColorSelect, PenPanel } from "./PenPanel";
 import { allColors } from "lib/color";
 import { DrawRefType } from "component/Draw";
-import { saveAs } from "file-saver";
 import { Color } from "paper/dist/paper-core";
 import IconFont from "component/IconFont";
 import "./draw-tools.sass";
@@ -42,19 +39,6 @@ export const SelectTool: FC<{
   clickPoint: paper.Point;
 }> = ({ drawRef, visible, clickPoint }) => {
   const [currDrawCtrl, setCurrDrawCtrl] = useState<Partial<DrawCtrl>>({});
-
-  const getRaster = () => {
-    if (!drawRef.current) return;
-    const imageData = drawRef.current.rasterizeSelected();
-    Modal.confirm({
-      title: "Screenshot",
-      content: <img className="raster" src={imageData} alt="raster" />,
-      className: "raster-modal",
-      icon: <PictureTwoTone />,
-      okText: "Save",
-      onOk: () => saveAs(imageData, document.title.split(" - ")[0] + ".png"),
-    });
-  };
 
   const { x, y } = clickPoint;
   return (
@@ -86,7 +70,6 @@ export const SelectTool: FC<{
         onClick={() => drawRef.current?.duplicateSelected()}
         {...btnProps}
       />
-      <Button icon={<PictureOutlined />} onClick={getRaster} {...btnProps} />
       <Button
         danger
         icon={<DeleteOutlined />}

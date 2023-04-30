@@ -30,7 +30,6 @@ import { setGridItem, getGridItems, gernerateGrid } from "./grid";
 export interface DrawRefType {
   deleteSelected: () => void;
   duplicateSelected: () => void;
-  rasterizeSelected: () => string;
   mutateStyle: (updated: Partial<DrawCtrl>) => void;
   mutatePointText: (cb: (prev: paper.PointText) => void) => void;
 }
@@ -701,14 +700,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       showSelectTool();
     };
 
-    const rasterizeSelected = () => {
-      scope.current.activate();
-      const clip = path?.clone();
-      clip && rasterizeLayer(clip, true);
-      unrasterizeLayer();
-      return layerRaster.current?.toDataURL() ?? "";
-    };
-
     const pointText = useRef<paper.PointText>();
     const prevTextData = useRef("");
     const cancelText = useEvent(() => {
@@ -757,7 +748,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     useImperativeHandle(ref, () => ({
       deleteSelected,
       duplicateSelected,
-      rasterizeSelected,
       mutateStyle,
       mutatePointText,
     }));

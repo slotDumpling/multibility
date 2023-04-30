@@ -11,7 +11,7 @@
 .select-tool
   position: absolute
   $tf: translate(-50%, 20%)
-  left: min(max(100px, var(--pos-x)), calc(100% - 100px))
+  left: min(max(70px, var(--pos-x)), calc(100% - 70px))
   top: min(max(0px, var(--pos-y)), calc(100% - 50px))
   border-radius: 50px
   transform: $tf
@@ -24,16 +24,6 @@
     visibility: hidden
     .style-pop
       display: none
-
-.raster-modal
-  .ant-modal-confirm-content
-    @include flex-center
-    // override antd modal content margin
-    margin: 20px 0 0 0 !important
-  .raster
-    max-height: 50vh
-    max-width: 100%
-    border: $default-border
 
 .text-tool
   --real-width: calc(var(--width) * var(--scale))
