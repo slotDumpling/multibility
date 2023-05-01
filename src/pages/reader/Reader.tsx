@@ -28,6 +28,7 @@ import { TeamCtx } from "./Team";
 import { Map } from "immutable";
 import { message } from "antd";
 import { InfoNav } from "./Info";
+import { useRedoUndo } from "lib/keyboard";
 import "./reader.sass";
 
 export interface ReaderStates {
@@ -250,6 +251,10 @@ const ReaderContent: FC = () => {
     setNoteInfo(info);
   };
 
+  const handleUndo = () => updateStateSet((prev) => prev.undo());
+  const handleRedo = () => updateStateSet((prev) => prev.redo());
+  useRedoUndo(handleUndo, handleRedo);
+
   if (!stateSet || !pageOrder || !pageRec || !noteInfo) return null;
   const readerStates: ReaderStates = {
     noteID,
@@ -274,8 +279,8 @@ const ReaderContent: FC = () => {
       <Header
         saved={saved}
         instantSave={instantSave}
-        handleUndo={() => updateStateSet((prev) => prev.undo())}
-        handleRedo={() => updateStateSet((prev) => prev.redo())}
+        handleUndo={handleUndo}
+        handleRedo={handleRedo}
         undoable={stateSet.isUndoable()}
         redoable={stateSet.isRedoable()}
       />
