@@ -95,6 +95,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
       return () => {
         scp.view?.remove();
+        scp.remove();
+        scp.clear();
         releaseCanvas(cvs);
       };
     }, []);
