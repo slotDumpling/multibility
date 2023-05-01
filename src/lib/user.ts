@@ -1,3 +1,4 @@
+import { animals, colors, uniqueNamesGenerator } from "unique-names-generator";
 import { v4 as getUid } from "uuid";
 
 export interface UserInfo {
@@ -23,7 +24,10 @@ export const getUserID = (() => {
 export const getUserName = () => {
   let name = localStorage.getItem("USER_NAME");
   if (!name) {
-    name = getUid().slice(0, 8);
+    name = uniqueNamesGenerator({
+      dictionaries: [colors, animals],
+      style: "capital",
+    });
     localStorage.setItem("USER_NAME", name);
   }
   return name;
