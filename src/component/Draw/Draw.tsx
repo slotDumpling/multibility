@@ -803,10 +803,9 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         view.scale(dScale, originPorjP);
 
         if (last) {
-          Promise.all([
-            putCenterBack(view, projSize),
-            scaleView(view, originPorjP, dScale),
-          ]).then(unrasterizeLayer);
+          scaleView(view, originPorjP, dScale)
+            .then(() => putCenterBack(view, projSize))
+            .then(unrasterizeLayer);
           view.scale(1 / dScale, originPorjP);
           setCurrScale(scale);
         } else {
@@ -834,8 +833,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         const targetCenter = getTargetCenter(view, projSize);
         const { x: dx, y: dy } = view.center.subtract(targetCenter);
         const divisorP = new paper.Point(
-          tx * dx < 0 ? Math.pow(Math.E, 0.02 * Math.abs(dx)) : 1,
-          ty * dy < 0 ? Math.pow(Math.E, 0.02 * Math.abs(dy)) : 1
+          tx * dx < 0 ? Math.pow(Math.E, 0.1 * Math.abs(dx)) : 1,
+          ty * dy < 0 ? Math.pow(Math.E, 0.1 * Math.abs(dy)) : 1
         );
         view.translate(transP.divide(divisorP));
 
