@@ -800,20 +800,19 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         let dScale = scale / prevScale.current;
         prevScale.current = scale;
         scope.current.settings.hitTolerance /= dScale;
-        view.scale(dScale, originPorjP);
 
         if (last) {
-          scaleView(view, originPorjP, dScale)
+          scaleView(view, dScale, projSize, originPorjP)
             .then(() => putCenterBack(view, projSize))
             .then(unrasterizeLayer);
-          view.scale(1 / dScale, originPorjP);
           setCurrScale(scale);
         } else {
+          view.scale(dScale, originPorjP);
           return [originViewP, elPos];
         }
       },
       {
-        scaleBounds: { max: 5, min: 1 },
+        scaleBounds: { min: 1, max: 5 },
         rubberband: 0.5,
         target: canvasEl,
       }
@@ -960,22 +959,32 @@ const moveDash = (item: paper.Item) => {
 
 const scaleView = (
   view: paper.View,
-  originPorjP: paper.Point,
-  dScale: number
+  dScale: number,
+  projSize: paper.Size,
+  originP: paper.Point
 ) =>
   new Promise<void>((resolve) => {
-    if (Math.abs(dScale - 1) < 0.05) {
-      view.scale(dScale, originPorjP);
-      return resolve();
+    if (dScale === 1) return resolve();
+    const { x: cx, y: cy } = view.center;
+    const { width, height } = projSize;
+
+    // if view is scaled from small to large, reset origin.
+    if (dScale > 1) {
+      originP = new paper.Point(
+        ((dScale / 2) * width - cx) / (dScale - 1),
+        ((dScale / 2) * height - cy) / (dScale - 1)
+      );
     }
+
     let aniCount = 10;
     dScale = Math.pow(dScale, 1 / aniCount);
-    const scale = () => {
-      view.scale(dScale, originPorjP);
-      if (--aniCount > 0) requestAnimationFrame(scale);
+
+    const scaleOneFrame = () => {
+      view.scale(dScale, originP);
+      if (--aniCount > 0) requestAnimationFrame(scaleOneFrame);
       else requestAnimationFrame(() => resolve());
     };
-    scale();
+    scaleOneFrame();
   });
 
 const getTargetCenter = (view: paper.View, projSize: paper.Size) => {
@@ -994,13 +1003,13 @@ const putCenterBack = (view: paper.View, projSize: paper.Size) =>
     const targetCenter = getTargetCenter(view, projSize);
     if (view.center.equals(targetCenter)) return resolve();
     let aniCount = 10;
-    const move = () => {
+    const moveOneFrame = () => {
       const delta = view.center.subtract(targetCenter);
       view.translate(delta.divide(aniCount));
-      if (--aniCount > 0) requestAnimationFrame(move);
+      if (--aniCount > 0) requestAnimationFrame(moveOneFrame);
       else requestAnimationFrame(() => resolve());
     };
-    requestAnimationFrame(move);
+    moveOneFrame();
   });
 
 const checkLasso = (items: paper.Item[], selection: paper.Path) => {
