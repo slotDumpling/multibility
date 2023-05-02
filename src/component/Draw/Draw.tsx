@@ -95,9 +95,9 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
       return () => {
         scp.view?.remove();
+        releaseCanvas(cvs);
         scp.remove();
         scp.clear();
-        releaseCanvas(cvs);
       };
     }, []);
 
@@ -868,7 +868,9 @@ function usePaperItem<T extends paper.Item>() {
   const tuple = useState<T>();
   const [item] = tuple;
   useDebugValue(item);
-  useEffect(() => () => void item?.remove(), [item]);
+  // the paper view is removed in useLayoutEffect clean-up func
+  // items with onFrame must be removed before view.
+  useLayoutEffect(() => () => void item?.remove(), [item]);
   return tuple;
 }
 
