@@ -111,15 +111,18 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
     const [canvasWidth] = useSize(canvasEl);
     const ratio = canvasWidth / width;
+    const currCenter = useRef(new Point(projSize).divide(2));
+    const [currScale, setCurrScale] = useState(1);
+    const prevScale = useRef(1);
+
     useEffect(() => {
       if (!ratio) return;
       const scp = scope.current;
       scp.view.viewSize = projSize.multiply(ratio);
-      scp.view.scale(ratio, P_ZERO);
+      scp.view.zoom = ratio * prevScale.current;
+      scp.view.center = currCenter.current;
       scp.project.layers.forEach((l) => (l.visible = true));
       scp.view.update();
-
-      return () => scp.view?.scale(1 / ratio, P_ZERO);
     }, [ratio, projSize]);
 
     const [imgRaster, setImgRaster] = usePaperItem();
@@ -574,7 +577,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     }[paperMode];
 
     const [cursor, setCursor] = useState("auto");
-    const [currScale, setCurrScale] = useState(1);
     useEffect(() => {
       if (paperMode === "text" || paperMode === "select") {
         setCursor("crosshair");
@@ -766,7 +768,6 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     }));
 
     usePreventGesture();
-    const prevScale = useRef(1);
 
     const beforeViewDragged = () => {
       toggleSelectTool(false);
@@ -804,7 +805,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         if (last) {
           scaleView(view, dScale, projSize, originPorjP)
             .then(() => putCenterBack(view, projSize))
-            .then(unrasterizeLayer);
+            .then(() => unrasterizeLayer())
+            .then(() => (currCenter.current = view.center));
           setCurrScale(scale);
         } else {
           view.scale(dScale, originPorjP);
@@ -838,7 +840,9 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         view.translate(transP.divide(divisorP));
 
         if (last) {
-          putCenterBack(view, projSize).then(unrasterizeLayer);
+          putCenterBack(view, projSize)
+            .then(unrasterizeLayer)
+            .then(() => (currCenter.current = view.center));
         }
       },
       {
