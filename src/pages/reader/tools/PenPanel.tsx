@@ -60,9 +60,17 @@ export const WidthSelect: FC<{
     else setPanelBlur(false);
   }, [popShow, setPanelBlur]);
 
+  // temp: ugly Implementation
+  const [widthRatio] = useState(() => {
+    const section = document.querySelector("section.note-page");
+    const sw = section?.getBoundingClientRect().width ?? 0;
+    const bw = document.body.getBoundingClientRect().width;
+    return sw / bw;
+  });
+
   const realSizeStyle = (width: number) =>
     ({
-      "--real-size": `calc(${100 / WIDTH}vw * ${width})`,
+      "--real-size": `calc(${100 / WIDTH}vw * ${width} * ${widthRatio})`,
     } as CSSProperties);
 
   const options = [
