@@ -1,7 +1,11 @@
 import React, { FC, useMemo, useState, useEffect, Suspense } from "react";
 import { deleteNote, editNoteData, loadNote } from "lib/note/archive";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
-import { CloudTwoTone, CheckCircleFilled } from "@ant-design/icons";
+import {
+  CloudTwoTone,
+  CheckCircleFilled,
+  LoadingOutlined,
+} from "@ant-design/icons";
 import { SwipeDelete, SwipeDeleteProvider } from "component/SwipeDelete";
 import { Note, NoteInfo, TeamPageRec } from "lib/note/note";
 import { DrawState } from "lib/draw/DrawState";
@@ -221,7 +225,7 @@ const NoteTimg: FC<{ uid: string }> = ({ uid }) => {
   const { ratio, image } = firstPage;
   return (
     <div className="timg-wrapper" data-landscape={ratio < 1}>
-      <Suspense fallback={null}>
+      <Suspense fallback={<LoadingOutlined style={{ opacity: 0.5 }} />}>
         <PageWrapper
           drawState={drawState}
           teamStateMap={teamStateMap}
