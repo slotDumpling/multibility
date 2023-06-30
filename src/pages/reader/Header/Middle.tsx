@@ -12,7 +12,7 @@ import IconFont from "component/IconFont";
 import { PenPanel, WidthSelect } from "../tools/PenPanel";
 import { useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
 
-const btnProps: ButtonProps = { type: "text", shape: "circle" };
+const btnProps: ButtonProps = { type: "text" };
 
 export const HeaderMiddle: FC<{
   handleUndo: () => void;
@@ -41,7 +41,6 @@ export const HeaderMiddle: FC<{
       <PenButton />
       <EraserButton />
       <Button
-        shape="circle"
         type={mode === "text" ? "link" : "text"}
         onClick={() => updateDrawCtrl({ mode: "text" })}
         icon={<IconFont type="icon-text1" />}
