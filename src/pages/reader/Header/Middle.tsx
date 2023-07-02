@@ -66,6 +66,7 @@ const PenButton = () => {
       <Button
         type="link"
         icon={<HighlightTwoTone twoToneColor={color} className="pen-icon" />}
+        className="with-secondary"
       />
     </Popover>
   ) : (
@@ -134,7 +135,11 @@ const EraserButton = () => {
       getPopupContainer={(e) => e.parentElement!}
       destroyTooltipOnHide
     >
-      <Button type="link" icon={<IconFont type="icon-eraser" />} />
+      <Button
+        type="link"
+        icon={<IconFont type="icon-eraser" />}
+        className="with-secondary"
+      />
     </Popover>
   ) : (
     <Button
@@ -156,6 +161,7 @@ const SelectButton = () => {
       type="link"
       icon={icon}
       onClick={() => updateDrawCtrl({ lasso: !lasso })}
+      className="with-secondary"
     />
   ) : (
     <Button
