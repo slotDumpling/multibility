@@ -15,6 +15,7 @@ import { useInView } from "react-intersection-observer";
 import { DrawState } from "lib/draw/DrawState";
 import { Map, Set } from "immutable";
 import { P_ZERO } from "component/Draw/Draw";
+import { ErrorBoundary } from "lib/ErrorBoundary";
 
 const PageWrapperRaw: FC<{
   drawState: DrawState;
@@ -138,7 +139,7 @@ const DrawWrapper: FC<{
       readonly
     />
   ) : (
-    <>
+    <ErrorBoundary>
       <Draw
         drawState={drawState}
         otherStates={otherStates}
@@ -161,6 +162,6 @@ const DrawWrapper: FC<{
           renderSlow={renderSlow}
         />
       )}
-    </>
+    </ErrorBoundary>
   );
 };
