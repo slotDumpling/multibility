@@ -302,6 +302,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     };
     const unrasterizeCanvas = () => {
       scope.current.activate();
+      // if the paper scope were removed.
+      if (!scope.current?.project) return;
       const [, l1] = scope.current.project.layers;
       const cr = canvasRaster.current;
       const lr = layerRaster.current;
