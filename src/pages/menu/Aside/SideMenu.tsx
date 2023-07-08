@@ -13,6 +13,7 @@ import { Setter, useAsideOpen } from "lib/hooks";
 import { SwipeDelete, SwipeDeleteProvider } from "component/SwipeDelete";
 import { ColorCirle } from "component/ColorCircle";
 import { MenuProps } from "../Menu";
+import GitHubButton from "react-github-btn";
 
 const TagInput: FC<{
   tagName: string;
@@ -221,6 +222,30 @@ export const SideMenu: FC<MenuProps> = (props) => {
     </header>
   );
 
+  const footer = (
+    <footer>
+      <GitHubButton
+        href="https://github.com/slotDumpling/multibility"
+        data-color-scheme="no-preference: light; light: light; dark: dark;"
+        data-size="large"
+        data-show-count="true"
+        aria-label="Star slotDumpling/multibility on GitHub"
+      >
+        Star
+      </GitHubButton>
+
+      <GitHubButton
+        href="https://github.com/slotDumpling/multibility/issues/3"
+        data-color-scheme="no-preference: light; light: light; dark: dark;"
+        data-icon="octicon-issue-opened"
+        data-size="large"
+        aria-label="Issue slotDumpling/multibility on GitHub"
+      >
+        想要无边界画板
+      </GitHubButton>
+    </footer>
+  );
+
   return (
     <aside data-open={asideOpen} onClick={() => setAsideOpen(false)}>
       <div className="side-menu" onClick={(e) => e.stopPropagation()}>
@@ -234,6 +259,7 @@ export const SideMenu: FC<MenuProps> = (props) => {
           </SwipeDeleteProvider>
           {adding && <NewTagItem setAdding={setAdding} {...props} />}
         </div>
+        {footer}
       </div>
     </aside>
   );

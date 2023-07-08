@@ -55,6 +55,16 @@
         background-clip: text
         font-family: sofia, sans-serif
         color: #0000
+    footer
+      padding: 10px 20px
+      margin-bottom: $safe-bottom
+      border-top: $default-border
+      display: flex
+      justify-content: space-between
+      opacity: 0.5
+      transition: opacity $speed
+      &:hover
+        opacity: 1
 
 .tag-list
   @include y-scroll
