@@ -185,7 +185,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         requestAnimationFrame(() => {
           const timeAfterUpdate = performance.now();
           const updateDuration = timeAfterUpdate - timeBeforeUpdate;
-          renderSlow.current = updateDuration > 20;
+          renderSlow.current = updateDuration > 16;
         });
       };
 
