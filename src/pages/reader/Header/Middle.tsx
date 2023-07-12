@@ -1,12 +1,11 @@
 import { FC } from "react";
-import { Button, ButtonProps, Popover, Segmented, Switch, Tooltip } from "antd";
+import { Button, ButtonProps, Popover, Segmented } from "antd";
 import {
   UndoOutlined,
   RedoOutlined,
   GatewayOutlined,
   HighlightTwoTone,
   HighlightOutlined,
-  QuestionCircleOutlined,
 } from "@ant-design/icons";
 import IconFont from "component/IconFont";
 import { PenPanel, WidthSelect } from "../tools/PenPanel";
@@ -80,7 +79,7 @@ const PenButton = () => {
 
 const EraserButton = () => {
   const drawCtrl = useDrawCtrl();
-  const { mode, pixelEraser, globalEraser } = drawCtrl;
+  const { mode, pixelEraser } = drawCtrl;
   const updateDrawCtrl = useUpdateDrawCtrl();
 
   const pixelSeg = (
@@ -97,26 +96,6 @@ const EraserButton = () => {
     />
   );
 
-  const globalSwitch = (
-    <div className="global-switch" data-pixel-on={pixelEraser}>
-      {pixelEraser || (
-        <>
-          <span>
-            Global
-            <Tooltip className="hint" title="Turn on to erase others' strokes.">
-              <QuestionCircleOutlined />
-            </Tooltip>
-          </span>
-          <Switch
-            size="small"
-            checked={globalEraser}
-            onChange={(v) => updateDrawCtrl({ globalEraser: v })}
-          />
-        </>
-      )}
-    </div>
-  );
-
   return mode === "erase" ? (
     <Popover
       content={
@@ -127,7 +106,6 @@ const EraserButton = () => {
             updateDrawCtrl={updateDrawCtrl}
             field="eraserWidth"
           />
-          {globalSwitch}
         </div>
       }
       trigger="click"

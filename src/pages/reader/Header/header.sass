@@ -52,50 +52,64 @@
 
 .team-popover
   width: 200px
-  display: flex
-  flex-direction: column
   .disconn-alert
     margin: -16px -16px 16px -16px
-  .code-display
-    pointer-events: none
-    align-self: center
-  .share-btn
-    width: 162px
-    margin-top: 15px
-    border-radius: 8px
-    align-self: center
-  .team-info-title
-    padding: 0 10px 10px 10px
-    text-align: center
-    color: #aaa
-    > * + *
-      padding-left: 10px
-  .user-list
-    @include y-scroll
+  .team-info-menu
     display: flex
     flex-direction: column
-    max-height: 150px
-    padding: 0 10px
-    margin-bottom: 10px
-    .user-item
+    .team-info-title
+      padding: 0 10px 10px 10px
+      text-align: center
+      color: #aaa
+      > * + *
+        padding-left: 10px
+    &:last-child > .ant-divider
+      display: none
+
+    .code-display
+      pointer-events: none
+      align-self: center
+    .share-btn
+      width: 162px
+      margin-top: 15px
+      border-radius: 8px
+      align-self: center
+
+    .global-switch
       display: flex
       align-items: center
-      &:not(:last-of-type)
-        margin-bottom: 10px
-      &:not([data-online="true"])
-        .room-avatar, .user-name
-          opacity: 0.5
-          filter: grayscale(0.5)
-      .room-avatar
-        margin-right: 10px
-      .user-name
-        @include text-overflow
-        flex: 1
-      .rename-input
-        flex: 1
-        margin-left: -6px
-        input
-          padding-left: 5px
+      justify-content: space-between
+      padding: 10px 20px
+      .hint
+        color: #aaa
+        margin-left: 10px
+
+    .user-list
+      @include y-scroll
+      display: flex
+      flex-direction: column
+      max-height: 150px
+      padding: 0 10px
+      margin-bottom: 10px
+      .user-item
+        display: flex
+        align-items: center
+        &:not(:last-of-type)
+          margin-bottom: 10px
+        &:not([data-online="true"])
+          .room-avatar, .user-name
+            opacity: 0.5
+            filter: grayscale(0.5)
+        .room-avatar
+          margin-right: 10px
+        .user-name
+          @include text-overflow
+          flex: 1
+        .rename-input
+          flex: 1
+          margin-left: -6px
+          input
+            padding-left: 5px
 
 .erase-panel
   display: flex
@@ -103,22 +117,3 @@
   margin: 4px 0
   .pixel-seg
     margin-bottom: 15px
-  // specify height & margin for animation
-  .global-switch
-    transition: height $speed
-    overflow: hidden
-    &[data-pixel-on=true]
-      height: 0
-    &[data-pixel-on=false]
-      height: 40px
-      > *
-        margin-top: 15px
-
-.global-switch
-  display: flex
-  align-items: center
-  justify-content: space-between
-  padding: 0 5px
-  .hint
-    color: #aaa
-    margin-left: 10px

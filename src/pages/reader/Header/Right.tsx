@@ -1,5 +1,23 @@
-import { FC, useMemo, useState, useEffect, useContext } from "react";
-import { Badge, Alert, Modal, Button, Divider, message, Popover } from "antd";
+import {
+  FC,
+  useMemo,
+  useState,
+  useEffect,
+  useContext,
+  PropsWithChildren,
+  ReactNode,
+} from "react";
+import {
+  Badge,
+  Alert,
+  Modal,
+  Button,
+  Divider,
+  message,
+  Popover,
+  Tooltip,
+  Switch,
+} from "antd";
 import Search from "antd/lib/input/Search";
 import { useNavigate, useParams } from "react-router-dom";
 import { PasscodeInput } from "antd-mobile";
@@ -13,10 +31,12 @@ import {
   CheckOutlined,
   ReloadOutlined,
   ShareAltOutlined,
+  BranchesOutlined,
   CheckCircleFilled,
   DisconnectOutlined,
   EyeInvisibleOutlined,
   UsergroupAddOutlined,
+  QuestionCircleOutlined,
 } from "@ant-design/icons";
 import { editNoteData } from "lib/note/archive";
 import { UserAvatar } from "component/UserAvatar";
@@ -25,6 +45,7 @@ import copy from "clipboard-copy";
 import { useAsideOpen } from "lib/hooks";
 import { sortBy } from "lodash";
 import IconFont from "component/IconFont";
+import { useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
 
 export const HeaderRight: FC<{
   instantSave: () => Promise<void> | undefined;
@@ -129,8 +150,62 @@ const ShareButton: FC = () => {
   );
 };
 
+const TeamInfoMenu: FC<
+  PropsWithChildren<{ title: string; icon: ReactNode }>
+> = ({ children, title, icon }) => {
+  return (
+    <div className="team-info-menu">
+      <div className="team-info-title">
+        {icon}
+        <span>{title}</span>
+      </div>
+      {children}
+      <Divider />
+    </div>
+  );
+};
+
+const ShareMenu: FC = () => {
+  const { code } = useContext(TeamCtx);
+  return (
+    <TeamInfoMenu icon={<ShareAltOutlined />} title="Share">
+      <PasscodeInput
+        className="code-display"
+        value={String(code)}
+        length={4}
+        plain
+      />
+      <ShareButton />
+    </TeamInfoMenu>
+  );
+};
+
+const CollaborateMenu: FC = () => {
+  const drawCtrl = useDrawCtrl();
+  const { globalEraser } = drawCtrl;
+  const updateDrawCtrl = useUpdateDrawCtrl();
+
+  return (
+    <TeamInfoMenu icon={<BranchesOutlined />} title="Collaborate">
+      <div className="global-switch">
+        <span>
+          Global
+          <Tooltip className="hint" title="Turn on to edit others' strokes.">
+            <QuestionCircleOutlined />
+          </Tooltip>
+        </span>
+        <Switch
+          size="small"
+          checked={globalEraser}
+          onChange={(v) => updateDrawCtrl({ globalEraser: v })}
+        />
+      </div>
+    </TeamInfoMenu>
+  );
+};
+
 const RoomInfo: FC = () => {
-  const { code, userRec, connected, loadInfo, loadState, resetIO } =
+  const { userRec, connected, loadInfo, loadState, resetIO } =
     useContext(TeamCtx);
 
   const userList = useMemo(() => {
@@ -158,27 +233,15 @@ const RoomInfo: FC = () => {
           banner
         />
       )}
-      <div className="team-info-title">
-        <ShareAltOutlined />
-        <span>Share</span>
-      </div>
-      <PasscodeInput
-        className="code-display"
-        value={String(code)}
-        length={4}
-        plain
-      />
-      <ShareButton />
-      <Divider />
-      <div className="team-info-title">
-        <TeamOutlined />
-        <span>Members</span>
-      </div>
-      <div className="user-list">
-        {userList.map((u) => (
-          <UserCard key={u.userID} userInfo={u} />
-        ))}
-      </div>
+      <ShareMenu />
+      <CollaborateMenu />
+      <TeamInfoMenu icon={<TeamOutlined />} title="Members">
+        <div className="user-list">
+          {userList.map((u) => (
+            <UserCard key={u.userID} userInfo={u} />
+          ))}
+        </div>
+      </TeamInfoMenu>
     </div>
   );
 
