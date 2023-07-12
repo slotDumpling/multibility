@@ -714,9 +714,9 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
       copies.forEach((p) => (p.name = ""));
       const pathDataList = copies.map((item) => item.exportJSON());
-      const IDs: string[] = [];
-      onChange((prev) => DrawState.addStrokes(prev, pathDataList, IDs));
-      setChosenIDs(IDs);
+      onChange((prev) =>
+        DrawState.addStrokeList(prev, pathDataList, setChosenIDs)
+      );
       showSelectTool();
     };
 

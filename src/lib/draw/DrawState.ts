@@ -37,6 +37,10 @@ export type Operation =
       stroke: Stroke;
     }
   | {
+      type: "add_list";
+      strokeList: Stroke[];
+    }
+  | {
       type: "erase";
       erased: string[];
     }
@@ -156,19 +160,21 @@ export class DrawState {
     return DrawState.pushStroke(drawState, stroke);
   }
 
-  static addStrokes(
+  static addStrokeList(
     drawState: DrawState,
     pathDataList: string[],
-    IDs?: string[]
+    callback?: (IDs: string[]) => void
   ) {
-    return DrawState.mutateStrokes(
-      drawState,
-      pathDataList.map((pathData) => {
-        const uid = v4();
-        IDs?.push(uid);
-        return [uid, pathData];
-      })
-    );
+    const newIDs: string[] = [];
+    const timestamp = Date.now();
+    const strokeList: Stroke[] = pathDataList.map((pathData) => {
+      const uid = v4();
+      newIDs.push(uid);
+      return { type: "STROKE", pathData, timestamp, uid };
+    });
+    callback?.(newIDs);
+
+    return DrawState.pushStrokeList(drawState, strokeList);
   }
 
   static pushStroke(drawState: DrawState, stroke: Stroke) {
@@ -180,6 +186,16 @@ export class DrawState {
       .delete("undoStack");
 
     const lastOp: Operation = { type: "add", stroke };
+
+    return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
+  }
+
+  static pushStrokeList(drawState: DrawState, strokeList: Stroke[]) {
+    const prevRecord = drawState.getImmutable();
+    const currRecord = prevRecord.update("strokes", (s) =>
+      s.merge(strokeList.map((stroke) => [stroke.uid, stroke]))
+    );
+    const lastOp: Operation = { type: "add_list", strokeList };
 
     return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
   }
@@ -280,6 +296,8 @@ export class DrawState {
     switch (op.type) {
       case "add":
         return DrawState.pushStroke(drawState, op.stroke);
+      case "add_list":
+        return DrawState.pushStrokeList(drawState, op.strokeList);
       case "erase":
         return DrawState.eraseStrokes(drawState, op.erased);
       case "mutate":
@@ -336,8 +354,7 @@ export class DrawState {
         const { originUid, pathData } = stroke;
         mergedStrokes = mergedStrokes.update(
           originUid,
-          { type: "STROKE", uid: originUid, pathData, timestamp: Date.now() },
-          (s) => ({ ...s, pathData })
+          (s) => s! && { ...s, pathData }
         );
       } else if (/^HIDE_/.test(stroke.pathData)) {
         // temporary fallback, delete this later.
