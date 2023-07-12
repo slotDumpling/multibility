@@ -228,7 +228,6 @@ export const SideMenu: FC<MenuProps> = (props) => {
         href="https://github.com/slotDumpling/multibility"
         data-color-scheme="no-preference: light; light: light; dark: dark;"
         data-size="large"
-        data-show-count="true"
         aria-label="Star slotDumpling/multibility on GitHub"
       >
         Star
