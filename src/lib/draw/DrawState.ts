@@ -308,6 +308,8 @@ export class DrawState {
         return DrawState.redo(drawState);
       case "split":
         return DrawState.splitStrokes(drawState, op.splitters);
+      default:
+        return drawState;
     }
   }
 
