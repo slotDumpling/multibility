@@ -5,12 +5,29 @@ import Heap from "heap";
 export const WIDTH = 2000;
 
 export interface Stroke {
+  type: "STROKE";
   uid: string;
   pathData: string;
   timestamp: number;
 }
 
-export type StrokeRecord = globalThis.Record<string, Stroke>;
+export type StrokeData =
+  | Stroke
+  | {
+      type: "HIDE";
+      uid: string;
+      originUid: string;
+      timestamp: number;
+    }
+  | {
+      type: "MUTATE";
+      uid: string;
+      originUid: string;
+      pathData: string;
+      timestamp: number;
+    };
+
+export type StrokeRecord = globalThis.Record<string, StrokeData>;
 export type Mutation = [string, string];
 export type Splitter = [string, string[]];
 
@@ -39,7 +56,8 @@ export type Operation =
     };
 
 interface DrawStateRecordType {
-  strokes: OrderedMap<string, Stroke>;
+  strokes: OrderedMap<string, StrokeData>;
+  mutationPairs: Map<string, string>;
   undoStack: List<DrawStateRecord>;
   historyStack: List<DrawStateRecord>;
 }
@@ -48,6 +66,7 @@ type DrawStateRecord = Record<DrawStateRecordType>;
 
 const defaultRecord: Readonly<DrawStateRecordType> = {
   strokes: OrderedMap(),
+  mutationPairs: Map(),
   undoStack: List(),
   historyStack: List(),
 };
@@ -87,14 +106,12 @@ export class DrawState {
     return this.getImmutable().get("strokes");
   }
 
-  getStrokeList(): Stroke[] {
-    return this.getStrokeMap()
-      .toArray()
-      .map(([_, stroke]) => stroke);
-  }
-
   getLastStroke() {
     return this.getStrokeMap().last();
+  }
+
+  getmutationPairs() {
+    return this.getImmutable().get("mutationPairs");
   }
 
   isEmpty() {
@@ -135,7 +152,7 @@ export class DrawState {
   static addStroke(drawState: DrawState, pathData: string) {
     const uid = v4();
     const timestamp = Date.now();
-    const stroke = { pathData, uid, timestamp };
+    const stroke: Stroke = { pathData, uid, timestamp, type: "STROKE" };
     return DrawState.pushStroke(drawState, stroke);
   }
 
@@ -176,9 +193,10 @@ export class DrawState {
     hidden.forEach((hideID) => {
       const uid = v4();
       strokes = strokes.set(uid, {
+        type: "HIDE",
         uid,
+        originUid: hideID,
         timestamp: Date.now(),
-        pathData: "HIDE_" + hideID,
       });
     });
 
@@ -196,16 +214,23 @@ export class DrawState {
     if (mutations.length === 0) return drawState;
     const prevRecord = drawState.getImmutable();
     let strokes = drawState.getStrokeMap();
-    mutations.forEach(
-      ([uid, pathData]) =>
-        (strokes = strokes.update(
-          uid,
-          { uid, pathData, timestamp: Date.now() },
-          (s) => ({ ...s, pathData })
-        ))
-    );
+    let mutationPairs = drawState.getmutationPairs();
+    mutations.forEach(([uid, pathData]) => {
+      const newUid = v4();
+      strokes = strokes.set(newUid, {
+        type: "MUTATE",
+        uid: newUid,
+        originUid: uid,
+        pathData,
+        timestamp: Date.now(),
+      });
+      const prevMutationUid = mutationPairs.get(uid);
+      mutationPairs = mutationPairs.set(uid, newUid);
+      strokes = strokes.delete(prevMutationUid ?? "");
+    });
     const currRecord = prevRecord
       .set("strokes", strokes)
+      .set("mutationPairs", mutationPairs)
       .update("historyStack", (s) => s.push(prevRecord))
       .delete("undoStack");
 
@@ -217,7 +242,7 @@ export class DrawState {
   static splitStrokes(drawState: DrawState, splitters: Splitter[]) {
     if (splitters.length === 0) return drawState;
     const splitMap = Map(splitters);
-    let strokes = OrderedMap<string, Stroke>();
+    let strokes = OrderedMap<string, StrokeData>();
     const prevStrokes = drawState.getStrokeMap();
     prevStrokes.forEach((stroke, prevUid) => {
       const splitStrokes = splitMap.get(prevUid);
@@ -229,7 +254,7 @@ export class DrawState {
 
             const uid = v5(String(index), prevUid);
             const { timestamp } = stroke;
-            return [uid, { pathData, timestamp, uid }];
+            return [uid, { pathData, timestamp, uid, type: "STROKE" }];
           })
         );
       } else {
@@ -291,7 +316,7 @@ export class DrawState {
   static mergeStates(...states: DrawState[]) {
     const iterators = states.map((ds) => ds.getStrokeMap().values());
     let mergedStrokes = OrderedMap<string, Stroke>();
-    const heap = new Heap<[Stroke, number]>(
+    const heap = new Heap<[StrokeData, number]>(
       ([s0], [s1]) => s0.timestamp - s1.timestamp
     );
 
@@ -304,12 +329,22 @@ export class DrawState {
       const record = heap.pop();
       if (!record) break;
       const [stroke, index] = record;
-      const { uid, pathData } = stroke;
 
-      if (/^HIDE_/.test(pathData)) {
-        const hideID = pathData.slice(5);
+      if (stroke.type === "HIDE") {
+        mergedStrokes = mergedStrokes.delete(stroke.originUid);
+      } else if (stroke.type === "MUTATE") {
+        const { originUid, pathData } = stroke;
+        mergedStrokes = mergedStrokes.update(
+          originUid,
+          { type: "STROKE", uid: originUid, pathData, timestamp: Date.now() },
+          (s) => ({ ...s, pathData })
+        );
+      } else if (/^HIDE_/.test(stroke.pathData)) {
+        // temporary fallback, delete this later.
+        const hideID = stroke.pathData.slice(5);
         mergedStrokes = mergedStrokes.delete(hideID);
       } else {
+        const { uid } = stroke;
         mergedStrokes = mergedStrokes.set(uid, stroke);
       }
 

@@ -141,10 +141,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     }, [imgSrc, projSize, setImgRaster]);
 
     const mergedStrokes = useMemo(
-      () =>
-        otherStates
-          ? DrawState.mergeStates(drawState, ...otherStates)
-          : drawState.getStrokeMap(),
+      () => DrawState.mergeStates(drawState, ...(otherStates || [])),
       [drawState, otherStates]
     );
 
@@ -203,8 +200,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const [chosenIDs, setChosenIDs] = useState<string[]>([]);
     const chosenItems = useMemo(() => {
       const IDSet = new Set(chosenIDs);
-      return group.filter((item) => IDSet.has(item.name));
-    }, [group, chosenIDs]);
+      return teamGroup.filter((item) => IDSet.has(item.name));
+    }, [teamGroup, chosenIDs]);
 
     const resetSelect = useEvent(() => {
       setSelected(false);
@@ -440,7 +437,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const itemGrid = useMemo(() => {
       if (!/^(erase|select)$/.test(mode)) return [];
       const items =
-        globalEraser && mode === "erase" && !pixelEraser ? teamGroup : group;
+        globalEraser &&
+        ((mode === "erase" && !pixelEraser) || mode === "select")
+          ? teamGroup
+          : group;
       return gernerateGrid(items, width, height);
     }, [group, width, height, mode, teamGroup, globalEraser, pixelEraser]);
 
@@ -562,7 +562,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         if (!l1) return;
 
         const item = getClickedText(l1, e.point);
-        const t = item && isSelfItem(item) ? item : startText(e.point);
+        const t =
+          item && (isSelfItem(item) || globalEraser)
+            ? item
+            : startText(e.point);
         t.justification = "left";
         pointText.current = t;
         prevTextData.current = t.exportJSON();
@@ -620,7 +623,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       const layer = scope.current.project.layers[1];
       if (!layer) return;
       const item = getClickedText(layer, e.point);
-      if (item && isSelfItem(item)) setCursor("text");
+      if (item && (isSelfItem(item) || globalEraser)) setCursor("text");
       else setCursor("crosshair");
     };
 
@@ -902,6 +905,7 @@ const paintStroke = (() => {
         item = layer.importJSON(pathData);
       } catch (e) {
         console.error(e);
+        return;
       }
       item ??= new paper.Item();
       item.name = uid;
