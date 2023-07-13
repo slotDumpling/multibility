@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { Button, message } from "antd";
-import { EditOutlined, EyeInvisibleOutlined } from "@ant-design/icons";
+import { EditOutlined, CloseOutlined } from "@ant-design/icons";
 import localforage from "localforage";
 import { once } from "lodash";
 import "./draw-ctrl.sass";
@@ -125,12 +125,13 @@ const showPencilMsg = once(async (cb: () => void) => {
           size="small"
           type="text"
           shape="circle"
-          icon={<EyeInvisibleOutlined style={{ color: "#999" }} />}
+          icon={<CloseOutlined style={{ color: "#999" }} />}
           onClick={hide}
         />
       </>
     ),
     key: "DETECT_PENCIL",
     className: "pencil-msg",
+    duration: 0,
   });
 });
