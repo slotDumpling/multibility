@@ -1,5 +1,10 @@
 import { Button, Popover } from "antd";
-import { MenuOutlined, FormOutlined, TeamOutlined } from "@ant-design/icons";
+import {
+  MenuOutlined,
+  FormOutlined,
+  TeamOutlined,
+  LoadingOutlined,
+} from "@ant-design/icons";
 import { FC, useState } from "react";
 import { createEmptyNote } from "lib/note/note";
 import { createNewNote } from "lib/note/archive";
@@ -84,21 +89,31 @@ const NewNoteButton: FC<MenuProps> = ({
 
 const JoinTeamButton = () => {
   const [roomCode, setRoomCode] = useState("");
+  const [loading, setLoading] = useState(false);
   const [wrong, setWrong] = useState(false);
 
   const nav = useNavigate();
   async function handleSubmit(code: string) {
+    setLoading(true);
     const noteID = await getNoteID(code);
+    setLoading(false);
     if (noteID) return nav(`/team/${noteID}`);
     setRoomCode("");
     setWrong(true);
   }
 
+  const title = (
+    <div className="join-team-title">
+      <span>Join a team note</span>
+      <span>{loading && <LoadingOutlined />}</span>
+    </div>
+  );
+
   return (
     <Popover
       placement="bottomRight"
       trigger="click"
-      title="Join a team note"
+      title={title}
       destroyTooltipOnHide
       onOpenChange={() => setWrong(false)}
       content={
