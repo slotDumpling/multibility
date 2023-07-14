@@ -17,19 +17,22 @@ import {
   Popover,
   Tooltip,
   Switch,
+  Select,
 } from "antd";
 import Search from "antd/lib/input/Search";
 import { useNavigate, useParams } from "react-router-dom";
 import { PasscodeInput } from "antd-mobile";
 import { TeamCtx } from "../Team";
-import { getUserID, saveUserName, UserInfo } from "lib/user";
+import { getUserID, getUserName, saveUserName, UserInfo } from "lib/user";
 import {
   EyeOutlined,
   FormOutlined,
   TeamOutlined,
   LinkOutlined,
+  UserOutlined,
   CheckOutlined,
   ReloadOutlined,
+  GlobalOutlined,
   ShareAltOutlined,
   BranchesOutlined,
   CheckCircleFilled,
@@ -305,10 +308,37 @@ const JoinRoom: FC<{
     nav("/team/" + noteID);
   };
 
+  const content = (
+    <div className="share-modal-content">
+      <Alert
+        className="share-alert"
+        type="warning"
+        message="This will make your note public."
+      />
+      <p className="share-list-item">
+        <span className="user-info">
+          <GlobalOutlined />
+          Anyone with the link
+        </span>
+        <Select
+          defaultValue="EDIT"
+          options={[{ value: "EDIT", label: "Edit" }]}
+        />
+      </p>
+      <p className="share-list-item">
+        <span className="user-info">
+          <UserOutlined />
+          {getUserName()} (You)
+        </span>
+        <span>Owner</span>
+      </p>
+    </div>
+  );
+
   const showModal = () => {
     Modal.confirm({
       title: "Enable team editing",
-      content: "This will make your note public to anyone with the link.",
+      content,
       icon: <TeamOutlined style={{ color: "#555" }} />,
       onOk: createRoom,
     });
