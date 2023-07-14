@@ -7,11 +7,15 @@ import { clearServiceWorker } from "temp/stopPWA";
 import Test from "./pages/test";
 import "./index.sass";
 
-const MainMenu = React.lazy(() => import("pages/menu"));
-const Reader = React.lazy(
-  () => import(/* webpackPrefetch: true */ "pages/reader/Reader")
+const MainMenu = React.lazy(
+  () => import(/* webpackPreload: true */ "pages/menu")
 );
-const Team = React.lazy(() => import("pages/reader/Team"));
+const Reader = React.lazy(
+  () => import(/* webpackPreload: true */ "pages/reader/Reader")
+);
+const Team = React.lazy(
+  () => import(/* webpackPreload: true */ "pages/reader/Team")
+);
 const SuspendLazy = (Component: LazyExoticComponent<FC>) => (
   <Suspense fallback={<Loading />}>
     <Component />
