@@ -1,6 +1,18 @@
+@import ../../sass/_mixins
+
 .page-wrapper
   position: relative
   overflow: hidden
   > svg.size-holder
     visibility: hidden
     display: block
+
+// use pseudo element with backdrop filter for main canvas in dark mode.
+@include for-dark
+  body:not([data-force-light=true]) .page-wrapper
+    &[data-preview=true] .draw-canvas
+      filter: invert(100%) hue-rotate(180deg) contrast(90%)
+    &[data-preview=false]::after
+      @include pseudo-el(-1px, -1px, -1px, -1px)
+      backdrop-filter: invert(100%) hue-rotate(180deg) contrast(90%)
+      pointer-events: none

@@ -78,7 +78,7 @@ const PageWrapperRaw: FC<{
   const ratio = height / width;
 
   return (
-    <div ref={ref} className="page-wrapper">
+    <div ref={ref} className="page-wrapper" data-preview={preview}>
       <svg className="size-holder" viewBox={`0 0 100 ${ratio * 100}`} />
       {drawShow && (
         <DrawWrapper

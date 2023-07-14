@@ -14,11 +14,3 @@
     height: 100% !important
     left: 0
     top: 0
-
-// use pseudo element with backdrop filter for main canvas in dark mode.
-@include for-dark
-  body:not([data-force-light=true])
-    .draw-wrapper[data-readonly=false]::after
-      @include pseudo-el
-      backdrop-filter: invert(100%) hue-rotate(180deg) contrast(90%)
-      pointer-events: none

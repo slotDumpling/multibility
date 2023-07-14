@@ -21,7 +21,7 @@ export const loadDarkMode = async () => {
         ".text-color-icon",
       ],
       invert: [
-        ".draw-wrapper[data-readonly=true] .draw-canvas",
+        // ".page-wrapper[data-preview=true] .draw-canvas",
         "label .circle",
         ".width-circle.lineWidth",
         ".pen-icon",
