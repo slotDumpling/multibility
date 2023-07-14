@@ -178,7 +178,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         pathClones.current = [];
 
         const timeBeforeUpdate = performance.now();
-        scope.current.view.requestUpdate();
+        scope.current.view.update();
         requestAnimationFrame(() => {
           const timeAfterUpdate = performance.now();
           const updateDuration = timeAfterUpdate - timeBeforeUpdate;
