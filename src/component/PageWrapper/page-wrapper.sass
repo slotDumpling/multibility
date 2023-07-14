@@ -12,7 +12,7 @@
   body:not([data-force-light=true]) .page-wrapper
     &[data-preview=true] .draw-canvas
       filter: invert(100%) hue-rotate(180deg) contrast(90%)
-    &[data-preview=false]::after
+    &[data-preview=false] .draw-wrapper::after
       @include pseudo-el
       backdrop-filter: invert(100%) hue-rotate(180deg) contrast(90%)
       pointer-events: none
