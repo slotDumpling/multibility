@@ -33,6 +33,13 @@ export function usePreventTouch(
   };
 }
 
+export const rightClickHandler: React.HTMLAttributes<HTMLDivElement> = {
+  onMouseDownCapture: (e) => {
+    if (e.button !== 0) e.stopPropagation();
+  },
+  onContextMenu: (e) => e.preventDefault(),
+};
+
 export function usePreventGesture() {
   useEffect(() => {
     const handler = (e: Event) => e.preventDefault();

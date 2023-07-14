@@ -23,7 +23,7 @@ import { DrawState, Mutation, Splitter, Stroke } from "lib/draw/DrawState";
 import { defaultDrawCtrl, DrawCtrl } from "lib/draw/DrawCtrl";
 import { releaseCanvas } from "lib/draw/canvas";
 import { getCircleCursor, getRotateCurcor } from "./cursor";
-import { usePreventTouch, usePreventGesture } from "./touch";
+import { usePreventTouch, usePreventGesture, rightClickHandler } from "./touch";
 import { Setter } from "lib/hooks";
 import { setGridItem, getGridItems, gernerateGrid } from "./grid";
 
@@ -863,6 +863,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         style={{ cursor }}
         data-readonly={readonly}
         {...touchHandler}
+        {...rightClickHandler}
       >
         <canvas ref={canvasEl} className="draw-canvas" />
       </div>
