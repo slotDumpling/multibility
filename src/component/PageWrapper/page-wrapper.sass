@@ -13,6 +13,6 @@
     &[data-preview=true] .draw-canvas
       filter: invert(100%) hue-rotate(180deg) contrast(90%)
     &[data-preview=false]::after
-      @include pseudo-el(-1px, -1px, -1px, -1px)
+      @include pseudo-el
       backdrop-filter: invert(100%) hue-rotate(180deg) contrast(90%)
       pointer-events: none
