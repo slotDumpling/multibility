@@ -8,13 +8,13 @@ import Test from "./pages/test";
 import "./index.sass";
 
 const MainMenu = React.lazy(
-  () => import(/* webpackPreload: true */ "pages/menu")
+  () => import(/* webpackPrefetch: true */ "pages/menu")
 );
 const Reader = React.lazy(
-  () => import(/* webpackPreload: true */ "pages/reader/Reader")
+  () => import(/* webpackPrefetch: true */ "pages/reader/Reader")
 );
 const Team = React.lazy(
-  () => import(/* webpackPreload: true */ "pages/reader/Team")
+  () => import(/* webpackPrefetch: true */ "pages/reader/Team")
 );
 const SuspendLazy = (Component: LazyExoticComponent<FC>) => (
   <Suspense fallback={<Loading />}>
