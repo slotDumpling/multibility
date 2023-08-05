@@ -61,7 +61,7 @@ export type Operation =
 
 interface DrawStateRecordType {
   strokes: OrderedMap<string, StrokeData>;
-  mutationPairs: Map<string, string>;
+  mutationPairs: Map<string, string>; //{ [originID]: [mutationID] }
   undoStack: List<DrawStateRecord>;
   historyStack: List<DrawStateRecord>;
 }
@@ -114,7 +114,7 @@ export class DrawState {
     return this.getStrokeMap().last();
   }
 
-  getmutationPairs() {
+  getMutationPairs() {
     return this.getImmutable().get("mutationPairs");
   }
 
@@ -230,7 +230,7 @@ export class DrawState {
     if (mutations.length === 0) return drawState;
     const prevRecord = drawState.getImmutable();
     let strokes = drawState.getStrokeMap();
-    let mutationPairs = drawState.getmutationPairs();
+    let mutationPairs = drawState.getMutationPairs();
     mutations.forEach(([uid, pathData]) => {
       const newUid = v4();
       strokes = strokes.set(newUid, {
@@ -324,8 +324,20 @@ export class DrawState {
     width = WIDTH
   ): DrawState {
     const { strokes, operations } = flatState;
+    let strokeMap = OrderedMap(strokes);
+    let mutationPairs = Map<string, string>();
+
+    Object.entries(strokes).forEach(([uid, strokeData]) => {
+      if (strokeData.type !== "MUTATE") return;
+      const prevMutationUid = mutationPairs.get(strokeData.originUid);
+      mutationPairs = mutationPairs.set(strokeData.originUid, uid);
+      if (prevMutationUid) strokeMap = strokeMap.delete(prevMutationUid);
+    });
+
     let ds = new DrawState(
-      defaultFactory().set("strokes", OrderedMap(strokes)),
+      defaultFactory()
+        .set("strokes", strokeMap)
+        .set("mutationPairs", mutationPairs),
       width,
       width * ratio
     );
