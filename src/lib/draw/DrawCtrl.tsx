@@ -13,7 +13,7 @@ import { once } from "lodash";
 import "./draw-ctrl.sass";
 
 export interface DrawCtrl {
-  mode: "draw" | "erase" | "select" | "text";
+  mode: "draw" | "erase" | "select" | "text" | "rect" | "picture";
   finger: boolean;
   lineWidth: number;
   eraserWidth: number;

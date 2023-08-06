@@ -36,14 +36,17 @@
       grid-template-columns: repeat(7, 1fr)
       .redo-btn
         grid-column: span 2
-  button.with-secondary
-    overflow: hidden
-    &::after
-      @include pseudo-el(auto, 0, 0, auto)
-      height: 10px
-      width: 10px
-      background: #ddd
-      clip-path: polygon(100% 0, 0 100%, 100% 100%)
+  > .middle
+    > button[data-active=true]
+      overflow: hidden
+      &::after
+        @include pseudo-el(auto, 0, 0, auto)
+        height: 10px
+        width: 10px
+        background: #ddd
+        clip-path: polygon(100% 0, 0 100%, 100% 100%)
+    .add-pop-row > * + *
+      margin-left: 10px
 
 .team-title
   display: flex

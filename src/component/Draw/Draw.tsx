@@ -352,6 +352,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         }
       },
       text: null,
+      rect: null,
+      picture: null,
     }[paperMode];
 
     const dragPath = (e: paper.MouseEvent) => {
@@ -425,6 +427,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         }
       },
       text: null,
+      rect: null,
+      picture: null,
     }[paperMode];
 
     useEffect(() => {
@@ -579,6 +583,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
         toggleTextTool(t, renderSlow.current);
       },
+      rect: null,
+      picture: null,
     }[paperMode];
 
     const [cursor, setCursor] = useState("auto");
@@ -630,7 +636,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
     const handleMove = {
       selected: handleSelectedCursor,
       text: handleTextCursor,
-      ...{ select: null, draw: null, erase: null },
+      ...{ select: null, draw: null, erase: null, rect: null, picture: null },
     }[paperMode];
 
     const handleKeyDown = (e: paper.KeyEvent) => {
@@ -656,7 +662,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       text(e: paper.KeyEvent) {
         if (/escape/.test(e.key)) submitText();
       },
-      ...{ select: null, draw: null, erase: null },
+      ...{ select: null, draw: null, erase: null, rect: null, picture: null },
     }[paperMode];
 
     useEffect(() => {

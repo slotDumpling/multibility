@@ -1,15 +1,18 @@
-import { FC } from "react";
+import { FC, ReactNode } from "react";
 import { Button, ButtonProps, Popover, Segmented } from "antd";
 import {
   UndoOutlined,
   RedoOutlined,
+  BorderOutlined,
   GatewayOutlined,
+  PictureOutlined,
   HighlightTwoTone,
   HighlightOutlined,
+  PlusCircleOutlined,
 } from "@ant-design/icons";
 import IconFont from "component/IconFont";
 import { PenPanel, WidthSelect } from "../tools/PenPanel";
-import { useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
+import { DrawCtrl, useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
 
 const btnProps: ButtonProps = { type: "text" };
 
@@ -18,36 +21,27 @@ export const HeaderMiddle: FC<{
   handleRedo: () => void;
   undoable: boolean;
   redoable: boolean;
-}> = ({ handleUndo, handleRedo, undoable, redoable }) => {
-  const { mode } = useDrawCtrl();
-  const updateDrawCtrl = useUpdateDrawCtrl();
-
-  return (
-    <div className="middle">
-      <Button
-        {...btnProps}
-        icon={<UndoOutlined />}
-        onClick={handleUndo}
-        disabled={!undoable}
-      />
-      <Button
-        className="redo-btn"
-        {...btnProps}
-        icon={<RedoOutlined />}
-        onClick={handleRedo}
-        disabled={!redoable}
-      />
-      <PenButton />
-      <EraserButton />
-      <Button
-        type={mode === "text" ? "link" : "text"}
-        onClick={() => updateDrawCtrl({ mode: "text" })}
-        icon={<IconFont type="icon-text1" />}
-      />
-      <SelectButton />
-    </div>
-  );
-};
+}> = ({ handleUndo, handleRedo, undoable, redoable }) => (
+  <div className="middle">
+    <Button
+      {...btnProps}
+      icon={<UndoOutlined />}
+      onClick={handleUndo}
+      disabled={!undoable}
+    />
+    <Button
+      className="redo-btn"
+      {...btnProps}
+      icon={<RedoOutlined />}
+      onClick={handleRedo}
+      disabled={!redoable}
+    />
+    <PenButton />
+    <EraserButton />
+    <SelectButton />
+    <AddButton />
+  </div>
+);
 
 const PenButton = () => {
   const drawCtrl = useDrawCtrl();
@@ -65,7 +59,7 @@ const PenButton = () => {
       <Button
         type="link"
         icon={<HighlightTwoTone twoToneColor={color} className="pen-icon" />}
-        className="with-secondary"
+        data-active={mode === "draw"}
       />
     </Popover>
   ) : (
@@ -116,7 +110,7 @@ const EraserButton = () => {
       <Button
         type="link"
         icon={<IconFont type="icon-eraser" />}
-        className="with-secondary"
+        data-active={mode === "erase"}
       />
     </Popover>
   ) : (
@@ -139,7 +133,7 @@ const SelectButton = () => {
       type="link"
       icon={icon}
       onClick={() => updateDrawCtrl({ lasso: !lasso })}
-      className="with-secondary"
+      data-active={mode === "select"}
     />
   ) : (
     <Button
@@ -147,5 +141,38 @@ const SelectButton = () => {
       icon={icon}
       onClick={() => updateDrawCtrl({ mode: "select" })}
     />
+  );
+};
+
+const AddButton: FC = () => {
+  const { mode } = useDrawCtrl();
+  const updateDrawCtrl = useUpdateDrawCtrl();
+
+  const getButton = (modeName: DrawCtrl["mode"], icon: ReactNode) => (
+    <Button
+      key={modeName}
+      type={mode === modeName ? "link" : "text"}
+      onClick={() => updateDrawCtrl({ mode: modeName })}
+      icon={icon}
+      data-active={mode === modeName}
+    />
+  );
+
+  const buttons: Record<string, ReactNode> = {
+    text: getButton("text", <IconFont type="icon-text1" />),
+    picture: getButton("picture", <PictureOutlined />),
+    rect: getButton("rect", <BorderOutlined />),
+  };
+
+  const content = <div className="add-pop-row">{Object.values(buttons)}</div>;
+  return (
+    <Popover
+      content={content}
+      trigger="click"
+      placement="bottom"
+      getPopupContainer={(e) => e.parentElement!}
+    >
+      {buttons[mode] ?? <Button type="text" icon={<PlusCircleOutlined />} />}
+    </Popover>
   );
 };
