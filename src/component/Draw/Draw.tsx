@@ -318,7 +318,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       setPath(startStroke(drawCtrl, e.point));
       requestAnimationFrame(rasterizeCanvas);
     };
-    const downRect = (e: paper.MouseEvent) => {
+    const downSelectRect = (e: paper.MouseEvent) => {
       // reset rect path before rasterizing;
       setPath(startRect(e.point));
       requestAnimationFrame(rasterizeCanvas);
@@ -331,7 +331,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         downPath(e);
       },
       erase: downPath,
-      select: lasso ? downLasso : downRect,
+      select: lasso ? downLasso : downSelectRect,
       selected(e: paper.MouseEvent) {
         selectionDragged.current = false;
         if (!path) return;
@@ -348,11 +348,15 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         if (!path.contains(e.point)) {
           resetSelect();
           setRotateHandle(undefined);
-          lasso ? downLasso(e) : downRect(e);
+          lasso ? downLasso(e) : downSelectRect(e);
         }
       },
       text: null,
-      rect: null,
+      rect(e: paper.MouseEvent) {
+        setDefer();
+        rasterizeCanvas();
+        setPath(startRect(e.point, drawCtrl));
+      },
       picture: null,
     }[paperMode];
 
@@ -362,7 +366,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       path?.add(e.point);
       path?.smooth();
     };
-    const resizeRect = (e: paper.MouseEvent) => {
+    const resizeRect = (e: paper.MouseEvent, selected = true) => {
       if (!path) return;
       const { x, y } = e.point;
       const [, s1, s2, s3] = path.segments;
@@ -370,7 +374,7 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
       s1.point.x = x;
       s2.point = e.point;
       s3.point.y = y;
-      path.selected = true;
+      if (selected) path.selected = true;
     };
     const moveSelected = (delta: paper.Point) => {
       chosenItems.forEach((item) => item.translate(delta));
@@ -427,7 +431,11 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         }
       },
       text: null,
-      rect: null,
+      rect(e: paper.MouseEvent) {
+        // cancel previous render timer.
+        window.clearTimeout(deferTimerID.current);
+        resizeRect(e, false);
+      },
       picture: null,
     }[paperMode];
 
@@ -583,17 +591,29 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
 
         toggleTextTool(t, renderSlow.current);
       },
-      rect: null,
+      rect() {
+        if (!path || Math.abs(path.area) < 1_000) {
+          // if canvas is clicked without any path in queue.
+          if (!pathClones.current.length) unrasterizeCanvas();
+          return;
+        }
+        if (renderSlow.current) pathClones.current.push(path.clone());
+
+        const pathData = path.exportJSON();
+        onChange((prev) => DrawState.addStroke(prev, pathData));
+        setPath(undefined);
+      },
       picture: null,
     }[paperMode];
 
     const [cursor, setCursor] = useState("auto");
     useEffect(() => {
-      if (paperMode === "text" || paperMode === "select") {
+      if (/^(text|select|rect)$/.test(paperMode)) {
         setCursor("crosshair");
       } else if (paperMode === "selected") {
+        // set resize cursor for the bottom-right rect selection
         setCursor(lasso ? "crosshair" : "nwse-resize");
-      } else if (paperMode === "draw" || paperMode === "erase") {
+      } else if (/^(draw|erase)$/.test(paperMode)) {
         setCursor(getCircleCursor(drawCtrl, ratio * currScale));
       }
     }, [paperMode, lasso, drawCtrl, ratio, currScale]);
@@ -939,9 +959,13 @@ const paintRects = (layers: paper.Layer[], projSize: paper.Size) => {
   return [bgRect, clip1, clip2];
 };
 
-const startRect = (point: paper.Point) => {
+const startRect = (point: paper.Point, drawCtrl?: DrawCtrl) => {
   const rect = new Path.Rectangle(point, new Size(0, 0));
   rect.onFrame = () => {}; // the handle size bug
+  if (drawCtrl) {
+    rect.strokeWidth = drawCtrl.lineWidth;
+    rect.strokeColor = new Color(drawCtrl.color);
+  }
   return rect;
 };
 

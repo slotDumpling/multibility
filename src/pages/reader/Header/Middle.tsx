@@ -145,8 +145,9 @@ const SelectButton = () => {
 };
 
 const AddButton: FC = () => {
-  const { mode } = useDrawCtrl();
+  const drawCtrl = useDrawCtrl();
   const updateDrawCtrl = useUpdateDrawCtrl();
+  const { mode } = drawCtrl;
 
   const getButton = (modeName: DrawCtrl["mode"], icon: ReactNode) => (
     <Button
@@ -164,12 +165,25 @@ const AddButton: FC = () => {
     rect: getButton("rect", <BorderOutlined />),
   };
 
-  const content = <div className="add-pop-row">{Object.values(buttons)}</div>;
+  const optionPanels: Record<string, ReactNode> = {
+    text: <div>Tap anywhere to insert text.</div>,
+    picture: <div></div>,
+    rect: <PenPanel {...{ drawCtrl, updateDrawCtrl }} />,
+  };
+
+  const content = (
+    <div className="add-pop">
+      <div className="button-row">{Object.values(buttons)}</div>
+      {/^(text|picture|rect)$/.test(mode) && (
+        <div className="option-panel">{optionPanels[mode]}</div>
+      )}
+    </div>
+  );
   return (
     <Popover
       content={content}
       trigger="click"
-      placement="bottom"
+      placement="bottomRight"
       getPopupContainer={(e) => e.parentElement!}
     >
       {buttons[mode] ?? <Button type="text" icon={<PlusCircleOutlined />} />}
