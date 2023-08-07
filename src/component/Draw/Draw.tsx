@@ -592,10 +592,10 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         toggleTextTool(t, renderSlow.current);
       },
       rect() {
-        if (!path || Math.abs(path.area) < 1_000) {
+        if (!path || Math.abs(path.area) < 1) {
           // if canvas is clicked without any path in queue.
           if (!pathClones.current.length) unrasterizeCanvas();
-          return;
+          return setPath(undefined);
         }
         if (renderSlow.current) pathClones.current.push(path.clone());
 
