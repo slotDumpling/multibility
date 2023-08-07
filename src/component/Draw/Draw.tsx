@@ -1079,7 +1079,12 @@ const checkLasso = (items: paper.Item[], selection: paper.Path) => {
       if (item instanceof paper.Path) {
         return isInside(item);
       } else {
+        const { rotation } = item;
+        item.rotation = 0;
         const checkedP = new Path.Rectangle(item.bounds);
+        checkedP.selected = true;
+        checkedP.rotation = rotation;
+        item.rotation = rotation;
         checkedP.remove();
         return isInside(checkedP) || selection.isInside(item.bounds);
       }
