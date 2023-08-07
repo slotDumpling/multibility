@@ -625,6 +625,8 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         setCursor(lasso ? "crosshair" : "nwse-resize");
       } else if (/^(draw|erase)$/.test(paperMode)) {
         setCursor(getCircleCursor(drawCtrl, ratio * currScale));
+      } else if (paperMode === "picture") {
+        setCursor(drawCtrl.imageSrc ? "crosshair" : "not-allowed");
       }
     }, [paperMode, lasso, drawCtrl, ratio, currScale]);
 
