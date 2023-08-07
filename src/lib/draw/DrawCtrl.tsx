@@ -23,6 +23,7 @@ export interface DrawCtrl {
   pixelEraser: boolean;
   globalEraser: boolean;
   widthList: number[];
+  imageSrc: string;
 }
 
 export const defaultWidthList = [10, 20, 30, 50];
@@ -37,6 +38,7 @@ export const defaultDrawCtrl: Readonly<DrawCtrl> = {
   pixelEraser: false,
   globalEraser: false,
   widthList: defaultWidthList,
+  imageSrc: "",
 };
 
 async function getDrawCtrl() {

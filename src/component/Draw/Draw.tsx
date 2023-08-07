@@ -603,7 +603,17 @@ const DrawRaw = React.forwardRef<DrawRefType, DrawPropType>(
         onChange((prev) => DrawState.addStroke(prev, pathData));
         setPath(undefined);
       },
-      picture: null,
+      picture(e: paper.MouseEvent) {
+        const { imageSrc } = drawCtrl;
+        if (!imageSrc) return;
+        const raster = new Raster(imageSrc);
+        raster.position = e.point;
+        raster.onLoad = () => {
+          const itemData = raster.exportJSON();
+          onChange((prev) => DrawState.addStroke(prev, itemData));
+          raster.remove();
+        };
+      },
     }[paperMode];
 
     const [cursor, setCursor] = useState("auto");

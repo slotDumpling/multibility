@@ -1,8 +1,9 @@
-import { FC, ReactNode } from "react";
-import { Button, ButtonProps, Popover, Segmented } from "antd";
+import { FC, ReactNode, useState } from "react";
+import { Button, ButtonProps, Input, Popover, Segmented } from "antd";
 import {
   UndoOutlined,
   RedoOutlined,
+  LinkOutlined,
   BorderOutlined,
   GatewayOutlined,
   PictureOutlined,
@@ -147,7 +148,7 @@ const SelectButton = () => {
 const AddButton: FC = () => {
   const drawCtrl = useDrawCtrl();
   const updateDrawCtrl = useUpdateDrawCtrl();
-  const { mode } = drawCtrl;
+  const { mode, imageSrc } = drawCtrl;
 
   const getButton = (modeName: DrawCtrl["mode"], icon: ReactNode) => (
     <Button
@@ -165,9 +166,30 @@ const AddButton: FC = () => {
     rect: getButton("rect", <BorderOutlined />),
   };
 
+  const [showImage, setShowImage] = useState(false);
+
   const optionPanels: Record<string, ReactNode> = {
-    text: <div>Tap anywhere to insert text.</div>,
-    picture: <div></div>,
+    text: <div className="text-option">Tap anywhere to insert text.</div>,
+    picture: (
+      <div className="picture-option">
+        <Input
+          value={imageSrc}
+          onChange={(e) => updateDrawCtrl({ imageSrc: e.target.value })}
+          prefix={<LinkOutlined />}
+          placeholder="Image URL"
+          allowClear
+        />
+        {
+          <img
+            src={imageSrc}
+            alt="inserted"
+            data-show={showImage}
+            onLoad={() => setShowImage(true)}
+            onError={() => setShowImage(false)}
+          />
+        }
+      </div>
+    ),
     rect: <PenPanel {...{ drawCtrl, updateDrawCtrl }} />,
   };
 
