@@ -242,6 +242,16 @@ const ReaderContent: FC = () => {
     return () => bc.close();
   }, [nav, noteID, debouncedSave]);
 
+  useEffect(() => {
+    const handleUnload = (e: BeforeUnloadEvent) => {
+      if (saved) return;
+      e.preventDefault();
+      return (e.returnValue = "");
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, [saved]);
+
   const renameNote = async (name: string) => {
     if (name === noteInfo?.name) return;
     await editNoteData(noteID, { name });
