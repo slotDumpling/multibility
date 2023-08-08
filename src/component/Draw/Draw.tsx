@@ -973,7 +973,6 @@ const paintRects = (layers: paper.Layer[], projSize: paper.Size) => {
 
 const startRect = (point: paper.Point, drawCtrl?: DrawCtrl) => {
   const rect = new Path.Rectangle(point, new Size(0, 0));
-  rect.onFrame = () => {}; // the handle size bug
   if (drawCtrl) {
     rect.strokeWidth = drawCtrl.lineWidth;
     rect.strokeColor = new Color(drawCtrl.color);

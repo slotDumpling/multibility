@@ -3,9 +3,18 @@ new file mode 100644
 index 0000000..c88a062
 Binary files /dev/null and b/node_modules/paper/.DS_Store differ
 diff --git a/node_modules/paper/dist/paper-core.js b/node_modules/paper/dist/paper-core.js
-index 369315e..bec955f 100644
+index 369315e..2595a5c 100644
 --- a/node_modules/paper/dist/paper-core.js
 +++ b/node_modules/paper/dist/paper-core.js
+@@ -9514,7 +9514,7 @@ new function() {
+ 			ctx.beginPath();
+ 			drawSegments(ctx, this, matrix);
+ 			ctx.stroke();
+-			drawHandles(ctx, this._segments, matrix, paper.settings.handleSize);
++			drawHandles(ctx, this._segments, matrix, this.project._scope.settings.handleSize);
+ 		}
+ 	};
+ },
 @@ -10378,7 +10378,7 @@ PathItem.inject(new function() {
  	function traceBoolean(path1, path2, operation, options) {
  		if (options && (options.trace == false || options.stroke) &&
