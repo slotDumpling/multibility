@@ -47,6 +47,7 @@ export type Operation =
   | {
       type: "mutate";
       mutations: Mutation[];
+      timestamp: number;
     }
   | {
       type: "split";
@@ -226,7 +227,7 @@ export class DrawState {
     return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
   }
 
-  static mutateStrokes(drawState: DrawState, mutations: Mutation[]) {
+  static mutateStrokes(drawState: DrawState, mutations: Mutation[], timestamp = Date.now()) {
     if (mutations.length === 0) return drawState;
     const prevRecord = drawState.getImmutable();
     let strokes = drawState.getStrokeMap();
@@ -238,7 +239,7 @@ export class DrawState {
         uid: newUid,
         originUid: uid,
         pathData,
-        timestamp: Date.now(),
+        timestamp,
       });
       const prevMutationUid = mutationPairs.get(uid);
       mutationPairs = mutationPairs.set(uid, newUid);
@@ -250,7 +251,7 @@ export class DrawState {
       .update("historyStack", (s) => s.push(prevRecord))
       .delete("undoStack");
 
-    const lastOp: Operation = { type: "mutate", mutations };
+    const lastOp: Operation = { type: "mutate", mutations, timestamp };
 
     return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
   }
@@ -301,7 +302,7 @@ export class DrawState {
       case "erase":
         return DrawState.eraseStrokes(drawState, op.erased);
       case "mutate":
-        return DrawState.mutateStrokes(drawState, op.mutations);
+        return DrawState.mutateStrokes(drawState, op.mutations, op.timestamp ?? 0) /* temporary fallback */;
       case "undo":
         return DrawState.undo(drawState);
       case "redo":
