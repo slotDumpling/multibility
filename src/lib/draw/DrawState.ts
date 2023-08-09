@@ -227,7 +227,11 @@ export class DrawState {
     return new DrawState(currRecord, drawState.width, drawState.height, lastOp);
   }
 
-  static mutateStrokes(drawState: DrawState, mutations: Mutation[], timestamp = Date.now()) {
+  static mutateStrokes(
+    drawState: DrawState,
+    mutations: Mutation[],
+    timestamp = Date.now()
+  ) {
     if (mutations.length === 0) return drawState;
     const prevRecord = drawState.getImmutable();
     let strokes = drawState.getStrokeMap();
@@ -302,7 +306,11 @@ export class DrawState {
       case "erase":
         return DrawState.eraseStrokes(drawState, op.erased);
       case "mutate":
-        return DrawState.mutateStrokes(drawState, op.mutations, op.timestamp ?? 0) /* temporary fallback */;
+        return DrawState.mutateStrokes(
+          drawState,
+          op.mutations,
+          op.timestamp ?? 0 // temporary fallback
+        );
       case "undo":
         return DrawState.undo(drawState);
       case "redo":
