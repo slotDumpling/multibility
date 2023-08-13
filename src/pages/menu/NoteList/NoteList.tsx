@@ -8,7 +8,7 @@ import {
 } from "@ant-design/icons";
 import { SwipeDelete, SwipeDeleteProvider } from "component/SwipeDelete";
 import { Note, NoteInfo, TeamPageRec } from "lib/note/note";
-import { DrawState } from "lib/draw/DrawState";
+import { DrawState } from "draft-pad";
 import { useNavigate } from "react-router-dom";
 import { Setter } from "lib/hooks";
 import { List, Set } from "immutable";
