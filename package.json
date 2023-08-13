@@ -15,7 +15,7 @@
     "clipboard-copy": "^4.0.1",
     "darkreader": "^4.9.52",
     "dayjs": "^1.11.4",
-    "draft-pad": "^0.1.1",
+    "draft-pad": "^0.1.2",
     "heap": "^0.2.7",
     "immutable": "^4.1.0",
     "localforage": "^1.10.0",
