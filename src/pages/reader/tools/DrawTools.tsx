@@ -1,3 +1,4 @@
+/// <reference types="paper" />
 import { CSSProperties, FC, RefObject, useMemo, useState } from "react";
 import {
   CopyOutlined,
@@ -7,11 +8,10 @@ import {
   ItalicOutlined,
 } from "@ant-design/icons";
 import { Button, ButtonProps, Popover, Select } from "antd";
-import { DrawCtrl } from "lib/draw/DrawCtrl";
+import { DrawCtrl } from "draft-pad";
 import { ColorSelect, PenPanel } from "./PenPanel";
 import { allColors } from "lib/color";
-import { DrawRefType } from "component/Draw";
-import { Color } from "paper/dist/paper-core";
+import { DrawRefType } from "draft-pad";
 import IconFont from "component/IconFont";
 import "./draw-tools.sass";
 
@@ -107,7 +107,7 @@ export const TextTool: FC<{
           color={color}
           setColor={(c) =>
             drawRef.current?.mutatePointText((prev) => {
-              prev.fillColor = new Color(c);
+              prev.fillColor = c as unknown as paper.Color;
             })
           }
         />

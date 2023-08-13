@@ -1,3 +1,4 @@
+/// <reference types="paper" />
 import React, {
   FC,
   useRef,
@@ -9,12 +10,11 @@ import React, {
 import { useDrawCtrl } from "lib/draw/DrawCtrl";
 import { useMemoizedFn as useEvent } from "ahooks";
 
-import { Draw, DrawRefType, DrawState } from "draft-pad";
+import { Draw, DrawRefType, DrawState, P_ZERO } from "draft-pad";
 import { SelectTool, TextTool } from "pages/reader/tools/DrawTools";
 import { once, range } from "lodash";
 import { useInView } from "react-intersection-observer";
 import { Map, Set } from "immutable";
-import { P_ZERO } from "component/Draw/Draw";
 import { ErrorBoundary } from "lib/ErrorBoundary";
 
 const PageWrapperRaw: FC<{

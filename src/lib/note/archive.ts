@@ -1,5 +1,5 @@
 import { Note, NoteInfo, NotePage, TeamNoteInfo, TeamPageInfo } from "./note";
-import { getDefaultFlatState } from "lib/draw/DrawState";
+import { getDefaultFlatState } from "draft-pad";
 import localforage from "localforage";
 import { v4 as getUid } from "uuid";
 import { pickBy } from "lodash";

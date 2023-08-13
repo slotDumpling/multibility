@@ -1,4 +1,4 @@
-import { getDefaultFlatState, FlatState } from "lib/draw/DrawState";
+import { getDefaultFlatState, FlatState } from "draft-pad";
 import { v4 as getUid } from "uuid";
 import dayjs from "dayjs";
 export interface NotePage {
