@@ -2,6 +2,7 @@ import { NotePage, TeamPageInfo, TeamPageRec } from "lib/note/note";
 import { DrawState } from "draft-pad";
 import { SetOperation } from "./StateSet";
 import { Map, Record, Set } from "immutable";
+import { WIDTH } from "./DrawConst";
 
 interface TeamStateRecordType {
   pageStates: Map<string, Map<string, DrawState>>;
@@ -64,7 +65,7 @@ export class TeamState {
       const pageMap = Map(
         Object.entries(states).map(([userID, flatState]) => [
           userID,
-          DrawState.loadFromFlat(flatState, ratio),
+          DrawState.loadFromFlat(flatState, ratio, WIDTH),
         ])
       );
       record = record
@@ -88,7 +89,7 @@ export class TeamState {
     const ratio = this.getPageRatio(pageID);
     if (!this.includesPage(pageID) || !ratio) return this;
     const prevDs =
-      this.getOneState(pageID, userID) || DrawState.createEmpty(ratio);
+      this.getOneState(pageID, userID) || DrawState.createEmpty(ratio, WIDTH);
 
     const ds = DrawState.pushOperation(prevDs, op);
     return this.setState(pageID, userID, ds);
@@ -102,7 +103,7 @@ export class TeamState {
       newTS = newTS.setState(
         pageID,
         userID,
-        DrawState.loadFromFlat(state, ratio)
+        DrawState.loadFromFlat(state, ratio, WIDTH)
       );
     }
     return newTS;

@@ -1,6 +1,7 @@
 import { DrawState, Operation } from "draft-pad";
 import { List, Map, Record } from "immutable";
 import { NotePage } from "lib/note/note";
+import { WIDTH } from "./DrawConst";
 
 interface StateSetRecordType {
   states: Map<string, DrawState>;
@@ -30,7 +31,7 @@ export class StateSet {
       defaultFactory().set(
         "states",
         Map(pageRec).map(({ state, ratio }) =>
-          DrawState.loadFromFlat(state, ratio)
+          DrawState.loadFromFlat(state, ratio, WIDTH)
         )
       )
     );
@@ -79,7 +80,7 @@ export class StateSet {
 
   addState(pageID: string, notePage: NotePage) {
     const { state, ratio } = notePage;
-    const newDS = DrawState.loadFromFlat(state, ratio);
+    const newDS = DrawState.loadFromFlat(state, ratio, WIDTH);
     const currRecord = this.getImmutable().update("states", (s) =>
       s.set(pageID, newDS)
     );

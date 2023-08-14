@@ -10,7 +10,7 @@ import React, {
 import { useDrawCtrl } from "lib/draw/DrawCtrl";
 import { useMemoizedFn as useEvent } from "ahooks";
 
-import { Draw, DrawRefType, DrawState, P_ZERO } from "draft-pad";
+import { Draw, DrawRefType, DrawState } from "draft-pad";
 import { SelectTool, TextTool } from "pages/reader/tools/DrawTools";
 import { once, range } from "lodash";
 import { useInView } from "react-intersection-observer";
@@ -105,7 +105,7 @@ const DrawWrapper: FC<{
   const drawCtrl = useDrawCtrl();
   const drawRef = useRef<DrawRefType>(null);
   const [selectShow, setSelectShow] = useState(false);
-  const [clickPoint, setClickPoint] = useState<paper.Point>(P_ZERO);
+  const [clickPoint, setClickPoint] = useState<paper.Point>();
   const [pointText, setPointText] = useState<paper.PointText>();
   const [renderSlow, setRenderSlow] = useState(false);
 
@@ -119,7 +119,7 @@ const DrawWrapper: FC<{
   );
 
   const toggleSelectTool = (active: boolean, clickPoint?: paper.Point) => {
-    setClickPoint((p) => clickPoint ?? p);
+    if (clickPoint) setClickPoint(clickPoint);
     setSelectShow(active);
   };
 

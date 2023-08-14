@@ -8,10 +8,9 @@ import {
   ItalicOutlined,
 } from "@ant-design/icons";
 import { Button, ButtonProps, Popover, Select } from "antd";
-import { DrawCtrl } from "draft-pad";
+import { DrawCtrl, DrawRefType } from "draft-pad";
 import { ColorSelect, PenPanel } from "./PenPanel";
 import { allColors } from "lib/color";
-import { DrawRefType } from "draft-pad";
 import IconFont from "component/IconFont";
 import "./draw-tools.sass";
 
@@ -36,10 +35,10 @@ const getObjVars = (obj: Record<string, string | number>, unit?: string) => {
 export const SelectTool: FC<{
   drawRef: RefObject<DrawRefType>;
   visible: boolean;
-  clickPoint: paper.Point;
+  clickPoint?: paper.Point;
 }> = ({ drawRef, visible, clickPoint }) => {
   const [currDrawCtrl, setCurrDrawCtrl] = useState<Partial<DrawCtrl>>({});
-
+  if (!clickPoint) return null;
   const { x, y } = clickPoint;
   return (
     <div

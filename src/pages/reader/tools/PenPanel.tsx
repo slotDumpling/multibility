@@ -1,12 +1,12 @@
 import { CSSProperties, FC, useEffect, useMemo, useState } from "react";
 import { defaultWidthList, DrawCtrl } from "draft-pad";
 import { ColorCirle } from "component/ColorCircle";
-import { WIDTH } from "draft-pad";
 import { Popover, Segmented, Slider } from "antd";
 import { allColors } from "lib/color";
 import { Setter } from "lib/hooks";
 import IconFont from "component/IconFont";
 import { List } from "immutable";
+import { WIDTH } from "lib/draw/DrawConst";
 import "./pen-panel.sass";
 
 export const PenPanel: FC<{

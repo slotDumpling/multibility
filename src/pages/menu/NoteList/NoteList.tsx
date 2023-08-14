@@ -20,6 +20,7 @@ import { NoteNav, ListTools } from "../Header";
 import dayjs from "dayjs";
 import calender from "dayjs/plugin/calendar";
 import { MenuProps } from "../Menu";
+import { WIDTH } from "lib/draw/DrawConst";
 dayjs.extend(calender);
 
 export const NoteList: FC<MenuProps> = (props) => {
@@ -214,7 +215,7 @@ const NoteTimg: FC<{ uid: string }> = ({ uid }) => {
   const drawState = useMemo(() => {
     if (!firstPage) return;
     const { state, ratio } = firstPage;
-    return DrawState.loadFromFlat(state, ratio);
+    return DrawState.loadFromFlat(state, ratio, WIDTH);
   }, [firstPage]);
   const teamStateMap = useMemo(() => {
     if (!teamNote || !firstID) return;
