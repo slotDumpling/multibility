@@ -1,5 +1,5 @@
 import { NotePage, TeamPageInfo, TeamPageRec } from "lib/note/note";
-import { DrawState } from "draft-pad";
+import { DrawState } from "draft-pad/dist/lib";
 import { SetOperation } from "./StateSet";
 import { Map, Record, Set } from "immutable";
 import { WIDTH } from "./DrawConst";

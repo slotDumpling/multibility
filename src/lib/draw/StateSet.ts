@@ -1,4 +1,4 @@
-import { DrawState, Operation } from "draft-pad";
+import { DrawState, Operation } from "draft-pad/dist/lib";
 import { List, Map, Record } from "immutable";
 import { NotePage } from "lib/note/note";
 import { WIDTH } from "./DrawConst";

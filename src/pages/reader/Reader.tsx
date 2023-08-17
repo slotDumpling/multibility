@@ -16,7 +16,7 @@ import { loadNote, editNoteData } from "lib/note/archive";
 import { showPageDelMsg, showReopenMsg } from "./tools/Messages";
 import { useParams, useNavigate } from "react-router-dom";
 import PageWrapper from "component/PageWrapper";
-import { DrawState } from "draft-pad";
+import { DrawState } from "draft-pad/dist/lib";
 import { useScrollPage } from "./lib/scroll";
 import { debounce, last } from "lodash";
 import { insertAfter } from "./lib/array";

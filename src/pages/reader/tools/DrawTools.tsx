@@ -8,7 +8,8 @@ import {
   ItalicOutlined,
 } from "@ant-design/icons";
 import { Button, ButtonProps, Popover, Select } from "antd";
-import { DrawCtrl, DrawRefType } from "draft-pad";
+import { DrawRefType } from "draft-pad";
+import { DrawCtrl } from "draft-pad/dist/lib";
 import { ColorSelect, PenPanel } from "./PenPanel";
 import { allColors } from "lib/color";
 import IconFont from "component/IconFont";

@@ -9,8 +9,8 @@ import React, {
 } from "react";
 import { useDrawCtrl } from "lib/draw/DrawCtrl";
 import { useMemoizedFn as useEvent } from "ahooks";
-
-import { Draw, DrawRefType, DrawState } from "draft-pad";
+import { Draw, DrawRefType } from "draft-pad";
+import { DrawState } from "draft-pad/dist/lib";
 import { SelectTool, TextTool } from "pages/reader/tools/DrawTools";
 import { once, range } from "lodash";
 import { useInView } from "react-intersection-observer";

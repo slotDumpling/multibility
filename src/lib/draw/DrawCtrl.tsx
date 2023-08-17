@@ -10,7 +10,7 @@ import { Button, message } from "antd";
 import { EditOutlined, CloseOutlined } from "@ant-design/icons";
 import localforage from "localforage";
 import { once } from "lodash";
-import { defaultDrawCtrl, DrawCtrl } from "draft-pad";
+import { defaultDrawCtrl, DrawCtrl } from "draft-pad/dist/lib";
 import "./draw-ctrl.sass";
 
 async function getDrawCtrl() {

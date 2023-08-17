@@ -1,5 +1,5 @@
 import { CSSProperties, FC, useEffect, useMemo, useState } from "react";
-import { defaultWidthList, DrawCtrl } from "draft-pad";
+import { defaultWidthList, DrawCtrl } from "draft-pad/dist/lib";
 import { ColorCirle } from "component/ColorCircle";
 import { Popover, Segmented, Slider } from "antd";
 import { allColors } from "lib/color";

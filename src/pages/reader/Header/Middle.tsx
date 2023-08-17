@@ -13,7 +13,7 @@ import {
 } from "@ant-design/icons";
 import IconFont from "component/IconFont";
 import { PenPanel, WidthSelect } from "../tools/PenPanel";
-import { DrawCtrl } from "draft-pad";
+import { DrawCtrl } from "draft-pad/dist/lib";
 import { useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
 
 const btnProps: ButtonProps = { type: "text" };
