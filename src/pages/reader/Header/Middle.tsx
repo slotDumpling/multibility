@@ -198,7 +198,9 @@ const AddButton: FC = () => {
     <div className="add-pop">
       <div className="button-row">{Object.values(buttons)}</div>
       {/^(text|picture|rect)$/.test(mode) && (
-        <div className="option-panel">{optionPanels[mode]}</div>
+        <div className="option-panel" data-mode={mode}>
+          {optionPanels[mode]}
+        </div>
       )}
     </div>
   );
