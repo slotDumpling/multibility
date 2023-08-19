@@ -1,12 +1,14 @@
-import React, {
+import {
   createContext,
   Dispatch,
   FC,
   PropsWithChildren,
   SetStateAction,
   TransitionEventHandler,
+  useCallback,
   useContext,
   useDebugValue,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -65,3 +67,12 @@ export const AsideOpenProvider: FC<PropsWithChildren> = ({ children }) => {
     <AsideOpenCtx.Provider value={tuple}>{children}</AsideOpenCtx.Provider>
   );
 };
+
+export function useEvent<A extends any[], R>(fn: (...args: A) => R) {
+  const fnRef = useRef(fn);
+  fnRef.current = useMemo(() => fn, [fn]);
+  useDebugValue(fn);
+  return useCallback((...args: A) => {
+    return fnRef.current(...args);
+  }, []);
+}

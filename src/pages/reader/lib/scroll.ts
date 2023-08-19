@@ -10,7 +10,7 @@ import {
 import localforage from "localforage";
 import { Map } from "immutable";
 import { debounce } from "lodash";
-import { useMemoizedFn as useEvent } from "ahooks";
+import { useEvent } from "lib/hooks";
 
 const scrollForage = localforage.createInstance({ name: "scroll" });
 const persistScroll = debounce((noteID: string, currPageID: string) => {

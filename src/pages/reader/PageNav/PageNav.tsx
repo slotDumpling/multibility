@@ -34,6 +34,7 @@ import {
   useActiveKey,
   useAsideOpen,
   ActiveKeyProvider,
+  useEvent,
 } from "lib/hooks";
 import { ReaderMethods, ReaderStates } from "../Reader";
 import PageWrapper from "component/PageWrapper";
@@ -42,7 +43,6 @@ import { exchange } from "../lib/array";
 import IconFont from "component/IconFont";
 import classNames from "classnames";
 import { TeamCtx } from "../Team";
-import { useMemoizedFn as useEvent } from "ahooks";
 import { useSwipeable } from "react-swipeable";
 import { NotePage } from "lib/note/note";
 import { TeamState } from "lib/draw/TeamState";
