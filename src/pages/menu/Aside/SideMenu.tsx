@@ -3,6 +3,7 @@ import {
   MenuOutlined,
   PlusOutlined,
   DeleteOutlined,
+  GithubOutlined,
   SettingOutlined,
   ContainerOutlined,
 } from "@ant-design/icons";
@@ -13,7 +14,7 @@ import { Setter, useAsideOpen } from "lib/hooks";
 import { SwipeDelete, SwipeDeleteProvider } from "component/SwipeDelete";
 import { ColorCirle } from "component/ColorCircle";
 import { MenuProps } from "../Menu";
-import GitHubButton from "react-github-btn";
+import IconFont from "component/IconFont";
 
 const TagInput: FC<{
   tagName: string;
@@ -224,24 +225,22 @@ export const SideMenu: FC<MenuProps> = (props) => {
 
   const footer = (
     <footer>
-      <GitHubButton
+      <Button
+        icon={<GithubOutlined />}
         href="https://github.com/slotDumpling/multibility"
-        data-color-scheme="no-preference: light; light: light; dark: dark;"
-        data-size="large"
-        aria-label="Star slotDumpling/multibility on GitHub"
+        shape="round"
+        size="small"
       >
-        Star
-      </GitHubButton>
-
-      <GitHubButton
-        href="https://github.com/slotDumpling/multibility/issues/3"
-        data-color-scheme="no-preference: light; light: light; dark: dark;"
-        data-icon="octicon-issue-opened"
-        data-size="large"
-        aria-label="Issue slotDumpling/multibility on GitHub"
+        GitHub
+      </Button>
+      <Button
+        icon={<IconFont type="icon-npm" />}
+        href="https://www.npmjs.com/package/draft-pad"
+        shape="round"
+        size="small"
       >
-        想要无边界画板
-      </GitHubButton>
+        draft-pad
+      </Button>
     </footer>
   );
 
