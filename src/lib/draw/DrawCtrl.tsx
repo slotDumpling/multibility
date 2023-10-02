@@ -6,10 +6,9 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { Button, message } from "antd";
-import { EditOutlined, CloseOutlined } from "@ant-design/icons";
+import { notification } from "antd";
 import localforage from "localforage";
-import { once } from "lodash";
+import { debounce, once } from "lodash";
 import { defaultDrawCtrl, DrawCtrl } from "draft-pad/dist/lib";
 import "./draw-ctrl.sass";
 
@@ -58,11 +57,11 @@ export const DrawCtrlProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const { finger } = drawCtrl;
   useEffect(() => {
-    const detectPen = (e: PointerEvent) => {
+    const detectPen = debounce((e: PointerEvent) => {
       const isPen = e.isPrimary && e.pointerType === "pen";
       if (!isPen || !finger) return;
       showPencilMsg(() => updateDrawCtrl({ finger: false }));
-    };
+    }, 1000);
     document.addEventListener("pointerup", detectPen);
     return () => document.removeEventListener("pointerup", detectPen);
   }, [finger]);
@@ -76,36 +75,39 @@ export const DrawCtrlProvider: FC<PropsWithChildren> = ({ children }) => {
 
 const showPencilMsg = once(async (cb: () => void) => {
   const hide = () => {
-    message.destroy("DETECT_PENCIL");
+    notification.close("DETECT_PENCIL");
     localforage.setItem("SKIP_PENCIL_MSG", true);
   };
+
   if (await localforage.getItem("SKIP_PENCIL_MSG")) return;
-  message.info({
-    content: (
-      <>
-        Your device supports
-        <Button
-          shape="round"
-          size="small"
-          icon={<EditOutlined />}
+
+  notification.info({
+    message: "Your device supports Pencil Only",
+    description: (
+      <div className="pencil-noty-content">
+        <div
+          className="enable demo-card"
           onClick={() => {
             cb();
             hide();
           }}
         >
-          Pencil only
-        </Button>
-        <Button
-          size="small"
-          type="text"
-          shape="circle"
-          icon={<CloseOutlined style={{ color: "#999" }} />}
-          onClick={hide}
-        />
-      </>
+          <div className="title">Draw with pencil only</div>
+          <div className="stroke"></div>
+          <div className="pencil-1 emoji">✍️</div>
+          <div className="finger-1 emoji">🫵</div>
+        </div>
+        <div className="disable demo-card" onClick={hide}>
+          <div className="title">Draw with fingers</div>
+          <div className="stroke"></div>
+          <div className="finger-1 emoji">🫵</div>
+          <div className="finger-2 emoji">🫵</div>
+        </div>
+      </div>
     ),
+    icon: <></>,
+    duration: 60,
+    className: "pencil-noty",
     key: "DETECT_PENCIL",
-    className: "pencil-msg",
-    duration: 0,
   });
 });

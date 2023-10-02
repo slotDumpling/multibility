@@ -1,5 +1,106 @@
-.pencil-msg
-  button
-    margin-left: 0.5em
-    .anticon
-      margin: 0
+@import ../../sass/_var
+@import ../../sass/_mixins
+
+.pencil-noty .ant-notification-notice-description
+  margin-left: 0
+
+.pencil-noty-content
+  padding: 10px 0
+  > * + *
+    margin-top: 20px
+  .demo-card
+    border: $default-border
+    border-radius: 10px
+    height: 150px
+    overflow: hidden
+    position: relative
+    cursor: pointer
+    .title
+      text-align: center
+    .stroke
+      position: absolute
+      height: 3px
+      bottom: 40px
+      left: 50px
+      background: #555
+      animation: stroke-draw 5s infinite
+    .emoji
+      font-size: 30px
+      position: absolute
+    &.enable
+      border-color: $blue-color
+      .title
+        background: $blue-color
+        color: #fff
+      .pencil-1
+        bottom: 30px
+        left: 50px
+        animation: pencil-move 5s infinite
+      .finger-1
+        bottom: 20px
+        left: 200px
+        animation: finger-scroll 5s infinite
+    &.disable
+      .title
+        background: #bbb
+        color: #fff
+      .finger-1
+        bottom: 15px
+        left: 50px
+        animation: pencil-move 5s infinite
+      .finger-2
+        bottom: 20px
+        right: 5px
+        z-index: 1
+        animation: finger-scroll 5s infinite
+      &::after
+        @include pseudo-el(0, 0, 0, auto)
+        width: 30px
+        z-index: 0
+        box-sizing: content-box
+        background-color: #7771
+        background-image: radial-gradient(#9992 20%, #0000 0)
+        background-size: 10px 10px
+        border-left: #9992 solid 1px
+
+@keyframes stroke-draw
+  0%
+    opacity: 0
+    width: 0px
+  50%
+    width: 100px
+    opacity: 1
+    transform: translateY(0)
+  100%
+    width: 100px
+    opacity: 0
+    transform: translateY(-50px)
+
+@keyframes pencil-move
+  from
+    visibility: visible
+    opacity: 0
+    transform: translateX(0)
+  25%
+    opacity: 1
+  50%
+    visibility: hidden
+    opacity: 0
+    transform: translateX(100px)
+  to
+    visibility: hidden
+
+@keyframes finger-scroll
+  0%
+    visibility: hidden
+    opacity: 0
+  50%
+    visibility: hidden
+    opacity: 0
+    transform: translateY(0)
+  75%
+    opacity: 1
+  100%
+    visibility: visible
+    opacity: 0
+    transform: translateY(-50px)
