@@ -75,11 +75,11 @@ export const DrawCtrlProvider: FC<PropsWithChildren> = ({ children }) => {
 
 const showPencilMsg = once(async (cb: () => void) => {
   const hide = () => {
-    notification.close("DETECT_PENCIL");
-    localforage.setItem("SKIP_PENCIL_MSG", true);
+    notification.close("PENCIL_ONLY");
+    localforage.setItem("SKIP_PENCIL_ONLY_NOTY", true);
   };
 
-  if (await localforage.getItem("SKIP_PENCIL_MSG")) return;
+  if (await localforage.getItem("SKIP_PENCIL_ONLY_NOTY")) return;
 
   notification.info({
     message: "Your device supports Pencil Only",
@@ -108,6 +108,6 @@ const showPencilMsg = once(async (cb: () => void) => {
     icon: <></>,
     duration: 60,
     className: "pencil-noty",
-    key: "DETECT_PENCIL",
+    key: "PENCIL_ONLY",
   });
 });
