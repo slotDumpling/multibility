@@ -3,7 +3,7 @@ import { defaultWidthList, DrawCtrl } from "draft-pad/dist/lib";
 import { ColorCirle } from "component/ColorCircle";
 import { Popover, Segmented, Slider } from "antd";
 import { allColors } from "lib/color";
-import { Setter } from "lib/hooks";
+import { Setter, useEvent } from "lib/hooks";
 import IconFont from "component/IconFont";
 import { List } from "immutable";
 import { WIDTH } from "lib/draw/DrawConst";
@@ -49,12 +49,13 @@ export const WidthSelect: FC<{
   const widthList = drawCtrl.widthList ?? defaultWidthList;
   const color = field === "lineWidth" ? drawCtrl.color ?? "#aaa" : "#aaa";
 
-  const chosen = useMemo(
+  const chosenIndex = useMemo(
     () => widthList.indexOf(currWidth ?? -1),
     [currWidth, widthList]
   );
 
   const [popShow, setPopShow] = useState(List([false, false, false, false]));
+  setPanelBlur = useEvent(setPanelBlur);
   useEffect(() => {
     if (popShow.includes(true)) setPanelBlur(true);
     else setPanelBlur(false);
@@ -81,7 +82,7 @@ export const WidthSelect: FC<{
         <Popover
           open={popShow.get(index)}
           onOpenChange={(v) => setPopShow((prev) => prev.set(index, v))}
-          trigger={chosen === index ? ["click"] : []}
+          trigger={chosenIndex === index ? ["click"] : []}
           placement="bottom"
           destroyTooltipOnHide
           content={
@@ -102,7 +103,11 @@ export const WidthSelect: FC<{
             />
           }
         >
-          <div className="circle-wrapper" style={realSizeStyle(width)}>
+          <div
+            className="circle-wrapper"
+            data-chosen={chosenIndex === index}
+            style={realSizeStyle(width)}
+          >
             <ColorCirle className={"width-circle " + field} color={color} />
           </div>
         </Popover>
@@ -113,7 +118,7 @@ export const WidthSelect: FC<{
   return (
     <Segmented
       className="width-seg"
-      value={chosen}
+      value={chosenIndex}
       options={options}
       onChange={(i) => updateDrawCtrl({ [field]: widthList[+i] ?? 10 })}
     />

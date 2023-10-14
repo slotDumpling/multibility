@@ -57,9 +57,22 @@
     min-width: 30px
     padding: 10px
     height: 100%
+    position: relative
     .width-circle
       width: var(--real-size)
       height: var(--real-size)
+    &::after
+      @include pseudo-el(auto, 2px, 2px, auto)
+      width: 10px
+      height: 10px
+      background: #ddd
+      border-bottom-right-radius: 3px
+      clip-path: polygon(100% 0, 0 100%, 100% 100%)
+      opacity: 0
+      transition: opacity 0.2s
+    &[data-chosen=true]::after
+      opacity: 1
+      transition-delay: 0.5s
 
 .ctrl-slider
   width: 200px
