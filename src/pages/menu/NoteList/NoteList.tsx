@@ -74,6 +74,12 @@ export const NoteList: FC<MenuProps> = (props) => {
     setSelectNotes(Set());
   }, [noteList, editing]);
 
+  const [componentInit, setComponentInit] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setComponentInit(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="note-list">
       <header>
@@ -105,6 +111,7 @@ export const NoteList: FC<MenuProps> = (props) => {
                     disable={editing}
                     data-last={last}
                     data-selected={selected}
+                    data-init={componentInit}
                   >
                     <NoteItem
                       timgShow={/^(entered|exiting)$/.test(state)}
