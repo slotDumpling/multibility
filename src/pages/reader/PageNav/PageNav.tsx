@@ -10,7 +10,6 @@ import {
   MoreOutlined,
   PlusOutlined,
   CopyOutlined,
-  CaretUpOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
 import {
@@ -506,7 +505,7 @@ const FooterOptions = () => {
         size="small"
         type="text"
         shape="circle"
-        icon={<CaretUpOutlined style={{ opacity: 0.5 }} />}
+        icon={<MoreOutlined />}
       />
     </Popover>
   );
