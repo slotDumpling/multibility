@@ -11,9 +11,14 @@ export const Header: FC<{
   undoable: boolean;
   redoable: boolean;
   instantSave: () => Promise<void> | undefined;
-}> = ({ saved, instantSave, ...undoProps }) => (
+  handleExportPDF: () => Promise<void>;
+}> = ({ saved, instantSave, handleExportPDF, ...undoProps }) => (
   <header>
-    <HeaderLeft saved={saved} instantSave={instantSave} />
+    <HeaderLeft
+      saved={saved}
+      instantSave={instantSave}
+      handleExportPDF={handleExportPDF}
+    />
     <HeaderMiddle {...undoProps} />
     <HeaderRight instantSave={instantSave} />
   </header>

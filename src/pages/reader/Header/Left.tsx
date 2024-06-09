@@ -1,12 +1,13 @@
 import { FC } from "react";
 import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
-import { HomeFilled, SaveOutlined } from "@ant-design/icons";
+import { HomeFilled, SaveOutlined, PrinterOutlined } from "@ant-design/icons";
 
 export const HeaderLeft: FC<{
   saved: boolean;
   instantSave: () => Promise<void> | undefined;
-}> = ({ saved, instantSave }) => {
+  handleExportPDF: () => Promise<void>;
+}> = ({ saved, instantSave, handleExportPDF }) => {
   const nav = useNavigate();
   return (
     <div className="left">
@@ -18,13 +19,21 @@ export const HeaderLeft: FC<{
         }}
         icon={<HomeFilled style={{ opacity: 0.8 }} />}
       />
-      <Button
-        type="text"
-        className="save"
-        onClick={instantSave}
-        disabled={saved}
-        icon={<SaveOutlined />}
-      />
+      {saved ? (
+        <Button
+          type="text"
+          className="save"
+          onClick={handleExportPDF}
+          icon={<PrinterOutlined />}
+        />
+      ) : (
+        <Button
+          type="text"
+          className="save"
+          onClick={instantSave}
+          icon={<SaveOutlined />}
+        />
+      )}
     </div>
   );
 };
