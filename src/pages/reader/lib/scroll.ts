@@ -92,8 +92,19 @@ export function useScrollPage(
     setScrolling(true);
   };
 
+  const getPageRef = (pageID: string) => {
+    return refMap.get(pageID);
+  };
+
   useDebugValue(currPageID);
-  return { scrollPage, setInviewRatios, sectionRef, currPageID, scrolling };
+  return {
+    scrollPage,
+    setInviewRatios,
+    sectionRef,
+    currPageID,
+    scrolling,
+    getPageRef,
+  };
 }
 
 const largestKey = (map: Map<string, number>, order: string[]) => {
