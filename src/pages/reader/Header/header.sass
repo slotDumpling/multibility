@@ -32,8 +32,10 @@
         grid-column: span 3
   @include for-desktop
     height: $header-low-height
-    > .left, > .right
+    > .left
       grid-template-columns: repeat(2, 1fr)
+    > .right
+      grid-template-columns: repeat(3, 1fr)
     > .middle
       grid-template-columns: repeat(7, 1fr)
       .redo-btn
@@ -73,6 +75,9 @@
           max-width: 200px
           &[data-show=false]
             display: none
+  > .right .reader-option-btn
+    @include for-phone
+      display: none
 
 .team-title
   display: flex

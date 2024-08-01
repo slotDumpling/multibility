@@ -42,8 +42,8 @@ $card-width: 200px
   @include for-phone
     padding: $header-high-height+10px 10px calc(10px + $safe-bottom) 10px
 
-@media (hover: none)
-  main[data-finger=true] ~ .preview-drop
+main[data-finger=true] ~ .preview-drop
+  @media (hover: none)
     right: 30px
 
 body.ant-scrolling-effect .preview-drop
@@ -173,18 +173,9 @@ body.ant-scrolling-effect .preview-drop
     .size-select
       @include for-phone
         display: none
-    .footer-option
-      width: 120px
-      display: flex
-      justify-content: space-between
-      align-items: center
-      padding-bottom: 10px
-      &:last-of-type
-        padding: 0
-      .ant-switch
-        box-shadow: 0 0 0 1px #eee
-        .ant-switch-handle::before
-          border: $default-border
+    .reader-option-btn
+      @include for-desktop
+        display: none
 
 .preview-avatar
   box-sizing: content-box

@@ -18,16 +18,7 @@ import {
   DropResult,
   DragDropContext,
 } from "react-beautiful-dnd";
-import {
-  Avatar,
-  Button,
-  Menu,
-  Pagination,
-  Popover,
-  Select,
-  Switch,
-  Tabs,
-} from "antd";
+import { Avatar, Button, Menu, Pagination, Popover, Select, Tabs } from "antd";
 import {
   Setter,
   useActiveKey,
@@ -47,9 +38,7 @@ import { NotePage } from "lib/note/note";
 import { TeamState } from "lib/draw/TeamState";
 import { AddPageButton } from "../tools/AddButton";
 import { CSSTransition } from "react-transition-group";
-import { useForceLight } from "lib/Dark";
-import { useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
-import { useMediaQuery } from "react-responsive";
+import { OptionButton } from "../Options";
 
 type PreviewProps = ReaderMethods & ReaderStates;
 export const PageNav: FC<PreviewProps> = (props) => {
@@ -444,7 +433,6 @@ const PreviewFooter: FC<PreviewProps> = ({
           {pageIndex} / {pageOrder.length}
         </Button>
       </Popover>
-      <FooterOptions />
       <Select
         className="size-select"
         popupClassName="size-drop"
@@ -461,52 +449,7 @@ const PreviewFooter: FC<PreviewProps> = ({
         placement="topRight"
         getPopupContainer={(e) => e.parentElement!}
       />
+      <OptionButton placement="topRight" />
     </footer>
-  );
-};
-
-const FooterOptions = () => {
-  const { finger } = useDrawCtrl();
-  const updateDrawCtrl = useUpdateDrawCtrl();
-  const [forceLight, setForceLight] = useForceLight();
-  const isLight = useMediaQuery({ query: "(prefers-color-scheme: light)" });
-
-  const options = (
-    <>
-      <div className="footer-option">
-        <span>Pencil only</span>
-        <Switch
-          size="small"
-          checked={!finger}
-          onChange={(v) => updateDrawCtrl({ finger: !v })}
-        />
-      </div>
-      <div className="footer-option">
-        <span>Light mode</span>
-        <Switch
-          size="small"
-          checked={forceLight || isLight}
-          disabled={isLight}
-          onChange={setForceLight}
-        />
-      </div>
-    </>
-  );
-
-  return (
-    <Popover
-      getPopupContainer={(e) => e.parentElement!}
-      trigger="click"
-      content={options}
-      placement="topRight"
-    >
-      <Button
-        className="option-btn"
-        size="small"
-        type="text"
-        shape="circle"
-        icon={<MoreOutlined />}
-      />
-    </Popover>
   );
 };
