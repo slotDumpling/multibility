@@ -1,0 +1,15 @@
+@import ../../../sass/_mixins
+@import ../../../sass/_var
+
+.reader-options .other-option
+  width: 120px
+  display: flex
+  justify-content: space-between
+  align-items: center
+  padding-bottom: 10px
+  &:last-of-type
+    padding: 0
+  .ant-switch
+    box-shadow: 0 0 0 1px #eee
+    .ant-switch-handle::before
+      border: $default-border

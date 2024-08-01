@@ -49,6 +49,7 @@ import { useAsideOpen } from "lib/hooks";
 import { sortBy } from "lodash";
 import IconFont from "component/IconFont";
 import { useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
+import { OptionButton } from "../Options";
 
 export const HeaderRight: FC<{
   instantSave: () => Promise<void> | undefined;
@@ -58,6 +59,7 @@ export const HeaderRight: FC<{
     <div className="right">
       {teamOn ? <RoomInfo /> : <JoinRoom instantSave={instantSave} />}
       <PageNavButton />
+      <OptionButton placement="bottomRight" />
     </div>
   );
 };
