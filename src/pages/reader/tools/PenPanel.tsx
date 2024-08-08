@@ -13,11 +13,16 @@ export const PenPanel: FC<{
   updateDrawCtrl: (updated: Partial<DrawCtrl>) => void;
   drawCtrl: Partial<DrawCtrl>;
 }> = ({ updateDrawCtrl, drawCtrl }) => {
-  const { highlight, color } = drawCtrl;
+  const { highlight, color, mode } = drawCtrl;
   const [panelBlur, setPanelBlur] = useState(false);
 
   return (
-    <div className="pen-panel" data-blur={panelBlur} data-hi={highlight}>
+    <div
+      className="pen-panel"
+      data-blur={panelBlur}
+      data-hi={highlight}
+      data-mode={mode}
+    >
       <div className="pen-status">
         <WidthSelect
           updateDrawCtrl={updateDrawCtrl}
