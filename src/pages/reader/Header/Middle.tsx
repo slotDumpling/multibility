@@ -213,6 +213,7 @@ const AddMoreButtons: FC = () => {
     <>
       {Object.entries(buttons).map(([key, btn]) => (
         <Popover
+          key={"pop-" + key}
           className="btn-for-desktop"
           content={optionPanels[key]}
           trigger="click"
