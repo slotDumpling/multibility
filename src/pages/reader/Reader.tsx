@@ -47,6 +47,7 @@ export interface ReaderMethods {
   deletePage: (pageID: string) => void;
   saveReorder: (order: string[], push: boolean) => Promise<void>;
   setSize: Setter<number>;
+  handleExportPDF: () => Promise<void>;
 }
 
 export default function Reader() {
@@ -224,8 +225,14 @@ const ReaderContent: FC = () => {
   const pd = (100 - size) / 2 + "%";
   const mainStyle = { paddingLeft: pd, paddingRight: pd };
 
-  const { setInviewRatios, scrollPage, sectionRef, currPageID, scrolling } =
-    useScrollPage(noteID, pageOrder, [size]);
+  const {
+    setInviewRatios,
+    scrollPage,
+    sectionRef,
+    currPageID,
+    scrolling,
+    getPageRef,
+  } = useScrollPage(noteID, pageOrder, [size]);
 
   const { finger } = useDrawCtrl();
 
@@ -264,6 +271,11 @@ const ReaderContent: FC = () => {
   const handleRedo = () => updateStateSet((prev) => prev.redo());
   useRedoUndo(handleUndo, handleRedo);
 
+  const handleExportPDF = useEvent(async () => {
+    const { exportPDF } = await import("./lib/toPdf");
+    exportPDF(pageOrder ?? [], getPageRef, noteInfo?.name ?? "");
+  });
+
   if (!stateSet || !pageOrder || !pageRec || !noteInfo) return null;
   const readerStates: ReaderStates = {
     noteID,
@@ -281,6 +293,7 @@ const ReaderContent: FC = () => {
     deletePage,
     saveReorder,
     setSize,
+    handleExportPDF,
   };
 
   return (
