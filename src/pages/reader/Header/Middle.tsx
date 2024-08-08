@@ -40,8 +40,8 @@ export const HeaderMiddle: FC<{
     />
     <PenButton />
     <EraserButton />
+    <AddMoreButtons />
     <SelectButton />
-    <AddButton />
   </div>
 );
 
@@ -146,14 +146,19 @@ const SelectButton = () => {
   );
 };
 
-const AddButton: FC = () => {
+const AddMoreButtons: FC = () => {
   const drawCtrl = useDrawCtrl();
   const updateDrawCtrl = useUpdateDrawCtrl();
   const { mode, imageSrc } = drawCtrl;
 
-  const getButton = (modeName: DrawCtrl["mode"], icon: ReactNode) => (
+  const getButton = (
+    modeName: DrawCtrl["mode"],
+    icon: ReactNode,
+    className?: string
+  ) => (
     <Button
       key={modeName}
+      className={className}
       type={mode === modeName ? "link" : "text"}
       onClick={() => updateDrawCtrl({ mode: modeName })}
       icon={icon}
@@ -205,13 +210,27 @@ const AddButton: FC = () => {
     </div>
   );
   return (
-    <Popover
-      content={content}
-      trigger="click"
-      placement="bottomRight"
-      getPopupContainer={(e) => e.parentElement!}
-    >
-      {buttons[mode] ?? <Button type="text" icon={<PlusCircleOutlined />} />}
-    </Popover>
+    <>
+      {Object.entries(buttons).map(([key, btn]) => (
+        <Popover
+          className="btn-for-desktop"
+          content={optionPanels[key]}
+          trigger="click"
+          placement="bottomRight"
+          getPopupContainer={(e) => e.parentElement!}
+        >
+          {btn}
+        </Popover>
+      ))}
+      <Popover
+        className="btn-for-phone"
+        content={content}
+        trigger="click"
+        placement="bottomRight"
+        getPopupContainer={(e) => e.parentElement!}
+      >
+        {buttons[mode] ?? <Button type="text" icon={<PlusCircleOutlined />} />}
+      </Popover>
+    </>
   );
 };
