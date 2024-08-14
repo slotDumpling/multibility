@@ -15,14 +15,14 @@ export const loadDarkMode = async () => {
     { brightness: 100, contrast: 100 },
     {
       ignoreInlineStyle: [
-        "label .circle",
+        ".color-select .circle",
         ".color-circle",
         ".pen-icon path",
         ".text-color-icon",
       ],
       invert: [
         // ".page-wrapper[data-preview=true] .draw-canvas",
-        "label .circle",
+        ".color-select .circle",
         ".width-circle.lineWidth",
         ".pen-icon",
         ".text-color-icon",
