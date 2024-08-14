@@ -155,19 +155,14 @@ export const ColorSelect: FC<{
 }> = ({ setColor, color }) => (
   <div className="color-select">
     {allColors.map((c) => (
-      <label key={c}>
-        <input
-          checked={color === c}
-          type="radio"
-          name="color"
-          onChange={(e) => e.target.checked && setColor(c)}
-        />
-        <div
-          data-color={c}
-          className="circle"
-          style={{ backgroundColor: c, borderColor: c }}
-        />
-      </label>
+      <div
+        key={c}
+        data-color={c}
+        data-selected={color === c}
+        className="circle"
+        style={{ backgroundColor: c, borderColor: c }}
+        onClick={() => setColor(c)}
+      />
     ))}
   </div>
 );

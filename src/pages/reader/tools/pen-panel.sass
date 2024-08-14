@@ -90,12 +90,6 @@
   grid-template-columns: repeat(4, 1fr)
   gap: 10px 0
   place-items: center
-  input[type="radio"]
-    display: none
-    &:checked + .circle
-      border-width: 6px
-      // checked circle ring
-      background-color: #0000 !important
   .circle
     cursor: pointer
     width: 30px
@@ -105,6 +99,9 @@
     transition: all 0.2s
     &[data-color="#000000"]
       box-shadow: 0 0 0 1px #ddd
+    &[data-selected=true]
+      border-width: 6px
+      background-color: #0000 !important
 
 @media (prefers-color-scheme: dark)
   .ant-segmented-item-selected, .ant-segmented-thumb
