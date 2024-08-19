@@ -78,18 +78,20 @@ const PageWrapperRaw: FC<{
   const ratio = height / width;
 
   return (
-    <div ref={ref} className="page-wrapper" data-preview={preview}>
-      <svg className="size-holder" viewBox={`0 0 100 ${ratio * 100}`} />
-      {drawShow && (
-        <DrawWrapper
-          drawState={drawState}
-          otherStates={otherStates}
-          updateState={updateState}
-          imgSrc={fullImg || thumbnail}
-          preview={preview}
-        />
-      )}
-    </div>
+    <ErrorBoundary>
+      <div ref={ref} className="page-wrapper" data-preview={preview}>
+        <svg className="size-holder" viewBox={`0 0 100 ${ratio * 100}`} />
+        {drawShow && (
+          <DrawWrapper
+            drawState={drawState}
+            otherStates={otherStates}
+            updateState={updateState}
+            imgSrc={fullImg || thumbnail}
+            preview={preview}
+          />
+        )}
+      </div>
+    </ErrorBoundary>
   );
 };
 PageWrapperRaw.displayName = "PageWrapper";
@@ -139,7 +141,7 @@ const DrawWrapper: FC<{
       readonly
     />
   ) : (
-    <ErrorBoundary>
+    <>
       <Draw
         drawState={drawState}
         otherStates={otherStates}
@@ -162,6 +164,6 @@ const DrawWrapper: FC<{
           renderSlow={renderSlow}
         />
       )}
-    </ErrorBoundary>
+    </>
   );
 };
