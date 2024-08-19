@@ -1,3 +1,4 @@
+import { Result } from "antd";
 import { Component, ErrorInfo, ReactNode } from "react";
 
 interface Props {
@@ -23,7 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
-      return <p>Error</p>;
+      return <Result status="error" title="Something went wrong." />;
     }
 
     return this.props.children;
