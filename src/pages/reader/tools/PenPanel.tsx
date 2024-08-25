@@ -1,7 +1,7 @@
 import { CSSProperties, FC, useEffect, useMemo, useState } from "react";
 import { defaultWidthList, DrawCtrl } from "draft-pad/dist/lib";
 import { ColorCirle } from "component/ColorCircle";
-import { Popover, Segmented, Slider } from "antd";
+import { Popover, Segmented, Slider, Tooltip } from "antd";
 import { allColors } from "lib/color";
 import { Setter, useEvent } from "lib/hooks";
 import IconFont from "component/IconFont";
@@ -142,9 +142,11 @@ const HighlightSwitch: FC<{
         checked={checked}
         onChange={(e) => updateDrawCtrl({ highlight: e.target.checked })}
       />
-      <div className="hi-switch">
-        <IconFont type="icon-Highlight" />
-      </div>
+      <Tooltip title="Highlighter" placement="bottom">
+        <div className="hi-switch">
+          <IconFont type="icon-Highlight" />
+        </div>
+      </Tooltip>
     </label>
   );
 };
