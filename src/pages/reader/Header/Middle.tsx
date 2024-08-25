@@ -1,5 +1,5 @@
-import { FC, ReactNode, useState } from "react";
-import { Button, ButtonProps, Input, Popover, Segmented } from "antd";
+import React, { FC, ReactNode, useState } from "react";
+import { Button, ButtonProps, Input, Popover, Segmented, Tooltip } from "antd";
 import {
   UndoOutlined,
   RedoOutlined,
@@ -17,6 +17,11 @@ import { DrawCtrl } from "draft-pad/dist/lib";
 import { useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
 
 const btnProps: ButtonProps = { type: "text" };
+const addTip = (icon: React.ReactNode, title = ""): React.ReactNode => (
+  <Tooltip placement="bottom" title={title}>
+    {icon}
+  </Tooltip>
+);
 
 export const HeaderMiddle: FC<{
   handleUndo: () => void;
@@ -27,14 +32,14 @@ export const HeaderMiddle: FC<{
   <div className="middle">
     <Button
       {...btnProps}
-      icon={<UndoOutlined />}
+      icon={addTip(<UndoOutlined />, "Undo")}
       onClick={handleUndo}
       disabled={!undoable}
     />
     <Button
       className="redo-btn"
       {...btnProps}
-      icon={<RedoOutlined />}
+      icon={addTip(<RedoOutlined />, "Redo")}
       onClick={handleRedo}
       disabled={!redoable}
     />
@@ -60,7 +65,10 @@ const PenButton = () => {
     >
       <Button
         type="link"
-        icon={<HighlightTwoTone twoToneColor={color} className="pen-icon" />}
+        icon={addTip(
+          <HighlightTwoTone twoToneColor={color} className="pen-icon" />,
+          "Draw"
+        )}
         data-active={mode === "draw"}
       />
     </Popover>
@@ -68,7 +76,7 @@ const PenButton = () => {
     <Button
       {...btnProps}
       onClick={() => updateDrawCtrl({ mode: "draw" })}
-      icon={<HighlightOutlined />}
+      icon={addTip(<HighlightOutlined />, "Draw")}
     />
   );
 };
@@ -111,7 +119,7 @@ const EraserButton = () => {
     >
       <Button
         type="link"
-        icon={<IconFont type="icon-eraser" />}
+        icon={addTip(<IconFont type="icon-eraser" />, "Eraser")}
         data-active={mode === "erase"}
       />
     </Popover>
@@ -119,7 +127,7 @@ const EraserButton = () => {
     <Button
       {...btnProps}
       onClick={() => updateDrawCtrl({ mode: "erase" })}
-      icon={<IconFont type="icon-eraser" />}
+      icon={addTip(<IconFont type="icon-eraser" />, "Eraser")}
     />
   );
 };
@@ -128,7 +136,10 @@ const SelectButton = () => {
   const { lasso, mode } = useDrawCtrl();
   const updateDrawCtrl = useUpdateDrawCtrl();
 
-  const icon = lasso ? <IconFont type="icon-lasso1" /> : <GatewayOutlined />;
+  const icon = addTip(
+    lasso ? <IconFont type="icon-lasso1" /> : <GatewayOutlined />,
+    "Lasso"
+  );
 
   return mode === "select" ? (
     <Button
@@ -167,9 +178,9 @@ const AddMoreButtons: FC = () => {
   );
 
   const buttons: Record<string, ReactNode> = {
-    text: getButton("text", <IconFont type="icon-text1" />),
-    picture: getButton("picture", <PictureOutlined />),
-    rect: getButton("rect", <BorderOutlined />),
+    text: getButton("text", addTip(<IconFont type="icon-text1" />, "Add text")),
+    picture: getButton("picture", addTip(<PictureOutlined />, "Add image")),
+    rect: getButton("rect", addTip(<BorderOutlined />, "Add rectangle")),
   };
 
   const [showImage, setShowImage] = useState(false);
@@ -230,7 +241,12 @@ const AddMoreButtons: FC = () => {
         placement="bottomRight"
         getPopupContainer={(e) => e.parentElement!}
       >
-        {buttons[mode] ?? <Button type="text" icon={<PlusCircleOutlined />} />}
+        {buttons[mode] ?? (
+          <Button
+            type="text"
+            icon={addTip(<PlusCircleOutlined />, "Add more")}
+          />
+        )}
       </Popover>
     </>
   );
