@@ -1,5 +1,12 @@
 /// <reference types="paper" />
-import { CSSProperties, FC, RefObject, useMemo, useState } from "react";
+import {
+  CSSProperties,
+  FC,
+  RefObject,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   CopyOutlined,
   BoldOutlined,
@@ -39,6 +46,7 @@ export const SelectTool: FC<{
   clickPoint?: paper.Point;
 }> = ({ drawRef, visible, clickPoint }) => {
   const [currDrawCtrl, setCurrDrawCtrl] = useState<Partial<DrawCtrl>>({});
+  useEffect(() => setCurrDrawCtrl({}), [visible]);
   if (!clickPoint) return null;
   const { x, y } = clickPoint;
   return (
@@ -47,24 +55,26 @@ export const SelectTool: FC<{
       data-visible={visible}
       style={getPosVars(x, y)}
     >
-      <Popover
-        trigger="click"
-        placement="bottom"
-        overlayClassName="style-pop"
-        getPopupContainer={(e) => e.parentElement!}
-        destroyTooltipOnHide
-        content={
-          <PenPanel
-            updateDrawCtrl={(updated) => {
-              setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
-              drawRef.current?.mutateStyle(updated);
-            }}
-            drawCtrl={currDrawCtrl}
-          />
-        }
-      >
-        <Button icon={<BgColorsOutlined />} {...btnProps} />
-      </Popover>
+      {visible && (
+        <Popover
+          trigger="click"
+          placement="bottom"
+          overlayClassName="style-pop"
+          getPopupContainer={(e) => e.parentElement!}
+          destroyTooltipOnHide
+          content={
+            <PenPanel
+              updateDrawCtrl={(updated) => {
+                setCurrDrawCtrl((prev) => ({ ...prev, ...updated }));
+                drawRef.current?.mutateStyle(updated);
+              }}
+              drawCtrl={currDrawCtrl}
+            />
+          }
+        >
+          <Button icon={<BgColorsOutlined />} {...btnProps} />
+        </Popover>
+      )}
       <Button
         icon={<CopyOutlined />}
         onClick={() => drawRef.current?.duplicateSelected()}
