@@ -1,6 +1,7 @@
 import { Modal, message } from "antd";
 import { LoadingOutlined } from "@ant-design/icons";
 import jsPDF from "jspdf";
+import "svg2pdf.js";
 
 const delay = (time: number) =>
   new Promise((res) => {
