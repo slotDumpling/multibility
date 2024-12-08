@@ -12,7 +12,7 @@
     "clipboard-copy": "^4.0.1",
     "darkreader": "^4.9.52",
     "dayjs": "^1.11.4",
-    "draft-pad": "^0.2.6",
+    "draft-pad": "^0.2.11",
     "immutable": "^4.1.0",
     "jspdf": "^2.5.1",
     "localforage": "^1.10.0",
