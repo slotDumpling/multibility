@@ -18,7 +18,12 @@ import { useDrawCtrl, useUpdateDrawCtrl } from "lib/draw/DrawCtrl";
 
 const btnProps: ButtonProps = { type: "text" };
 const addTip = (icon: React.ReactNode, title = ""): React.ReactNode => (
-  <Tooltip placement="bottom" title={title}>
+  <Tooltip
+    trigger="hover"
+    placement="bottom"
+    title={title}
+    overlayClassName="middle-btn-tip"
+  >
     {icon}
   </Tooltip>
 );
